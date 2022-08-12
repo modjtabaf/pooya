@@ -7,83 +7,62 @@ Created on Wed Aug 10 20:52:40 2022
 @author: fathi
 """
 
-class Base:
-    all_inports_ = []
-    all_outports_ = []
-    
-    def __init__(self, name, inports=[], outports=[]):
-        self.name_ = name
-        self.inports_ = inports
-        self.outports_ = outports
-        
-        for port in outports:
-            assert port not in self.all_outports
+import matplotlib.pyplot as plt
+import numpy as np
 
-        for port in inports:
-            if port not in self.all_inports:
-                self.all_inports.append(port)
+import blocks
+import solver
 
-        self.all_outports_ += outports
-
-    def get_states(self, states):
-        return
-
-class Signal:
-    def __name__(self, src, dst, name):
-        self.src_ = src
-        self.dst_ = dst
-        self.name_ = name
-
-class Gain(Base):
-    def __init__(self, k, name):
-        Base.__init__(self, name)
-        self.k_ = k
-
-class Integrator(Base):
-    def __init__(self, t0, x0, name):
-        Base.__init__(self, name)
-        self.time_ = t0
-        self.value_ = x0
-    
-    def get_states(self, states):
-        states[self.name_] = self.value_
-
-class Submodel(Base):
-    def __init__(self, name):
-        Base.__init__(self, name)
-        self.submodels_ = []
-
-    def add_submodel(self, model):
-        model.name_ = self.name_ + '.' + model.name_
-        self.submodels_.append(model)
-
-    def get_states(self, states):
-        for m in self.submodels_:
-            m.get_states(states)
-
-class SSModel(Submodel):
+class SSModel(blocks.Submodel):
     def __init__(self):
-        Submodel.__init__(self, 'mass_spring')
+        blocks.Submodel.__init__(self, 'mass_spring')
 
-        self.xd_ = Integrator(0.0, 0.1, 'xd')
-        self.x_  = Integrator(0.0, 0.0, 'x')
-        
-        self.add_submodel(self.xd_)
-        self.add_submodel(self.x_)
-    
-    def __call__(self, t, x):
-        # create the dictionary
-        x = {k: v for k, v in zip(self.state_names_, x)}
+        self.xd_ = blocks.Integrator(0.0, 0.1, 'xd', 'xdd', 'xd')
+        self.x_  = blocks.Integrator(0.0, 0.0, 'x', 'xd', 'x')
+        self.gain_ = blocks.Gain(-1.0/1.0, '-k/m', 'x', 'xdd')
 
-def rk4(model, t0, x0, h):
-    k1 = h*model(t0, x0)
-    k2 = h*model(t0 + h/2, x0 + k1/2)
-    k3 = h*model(t0 + h/2, x0 + k2/2)
-    k4 = h*model(t0 + h, x0 + k3)
-    return x0 + k1/6 + k2/3 + k3/3 + k4/6
+        self.add_component(self.xd_)
+        self.add_component(self.x_)
+        self.add_component(self.gain_)
+
+    def process(self, t, x):
+        n_processed = self._process(t, x, True)
+        while True:
+            n = self._process(t, x, False)
+            if n == 0:
+                break
+            n_processed += n
+
+        return n_processed
 
 if __name__ == '__main__':
     model = SSModel()
-    states = {}
+    states = []
     model.get_states(states)
-    print(states)
+    
+    state_names = [state._state for state in states]
+
+    def solver_callback(t, x):
+        x = {k: v for k, v in zip(state_names, x)}
+        model.process(t, x)
+        return np.array([x[state._deriv] for state in states])
+
+    h = 0.01    
+    x = np.array([state._value for state in states])
+    t = 0.0
+    X = [x]
+    T = [t]
+    k = 0
+    while t < 50.0:
+        x = solver.rk4(solver_callback, t0=t, x0=x, h=h)
+        k += 1
+        t = k*h
+        print(t)
+
+        model.update_states(t, {k: v for k, v in zip(state_names, x)})
+
+        X.append(x)
+        T.append(t)
+
+    plt.plot(T, [x[1] for x in X])
+    plt.show()

@@ -35,7 +35,7 @@ class Base:
     def get_states(self, states):
         return
 
-    def update_states(self, t, states):
+    def update_state(self, t, states):
         return
 
     def get_ports(self):
@@ -66,6 +66,14 @@ class Base:
             self._processed = True
             return 1
 
+class Const(Base):
+    def __init__(self, v, name, outport):
+        Base.__init__(self, name, [], [outport])
+        self._v = v
+
+    def activation_function(self, t, x):
+        return [self._v]
+
 class Gain(Base):
     def __init__(self, k, name, inport, outport):
         Base.__init__(self, name, [inport], [outport])
@@ -81,6 +89,38 @@ class Sin(Base):
     def activation_function(self, t, x):
         return [np.sin(x[0])]
 
+class AddSub(Base):
+    def __init__(self, name, signs, inports, outport, initial=0.0):
+        assert len(signs) == len(inports)
+        Base.__init__(self, name, inports, [outport])
+        self._signs = signs
+        self._initial = initial
+
+    def activation_function(self, t, x):
+        ret = self._initial
+        for sign, v in zip(self._signs, x):
+            if sign == '+':
+                ret += v
+            elif sign == '-':
+                ret -= v
+        return [ret]
+
+class MulDiv(Base):
+    def __init__(self, name, operations, inports, outport, initial=1.0):
+        assert len(operations) == len(inports)
+        Base.__init__(self, name, inports, [outport])
+        self._operations = operations
+        self._initial = initial
+
+    def activation_function(self, t, x):
+        ret = self._initial
+        for operation, v in zip(self._operations, x):
+            if operation == '*':
+                ret *= v
+            elif operation == '/':
+                ret /= v
+        return [ret]
+
 class Integrator(Base):
     def __init__(self, x0, name, inport, outport):
         Base.__init__(self, name, [inport], [outport])
@@ -89,7 +129,7 @@ class Integrator(Base):
     def get_states(self, states):
         states.append(State(self._outports[0], self._inports[0], self._value))
 
-    def update_states(self, t, states):
+    def update_state(self, t, states):
         self._value = states[self._outports[0]]
 
     def _process(self, t, x, reset):
@@ -109,9 +149,9 @@ class Submodel(Base):
         for component in self._components:
             component.get_states(states)
 
-    def update_states(self, t, states):
+    def update_state(self, t, states):
         for component in self._components:
-            component.update_states(t, states)
+            component.update_state(t, states)
 
     def _process(self, t, x, reset):
         if reset:

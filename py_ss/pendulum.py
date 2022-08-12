@@ -20,7 +20,8 @@ class SSModel(blocks.MainModel):
         self._dphi    = blocks.Integrator(np.pi/4, 'dphi', 'd2phi', 'dphi')
         self._phi     = blocks.Integrator(0.0, 'phi', 'dphi', 'phi')
         self._sin_phi = blocks.Sin('sin(phi)', 'phi', 'sin_phi')
-        self._gain    = blocks.Gain(-9.81/0.1, '-g/l', 'sin_phi', 'd2phi')
+        self._gain    = blocks.MulDiv('-g/l', '**/', ['sin_phi', 'g', 'l'],
+                                      'd2phi', initial=-1)
 
         self.add_component(self._dphi)
         self.add_component(self._phi)
@@ -31,11 +32,19 @@ if __name__ == '__main__':
     model = SSModel()
     states = []
     model.get_states(states)
-    
+
+    parameters = {
+        'm': 0.2,
+        'l': 0.1,
+        'g': 9.81,
+        }
+
     state_names = [state._state for state in states]
 
     def solver_callback(t, x):
         x = {k: v for k, v in zip(state_names, x)}
+        for p, v in parameters.items():
+            x[p] = v
         model.process(t, x)
         return np.array([x[state._deriv] for state in states])
 
@@ -51,7 +60,7 @@ if __name__ == '__main__':
         t = k*h
         print(k, t)
 
-        model.update_states(t, {k: v for k, v in zip(state_names, x)})
+        model.update_state(t, {k: v for k, v in zip(state_names, x)})
 
         X.append(x)
         T.append(t)

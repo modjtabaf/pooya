@@ -17,8 +17,8 @@ class SSModel(blocks.Submodel):
     def __init__(self):
         blocks.Submodel.__init__(self, 'mass_spring')
 
-        self.xd_ = blocks.Integrator(0.0, 0.1, 'xd', 'xdd', 'xd')
-        self.x_  = blocks.Integrator(0.0, 0.0, 'x', 'xd', 'x')
+        self.xd_ = blocks.Integrator(0.1, 'xd', 'xdd', 'xd')
+        self.x_  = blocks.Integrator(0.0, 'x', 'xd', 'x')
         self.gain_ = blocks.Gain(-1.0/1.0, '-k/m', 'x', 'xdd')
 
         self.add_component(self.xd_)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         x = solver.rk4(solver_callback, t0=t, x0=x, h=h)
         k += 1
         t = k*h
-        print(t)
+        print(k, t)
 
         model.update_states(t, {k: v for k, v in zip(state_names, x)})
 

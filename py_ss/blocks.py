@@ -6,6 +6,8 @@ Created on Fri Aug 12 11:41:22 2022
 @author: fathi
 """
 
+import numpy as np
+
 class State:
     def __init__(self, state, deriv, value):
         self._state = state
@@ -72,6 +74,13 @@ class Gain(Base):
     def activation_function(self, t, x):
         return [self._k * x[0]]
 
+class Sin(Base):
+    def __init__(self, name, inport, outport):
+        Base.__init__(self, name, [inport], [outport])
+
+    def activation_function(self, t, x):
+        return [np.sin(x[0])]
+
 class Integrator(Base):
     def __init__(self, x0, name, inport, outport):
         Base.__init__(self, name, [inport], [outport])
@@ -115,5 +124,16 @@ class Submodel(Base):
                 n_processed += component._process(t, x, reset)
                 if not component.is_processed:
                     self._processed = False
+
+        return n_processed
+
+class MainModel(Submodel):
+    def process(self, t, x):
+        n_processed = self._process(t, x, True)
+        while True:
+            n = self._process(t, x, False)
+            if n == 0:
+                break
+            n_processed += n
 
         return n_processed

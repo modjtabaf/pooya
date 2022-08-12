@@ -13,9 +13,9 @@ import numpy as np
 import blocks
 import solver
 
-class SSModel(blocks.Submodel):
+class SSModel(blocks.MainModel):
     def __init__(self):
-        blocks.Submodel.__init__(self, 'mass_spring')
+        blocks.MainModel.__init__(self, 'mass_spring')
 
         self.xd_ = blocks.Integrator(0.1, 'xd', 'xdd', 'xd')
         self.x_  = blocks.Integrator(0.0, 'x', 'xd', 'x')
@@ -24,16 +24,6 @@ class SSModel(blocks.Submodel):
         self.add_component(self.xd_)
         self.add_component(self.x_)
         self.add_component(self.gain_)
-
-    def process(self, t, x):
-        n_processed = self._process(t, x, True)
-        while True:
-            n = self._process(t, x, False)
-            if n == 0:
-                break
-            n_processed += n
-
-        return n_processed
 
 if __name__ == '__main__':
     model = SSModel()

@@ -13,18 +13,41 @@ import numpy as np
 import blocks
 import solver
 
-class SSModel(blocks.MainModel):
+class Pendulum(blocks.Submodel):
     def __init__(self):
-        blocks.MainModel.__init__(self, 'pendulum')
-
+        sig_tau = 'tau'
+        sig_tau_scaled = 'tau_scaled'
         sig_phi = 'phi'
         sig_dphi = 'dphi'
         sig_d2phi = 'd2phi'
         sig_sin_phi = 'sin_phi'
-        sig_tau = 'tau'
-        sig_tau_scaled = 'tau_scaled'
 
+        blocks.Submodel.__init__(self, 'pendulum', [sig_tau], [sig_phi])
+
+        self._gain1   = blocks.MulDiv('', '*///', [sig_tau, 'm', 'l', 'l'],
+                                      sig_tau_scaled)
+        self._add     = blocks.AddSub('', '+-', [sig_tau_scaled, 'rhs'], sig_d2phi)
         self._dphi    = blocks.Integrator(np.pi/4, 'dphi', sig_d2phi, sig_dphi)
+        self._phi     = blocks.Integrator(0.0, 'phi', sig_dphi, sig_phi)
+        self._sin_phi = blocks.Sin('sin(phi)', sig_phi, sig_sin_phi)
+        self._gain2   = blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],
+                                      'rhs')
+
+        self.add_component(self._gain1)
+        self.add_component(self._add)
+        self.add_component(self._dphi)
+        self.add_component(self._phi)
+        self.add_component(self._sin_phi)
+        self.add_component(self._gain2)
+
+class SSModel(blocks.MainModel):
+    def __init__(self):
+        blocks.MainModel.__init__(self, 'pendulum_with_pid')
+
+        sig_phi = 'phi'
+        sig_tau = 'tau'
+
+        self._pendulum = Pendulum(np.pi/4, 'dphi', sig_d2phi, sig_dphi)
         self._phi     = blocks.Integrator(0.0, 'phi', sig_dphi, sig_phi)
         self._sin_phi = blocks.Sin('sin(phi)', sig_phi, sig_sin_phi)
         self._gain1   = blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],

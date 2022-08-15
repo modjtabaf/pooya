@@ -25,7 +25,8 @@ class Base:
         self._outports = outports
 
         for port in outports:
-            assert port not in self._all_outports, 'Port ' + port + ' already exists it outports: {}'.format(self._all_outports)
+            assert port not in self._all_outports, 'Port ' + port \
+                + ' already exists in outports: {}'.format(self._all_outports)
             self._all_outports.append(port)
 
         for port in inports:
@@ -56,7 +57,7 @@ class Base:
                     return 0
 
             for outport in self._outports:
-                assert outport not in x
+                assert outport not in x, self._name + ': outport ' + outport + ' already exists in outports'
 
             input_values = [x[inport] for inport in self._inports]
             output_values = self.activation_function(t, input_values)
@@ -65,6 +66,13 @@ class Base:
 
             self._processed = True
             return 1
+
+class Signal(Base):
+    def __init__(self, name, inport, outport):
+        Base.__init__(self, name, [inport], [outport])
+
+    def activation_function(self, t, x):
+        return [x[0]]
 
 class Const(Base):
     def __init__(self, v, name, outport):
@@ -136,9 +144,52 @@ class Integrator(Base):
         self._processed = True
         return 1 if reset else 0
 
+# it is still unclear how to deal with states when using this numerical integrator
+class NumericalIntegrator(Base):
+    def __init__(self, y0, name, inport, outport):
+        Base.__init__(self, name, [inport], [outport])
+        self._t = None
+        self._x = None
+        self._y = y0
+    
+    def update_state(self, t, states):
+        self._t = t
+        self._x = states[self._inports[0]]
+        self._y = states[self._outports[0]]
+
+    def activation_function(self, t, x):
+        if self._t is None:
+            self._t = t
+            self._x = x[0]
+            return [self._y]
+        else:
+            return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
+
+class Derivative(Base):
+    def __init__(self, y0, name, inport, outport):
+        Base.__init__(self, name, [inport], [outport])
+        self._t = None
+        self._x = None
+        self._y = y0
+
+    def update_state(self, t, states):
+        self._t = t
+        self._x = states[self._inports[0]]
+        self._y = states[self._outports[0]]
+
+    def activation_function(self, t, x):
+        if self._t is None:
+            self._t = t
+            self._x = x[0]
+            return [self._y]
+        elif self._t == t:
+            return [self._y]
+        else:
+            return [(x[0] - self._x)/(t - self._t)]
+
 class Submodel(Base):
     def __init__(self, name, inports=[], outports=[]):
-        Base.__init__(self, name, inports, outports)
+        Base.__init__(self, name) #, inports, outports)
         self._components = []
 
     def add_component(self, component):
@@ -152,6 +203,9 @@ class Submodel(Base):
     def update_state(self, t, states):
         for component in self._components:
             component.update_state(t, states)
+
+    def make_signal_name(self, name):
+        return self._name + '.' + name
 
     def _process(self, t, x, reset):
         if reset:

@@ -14,16 +14,17 @@ import blocks
 import solver
 
 class Pendulum(blocks.Submodel):
-    def __init__(self):
-        sig_tau = 'tau'
-        sig_tau_scaled = 'tau_scaled'
-        sig_phi = 'phi'
-        sig_dphi = 'dphi'
-        sig_d2phi = 'd2phi'
-        sig_sin_phi = 'sin_phi'
+    def __init__(self, inport, outport):
+        blocks.Submodel.__init__(self, 'pendulum', [inport], [outport])
 
-        blocks.Submodel.__init__(self, 'pendulum', [sig_tau], [sig_phi])
+        sig_tau        = self.make_signal_name('tau')
+        sig_tau_scaled = self.make_signal_name('tau_scaled')
+        sig_phi        = self.make_signal_name('phi')
+        sig_dphi       = self.make_signal_name('dphi')
+        sig_d2phi      = self.make_signal_name('d2phi')
+        sig_sin_phi    = self.make_signal_name('sin_phi')
 
+        self._insig   = blocks.Signal('in', inport, sig_tau)
         self._gain1   = blocks.MulDiv('', '*///', [sig_tau, 'm', 'l', 'l'],
                                       sig_tau_scaled)
         self._add     = blocks.AddSub('', '+-', [sig_tau_scaled, 'rhs'], sig_d2phi)
@@ -32,13 +33,36 @@ class Pendulum(blocks.Submodel):
         self._sin_phi = blocks.Sin('sin(phi)', sig_phi, sig_sin_phi)
         self._gain2   = blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],
                                       'rhs')
+        self._outsig  = blocks.Signal('out', sig_phi, outport)
 
+        self.add_component(self._insig)
         self.add_component(self._gain1)
         self.add_component(self._add)
         self.add_component(self._dphi)
         self.add_component(self._phi)
         self.add_component(self._sin_phi)
         self.add_component(self._gain2)
+        self.add_component(self._outsig)
+
+class PID(blocks.Submodel):
+    def __init__(self, Kp, Ki, Kd, x0, inport, outport):
+        blocks.Submodel.__init__(self, 'PID', [inport], [outport])
+        self._Kp = Kp
+        self._Ki = Ki
+        self._Kd = Kd
+
+        sig_xKp  = self.make_signal_name('xKp')
+        sig_ix   = self.make_signal_name('ix')
+        sig_ixKi = self.make_signal_name('ixKi')
+        sig_dx   = self.make_signal_name('dx')
+        sig_dxKd = self.make_signal_name('dxKd')
+
+        self.add_component(blocks.Gain(Kp, 'Kp', inport, sig_xKp))
+        self.add_component(blocks.Integrator(x0, 'ix', inport, sig_ix))
+        self.add_component(blocks.Gain(Ki, 'Ki', sig_ix, sig_ixKi))
+        self.add_component(blocks.Derivative(x0, 'dx', inport, sig_dx))
+        self.add_component(blocks.Gain(Kd, 'Kd', sig_dx, sig_dxKd))
+        self.add_component(blocks.AddSub('', '+++', [sig_xKp, sig_ixKi, sig_dxKd], outport))
 
 class SSModel(blocks.MainModel):
     def __init__(self):
@@ -46,22 +70,11 @@ class SSModel(blocks.MainModel):
 
         sig_phi = 'phi'
         sig_tau = 'tau'
+        sig_err = 'err'
 
-        self._pendulum = Pendulum(np.pi/4, 'dphi', sig_d2phi, sig_dphi)
-        self._phi     = blocks.Integrator(0.0, 'phi', sig_dphi, sig_phi)
-        self._sin_phi = blocks.Sin('sin(phi)', sig_phi, sig_sin_phi)
-        self._gain1   = blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],
-                                      'rhs')
-        self._gain2   = blocks.MulDiv('', '*///', [sig_tau, 'm', 'l', 'l'],
-                                      sig_tau_scaled)
-        self._add     = blocks.AddSub('', '+-', [sig_tau_scaled, 'rhs'], sig_d2phi)
-
-        self.add_component(self._dphi)
-        self.add_component(self._phi)
-        self.add_component(self._sin_phi)
-        self.add_component(self._gain1)
-        self.add_component(self._gain2)
-        self.add_component(self._add)
+        self.add_component(blocks.AddSub('', '+-', ['des_phi', sig_phi], sig_err))
+        self.add_component(PID(40.0, 20.0, 0.05, 0.0, sig_err, sig_tau))
+        self.add_component(Pendulum(sig_tau, sig_phi))
 
 if __name__ == '__main__':
     model = SSModel()
@@ -72,7 +85,7 @@ if __name__ == '__main__':
         'm': 0.2,
         'l': 0.1,
         'g': 9.81,
-        'tau': 0.13,
+        'des_phi': np.pi/4,
         }
 
     state_names = [state._state for state in states]
@@ -88,8 +101,27 @@ if __name__ == '__main__':
     x = np.array([state._value for state in states])
     t = 0.0
     
-    History = {state._state: [state._value] for state in states}
-    History['t'] = [t]
+    history = {}
+
+    def update_history(t, x):
+        y = {k: v for k, v in zip(state_names, x)}
+        for p, v in parameters.items():
+            y[p] = v
+        model.process(t, y)
+        model.update_state(t, y)
+
+        if not history:
+            history['t'] = []
+            for k in y.keys():
+                if k not in parameters:
+                    history[k] = []
+
+        history['t'].append(t)
+        for k, v in y.items():
+            if k not in parameters:
+                history[k].append(v)
+
+    update_history(t, x)
 
     k = 0
     while t < 5.0:
@@ -98,15 +130,13 @@ if __name__ == '__main__':
         t = k*h
         print(k, t)
 
-        model.update_state(t, {k: v for k, v in zip(state_names, x)})
+        update_history(t, x)
 
-        History['t'].append(t)
-        for name, value in zip(state_names, x):
-            History[name].append(value)
-
-    plt.figure()    
-    plt.subplot(2, 1, 1); plt.plot(History['t'], History['phi'])
+    plt.figure()
+    plt.subplot(3, 1, 1); plt.plot(history['t'], history['pendulum.phi'])
     plt.ylabel('phi')
-    plt.subplot(2, 1, 2); plt.plot(History['t'], History['dphi'])
-    plt.xlabel('t'); plt.ylabel('dphi')
+    plt.subplot(3, 1, 2); plt.plot(history['t'], history['pendulum.dphi'])
+    plt.ylabel('dphi')
+    plt.subplot(3, 1, 3); plt.plot(history['t'], history['tau'])
+    plt.xlabel('t'); plt.ylabel('tau')
     plt.show()

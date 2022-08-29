@@ -15,17 +15,14 @@ import solver
 
 class SSModel(blocks.MainModel):
     def __init__(self):
-        blocks.MainModel.__init__(self, 'mass_spring')
+        blocks.MainModel.__init__(self, '')
 
-        self.xd_ = blocks.Integrator(0.1, 'xd', 'xdd', 'xd')
-        self.x_  = blocks.Integrator(0.0, 'x', 'xd', 'x')
-        self.gain_ = blocks.Gain(-1.0/1.0, '-k/m', 'x', 'xdd')
+        with self:
+            blocks.Integrator(0.1, 'xd', 'xdd', 'xd')
+            blocks.Integrator(0.0, 'x', 'xd', 'x')
+            blocks.Gain(-1.0/1.0, '-k/m', 'x', 'xdd')
 
-        self.add_component(self.xd_)
-        self.add_component(self.x_)
-        self.add_component(self.gain_)
-
-if __name__ == '__main__':
+def main():
     model = SSModel()
     states = []
     model.get_states(states)
@@ -40,19 +37,41 @@ if __name__ == '__main__':
     h = 0.01    
     x = np.array([state._value for state in states])
     t = 0.0
-    X = [x]
-    T = [t]
+
+    history = {}
+
+    def update_history(t, x):
+        y = {k: v for k, v in zip(state_names, x)}
+        model.process(t, y)
+        model.update_state(t, y)
+
+        if not history:
+            history['t'] = []
+            for k in y.keys():
+                history[k] = []
+
+        history['t'].append(t)
+        for k, v in y.items():
+            history[k].append(v)
+
+    update_history(t, x)
+
     k = 0
-    while t < 50.0:
+    while t < 5.0:
         x = solver.rk4(solver_callback, t0=t, x0=x, h=h)
         k += 1
         t = k*h
         print(k, t)
 
-        model.update_states(t, {k: v for k, v in zip(state_names, x)})
+        update_history(t, x)
 
-        X.append(x)
-        T.append(t)
-
-    plt.plot(T, [x[1] for x in X])
+    T = history['t']
+    plt.figure()
+    plt.subplot(2, 1, 1); plt.plot(T, history['x']) # 'phi' works too
+    plt.ylabel('x')
+    plt.subplot(2, 1, 2); plt.plot(T, history['xd'])
+    plt.ylabel('xd')
     plt.show()
+
+if __name__ == '__main__':
+    main()

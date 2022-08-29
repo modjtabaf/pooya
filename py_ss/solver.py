@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug 12 11:42:06 2022
-
-@author: fathi
-"""
 
 def rk4(callback, t0, x0, h):
     k1 = h*callback(t0, x0)

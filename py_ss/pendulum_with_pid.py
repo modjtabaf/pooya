@@ -33,7 +33,8 @@ class Pendulum(blocks.Submodel):
         self.add_component(blocks.AddSub('', '+-', [sig_tau_scaled, 'rhs'], sig_d2phi))
         self.add_component(blocks.Integrator(np.pi/4, 'dphi', sig_d2phi, sig_dphi))
         self.add_component(blocks.Integrator(0.0, 'phi', sig_dphi, sig_phi))
-        self.add_component(blocks.Sin('sin(phi)', sig_phi, sig_sin_phi))
+        self.add_component(blocks.Function('sin(phi)', sig_phi, sig_sin_phi,
+                                           act_func=(lambda t, x: np.sin(x))))
         self.add_component(blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],
                                       'rhs'))
         self.add_component(blocks.Signal('out', sig_phi, outport))

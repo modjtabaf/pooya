@@ -48,23 +48,16 @@ class ComputeFrontWheelAngleRightLeftPinpoint(blocks.Submodel):
 
 class Steering_System(blocks.MainModel):
     def __init__(self):
-        super().__init__('Steering_System', ['front_wheel_angle_Rq'], [
-            'front_wheel_angle',
-            'front_wheel_angle_rate',
-            'front_wheel_angle_neg',
-            'front_wheel_angle_rate_neg',
-            'AxFr_front_right',
-            'AxFr_front_left',
-            ])
+        super().__init__('Steering_System', ['front_wheel_angle_Rq'], 'steering')
 
         # nodes
         ad_DsrdFtWhlAngl_Rq_VD     = N(self._inports[0])
-        front_wheel_angle          = N(self._outports[0])
-        front_wheel_angle_rate     = N(self._outports[1])
-        front_wheel_angle_neg      = N(self._outports[2])
-        front_wheel_angle_rate_neg = N(self._outports[3])
-        AxFr_front_right           = N(self._outports[4])
-        AxFr_front_left            = N(self._outports[5])
+        front_wheel_angle          = N('front_wheel_angle')
+        front_wheel_angle_rate     = N('front_wheel_angle_rate')
+        front_wheel_angle_neg      = N('front_wheel_angle_neg')
+        front_wheel_angle_rate_neg = N('front_wheel_angle_rate_neg')
+        AxFr_front_right           = N('AxFr_front_right')
+        AxFr_front_left            = N('AxFr_front_left')
 
         # blocks
         with self:
@@ -77,7 +70,15 @@ class Steering_System(blocks.MainModel):
             blocks.Gain('Gain2', -1, front_wheel_angle_rate, front_wheel_angle_rate_neg)
             ComputeFrontWheelAngleRightLeftPinpoint(front_wheel_angle, [
                 AxFr_front_right, AxFr_front_left])
-
+            blocks.Bus('bus', [
+                front_wheel_angle,
+                front_wheel_angle_rate,
+                front_wheel_angle_neg,
+                front_wheel_angle_rate_neg,
+                AxFr_front_right,
+                AxFr_front_left,
+                ], 'steering')
+    
 def main():
     parameters = {
         'tractor_wheelbase': 5.8325,
@@ -89,8 +90,8 @@ def main():
         }
 
     dat = loadmat('/home/fathi/torc/git/playground/py_ss/data/matlab.mat')
-    front_wheel_angle_Rq_t = dat['front_wheel_angle_Rq_t'].ravel()#[:5000]
-    front_wheel_angle_Rq_data = dat['front_wheel_angle_Rq_data'].ravel()#[:5000]
+    front_wheel_angle_Rq_t = dat['front_wheel_angle_Rq_t'].ravel()[:5000]
+    front_wheel_angle_Rq_data = dat['front_wheel_angle_Rq_data'].ravel()[:5000]
 
     mat_time = dat['simpletruck_analyzer_results'][0, 0][0]
     mean_front_wheel_steering_angle = dat['simpletruck_analyzer_results'][0, 0][29][0, 0][0]

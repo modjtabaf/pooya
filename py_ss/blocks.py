@@ -99,6 +99,13 @@ class Signal(Base):
     def activation_function(self, t, x):
         return [x[0]]
 
+class Bus(Base):
+    def __init__(self, name, inports, outport):
+        super().__init__(name, inports, [outport])
+
+    def activation_function(self, t, x):
+        return [x]
+
 class InitialValue(Base):
     def __init__(self, name, inport, outport):
         super().__init__(name, [inport], [outport])
@@ -119,7 +126,7 @@ class Const(Base):
         return [self._v]
 
 class Gain(Base):
-    def __init__(self, k, name, inport, outport):
+    def __init__(self, name, k, inport, outport):
         super().__init__(name, [inport], [outport])
         self._k = k
 
@@ -228,7 +235,7 @@ class Delay(Base):
         return [x[2]]
 
 class Derivative(Base):
-    def __init__(self, y0, name, inport, outport):
+    def __init__(self, name, inport, outport, y0=0):
         super().__init__(name, [inport], [outport])
         self._t = None
         self._x = None
@@ -368,13 +375,13 @@ class MainModel(Submodel):
         
             if not self._history:
                 self._history['t'] = []
-                for k in y.keys():
-                    if k not in parameters:
+                for k, v in y.items():
+                    if k not in parameters and isinstance(v, (int, float)):
                         self._history[k] = []
         
             self._history['t'].append(t)
             for k, v in y.items():
-                if k not in parameters:
+                if k not in parameters and isinstance(v, (int, float)):
                     self._history[k].append(v)
         
         inputs = inputs_cb(t, x)

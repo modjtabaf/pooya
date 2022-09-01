@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import string
+import random
 
 import solver
 
@@ -35,8 +37,10 @@ class Base:
                 self._name = parent._name + '.' + self._name
             parent.add_component(self)
 
-            iports = [parent.make_signal_name(p) for p in iports]
-            oports = [parent.make_signal_name(p) for p in oports]
+            iports = [parent.auto_signal_name(False) if p == '-'
+                      else parent.make_signal_name(p) for p in iports]
+            oports = [parent.auto_signal_name(True) if p == '-'
+                      else parent.make_signal_name(p) for p in oports]
 
         self._iports = iports
         self._oports = oports
@@ -93,21 +97,21 @@ class Base:
         return cb(self)
 
 class Signal(Base):
-    def __init__(self, name, iport, oport):
+    def __init__(self, name, iport='-', oport='-'):
         super().__init__(name, [iport], [oport])
 
     def activation_function(self, t, x):
         return [x[0]]
 
 class Bus(Base):
-    def __init__(self, name, iports, oport):
+    def __init__(self, name, iports, oport='-'):
         super().__init__(name, iports, [oport])
 
     def activation_function(self, t, x):
         return [x]
 
 class InitialValue(Base):
-    def __init__(self, name, iport, oport):
+    def __init__(self, name, iport='-', oport='-'):
         super().__init__(name, [iport], [oport])
         self._value = None
 
@@ -118,7 +122,7 @@ class InitialValue(Base):
         return [self._value]
 
 class Const(Base):
-    def __init__(self, name, v, oport):
+    def __init__(self, name, v, oport='-'):
         super().__init__(name, [], [oport])
         self._v = v
 
@@ -126,7 +130,7 @@ class Const(Base):
         return [self._v]
 
 class Gain(Base):
-    def __init__(self, name, k, iport, oport):
+    def __init__(self, name, k, iport='-', oport='-'):
         super().__init__(name, [iport], [oport])
         self._k = k
 
@@ -134,7 +138,7 @@ class Gain(Base):
         return [self._k * x[0]]
 
 class Function(Base):
-    def __init__(self, name, iport, oport, act_func):
+    def __init__(self, name, act_func, iport='-', oport='-'):
         super().__init__(name, [iport], [oport])
         self._act_func = act_func
 
@@ -142,23 +146,23 @@ class Function(Base):
         return [self._act_func(t, x[0])]
 
 class AddSub(Base):
-    def __init__(self, name, signs, iports, oport, initial=0.0):
-        assert len(signs) == len(iports)
+    def __init__(self, name, operations, iports, oport='-', initial=0.0):
+        assert len(operations) == len(iports)
         super().__init__(name, iports, [oport])
-        self._signs = signs
+        self._operations = operations
         self._initial = initial
 
     def activation_function(self, t, x):
         ret = self._initial
-        for sign, v in zip(self._signs, x):
-            if sign == '+':
+        for operation, v in zip(self._operations, x):
+            if operation == '+':
                 ret += v
-            elif sign == '-':
+            elif operation == '-':
                 ret -= v
         return [ret]
 
 class MulDiv(Base):
-    def __init__(self, name, operations, iports, oport, initial=1.0):
+    def __init__(self, name, operations, iports, oport='-', initial=1.0):
         assert len(operations) == len(iports)
         super().__init__(name, iports, [oport])
         self._operations = operations
@@ -174,7 +178,7 @@ class MulDiv(Base):
         return [ret]
 
 class Integrator(Base):
-    def __init__(self, name, iport, oport, x0=0.0):
+    def __init__(self, name, iport='-', oport='-', x0=0.0):
         super().__init__(name, [iport], [oport])
         self._value = x0
 
@@ -198,7 +202,7 @@ class Integrator(Base):
 
 # it is still unclear how to deal with states when using this numerical integrator
 # class NumericalIntegrator(Base):
-#     def __init__(self, y0, name, iport, oport):
+#     def __init__(self, y0, name, iport='-', oport='-'):
 #         super().__init__(name, [iport], [oport])
 #         self._t = None
 #         self._x = None
@@ -218,7 +222,7 @@ class Integrator(Base):
 #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 class Delay(Base):
-    def __init__(self, name, iports, oport):
+    def __init__(self, name, iports, oport='-'):
         super().__init__(name, iports, [oport])
         self._t = []
         self._x = []
@@ -235,7 +239,7 @@ class Delay(Base):
         return [x[2]]
 
 class Derivative(Base):
-    def __init__(self, name, iport, oport, y0=0):
+    def __init__(self, name, iport='-', oport='-', y0=0):
         super().__init__(name, [iport], [oport])
         self._t = None
         self._x = None
@@ -265,6 +269,7 @@ class Submodel(Base):
     def __init__(self, name, iports=[], oports=[]):
         super().__init__(name, iports, oports, register_oports=False)
         self._components = []
+        self._auto_signal_name = ''
 
     def __enter__(self):
         Submodel._current_submodels.append(self)
@@ -292,8 +297,20 @@ class Submodel(Base):
         if not isinstance(name, str):
             name = str(name)
         if self._name:
-            name = self._name + '.' + name
+            if name[0] == '-':
+                name = '-' + self._name + '.' + name[1:]
+            else:
+                name = self._name + '.' + name
         return Node(name)
+
+    def auto_signal_name(self, makenew):
+        if makenew:
+            letters = string.ascii_letters
+            self._auto_signal_name = '-' + (''.join(random.choice(letters)
+                                              for i in range(10)))
+        else:
+            assert self._auto_signal_name
+        return self._auto_signal_name
 
     def _process(self, t, x, reset):
         if reset:
@@ -376,12 +393,14 @@ class MainModel(Submodel):
             if not self._history:
                 self._history['t'] = []
                 for k, v in y.items():
-                    if k not in parameters and isinstance(v, (int, float)):
+                    if k not in parameters and k[0] != '-' \
+                        and isinstance(v, (int, float)):
                         self._history[k] = []
         
             self._history['t'].append(t)
             for k, v in y.items():
-                if k not in parameters and isinstance(v, (int, float)):
+                if k not in parameters and k[0] != '-' \
+                    and isinstance(v, (int, float)):
                     self._history[k].append(v)
         
         inputs = inputs_cb(t, x)

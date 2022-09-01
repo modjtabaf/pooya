@@ -19,12 +19,12 @@ class Pendulum(blocks.Submodel):
         l = N('l')
         g = N('g')
 
+        # blocks
         with self:
-            # blocks
-            blocks.MulDiv('', '*///', [tau, m, l, l], 1)
-            blocks.AddSub('', '+-', [1, 5], 2)
-            blocks.Integrator(0.0, 'dphi', 2, dphi)
-            blocks.Integrator(0.0, 'phi', dphi, phi)
+            blocks.MulDiv('tau/ml2', '*///', [tau, m, l, l], 1)
+            blocks.AddSub('err', '+-', [1, 5], 2)
+            blocks.Integrator('dphi', 2, dphi)
+            blocks.Integrator('phi', dphi, phi)
             blocks.Function('sin(phi)', phi, 4, lambda t, x: np.sin(x))
             blocks.MulDiv('g/l', '**/', [4, g, l], 5)
 
@@ -37,9 +37,9 @@ class PI(blocks.Submodel):
 
         # blocks
         with self:
-            blocks.Gain(Kp, N('Kp'), x, 1)
-            blocks.Integrator(x0, 'ix', x, 2)
-            blocks.Gain(Ki, N('Ki'), 2, 3)
+            blocks.Gain('Kp', Kp, x, 1)
+            blocks.Integrator('ix', x, 2, x0=x0)
+            blocks.Gain('Ki', Ki, 2, 3)
             blocks.AddSub('', '++', [1, 3], N(outport))
 
 class SSModel(blocks.MainModel):

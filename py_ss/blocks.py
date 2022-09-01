@@ -174,7 +174,7 @@ class MulDiv(Base):
         return [ret]
 
 class Integrator(Base):
-    def __init__(self, x0, name, iport, oport):
+    def __init__(self, name, iport, oport, x0=0.0):
         super().__init__(name, [iport], [oport])
         self._value = x0
 

@@ -15,12 +15,12 @@ import solver
 
 class SSModel(blocks.MainModel):
     def __init__(self):
-        blocks.MainModel.__init__(self, '')
+        super().__init__('')
 
         with self:
-            blocks.Integrator(0.1, 'xd', 'xdd', 'xd')
-            blocks.Integrator(0.0, 'x', 'xd', 'x')
-            blocks.Gain(-1.0/1.0, '-k/m', 'x', 'xdd')
+            blocks.Integrator('xd', 'xdd', 'xd', x0=0.1)
+            blocks.Integrator('x', 'xd', 'x')
+            blocks.Gain('-k/m', -1.0/1.0, 'x', 'xdd')
 
 def main():
     model = SSModel()
@@ -43,7 +43,7 @@ def main():
     def update_history(t, x):
         y = {k: v for k, v in zip(state_names, x)}
         model.process(t, y)
-        model.update_state(t, y)
+        model.step(t, y)
 
         if not history:
             history['t'] = []
@@ -67,7 +67,7 @@ def main():
 
     T = history['t']
     plt.figure()
-    plt.subplot(2, 1, 1); plt.plot(T, history['x']) # 'phi' works too
+    plt.subplot(2, 1, 1); plt.plot(T, history['x'])
     plt.ylabel('x')
     plt.subplot(2, 1, 2); plt.plot(T, history['xd'])
     plt.ylabel('xd')

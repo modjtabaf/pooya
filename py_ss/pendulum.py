@@ -17,9 +17,9 @@ class SSModel(blocks.MainModel):
     def __init__(self):
         blocks.MainModel.__init__(self, 'pendulum')
 
-        self._dphi    = blocks.Integrator(np.pi/4, 'dphi', 'd2phi', 'dphi')
-        self._phi     = blocks.Integrator(0.0, 'phi', 'dphi', 'phi')
-        self._sin_phi = blocks.Sin('sin(phi)', 'phi', 'sin_phi')
+        self._dphi    = blocks.Integrator('dphi', 'd2phi', 'dphi')
+        self._phi     = blocks.Integrator('phi', 'dphi', 'phi', x0=np.pi/4)
+        self._sin_phi = blocks.Function('sin(phi)', 'phi', 'sin_phi', lambda t, x: np.sin(x))
         self._gain    = blocks.MulDiv('-g/l', '**/', ['sin_phi', 'g', 'l'],
                                       'd2phi', initial=-1)
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         t = k*h
         print(k, t)
 
-        model.update_state(t, {k: v for k, v in zip(state_names, x)})
+        model.step(t, {k: v for k, v in zip(state_names, x)})
 
         X.append(x)
         T.append(t)

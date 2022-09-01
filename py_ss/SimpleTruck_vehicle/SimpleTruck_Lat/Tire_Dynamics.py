@@ -8,47 +8,54 @@ from scipy.io import loadmat
 import blocks
 from blocks import N as N
 
-class PT(blocks.Submodel):
+class AvoidZeroVelocity(blocks.Base):
     def __init__(self, iports, oport):
-        super().__init__('PT', iports, [oport])
+        super().__init__('avoid_zero_velocity', iports, [oport])
+
+    def activation_function(self, t, x):
+        v_lon, v_trans = x
+        
+        v1 = np.abs(v_lon)
+        if v1 >= v_trans:
+            v_lon_abs_limited = v1
+        else:
+            v_lon_abs_limited = 2*v_trans/(3 - (v_lon/v_trans)**2)
+
+        return [v_lon_abs_limited]
+    
+class RollingResistance(blocks.Submodel):
+    def __init__(self, iports, oports):
+        super().__init__('Rolling_Resistance', iports, oports)
 
         # nodes
-        y_in  = N(self._iports[0])
-        tau   = N(self._iports[1])
-        y0    = N(self._iports[2])
-        y_out = N(self._oports[0])
+        v_tire_lon = N(self._iports[0])
+        Fz         = N(self._iports[1])
+        R_dyn      = N(self._iports[2])
+        T_roll     = N(self._oports[0])
+        F_roll     = N(self._oports[1])
 
         # blocks
         with self:
-            blocks.AddSub('AddSub', '+-', [y_in, y_out], 1)
-            blocks.MulDiv('MulDiv', '*/', [1, tau], 2)
-            blocks.Integrator(0.0, '', 2, 3)
-            blocks.InitialValue('IV', y0, 4)
-            blocks.AddSub('AddSub', '++', [3, 4], y_out)
+            # setting the sign of F_roll with some down time
+            blocks.Function('', v_tire_lon, 1, lambda t, x: (np.abs(x) > 1e-2)*np.sign(x))
 
-class ComputeFrontWheelAngleRightLeftPinpoint(blocks.Submodel):
-    def __init__(self, iport, oports):
-        super().__init__('ComputeFrontWheelAngleRightLeftPinpoint', [iport], oports)
+            blocks.MulDiv('', '***', [Fz, N('tire_roll_resist'), 1], 2)
 
-        # nodes
-        front_wheel_angle       = N(iport)
-        front_wheel_angle_right = N(oports[0])
-        front_wheel_angle_left  = N(oports[1])
-        tractor_wheelbase = N('tractor_wheelbase')
-        tractor_Width = N('tractor_Width')
+            # calculation of the time constant which depends on velocity and relaxation length
+            blocks.Const('', 0.69, 3)
+            AvoidZeroVelocity([v_tire_lon, 3], 4)
+            blocks.MulDiv('', '*/', [4, N('tire_relax_length')], 5)
 
-        # blocks
-        with self:
-            blocks.MulDiv('MulDiv1', '*/', [tractor_wheelbase, front_wheel_angle], 1)
-            blocks.AddSub('AddSub1', '++', [1, tractor_Width], 2)
-            blocks.MulDiv('MulDiv2', '*/', [tractor_wheelbase, 2], front_wheel_angle_right)
-            blocks.Gain('Gain', 0.5, tractor_Width, 3)
-            blocks.AddSub('AddSub2', '+-', [1, 3], 4)
-            blocks.MulDiv('MulDiv3', '*/', [tractor_wheelbase, 4], front_wheel_angle_left)
+            # low-pass filter
+            blocks.AddSub('', '+-', [2, F_roll], 6)
+            blocks.MulDiv('', '*/', [6, 5], 7)
+            blocks.Integrator('', 7, F_roll)
 
-class SteeringSystem(blocks.MainModel):
-    def __init__(self, iport, oport):
-        super().__init__('Steering_System', [iport], [oport])
+            blocks.MulDiv('', '**', [R_dyn, F_roll], T_roll)
+
+class TireDynamics(blocks.MainModel):
+    def __init__(self):
+        super().__init__('Tire_Dynamics', ['axle_torque', 'kinematics'], ['tire_info'])
 
         # nodes
         ad_DsrdFtWhlAngl_Rq_VD     = N(self._iports[0])
@@ -79,7 +86,7 @@ class SteeringSystem(blocks.MainModel):
                 AxFr_front_right,
                 AxFr_front_left,
                 ], steering_info)
-
+    
 def main():
     parameters = {
         'tractor_wheelbase': 5.8325,
@@ -109,10 +116,9 @@ def main():
         
         return inputs
 
-    history = SteeringSystem('front_wheel_angle_Rq', 'steering_info').run(
-        parameters=parameters, inputs_cb=inputs_cb,
-        t0=front_wheel_angle_Rq_t[0],
-        t_end=front_wheel_angle_Rq_t[-1])
+    history = Steering_System().run(parameters=parameters, inputs_cb=inputs_cb,
+                                    t0=front_wheel_angle_Rq_t[0],
+                                    t_end=front_wheel_angle_Rq_t[-1])
 
     print(history.keys())
     plt.figure()

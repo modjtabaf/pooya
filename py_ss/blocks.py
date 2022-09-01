@@ -21,10 +21,10 @@ def N(s):
     return s if isinstance(s, Node) else Node(s)
 
 class Base:
-    _all_inports = []
-    _all_outports = []
+    _all_iports = []
+    _all_oports = []
     
-    def __init__(self, name, inports=[], outports=[], **kwargs):
+    def __init__(self, name, iports=[], oports=[], **kwargs):
         parent = Submodel.current()
 
         self._name = name
@@ -35,21 +35,21 @@ class Base:
                 self._name = parent._name + '.' + self._name
             parent.add_component(self)
 
-            inports = [parent.make_signal_name(p) for p in inports]
-            outports = [parent.make_signal_name(p) for p in outports]
+            iports = [parent.make_signal_name(p) for p in iports]
+            oports = [parent.make_signal_name(p) for p in oports]
 
-        self._inports = inports
-        self._outports = outports
+        self._iports = iports
+        self._oports = oports
 
-        if kwargs.get('register_outports', True):
-            for port in outports:
-                assert port not in self._all_outports, 'Port ' + port \
-                    + ' already exists in outports: {}'.format(self._all_outports)
-                self._all_outports.append(port)
+        if kwargs.get('register_oports', True):
+            for port in oports:
+                assert port not in self._all_oports, 'Port ' + port \
+                    + ' already exists in oports: {}'.format(self._all_oports)
+                self._all_oports.append(port)
 
-        for port in inports:
-            if port not in self._all_inports:
-                self._all_inports.append(port)
+        for port in iports:
+            if port not in self._all_iports:
+                self._all_iports.append(port)
 
     def get_states(self, states):
         return
@@ -58,7 +58,7 @@ class Base:
         return
 
     def get_ports(self):
-        return self._inports, self._outports
+        return self._iports, self._oports
 
     @property
     def is_processed(self): return self._processed
@@ -70,81 +70,81 @@ class Base:
         if self._processed:
             return 0
         else:
-            for inport in self._inports:
-                if inport not in x:
+            for iport in self._iports:
+                if iport not in x:
                     return 0
 
-            for outport in self._outports:
-                assert outport not in x, self._name + ': outport ' \
-                    + outport + ' already exists in outports'
+            for oport in self._oports:
+                assert oport not in x, self._name + ': oport ' \
+                    + oport + ' already exists in oports'
 
-            input_values = [x[inport] for inport in self._inports]
+            input_values = [x[iport] for iport in self._iports]
             output_values = self.activation_function(t, input_values)
-            for outport, output_value in zip(self._outports, output_values):
-                x[outport] = output_value
+            for oport, output_value in zip(self._oports, output_values):
+                x[oport] = output_value
 
             self._processed = True
             return 1
 
     def __repr__(self):
-        return str(type(self)) + ":" + self._name + ", inports:" + str(self._inports) + ", outports:" + str(self._outports)
+        return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
 
     def traverse(self, cb):
         return cb(self)
 
 class Signal(Base):
-    def __init__(self, name, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport, oport):
+        super().__init__(name, [iport], [oport])
 
     def activation_function(self, t, x):
         return [x[0]]
 
 class Bus(Base):
-    def __init__(self, name, inports, outport):
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, iports, oport):
+        super().__init__(name, iports, [oport])
 
     def activation_function(self, t, x):
         return [x]
 
 class InitialValue(Base):
-    def __init__(self, name, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport, oport):
+        super().__init__(name, [iport], [oport])
         self._value = None
 
     def activation_function(self, t, x):
         if self._value is None:
             self._value = x[0]
-            self._inports = []
+            self._iports = []
         return [self._value]
 
 class Const(Base):
-    def __init__(self, v, name, outport):
-        super().__init__(name, [], [outport])
+    def __init__(self, name, v, oport):
+        super().__init__(name, [], [oport])
         self._v = v
 
     def activation_function(self, t, x):
         return [self._v]
 
 class Gain(Base):
-    def __init__(self, name, k, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, k, iport, oport):
+        super().__init__(name, [iport], [oport])
         self._k = k
 
     def activation_function(self, t, x):
         return [self._k * x[0]]
 
 class Function(Base):
-    def __init__(self, name, inport, outport, act_func):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport, oport, act_func):
+        super().__init__(name, [iport], [oport])
         self._act_func = act_func
 
     def activation_function(self, t, x):
         return [self._act_func(t, x[0])]
 
 class AddSub(Base):
-    def __init__(self, name, signs, inports, outport, initial=0.0):
-        assert len(signs) == len(inports)
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, signs, iports, oport, initial=0.0):
+        assert len(signs) == len(iports)
+        super().__init__(name, iports, [oport])
         self._signs = signs
         self._initial = initial
 
@@ -158,9 +158,9 @@ class AddSub(Base):
         return [ret]
 
 class MulDiv(Base):
-    def __init__(self, name, operations, inports, outport, initial=1.0):
-        assert len(operations) == len(inports)
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, operations, iports, oport, initial=1.0):
+        assert len(operations) == len(iports)
+        super().__init__(name, iports, [oport])
         self._operations = operations
         self._initial = initial
 
@@ -174,15 +174,15 @@ class MulDiv(Base):
         return [ret]
 
 class Integrator(Base):
-    def __init__(self, x0, name, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, x0, name, iport, oport):
+        super().__init__(name, [iport], [oport])
         self._value = x0
 
     def get_states(self, states):
-        states.append(State(self._outports[0], self._inports[0], self._value))
+        states.append(State(self._oports[0], self._iports[0], self._value))
 
     def step(self, t, states):
-        self._value = states[self._outports[0]]
+        self._value = states[self._oports[0]]
 
     def _process(self, t, x, reset):
         # self._processed = True
@@ -193,21 +193,21 @@ class Integrator(Base):
         if self._processed:
             return 0
         else:
-            self._processed = self._inports[0] in x
+            self._processed = self._iports[0] in x
             return 1 if self._processed else 0
 
 # it is still unclear how to deal with states when using this numerical integrator
 # class NumericalIntegrator(Base):
-#     def __init__(self, y0, name, inport, outport):
-#         super().__init__(name, [inport], [outport])
+#     def __init__(self, y0, name, iport, oport):
+#         super().__init__(name, [iport], [oport])
 #         self._t = None
 #         self._x = None
 #         self._y = y0
     
 #     def step(self, t, states):
 #         self._t = t
-#         self._x = states[self._inports[0]]
-#         self._y = states[self._outports[0]]
+#         self._x = states[self._iports[0]]
+#         self._y = states[self._oports[0]]
 
 #     def activation_function(self, t, x):
 #         if self._t is None:
@@ -218,15 +218,15 @@ class Integrator(Base):
 #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 class Delay(Base):
-    def __init__(self, name, inports, outport):
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, iports, oport):
+        super().__init__(name, iports, [oport])
         self._t = []
         self._x = []
 
     def step(self, t, states):
         assert (not self._t) or (t > self._t[-1])
         self._t.append(t)
-        self._x.append(states[self._inports[0]])
+        self._x.append(states[self._iports[0]])
 
     def activation_function(self, t, x):
         if self._t:
@@ -235,16 +235,16 @@ class Delay(Base):
         return [x[2]]
 
 class Derivative(Base):
-    def __init__(self, name, inport, outport, y0=0):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport, oport, y0=0):
+        super().__init__(name, [iport], [oport])
         self._t = None
         self._x = None
         self._y = y0
 
     def step(self, t, states):
         self._t = t
-        self._x = states[self._inports[0]]
-        self._y = states[self._outports[0]]
+        self._x = states[self._iports[0]]
+        self._y = states[self._oports[0]]
 
     def activation_function(self, t, x):
         if self._t is None:
@@ -262,8 +262,8 @@ class Submodel(Base):
     def current():
         return Submodel._current_submodels[-1] if len(Submodel._current_submodels) > 0 else None
 
-    def __init__(self, name, inports=[], outports=[]):
-        super().__init__(name, inports, outports, register_outports=False)
+    def __init__(self, name, iports=[], oports=[]):
+        super().__init__(name, iports, oports, register_oports=False)
         self._components = []
 
     def __enter__(self):
@@ -316,8 +316,8 @@ class Submodel(Base):
         return super().traverse(cb)
 
 class MainModel(Submodel):
-    def __init__(self, name, inports=[], outports=[]):
-        super().__init__(name, inports, outports)
+    def __init__(self, name, iports=[], oports=[]):
+        super().__init__(name, iports, oports)
         self._parameters = {}
         self._inputs = {}
         self._history = {}
@@ -339,15 +339,15 @@ class MainModel(Submodel):
         if unprocessed:
             for c in unprocessed:
                 print('-', c._name)
-                for p in c._inports:
+                for p in c._iports:
                     print('  - i: ', '*' if p not in x else ' ', p)
-                for p in c._outports:
+                for p in c._oports:
                     print('  - o: ', '*' if p not in x else ' ', p)
 
         return n_processed
 
-    def run(self, parameters, inputs_cb, h=0.01, t0=0.0, t_end=1.0,
-            integrator=solver.rk4):
+    def run(self, inputs_cb=lambda t, x: {}, parameters={},
+            h=0.01, t0=0.0, t_end=1.0, integrator=solver.rk4):
         states = []
         self.get_states(states)
         state_names = [state._state for state in states]

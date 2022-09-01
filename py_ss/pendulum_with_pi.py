@@ -12,9 +12,9 @@ class Pendulum(blocks.Submodel):
         super().__init__('pendulum', [inport], [outport])
 
         # nodes
-        phi  = N(outport)
-        dphi = 'dphi'
         tau  = N(inport)
+        dphi = N('dphi')
+        phi  = N(outport)
         m = N('m')
         l = N('l')
         g = N('g')
@@ -23,7 +23,7 @@ class Pendulum(blocks.Submodel):
             # blocks
             blocks.MulDiv('', '*///', [tau, m, l, l], 1)
             blocks.AddSub('', '+-', [1, 5], 2)
-            blocks.Integrator(np.pi/4, 'dphi', 2, dphi)
+            blocks.Integrator(0.0, 'dphi', 2, dphi)
             blocks.Integrator(0.0, 'phi', dphi, phi)
             blocks.Function('sin(phi)', phi, 4, lambda t, x: np.sin(x))
             blocks.MulDiv('g/l', '**/', [4, g, l], 5)
@@ -46,13 +46,6 @@ class SSModel(blocks.MainModel):
     def __init__(self):
         super().__init__('')
 
-        self._parameters = {
-            'm': 0.2,
-            'l': 0.1,
-            'g': 9.81,
-            'des_phi': np.pi/4,
-            }
-
         # nodes
         phi = N('phi')
         tau = N('tau')
@@ -65,13 +58,20 @@ class SSModel(blocks.MainModel):
             Pendulum(tau, phi)
 
 def main():
-    history = SSModel().run(t_end=5.0)
+    parameters = {
+        'm': 0.2,
+        'l': 0.1,
+        'g': 9.81,
+        'des_phi': np.pi/4,
+        }
+
+    history = SSModel().run(parameters=parameters, t_end=5.0)
 
     T = history['t']
     plt.figure()
     plt.subplot(3, 1, 1); plt.plot(T, history['phi'])
     plt.ylabel('phi')
-    plt.subplot(3, 1, 2); plt.plot(T, history['pendulum.dphi'])
+    plt.subplot(3, 1, 2); plt.plot(T, history['dphi'])
     plt.ylabel('dphi')
     plt.subplot(3, 1, 3); plt.plot(T, history['tau'])
     plt.xlabel('t'); plt.ylabel('tau')

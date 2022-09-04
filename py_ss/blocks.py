@@ -112,8 +112,45 @@ class Signal(Base):
         return [x[0]]
 
 class Bus(Base):
+    class BusValue(list):
+        def __init__(self, bus, *args):
+            super().__init__(args)
+            self._parent = bus
+
+    def __init__(self, name, iports='-', oport='-'):
+        super().__init__(name, iports, oport)
+        
+        if not isinstance(iports, (list, tuple)):
+            iports = [iports]
+        self._raw_names = [n for n in iports]
+
     def activation_function(self, t, x):
-        return [x]
+        ret = [Bus.BusValue(self, *x)]
+        return ret
+
+class BusSelector(Base):
+    def __init__(self, name, iport='-', signals=[], oports=[]):
+        if not isinstance(oports, (list, tuple)):
+            oports = [oports]
+        if not isinstance(signals, (list, tuple)):
+            signals = [signals]
+            
+        if not signals:
+            signals = oports
+        elif not oports:
+            oports = signals
+        assert len(signals) == len(oports)
+
+        super().__init__(name, iport, oports)
+        self._signals = signals
+        self._indices = None
+
+    def activation_function(self, t, x):
+        bus_values = x[0]
+        if self._indices is None:
+            self._indices = [bus_values._parent._raw_names.index(s)
+                             for s in self._signals]
+        return [bus_values[k] for k in self._indices]
 
 class InitialValue(Base):
     def __init__(self, name, iport='-', oport='-'):

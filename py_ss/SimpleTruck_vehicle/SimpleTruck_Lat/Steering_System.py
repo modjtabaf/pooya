@@ -150,9 +150,9 @@ def main():
 
     print(history.keys())
     plt.figure()
-    plt.plot(history['t'], history['front_wheel_angle'], 'b-')
+    plt.plot(history['t'], history['Steering_System.front_wheel_angle'], 'b-')
     plt.plot(mat_time, mean_front_wheel_steering_angle, 'r:')
-    plt.xlabel('t'); plt.ylabel('front whee angle')
+    plt.xlabel('t'); plt.ylabel('front wheel angle')
     plt.show()
     
 if __name__ == '__main__':

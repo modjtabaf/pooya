@@ -20,13 +20,22 @@ class Node(str):
     pass
 
 def N(s):
-    return s if isinstance(s, Node) else Node(s)
+    if isinstance(s, Node):
+        return s
+    if isinstance(s, list):
+        return [N(a) for a in s]
+    return Node(s)
 
 class Base:
     _all_iports = []
     _all_oports = []
     
     def __init__(self, name, iports=[], oports=[], **kwargs):
+        if not isinstance(iports, (list, tuple)):
+            iports = [iports]
+        if not isinstance(oports, (list, tuple)):
+            oports = [oports]
+
         parent = Submodel.current()
 
         self._name = name
@@ -78,6 +87,8 @@ class Base:
                 if iport not in x:
                     return 0
 
+            self._known_values = x
+
             for oport in self._oports:
                 assert oport not in x, self._name + ': oport ' \
                     + oport + ' already exists in oports'
@@ -97,22 +108,16 @@ class Base:
         return cb(self)
 
 class Signal(Base):
-    def __init__(self, name, iport='-', oport='-'):
-        super().__init__(name, [iport], [oport])
-
     def activation_function(self, t, x):
         return [x[0]]
 
 class Bus(Base):
-    def __init__(self, name, iports, oport='-'):
-        super().__init__(name, iports, [oport])
-
     def activation_function(self, t, x):
         return [x]
 
 class InitialValue(Base):
     def __init__(self, name, iport='-', oport='-'):
-        super().__init__(name, [iport], [oport])
+        super().__init__(name, iport, oport)
         self._value = None
 
     def activation_function(self, t, x):
@@ -122,16 +127,16 @@ class InitialValue(Base):
         return [self._value]
 
 class Const(Base):
-    def __init__(self, name, v, oport='-'):
-        super().__init__(name, [], [oport])
-        self._v = v
+    def __init__(self, name, value, oport='-'):
+        super().__init__(name, iports=[], oports=oport)
+        self._value = value
 
     def activation_function(self, t, x):
-        return [self._v]
+        return [self._value]
 
 class Gain(Base):
     def __init__(self, name, k, iport='-', oport='-'):
-        super().__init__(name, [iport], [oport])
+        super().__init__(name, iports=iport, oports=oport)
         self._k = k
 
     def activation_function(self, t, x):
@@ -139,16 +144,24 @@ class Gain(Base):
 
 class Function(Base):
     def __init__(self, name, act_func, iport='-', oport='-'):
-        super().__init__(name, [iport], [oport])
+        super().__init__(name, iports=iport, oports=oport)
         self._act_func = act_func
 
     def activation_function(self, t, x):
         return [self._act_func(t, x[0])]
 
+class MIMOFunction(Base):
+    def __init__(self, name, act_func, iports, oports):
+        super().__init__(name, iports=iports, oports=oports)
+        self._act_func = act_func
+
+    def activation_function(self, t, x):
+        return self._act_func(t, x)
+
 class AddSub(Base):
     def __init__(self, name, operations, iports, oport='-', initial=0.0):
         assert len(operations) == len(iports)
-        super().__init__(name, iports, [oport])
+        super().__init__(name, iports=iports, oports=oport)
         self._operations = operations
         self._initial = initial
 
@@ -164,7 +177,7 @@ class AddSub(Base):
 class MulDiv(Base):
     def __init__(self, name, operations, iports, oport='-', initial=1.0):
         assert len(operations) == len(iports)
-        super().__init__(name, iports, [oport])
+        super().__init__(name, iports=iports, oports=oport)
         self._operations = operations
         self._initial = initial
 
@@ -179,7 +192,7 @@ class MulDiv(Base):
 
 class Integrator(Base):
     def __init__(self, name, iport='-', oport='-', x0=0.0):
-        super().__init__(name, [iport], [oport])
+        super().__init__(name, iports=iport, oports=oport)
         self._value = x0
 
     def get_states(self, states):
@@ -223,7 +236,7 @@ class Integrator(Base):
 
 class Delay(Base):
     def __init__(self, name, iports, oport='-'):
-        super().__init__(name, iports, [oport])
+        super().__init__(name, iports=iports, oports=oport)
         self._t = []
         self._x = []
 
@@ -238,9 +251,36 @@ class Delay(Base):
             return [np.interp(t - delay, self._t, self._x)]
         return [x[2]]
 
+class Memory(Base):
+    def __init__(self, name, iport='-', oport='-', ic=0.0):
+        super().__init__(name, iports=iport, oports=oport)
+        self._value = ic
+
+    def step(self, t, states):
+        self._value = states[self._iports[0]]
+
+    # Memory can be implemented either by defining the following activation function
+    #   (which is more straightforward) or through overloading the _process method
+    #   which is more efficient since it deosn't rely on the input signal being known.
+    #   Both approaches are supposed to lead to the exact same results.
+
+    # def activation_function(self, t, x):
+    #     return [self._value]
+
+    def _process(self, t, x, reset):
+        if reset:
+            self._processed = False
+
+        if self._processed:
+            return 0
+        else:
+            x[self._oports] = self._value
+            self._processed = True
+            return 1
+
 class Derivative(Base):
     def __init__(self, name, iport='-', oport='-', y0=0):
-        super().__init__(name, [iport], [oport])
+        super().__init__(name, iports=iport, oports=oport)
         self._t = None
         self._x = None
         self._y = y0
@@ -267,7 +307,7 @@ class Submodel(Base):
         return Submodel._current_submodels[-1] if len(Submodel._current_submodels) > 0 else None
 
     def __init__(self, name, iports=[], oports=[]):
-        super().__init__(name, iports, oports, register_oports=False)
+        super().__init__(name, iports=iports, oports=oports, register_oports=False)
         self._components = []
         self._auto_signal_name = ''
 
@@ -334,9 +374,7 @@ class Submodel(Base):
 
 class MainModel(Submodel):
     def __init__(self, name, iports=[], oports=[]):
-        super().__init__(name, iports, oports)
-        self._parameters = {}
-        self._inputs = {}
+        super().__init__(name, iports=iports, oports=oports)
         self._history = {}
 
     def process(self, t, x):
@@ -354,6 +392,7 @@ class MainModel(Submodel):
             return True
         self.traverse(find_unprocessed_cb)
         if unprocessed:
+            print('-- unprocessed blocks detected:')
             for c in unprocessed:
                 print('-', c._name)
                 for p in c._iports:

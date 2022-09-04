@@ -53,7 +53,10 @@ class SSModel(blocks.MainModel):
 
         # blocks
         with self:
-            blocks.AddSub('', operations='+-', iports=[N('des_phi'), phi], oport=err)
+            blocks.AddSub('',
+                          operations='+-',
+                          iports=[N('des_phi'), phi],
+                          oport=err)
             PI(Kp=40.0, Ki=20.0, iport=err, oport=tau)
             Pendulum(iport=tau, oport=phi)
 

@@ -28,44 +28,191 @@ class RollingResistance(blocks.Submodel):
         super().__init__('Rolling_Resistance', iports, oports)
 
         # nodes
-        v_tire_lon = N(self._iports[0])
-        Fz         = N(self._iports[1])
-        R_dyn      = N(self._iports[2])
-        T_roll     = N(self._oports[0])
-        F_roll     = N(self._oports[1])
+        v_tire_lon, Fz, R_dyn = N(self._iports)
+        T_roll, F_roll = N(self._oports)
 
         # blocks
         with self:
             # setting the sign of F_roll with some down time
-            blocks.Function('', v_tire_lon, 1, lambda t, x: (np.abs(x) > 1e-2)*np.sign(x))
+            blocks.Function('',
+                            act_func=lambda t, x: (np.abs(x) > 1e-2)*np.sign(x),
+                            iport=v_tire_lon)
 
-            blocks.MulDiv('', '***', [Fz, N('tire_roll_resist'), 1], 2)
+            blocks.MulDiv('',
+                          operations='***',
+                          iports=[Fz, N('tire_roll_resist'), '-'],
+                          oport=-1)
 
             # calculation of the time constant which depends on velocity and relaxation length
-            blocks.Const('', 0.69, 3)
-            AvoidZeroVelocity([v_tire_lon, 3], 4)
-            blocks.MulDiv('', '*/', [4, N('tire_relax_length')], 5)
+            blocks.Const('', value=0.69)
+            AvoidZeroVelocity(iports=[v_tire_lon, '-'])
+            blocks.MulDiv('',
+                          operations='*/',
+                          iports=['-', N('tire_relax_length')],
+                          oport=-2)
 
             # low-pass filter
-            blocks.AddSub('', '+-', [2, F_roll], 6)
-            blocks.MulDiv('', '*/', [6, 5], 7)
-            blocks.Integrator('', 7, F_roll)
+            blocks.AddSub('',
+                          operations='+-',
+                          iports=[-1, F_roll])
+            blocks.MulDiv('',
+                          operations='*/',
+                          iports=['-', -2])
+            blocks.Integrator('', oport=F_roll)
 
-            blocks.MulDiv('', '**', [R_dyn, F_roll], T_roll)
+            blocks.MulDiv('',
+                          operations='**',
+                          iports=[R_dyn, F_roll],
+                          oport=T_roll)
+
+class VerticalTireDynamics(blocks.Base):
+    def __init__(self, oports):
+        super().__init__('vertical_tire_dynamics', [], oports)
+
+    def activation_function(self, t, x):
+        R_eff = self._known_values['tire_static_radius']
+
+        axle_load_empty = self._known_values['axle_load_empty']
+        axle_load_full  = self._known_values['axle_load_full']
+        payload_factor  = self._known_values['payload_factor']
+        Fz = 9.81*(axle_load_empty + payload_factor*(axle_load_full - axle_load_empty))
+
+        return [R_eff, Fz]
+    
+class TireLonNoSlip(blocks.Submodel):
+    def __init__(self, iports, oports):
+        super().__init__('tire_lon_no_slip', iports, oports)
+
+        # nodes
+        v_tire_lon, axle_torque, Fz, R_eff = N(self._iports)
+        Fx, Omega, kappa = N(self._oports)
+        Omega_prev = '-Omega_prev'
+
+        # blocks
+        with self:
+            blocks.Memory('', iport=Omega, oport=Omega_prev)
+
+            def Fx_act_func(t, x):
+                axle_torque, R_eff, Omega_prev = x
+                # Fx = axle_torque*float((axle_torque > 0) or (Omega_prev > 0))/R_eff
+                Fx = axle_torque/R_eff if ((axle_torque > 0) or (Omega_prev > 0)) else 0.0
+                return [Fx]
+
+            blocks.MIMOFunction('',
+                            act_func=Fx_act_func,
+                            iports=[axle_torque, R_eff, Omega_prev],
+                            oports=[Fx])
+
+            def act_func2(t, x):
+                R_eff, v_tire_lon = x
+                Omega = v_tire_lon/R_eff
+                kappa = Omega*0.0
+                return [Omega, kappa]
+
+            blocks.MIMOFunction('',
+                            act_func=act_func2,
+                            iports=[R_eff, v_tire_lon],
+                            oports=[Omega, kappa])
+
+class TireLatBasicSideSlip(blocks.Submodel):
+    def __init__(self, iports, oports):
+        super().__init__('tire_lat_basic_side_slip', iports, oports)
+
+        # nodes
+        v_tire_lon, v_tire_lat, Fz = N(self._iports)
+        Fy, alpha = N(self._oports)
+        tire_relax_length = N('tire_relax_length')
+
+        # blocks
+        with self:
+            blocks.Const('v_trans', value=10.0)
+
+            AvoidZeroVelocity(iports=[v_tire_lon, '-'])
+
+            blocks.MulDiv('',
+                          operations='*/*',
+                          iports=['-', tire_relax_length, alpha],
+                          oport=-1,
+                          initial=-1.0)
+
+            blocks.MulDiv('',
+                          operations='/*',
+                          iports=[tire_relax_length, v_tire_lat],
+                          oport=-2)
+
+            blocks.AddSub('',
+                          operations='++',
+                          iports=[-1, -2])
+
+            blocks.Integrator('', oport=alpha)
+
+            blocks.MulDiv('',
+                          operations='***',
+                          iports=[N('n_tires'), N('tire_c_lapha'), alpha],
+                          oport=Fy,
+                          initial=-1.0)
+
+class WheelSpeed(blocks.Submodel):
+    def __init__(self, iports, oports):
+        super().__init__('wheel_speed', iports, oports)
+
+        # nodes
+        x, rz = N(self._iports)
+        FL_x, FR_x, RL_x, RR_x = N(self._oports)
+
+        # blocks
+        with self:
+            def wheel_speed_FL(t, x):
+                yaw, vel_x = x
+                tractor_Width = self._known_values['tractor_Width']
+                WheelSpeed_FL_x = vel_x - 0.5*tractor_Width*yaw
+                return [WheelSpeed_FL_x]
+
+            blocks.MIMOFunction('wheel_speed_FL',
+                            act_func=wheel_speed_FL,
+                            iports=[rz, x],
+                            oports=[FL_x])
+
+            def wheel_speed_FR(t, x):
+                yaw, vel_x = x
+                tractor_Width = self._known_values['tractor_Width']
+                WheelSpeed_FR_x = vel_x + 0.5*tractor_Width*yaw
+                return [WheelSpeed_FR_x]
+
+            blocks.MIMOFunction('wheel_speed_FR',
+                            act_func=wheel_speed_FR,
+                            iports=[rz, x],
+                            oports=[FR_x])
+
+            def wheel_speed_RL(t, x):
+                yaw, vel_x = x
+                tractor_Width = self._known_values['tractor_Width']
+                WheelSpeed_RL_x = vel_x - 0.5*tractor_Width*yaw
+                return [WheelSpeed_RL_x]
+
+            blocks.MIMOFunction('wheel_speed_RL',
+                            act_func=wheel_speed_RL,
+                            iports=[rz, x],
+                            oports=[RL_x])
+
+            def wheel_speed_RR(t, x):
+                yaw, vel_x = x
+                tractor_Width = self._known_values['tractor_Width']
+                WheelSpeed_RR_x = vel_x + 0.5*tractor_Width*yaw
+                return [WheelSpeed_RR_x]
+
+            blocks.MIMOFunction('wheel_speed_RR',
+                            act_func=wheel_speed_RR,
+                            iports=[rz, x],
+                            oports=[RR_x])
 
 class TireDynamics(blocks.MainModel):
     def __init__(self):
         super().__init__('Tire_Dynamics', ['axle_torque', 'kinematics'], ['tire_info'])
 
         # nodes
-        ad_DsrdFtWhlAngl_Rq_VD     = N(self._iports[0])
-        front_wheel_angle          = N('front_wheel_angle')
-        front_wheel_angle_rate     = N('front_wheel_angle_rate')
-        front_wheel_angle_neg      = N('front_wheel_angle_neg')
-        front_wheel_angle_rate_neg = N('front_wheel_angle_rate_neg')
-        AxFr_front_right           = N('AxFr_front_right')
-        AxFr_front_left            = N('AxFr_front_left')
-        steering_info              = N(self._oports[0])
+        axle_torque, kinematics = N(self._iports)
+        tire_info, = N(self._oports)
 
         # blocks
         with self:

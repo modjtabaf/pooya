@@ -63,7 +63,7 @@ class ComputeFrontWheelAngleRightLeftPinpoint(blocks.Submodel):
                           iports=[tractor_wheelbase, '-'],
                           oport=front_wheel_angle_left)
 
-class SteeringSystem(blocks.MainModel):
+class SteeringSystem(blocks.Submodel):
     def __init__(self, iport, oport):
         super().__init__('Steering_System', [iport], [oport])
 
@@ -122,7 +122,7 @@ def main():
         }
 
     dat = loadmat('/home/fathi/torc/git/playground/py_ss/data/matlab.mat')
-    front_wheel_angle_Rq_t = dat['front_wheel_angle_Rq_t'].ravel()[:500]
+    front_wheel_angle_Rq_t = dat['front_wheel_angle_Rq_t'].ravel()[:5000]
     front_wheel_angle_Rq_data = dat['front_wheel_angle_Rq_data'].ravel()[:len(front_wheel_angle_Rq_t)]
 
     mat_time = dat['simpletruck_analyzer_results'][0, 0][0]
@@ -143,10 +143,9 @@ def main():
     steering_system = SteeringSystem(
         iport='front_wheel_angle_Rq',
         oport='steering_info')
-    history = steering_system.run(
-        parameters=parameters, inputs_cb=inputs_cb,
-        t0=front_wheel_angle_Rq_t[0],
-        t_end=front_wheel_angle_Rq_t[-1])
+    history = blocks.run_helper(
+        steering_system, parameters=parameters, inputs_cb=inputs_cb,
+        t0=front_wheel_angle_Rq_t[0], t_end=front_wheel_angle_Rq_t[-1])
 
     print(history.keys())
     plt.figure()

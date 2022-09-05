@@ -42,7 +42,7 @@ class PI(blocks.Submodel):
             blocks.Gain('Ki', k=Ki)
             blocks.AddSub('', operations='++', iports=[-1, '-'], oport=N(oport))
 
-class SSModel(blocks.MainModel):
+class SSModel(blocks.Submodel):
     def __init__(self):
         super().__init__('')
 
@@ -68,7 +68,8 @@ def main():
         'des_phi': np.pi/4,
         }
 
-    history = SSModel().run(parameters=parameters, t_end=5.0)
+    model = SSModel()
+    history = blocks.run_helper(model, parameters=parameters, t_end=5.0)
 
     print(history.keys())
     T = history['t']

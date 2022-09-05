@@ -9,7 +9,7 @@ import blocks
 from blocks import N as N
 
 class AvoidZeroVelocity(blocks.Base):
-    def __init__(self, iports, oport):
+    def __init__(self, iports, oport='-'):
         super().__init__('avoid_zero_velocity', iports, [oport])
 
     def activation_function(self, t, x):
@@ -206,7 +206,7 @@ class WheelSpeed(blocks.Submodel):
                             iports=[rz, x],
                             oports=[RR_x])
 
-class TireDynamics(blocks.MainModel):
+class TireDynamics(blocks.Submodel):
     def __init__(self, iports, oport):
         super().__init__('Tire_Dynamics', iports, oport)
 
@@ -217,39 +217,58 @@ class TireDynamics(blocks.MainModel):
         Fz = 'Fz'
         T_roll = 'T_roll'
         F_roll = 'F_roll'
+        v_tire_lon = 'v_tire_lon'
+        Fx = 'Fx'
+        Omega = 'Omega'
+        kappa = 'kappa'
+        tire_lon = 'tire_lon'
+        tire_lat = 'tire_lat'
+        Fy = 'Fy'
+        alpha = 'alpha'
+        front_wss_left_x = 'front_wss_left_x'
+        front_wss_right_x = 'front_wss_right_x'
+        rear_wss_right_x = 'rear_wss_right_x'
+        rear_wss_left_x = 'rear_wss_left_x'
 
         # blocks
         with self:
             VerticalTireDynamics(oports=[R_eff, Fz])
             
-            RollingResistance(iports=[kinematics, Fz, R_eff], oports=[T_roll, F_roll])
+            blocks.BusSelector('', iport=kinematics, oports=v_tire_lon)
+            RollingResistance(iports=[v_tire_lon, Fz, R_eff], oports=[T_roll, F_roll])
 
-            # blocks.MulDiv('MulDiv', '**', [ad_DsrdFtWhlAngl_Rq_VD, N('front_wheel_ang_gain')], 1)
-            # blocks.Delay('Delay', [1, N('front_wheel_ang_delay'), N('front_wheel_ang_init_value')], 2)
-            # blocks.Function('Function', N('front_wheel_ang_t_const'), 3, lambda t, x: max(0.001, min(10, x)))
-            # PT([2, 3, 2], front_wheel_angle)
-            # blocks.Derivative('Derivative', front_wheel_angle, front_wheel_angle_rate)
-            # blocks.Gain('Gain1', -1, front_wheel_angle, front_wheel_angle_neg)
-            # blocks.Gain('Gain2', -1, front_wheel_angle_rate, front_wheel_angle_rate_neg)
-            # ComputeFrontWheelAngleRightLeftPinpoint(front_wheel_angle, [
-            #     AxFr_front_right, AxFr_front_left])
-            # blocks.Bus('bus', [
-            #     front_wheel_angle,
-            #     front_wheel_angle_rate,
-            #     front_wheel_angle_neg,
-            #     front_wheel_angle_rate_neg,
-            #     AxFr_front_right,
-            #     AxFr_front_left,
-            #     ], steering_info)
-    
+            blocks.AddSub('', operations='+-', iports=[axle_torque, T_roll])
+            TireLonNoSlip(
+                iports=[v_tire_lon, '-', Fz, R_eff],
+                oports=[Fx, Omega, kappa])
+
+            blocks.BusSelector('', iport=kinematics, oports=[tire_lon, tire_lat])
+            TireLatBasicSideSlip(iports=[tire_lon, tire_lat, Fz],
+                                 oports=[Fy, alpha])
+
+            blocks.BusSelector('', iport=kinematics, signals=['vehicle', 'trailer'])
+            blocks.BusSelector('', iport='vehicle', signal='x', oports='vx')
+            blocks.BusSelector('', iport='trailer', signal='rz', oports='rz')
+            WheelSpeed(
+                iports=['vx', 'rz'],
+                oports=[
+                    front_wss_left_x,
+                    front_wss_right_x,
+                    rear_wss_right_x,
+                    rear_wss_left_x])
+
+            blocks.Bus('bus', [
+                Fx, Fy, Fz, Omega, R_eff, kappa, alpha, T_roll, F_roll,
+                front_wss_left_x, front_wss_right_x,
+                rear_wss_right_x, rear_wss_left_x],
+                tire_info)
+
 def main():
     parameters = {
-        'tractor_wheelbase': 5.8325,
-        'tractor_Width': 2.5,
-        'front_wheel_ang_t_const': 0.1,
-        'front_wheel_ang_delay': 0.02,
-        'front_wheel_ang_gain': 1.0,
-        'front_wheel_ang_init_value': 0.0,
+        'axle_load_empty':    np.array([5060., 6000., 4110.]),
+        'axle_load_full':     np.array([5240., 13280., 16280.]),
+        'payload_factor':     1.0,
+        'tire_static_radius': np.array([0.475, 0.51, 0.475]),
         }
 
     dat = loadmat('/home/fathi/torc/git/playground/py_ss/data/matlab.mat')
@@ -274,10 +293,10 @@ def main():
     tire_dynamics = TireDynamics(
         iports=['axle_torque', 'kinematics'],
         oport='tire_info')
-    history = tire_dynamics.run(
+    history = blocks.run_helper(tire_dynamics,
         parameters=parameters, inputs_cb=inputs_cb,
         t0=front_wheel_angle_Rq_t[0],
-        t_end=front_wheel_angle_Rq_t[-1])
+        t_end=0.011)#front_wheel_angle_Rq_t[-1])
 
     print(history.keys())
     plt.figure()

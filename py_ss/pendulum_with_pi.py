@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import blocks
+import blocks, helper
 from blocks import N as N
 
 class Pendulum(blocks.Submodel):
@@ -69,12 +69,13 @@ def main():
         }
 
     model = SSModel()
-    history = blocks.run_helper(model, parameters=parameters, t_end=5.0)
+    history = helper.run(model, T=np.arange(0.0, 5.0, 0.01),
+                         parameters=parameters)
 
     print(history.keys())
     T = history['t']
     plt.figure()
-    plt.subplot(3, 1, 1); plt.plot(T, history['phi'])
+    plt.subplot(3, 1, 1); plt.plot(T, np.rad2deg(history['phi']))
     plt.ylabel('phi')
     plt.subplot(3, 1, 2); plt.plot(T, history['dphi'])
     plt.ylabel('dphi')

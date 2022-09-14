@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io import loadmat
 
-import blocks
+import blocks, helper
 from blocks import N as N
 
 class PT(blocks.Submodel):
@@ -143,9 +143,9 @@ def main():
     steering_system = SteeringSystem(
         iport='front_wheel_angle_Rq',
         oport='steering_info')
-    history = blocks.run_helper(
-        steering_system, parameters=parameters, inputs_cb=inputs_cb,
-        t0=front_wheel_angle_Rq_t[0], t_end=front_wheel_angle_Rq_t[-1])
+    history = helper.run(
+        steering_system, T=front_wheel_angle_Rq_t,
+        parameters=parameters, inputs_cb=inputs_cb)
 
     print(history.keys())
     plt.figure()

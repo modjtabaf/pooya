@@ -5,8 +5,6 @@ import numpy as np
 import string
 import random
 
-import solver
-
 class State:
     def __init__(self, state, deriv, value):
         self._state = state
@@ -116,6 +114,9 @@ class Bus(Base):
         def __init__(self, names, *args):
             super().__init__(args)
             self._names = names
+        
+        def __repr__(self):
+            return 'BusValues(' + super().__repr__() + ')'
 
     def __init__(self, name, iports='-', oport='-'):
         super().__init__(name, iports, oport)
@@ -393,6 +394,8 @@ class Submodel(Base):
         if reset:
             self._processed = False
 
+        self._known_values = x
+
         n_processed = 0
         if not self._processed:
             self._processed = True
@@ -408,96 +411,3 @@ class Submodel(Base):
             if not component.traverse(cb):
                 return False
         return super().traverse(cb)
-
-def run_helper(model, inputs_cb=lambda t, x: {}, parameters={},
-               h=0.01, t0=0.0, t_end=1.0, stepper=solver.rk4):
-    def process(t, x):
-        n_processed = model._process(t, x, True)
-        while True:
-            n = model._process(t, x, False)
-            if n == 0:
-                break
-            n_processed += n
-
-        unprocessed = []
-        def find_unprocessed_cb(c):
-            if not c.is_processed:
-                unprocessed.append(c)
-            return True
-        model.traverse(find_unprocessed_cb)
-        if unprocessed:
-            print('-- unprocessed blocks detected:')
-            for c in unprocessed:
-                print('-', c._name)
-                for p in c._iports:
-                    print('  - i: ', '*' if p not in x else ' ', p)
-                for p in c._oports:
-                    print('  - o: ', '*' if p not in x else ' ', p)
-
-        return n_processed
-
-    history = {}
-
-    states = []
-    model.get_states(states)
-    state_names = [state._state for state in states]
-
-    def stepper_callback(t, x):
-        x = {k: v for k, v in zip(state_names, x)}
-        for p, v in parameters.items():
-            x[p] = v
-        for p, v in inputs.items():
-            x[p] = v
-        process(t, x)
-        return np.array([x[state._deriv] for state in states])
-
-    x = np.array([state._value for state in states])
-    t = t0
-
-    def update_history(t, x):
-        y = {k: v for k, v in zip(state_names, x)}
-        for p, v in parameters.items():
-            y[p] = v
-        for p, v in inputs.items():
-            y[p] = v
-        process(t, y)
-        model.step(t, y)
-    
-        if not history:
-            history['t'] = []
-            for k, v in y.items():
-                if k not in parameters and k[0] != '-' \
-                    and isinstance(v, (int, float)):
-                    history[k] = []
-    
-        history['t'].append(t)
-        for k, v in y.items():
-            if k not in parameters and k[0] != '-' \
-                and isinstance(v, (int, float)):
-                history[k].append(v)
-
-    if states:
-        inputs = inputs_cb(t, x)
-        update_history(t, x)
-    
-        k = 0
-        while t <= t_end:
-            inputs = inputs_cb(t, x)
-            x = stepper(stepper_callback, t0=t, x0=x, h=h)
-            k += 1
-            t = k*h
-            print(k, t)
-
-            update_history(t, x)
-    else:
-        k = 0
-        while t <= t_end:
-            inputs = inputs_cb(t, x)
-            x = stepper(stepper_callback, t0=t, x0=x)
-            update_history(t, x)
-
-            k += 1
-            t = k*h
-            print(k, t)
-
-    return history

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy.io import loadmat
 
 import blocks, helper
 from blocks import N as N
@@ -112,6 +110,10 @@ class SteeringSystem(blocks.Submodel):
                        oport=steering_info)
 
 def main():
+    front_wheel_angle_Rq = helper.load_mat_files_as_bus(
+        '/home/fathi/torc/git/playground/py_ss/data/processed_mat',
+        'front_wheel_angle_Rq')
+
     parameters = {
         'tractor_wheelbase': 5.8325,
         'tractor_Width': 2.5,
@@ -121,37 +123,63 @@ def main():
         'front_wheel_ang_init_value': 0.0,
         }
 
-    dat = loadmat('/home/fathi/torc/git/playground/py_ss/data/matlab.mat')
-    front_wheel_angle_Rq_t = dat['front_wheel_angle_Rq_t'].ravel()[:5000]
-    front_wheel_angle_Rq_data = dat['front_wheel_angle_Rq_data'].ravel()[:len(front_wheel_angle_Rq_t)]
-
-    mat_time = dat['simpletruck_analyzer_results'][0, 0][0]
-    mean_front_wheel_steering_angle = dat['simpletruck_analyzer_results'][0, 0][29][0, 0][0]
-    # for k in range(1, 81):
-    #     print(k, dat['simpletruck_analyzer_results'][0, 0][k][0, 0][2])
-    del dat
-
     def inputs_cb(t, x):
-        front_wheel_angle_Rq = np.interp(t, front_wheel_angle_Rq_t,
-                                         front_wheel_angle_Rq_data)
         inputs = {
-            'front_wheel_angle_Rq': front_wheel_angle_Rq,
+            'front_wheel_angle_Rq': helper.interp_bus(front_wheel_angle_Rq, t)[0],
             }
-        
+
         return inputs
+
+    slc = slice(len(front_wheel_angle_Rq['front_wheel_angle_Rq'].x))
 
     steering_system = SteeringSystem(
         iport='front_wheel_angle_Rq',
         oport='steering_info')
-    history = helper.run(
-        steering_system, T=front_wheel_angle_Rq_t,
+    history = helper.run(steering_system,
+        T=front_wheel_angle_Rq['front_wheel_angle_Rq'].x[slc],
         parameters=parameters, inputs_cb=inputs_cb)
 
+    steering_info = helper.load_mat_files_as_bus(
+        '/home/fathi/torc/git/playground/py_ss/data/processed_mat',
+        'steering_info')
+
     print(history.keys())
-    plt.figure()
-    plt.plot(history['t'], history['Steering_System.front_wheel_angle'], 'b-')
-    plt.plot(mat_time, mean_front_wheel_steering_angle, 'r:')
-    plt.xlabel('t'); plt.ylabel('front wheel angle')
+
+    T = history['t']
+
+    for f, mat in steering_info.items():
+        print(f)
+        if callable(mat):
+            mat = mat.y
+        mat = mat[slc]
+        
+        blk = history['Steering_System.' + f]
+        
+        plt.figure()
+        
+        if blk.ndim == 2:
+            n = blk.shape[1]
+            for k in range(n):
+                plt.subplot(n, 1, k+1)
+                if k == 0:
+                    plt.title(f)
+                blk_k = blk[:, k]
+                if mat.ndim == 2:
+                    mat_k = mat[:, k]
+                    plt.plot(T, mat_k, 'rx')
+                else:
+                    mat_k = mat[k]
+                    plt.plot(T[0], mat_k, 'rx')
+                plt.plot(T, blk_k, 'b-')
+                plt.plot(T, blk_k - mat_k, 'g-')
+                plt.grid()
+        else:
+            plt.title(f)
+            plt.plot(T, mat, 'rx')
+            plt.plot(T, blk, 'b-')
+            plt.plot(T, blk - mat, 'g-')
+            plt.grid()
+
     plt.show()
     
 if __name__ == '__main__':

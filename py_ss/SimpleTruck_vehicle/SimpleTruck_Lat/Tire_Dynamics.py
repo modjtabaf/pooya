@@ -295,7 +295,7 @@ def main():
 
         return inputs
 
-    slc = slice(100)#len(axle_torque['axle_torque'].x))
+    slc = slice(len(axle_torque['axle_torque'].x))
 
     tire_dynamics = TireDynamics(
         iports=['axle_torque', 'kinematics'],

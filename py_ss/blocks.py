@@ -273,12 +273,21 @@ class Integrator(Base):
 #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 class Delay(Base):
-    def __init__(self, name, iports, oport='-'):
+    def __init__(self, name, iports, oport='-', lifespan=10.0):
         super().__init__(name, iports=iports, oports=oport)
         self._t = []
         self._x = []
+        self._lifespan = lifespan
 
     def step(self, t, states):
+        if self._t:
+            t1 = t - self._lifespan
+            for k, v in enumerate(self._t):
+                if v >= t1:
+                    break
+            self._t = self._t[k:]
+            self._x = self._x[k:]
+
         assert (not self._t) or (t > self._t[-1])
         self._t.append(t)
         self._x.append(states[self._iports[0]])

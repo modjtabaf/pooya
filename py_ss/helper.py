@@ -122,11 +122,15 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
 
     if states:
         t = T[0]
+        k = 0
         for t1 in T[1:]:
+            if k%100 == 0:
+                print('%d: %.3f' %(k, t))
             inputs = inputs_cb(t, x)
             update_history(t, x)
             x = stepper(stepper_callback, t0=t, t1=t1, x0=x)
             t = t1
+            k += 1
         inputs = inputs_cb(t, x)
         update_history(t, x)
     else:

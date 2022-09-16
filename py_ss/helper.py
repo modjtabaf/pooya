@@ -38,12 +38,10 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
 
     states = []
     model.get_states(states)
-    # state_names = [state._state for state in states]
 
     def stepper_callback(t, x):
         y = {}
         
-        # x = {k: v for k, v in zip(state_names, x)}
         k = 0
         for state in states:
             if isinstance(state._value, np.ndarray):
@@ -62,7 +60,6 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
 
         process(t, y)
 
-        # return np.array([x[state._deriv] for state in states])
         ret = []
         for state in states:
             if isinstance(state._value, np.ndarray):
@@ -73,7 +70,6 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
         
         return ret
 
-    # x = np.array([state._value for state in states])
     x = []
     for state in states:
         if isinstance(state._value, np.ndarray):
@@ -86,7 +82,6 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
     def update_history(t, x):
         y = {}
         
-        # y = {k: v for k, v in zip(state_names, x)}
         k = 0
         for state in states:
             if isinstance(state._value, np.ndarray):

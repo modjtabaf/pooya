@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
-import solver
+import string
+import random
 
 class State:
     def __init__(self, state, deriv, value):
@@ -18,13 +18,22 @@ class Node(str):
     pass
 
 def N(s):
-    return s if isinstance(s, Node) else Node(s)
+    if isinstance(s, Node):
+        return s
+    if isinstance(s, list):
+        return [N(a) for a in s]
+    return Node(s)
 
 class Base:
-    _all_inports = []
-    _all_outports = []
+    _all_iports = []
+    _all_oports = []
     
-    def __init__(self, name, inports=[], outports=[], **kwargs):
+    def __init__(self, name, iports=[], oports=[], **kwargs):
+        if not isinstance(iports, (list, tuple)):
+            iports = [iports]
+        if not isinstance(oports, (list, tuple)):
+            oports = [oports]
+
         parent = Submodel.current()
 
         self._name = name
@@ -35,21 +44,23 @@ class Base:
                 self._name = parent._name + '.' + self._name
             parent.add_component(self)
 
-            inports = [parent.make_signal_name(p) for p in inports]
-            outports = [parent.make_signal_name(p) for p in outports]
+            iports = [parent.auto_signal_name(False) if p == '-'
+                      else parent.make_signal_name(p) for p in iports]
+            oports = [parent.auto_signal_name(True) if p == '-'
+                      else parent.make_signal_name(p) for p in oports]
 
-        self._inports = inports
-        self._outports = outports
+        self._iports = iports
+        self._oports = oports
 
-        if kwargs.get('register_outports', True):
-            for port in outports:
-                assert port not in self._all_outports, 'Port ' + port \
-                    + ' already exists in outports: {}'.format(self._all_outports)
-                self._all_outports.append(port)
+        if kwargs.get('register_oports', True):
+            for port in oports:
+                assert port not in self._all_oports, 'Port ' + port \
+                    + ' already exists in oports: {}'.format(self._all_oports)
+                self._all_oports.append(port)
 
-        for port in inports:
-            if port not in self._all_inports:
-                self._all_inports.append(port)
+        for port in iports:
+            if port not in self._all_iports:
+                self._all_iports.append(port)
 
     def get_states(self, states):
         return
@@ -58,7 +69,7 @@ class Base:
         return
 
     def get_ports(self):
-        return self._inports, self._outports
+        return self._iports, self._oports
 
     @property
     def is_processed(self): return self._processed
@@ -70,97 +81,141 @@ class Base:
         if self._processed:
             return 0
         else:
-            for inport in self._inports:
-                if inport not in x:
+            for iport in self._iports:
+                if iport not in x:
                     return 0
 
-            for outport in self._outports:
-                assert outport not in x, self._name + ': outport ' \
-                    + outport + ' already exists in outports'
+            self._known_values = x
 
-            input_values = [x[inport] for inport in self._inports]
+            for oport in self._oports:
+                assert oport not in x, self._name + ': oport ' \
+                    + oport + ' already exists in oports'
+
+            input_values = [x[iport] for iport in self._iports]
             output_values = self.activation_function(t, input_values)
-            for outport, output_value in zip(self._outports, output_values):
-                x[outport] = output_value
+            for oport, output_value in zip(self._oports, output_values):
+                x[oport] = output_value
 
             self._processed = True
             return 1
 
     def __repr__(self):
-        return str(type(self)) + ":" + self._name + ", inports:" + str(self._inports) + ", outports:" + str(self._outports)
+        return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
 
     def traverse(self, cb):
         return cb(self)
 
 class Signal(Base):
-    def __init__(self, name, inport, outport):
-        super().__init__(name, [inport], [outport])
-
     def activation_function(self, t, x):
         return [x[0]]
 
 class Bus(Base):
-    def __init__(self, name, inports, outport):
-        super().__init__(name, inports, [outport])
+    class BusValues(list):
+        def __init__(self, names, *args):
+            super().__init__(args)
+            self._names = names
+        
+        def __repr__(self):
+            return 'BusValues(' + super().__repr__() + ')'
+
+    def __init__(self, name, iports='-', oport='-'):
+        super().__init__(name, iports, oport)
+        
+        if not isinstance(iports, (list, tuple)):
+            iports = [iports]
+        self._raw_names = [n for n in iports]
 
     def activation_function(self, t, x):
-        return [x]
+        ret = [Bus.BusValues(self._raw_names, *x)]
+        return ret
+
+class BusSelector(Base):
+    def __init__(self, name, iport='-', signals=[], oports=[]):
+        if not isinstance(oports, (list, tuple)):
+            oports = [oports]
+        if not isinstance(signals, (list, tuple)):
+            signals = [signals]
+            
+        if not signals:
+            signals = oports
+        elif not oports:
+            oports = signals
+        assert len(signals) == len(oports)
+
+        super().__init__(name, iport, oports)
+        self._signals = signals
+        self._indices = None
+
+    def activation_function(self, t, x):
+        bus_values = x[0]
+        if self._indices is None:
+            self._indices = [bus_values._names.index(s)
+                             for s in self._signals]
+        return [bus_values[k] for k in self._indices]
 
 class InitialValue(Base):
-    def __init__(self, name, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport='-', oport='-'):
+        super().__init__(name, iport, oport)
         self._value = None
 
     def activation_function(self, t, x):
         if self._value is None:
             self._value = x[0]
-            self._inports = []
+            self._iports = []
         return [self._value]
 
 class Const(Base):
-    def __init__(self, v, name, outport):
-        super().__init__(name, [], [outport])
-        self._v = v
+    def __init__(self, name, value, oport='-'):
+        super().__init__(name, iports=[], oports=oport)
+        self._value = value
 
     def activation_function(self, t, x):
-        return [self._v]
+        return [self._value]
 
 class Gain(Base):
-    def __init__(self, name, k, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, k, iport='-', oport='-'):
+        super().__init__(name, iports=iport, oports=oport)
         self._k = k
 
     def activation_function(self, t, x):
         return [self._k * x[0]]
 
 class Function(Base):
-    def __init__(self, name, inport, outport, act_func):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, act_func, iport='-', oport='-'):
+        super().__init__(name, iports=iport, oports=oport)
         self._act_func = act_func
 
     def activation_function(self, t, x):
         return [self._act_func(t, x[0])]
 
+class MIMOFunction(Base):
+    def __init__(self, name, act_func, iports, oports):
+        super().__init__(name, iports=iports, oports=oports)
+        self._act_func = act_func
+
+    def activation_function(self, t, x):
+        return self._act_func(t, x)
+
 class AddSub(Base):
-    def __init__(self, name, signs, inports, outport, initial=0.0):
-        assert len(signs) == len(inports)
-        super().__init__(name, inports, [outport])
-        self._signs = signs
+    def __init__(self, name, operations, iports, oport='-', initial=0.0):
+        assert len(operations) == len(iports)
+        super().__init__(name, iports=iports, oports=oport)
+        self._operations = operations
         self._initial = initial
 
     def activation_function(self, t, x):
         ret = self._initial
-        for sign, v in zip(self._signs, x):
-            if sign == '+':
+        for operation, v in zip(self._operations, x):
+            if operation == '+':
                 ret += v
-            elif sign == '-':
+            elif operation == '-':
                 ret -= v
         return [ret]
 
 class MulDiv(Base):
-    def __init__(self, name, operations, inports, outport, initial=1.0):
-        assert len(operations) == len(inports)
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, operations, iports, oport='-', initial=1.0):
+        assert len(operations) == len(iports)
+        super().__init__(name, iports=iports, oports=oport)
         self._operations = operations
         self._initial = initial
 
@@ -174,15 +229,15 @@ class MulDiv(Base):
         return [ret]
 
 class Integrator(Base):
-    def __init__(self, x0, name, inport, outport):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport='-', oport='-', x0=0.0):
+        super().__init__(name, iports=iport, oports=oport)
         self._value = x0
 
     def get_states(self, states):
-        states.append(State(self._outports[0], self._inports[0], self._value))
+        states.append(State(self._oports[0], self._iports[0], self._value))
 
     def step(self, t, states):
-        self._value = states[self._outports[0]]
+        self._value = states[self._oports[0]]
 
     def _process(self, t, x, reset):
         # self._processed = True
@@ -193,21 +248,21 @@ class Integrator(Base):
         if self._processed:
             return 0
         else:
-            self._processed = self._inports[0] in x
+            self._processed = self._iports[0] in x
             return 1 if self._processed else 0
 
 # it is still unclear how to deal with states when using this numerical integrator
 # class NumericalIntegrator(Base):
-#     def __init__(self, y0, name, inport, outport):
-#         super().__init__(name, [inport], [outport])
+#     def __init__(self, y0, name, iport='-', oport='-'):
+#         super().__init__(name, [iport], [oport])
 #         self._t = None
 #         self._x = None
 #         self._y = y0
     
 #     def step(self, t, states):
 #         self._t = t
-#         self._x = states[self._inports[0]]
-#         self._y = states[self._outports[0]]
+#         self._x = states[self._iports[0]]
+#         self._y = states[self._oports[0]]
 
 #     def activation_function(self, t, x):
 #         if self._t is None:
@@ -218,15 +273,24 @@ class Integrator(Base):
 #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 class Delay(Base):
-    def __init__(self, name, inports, outport):
-        super().__init__(name, inports, [outport])
+    def __init__(self, name, iports, oport='-', lifespan=10.0):
+        super().__init__(name, iports=iports, oports=oport)
         self._t = []
         self._x = []
+        self._lifespan = lifespan
 
     def step(self, t, states):
+        if self._t:
+            t1 = t - self._lifespan
+            for k, v in enumerate(self._t):
+                if v >= t1:
+                    break
+            self._t = self._t[k:]
+            self._x = self._x[k:]
+
         assert (not self._t) or (t > self._t[-1])
         self._t.append(t)
-        self._x.append(states[self._inports[0]])
+        self._x.append(states[self._iports[0]])
 
     def activation_function(self, t, x):
         if self._t:
@@ -234,17 +298,44 @@ class Delay(Base):
             return [np.interp(t - delay, self._t, self._x)]
         return [x[2]]
 
+class Memory(Base):
+    def __init__(self, name, iport='-', oport='-', ic=0.0):
+        super().__init__(name, iports=iport, oports=oport)
+        self._value = ic
+
+    def step(self, t, states):
+        self._value = states[self._iports[0]]
+
+    # Memory can be implemented either by defining the following activation function
+    #   (which is more straightforward) or through overloading the _process method
+    #   which is more efficient since it deosn't rely on the input signal being known.
+    #   Both approaches are supposed to lead to the exact same results.
+
+    # def activation_function(self, t, x):
+    #     return [self._value]
+
+    def _process(self, t, x, reset):
+        if reset:
+            self._processed = False
+
+        if self._processed:
+            return 0
+        else:
+            x[self._oports[0]] = self._value
+            self._processed = True
+            return 1
+
 class Derivative(Base):
-    def __init__(self, name, inport, outport, y0=0):
-        super().__init__(name, [inport], [outport])
+    def __init__(self, name, iport='-', oport='-', y0=0):
+        super().__init__(name, iports=iport, oports=oport)
         self._t = None
         self._x = None
         self._y = y0
 
     def step(self, t, states):
         self._t = t
-        self._x = states[self._inports[0]]
-        self._y = states[self._outports[0]]
+        self._x = states[self._iports[0]]
+        self._y = states[self._oports[0]]
 
     def activation_function(self, t, x):
         if self._t is None:
@@ -262,9 +353,10 @@ class Submodel(Base):
     def current():
         return Submodel._current_submodels[-1] if len(Submodel._current_submodels) > 0 else None
 
-    def __init__(self, name, inports=[], outports=[]):
-        super().__init__(name, inports, outports, register_outports=False)
+    def __init__(self, name, iports=[], oports=[]):
+        super().__init__(name, iports=iports, oports=oports, register_oports=False)
         self._components = []
+        self._auto_signal_name = ''
 
     def __enter__(self):
         Submodel._current_submodels.append(self)
@@ -292,12 +384,26 @@ class Submodel(Base):
         if not isinstance(name, str):
             name = str(name)
         if self._name:
-            name = self._name + '.' + name
+            if name[0] == '-':
+                name = '-' + self._name + '.' + name[1:]
+            else:
+                name = self._name + '.' + name
         return Node(name)
+
+    def auto_signal_name(self, makenew):
+        if makenew:
+            letters = string.ascii_letters
+            self._auto_signal_name = '-' + (''.join(random.choice(letters)
+                                              for i in range(10)))
+        else:
+            assert self._auto_signal_name
+        return self._auto_signal_name
 
     def _process(self, t, x, reset):
         if reset:
             self._processed = False
+
+        self._known_values = x
 
         n_processed = 0
         if not self._processed:
@@ -314,87 +420,3 @@ class Submodel(Base):
             if not component.traverse(cb):
                 return False
         return super().traverse(cb)
-
-class MainModel(Submodel):
-    def __init__(self, name, inports=[], outports=[]):
-        super().__init__(name, inports, outports)
-        self._parameters = {}
-        self._inputs = {}
-        self._history = {}
-
-    def process(self, t, x):
-        n_processed = self._process(t, x, True)
-        while True:
-            n = self._process(t, x, False)
-            if n == 0:
-                break
-            n_processed += n
-
-        unprocessed = []
-        def find_unprocessed_cb(c):
-            if not c.is_processed:
-                unprocessed.append(c)
-            return True
-        self.traverse(find_unprocessed_cb)
-        if unprocessed:
-            for c in unprocessed:
-                print('-', c._name)
-                for p in c._inports:
-                    print('  - i: ', '*' if p not in x else ' ', p)
-                for p in c._outports:
-                    print('  - o: ', '*' if p not in x else ' ', p)
-
-        return n_processed
-
-    def run(self, parameters, inputs_cb, h=0.01, t0=0.0, t_end=1.0,
-            integrator=solver.rk4):
-        states = []
-        self.get_states(states)
-        state_names = [state._state for state in states]
-    
-        def solver_callback(t, x):
-            x = {k: v for k, v in zip(state_names, x)}
-            for p, v in parameters.items():
-                x[p] = v
-            for p, v in inputs.items():
-                x[p] = v
-            self.process(t, x)
-            return np.array([x[state._deriv] for state in states])
-    
-        x = np.array([state._value for state in states])
-        t = t0
-
-        def update_history(t, x):
-            y = {k: v for k, v in zip(state_names, x)}
-            for p, v in parameters.items():
-                y[p] = v
-            for p, v in inputs.items():
-                y[p] = v
-            self.process(t, y)
-            self.step(t, y)
-        
-            if not self._history:
-                self._history['t'] = []
-                for k, v in y.items():
-                    if k not in parameters and isinstance(v, (int, float)):
-                        self._history[k] = []
-        
-            self._history['t'].append(t)
-            for k, v in y.items():
-                if k not in parameters and isinstance(v, (int, float)):
-                    self._history[k].append(v)
-        
-        inputs = inputs_cb(t, x)
-        update_history(t, x)
-        
-        k = 0
-        while t <= t_end:
-            inputs = inputs_cb(t, x)
-            x = integrator(solver_callback, t0=t, x0=x, h=h)
-            k += 1
-            t = k*h
-            print(k, t)
-
-            update_history(t, x)
-
-        return self._history

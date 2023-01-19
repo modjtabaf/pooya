@@ -4,54 +4,47 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import blocks
+import blocks, helper
 from blocks import N as N
 
 class Pendulum(blocks.Submodel):
-    def __init__(self, inport, outport):
-        super().__init__('pendulum', [inport], [outport])
+    def __init__(self, iport, oport):
+        super().__init__('pendulum', [iport], [oport])
 
         # nodes
-        phi  = N(outport)
-        dphi = 'dphi'
-        tau  = N(inport)
+        tau  = N(iport)
+        dphi = N('dphi')
+        phi  = N(oport)
         m = N('m')
         l = N('l')
         g = N('g')
 
+        # blocks
         with self:
-            # blocks
-            blocks.MulDiv('', '*///', [tau, m, l, l], 1)
-            blocks.AddSub('', '+-', [1, 5], 2)
-            blocks.Integrator(np.pi/4, 'dphi', 2, dphi)
-            blocks.Integrator(0.0, 'phi', dphi, phi)
-            blocks.Function('sin(phi)', phi, 4, lambda t, x: np.sin(x))
-            blocks.MulDiv('g/l', '**/', [4, g, l], 5)
+            blocks.MulDiv('tau/ml2', operations='*///', iports=[tau, m, l, l])
+            blocks.AddSub('err', operations='+-', iports=['-', -1])
+            blocks.Integrator('dphi', oport=dphi)
+            blocks.Integrator('phi', iport=dphi, oport=phi)
+            blocks.Function('sin(phi)', act_func=lambda t, x: np.sin(x), iport=phi)
+            blocks.MulDiv('g/l', operations='**/', iports=['-', g, l], oport=-1)
 
 class PI(blocks.Submodel):
-    def __init__(self, Kp, Ki, x0, inport, outport):
-        super().__init__('PI', [inport], [outport])
+    def __init__(self, Kp, Ki, iport, oport, x0=0.0):
+        super().__init__('PI', [iport], [oport])
 
         # nodes
-        x = N(inport)
+        x = N(iport)
 
         # blocks
         with self:
-            blocks.Gain(Kp, N('Kp'), x, 1)
-            blocks.Integrator(x0, 'ix', x, 2)
-            blocks.Gain(Ki, N('Ki'), 2, 3)
-            blocks.AddSub('', '++', [1, 3], N(outport))
+            blocks.Gain('Kp', k=Kp, iport=x, oport=-1)
+            blocks.Integrator('ix', iport=x, x0=x0)
+            blocks.Gain('Ki', k=Ki)
+            blocks.AddSub('', operations='++', iports=[-1, '-'], oport=N(oport))
 
-class SSModel(blocks.MainModel):
+class SSModel(blocks.Submodel):
     def __init__(self):
         super().__init__('')
-
-        self._parameters = {
-            'm': 0.2,
-            'l': 0.1,
-            'g': 9.81,
-            'des_phi': np.pi/4,
-            }
 
         # nodes
         phi = N('phi')
@@ -60,18 +53,31 @@ class SSModel(blocks.MainModel):
 
         # blocks
         with self:
-            blocks.AddSub('', '+-', [N('des_phi'), phi], err)
-            PI(40.0, 20.0, 0.0, err, tau)
-            Pendulum(tau, phi)
+            blocks.AddSub('',
+                          operations='+-',
+                          iports=[N('des_phi'), phi],
+                          oport=err)
+            PI(Kp=40.0, Ki=20.0, iport=err, oport=tau)
+            Pendulum(iport=tau, oport=phi)
 
 def main():
-    history = SSModel().run(t_end=5.0)
+    parameters = {
+        'm': 0.2,
+        'l': 0.1,
+        'g': 9.81,
+        'des_phi': np.pi/4,
+        }
 
+    model = SSModel()
+    history = helper.run(model, T=np.arange(0.0, 5.0, 0.01),
+                         parameters=parameters)
+
+    print(history.keys())
     T = history['t']
     plt.figure()
-    plt.subplot(3, 1, 1); plt.plot(T, history['phi'])
+    plt.subplot(3, 1, 1); plt.plot(T, np.rad2deg(history['phi']))
     plt.ylabel('phi')
-    plt.subplot(3, 1, 2); plt.plot(T, history['pendulum.dphi'])
+    plt.subplot(3, 1, 2); plt.plot(T, history['dphi'])
     plt.ylabel('dphi')
     plt.subplot(3, 1, 3); plt.plot(T, history['tau'])
     plt.xlabel('t'); plt.ylabel('tau')

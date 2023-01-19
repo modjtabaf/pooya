@@ -1,72 +1,70 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-Created on Wed Aug 10 20:52:40 2022
-
-@author: fathi
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 import bisect
 import pyglet
 from pyglet import shapes
 
-import blocks
-import solver
+import blocks, helper
+from blocks import N as N
 
 class Pendulum(blocks.Submodel):
-    def __init__(self, inport, outport):
-        blocks.Submodel.__init__(self, 'pendulum', [inport], [outport])
+    def __init__(self, iport, oport):
+        super().__init__('pendulum', [iport], [oport])
 
-        sig_tau        = self.make_signal_name('tau')
-        sig_tau_scaled = self.make_signal_name('tau_scaled')
-        sig_phi        = self.make_signal_name('phi')
-        sig_dphi       = self.make_signal_name('dphi')
-        sig_d2phi      = self.make_signal_name('d2phi')
-        sig_sin_phi    = self.make_signal_name('sin_phi')
+        # nodes
+        tau  = N(iport)
+        dphi = N('dphi')
+        phi  = N(oport)
+        m = N('m')
+        l = N('l')
+        g = N('g')
 
-        self.add_component(blocks.Signal('in', inport, sig_tau))
-        self.add_component(blocks.MulDiv('', '*///', [sig_tau, 'm', 'l', 'l'],
-                                      sig_tau_scaled))
-        self.add_component(blocks.AddSub('', '+-', [sig_tau_scaled, 'rhs'], sig_d2phi))
-        self.add_component(blocks.Integrator(np.pi/4, 'dphi', sig_d2phi, sig_dphi))
-        self.add_component(blocks.Integrator(0.0, 'phi', sig_dphi, sig_phi))
-        self.add_component(blocks.Function('sin(phi)', sig_phi, sig_sin_phi,
-                                           act_func=(lambda t, x: np.sin(x))))
-        self.add_component(blocks.MulDiv('g/l', '**/', [sig_sin_phi, 'g', 'l'],
-                                      'rhs'))
-        self.add_component(blocks.Signal('out', sig_phi, outport))
+        # blocks
+        with self:
+            blocks.MulDiv('tau/ml2', operations='*///', iports=[tau, m, l, l])
+            blocks.AddSub('err', operations='+-', iports=['-', -1])
+            blocks.Integrator('dphi', oport=dphi)
+            blocks.Integrator('phi', iport=dphi, oport=phi)
+            blocks.Function('sin(phi)', act_func=lambda t, x: np.sin(x), iport=phi)
+            blocks.MulDiv('g/l', operations='**/', iports=['-', g, l], oport=-1)
 
 class PID(blocks.Submodel):
-    def __init__(self, Kp, Ki, Kd, x0, inport, outport):
-        blocks.Submodel.__init__(self, 'PID', [inport], [outport])
+    def __init__(self, Kp, Ki, Kd, iport, oport, x0=0.0):
+        super().__init__('PID', [iport], [oport])
 
-        sig_xKp  = self.make_signal_name('xKp')
-        sig_ix   = self.make_signal_name('ix')
-        sig_ixKi = self.make_signal_name('ixKi')
-        sig_dx   = self.make_signal_name('dx')
-        sig_dxKd = self.make_signal_name('dxKd')
+        # nodes
+        x = N(iport)
 
-        self.add_component(blocks.Gain(Kp, 'Kp', inport, sig_xKp))
-        self.add_component(blocks.Integrator(x0, 'ix', inport, sig_ix))
-        self.add_component(blocks.Gain(Ki, 'Ki', sig_ix, sig_ixKi))
-        self.add_component(blocks.Derivative(x0, 'dx', inport, sig_dx))
-        self.add_component(blocks.Gain(Kd, 'Kd', sig_dx, sig_dxKd))
-        self.add_component(blocks.AddSub('', '+++', [sig_xKp, sig_ixKi, sig_dxKd], outport))
+        # blocks
+        with self:
+            blocks.Gain('Kp', k=Kp, iport=x, oport=-1)
+            blocks.Integrator('ix', iport=x, x0=x0)
+            blocks.Gain('Ki', k=Ki, oport=-2)
+            blocks.Gain('Kd', k=Kd, iport=x)
+            blocks.Derivative('dx', oport=-3)
+            blocks.AddSub('', operations='+++', iports=[-1, -2, -3],
+                          oport=N(oport))
 
-class SSModel(blocks.MainModel):
+class SSModel(blocks.Submodel):
     def __init__(self):
-        blocks.MainModel.__init__(self, 'pendulum_with_pid')
+        super().__init__('')
 
-        sig_phi = 'phi'
-        sig_tau = 'tau'
-        sig_err = 'err'
+        # nodes
+        phi = N('phi')
+        tau = N('tau')
+        err = N('err')
 
-        self.add_component(blocks.AddSub('', '+-', ['des_phi', sig_phi], sig_err))
-        self.add_component(PID(40.0, 20.0, 0.05, 0.0, sig_err, sig_tau))
-        self.add_component(Pendulum(sig_tau, sig_phi))
+        # blocks
+        with self:
+            blocks.AddSub('',
+                          operations='+-',
+                          iports=[N('des_phi'), phi],
+                          oport=err)
+            PID(Kp=40.0, Ki=20.0, Kd=0.05, iport=err, oport=tau)
+            Pendulum(iport=tau, oport=phi)
 
 class DrawPendulum(pyglet.window.Window):
 
@@ -87,79 +85,36 @@ class DrawPendulum(pyglet.window.Window):
 
     def update(self, delta_time):
         """Animate the shapes"""
-        self.time += delta_time
+        self.time += 0.1*delta_time
         
         ind = bisect.bisect_left(self.history['t'], self.time)
         if ind < len(self.history['t']):
-            phi = (180/np.pi)*self.history['pendulum.phi'][ind] + 180
+            phi = (180/np.pi)*self.history['phi'][ind] + 180
             print(ind, phi)
             self.square.rotation = phi
-        
-def main():
-    model = SSModel()
-    states = []
-    model.get_states(states)
 
+def main():
     parameters = {
-        'm': 3.0,
+        'm': 0.2,
         'l': 0.1,
         'g': 9.81,
-        'des_phi': np.pi/6,
+        'des_phi': np.pi/4,
         }
-    
-    state_names = [state._state for state in states]
-    
-    def solver_callback(t, x):
-        x = {k: v for k, v in zip(state_names, x)}
-        for p, v in parameters.items():
-            x[p] = v
-        model.process(t, x)
-        return np.array([x[state._deriv] for state in states])
-    
-    h = 0.01    
-    x = np.array([state._value for state in states])
-    t = 0.0
-    
-    history = {}
-    
-    def update_history(t, x):
-        y = {k: v for k, v in zip(state_names, x)}
-        for p, v in parameters.items():
-            y[p] = v
-        model.process(t, y)
-        model.update_state(t, y)
-    
-        if not history:
-            history['t'] = []
-            for k in y.keys():
-                if k not in parameters:
-                    history[k] = []
-    
-        history['t'].append(t)
-        for k, v in y.items():
-            if k not in parameters:
-                history[k].append(v)
-    
-    update_history(t, x)
-    
-    k = 0
-    while t < 10.0:
-        x = solver.rk4(solver_callback, t0=t, x0=x, h=h)
-        k += 1
-        t = k*h
-        print(k, t)
-    
-        update_history(t, x)
-    
+
+    model = SSModel()
+    history = helper.run(model, T=np.arange(0.0, 5.0, 0.01),
+                         parameters=parameters)
+
+    T = history['t']
     plt.figure()
-    plt.subplot(3, 1, 1); plt.plot(history['t'], history['pendulum.phi'])
+    plt.subplot(3, 1, 1); plt.plot(T, np.rad2deg(history['phi']))
     plt.ylabel('phi')
-    plt.subplot(3, 1, 2); plt.plot(history['t'], history['pendulum.dphi'])
+    plt.subplot(3, 1, 2); plt.plot(T, history['dphi'])
     plt.ylabel('dphi')
-    plt.subplot(3, 1, 3); plt.plot(history['t'], history['tau'])
+    plt.subplot(3, 1, 3); plt.plot(T, history['tau'])
     plt.xlabel('t'); plt.ylabel('tau')
     plt.show()
-    
+
     vis = DrawPendulum(720, 480, history)
     pyglet.clock.schedule_interval(vis.update, 1/30)
     pyglet.app.run()

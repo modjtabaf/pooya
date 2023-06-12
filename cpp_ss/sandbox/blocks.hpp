@@ -222,13 +222,20 @@ public:
     }
 };
 
-// class Gain(Base):
-//     def __init__(self, name, k, iport='-', oport='-'):
-//         super().__init__(name, iports=iport, oports=oport)
-//         self._k = k
+class Gain : public Base
+{
+protected:
+    double _k;
 
-//     def activation_function(self, t, x):
-//         return [self._k * x[0]]
+public:
+    Gain(const char* name, double k, const Ports& iport=Ports({N("-", false)}), const Ports& oport=Ports({N("-", false)})) :
+        Base(name, iport, oport), _k(k) {}
+
+    Values activation_function(double t, const Values& x) override
+    {
+        return Values{_k * x[0]};
+    }
+};
 
 // class Function(Base):
 //     def __init__(self, name, act_func, iport='-', oport='-'):

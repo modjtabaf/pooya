@@ -159,13 +159,15 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
                 continue;
             }
 
-            inputs_cb(t, x, inputs);
+            if (inputs_cb)
+                inputs_cb(t, x, inputs);
             update_history(t, x, inputs);
             x = stepper(stepper_callback, t, t1, x);
             t = t1;
             k++;
         }
-        inputs_cb(t, x, inputs);
+        if (inputs_cb)
+            inputs_cb(t, x, inputs);
         update_history(t, x, inputs);
     }
     else
@@ -174,7 +176,8 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
         double t;
         while (time_cb(k++, t))
         {
-            inputs_cb(t, x, inputs);
+            if (inputs_cb)
+                inputs_cb(t, x, inputs);
             x = stepper_callback(t, x);
             update_history(t, x, inputs);
         }

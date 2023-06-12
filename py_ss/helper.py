@@ -131,7 +131,7 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
     else:
         for t in T:
             inputs = inputs_cb(t, x)
-            x = stepper(stepper_callback, t0=t, x0=x)
+            x = stepper_callback(t, x)
             update_history(t, x)
 
     history = {k: np.array(v) for k, v in history.items()}

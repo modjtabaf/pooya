@@ -12,7 +12,7 @@ class State:
         self._value = value
     
     def __repr__(self):
-        return self._state + ", " + self._deriv + ', ' + str(self._value)
+        return self._state + ', ' + self._deriv + ', ' + str(self._value)
 
 class Node(str):
     pass

@@ -11,6 +11,3 @@ def rk4(callback, t0, t1, x0):
 
 def simple(callback, t0, t1, x0):
     return x0 + (t1 - t0)*callback(t0, x0)
-
-def passive(callback, t0, x0):
-    return callback(t0, x0)

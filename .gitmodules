@@ -1,0 +1,6 @@
+[submodule "cpp_ss/3rdparty/eigen"]
+	path = cpp_ss/3rdparty/eigen
+	url = https://gitlab.com/libeigen/eigen
+[submodule "cpp_ss/3rdparty/mplcpp"]
+	path = cpp_ss/3rdparty/mplcpp
+	url = https://github.com/lava/matplotlib-cpp

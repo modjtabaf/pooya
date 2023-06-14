@@ -291,21 +291,36 @@ public:
 //     def activation_function(self, t, x):
 //         return self._act_func(t, x)
 
-// class AddSub(Base):
-//     def __init__(self, name, operations, iports, oport='-', initial=0.0):
-//         assert len(operations) == len(iports)
-//         super().__init__(name, iports=iports, oports=oport)
-//         self._operations = operations
-//         self._initial = initial
+class AddSub : public Base
+{
+protected:
+    std::string _operators;
+    double      _initial;
 
-//     def activation_function(self, t, x):
-//         ret = self._initial
-//         for operation, v in zip(self._operations, x):
-//             if operation == '+':
-//                 ret += v
-//             elif operation == '-':
-//                 ret -= v
-//         return [ret]
+public:
+    AddSub(const char* name, const char* operators, const Ports& iports, const Node& oport=N(), double initial=0.0) :
+        Base(name, iports, {oport}), _operators(operators), _initial(initial)
+    {
+        assert(std::strlen(operators) == iports.size());
+    }
+
+    Signals activation_function(double t, const Signals& x) override
+    {
+        Signal ret = Signal::Constant(x[0].size(), _initial);
+        const char* p = _operators.c_str();
+        for (const auto& v: x)
+        {
+            if (*p == '+')
+                ret += v;
+            else if (*p == '-')
+                ret -= v;
+            else
+                 assert(false);
+            p++;
+        }
+        return {ret};
+    }
+};
 
 class MulDiv : public Base
 {

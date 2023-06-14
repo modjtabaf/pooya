@@ -53,7 +53,7 @@ Base::Base(const char* name, const Ports& iports, const Ports& oports, bool regi
             _all_iports.push_back(port);
 }
 
-uint Base::_process(double t, NamedValues& x, bool reset)
+uint Base::_process(double t, NamedSignals& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -62,15 +62,17 @@ uint Base::_process(double t, NamedValues& x, bool reset)
         return 0;
 
     for (auto& iport: _iports)
+    {
         if (x.find(iport) == x.end())
             return 0;
+    }
 
     _known_values = x;
 
     for (auto& oport: _oports)
         assert(x.find(oport) == x.end());
 
-    Values input_values(_iports.size());
+    Signals input_values(_iports.size());
     uint k = 0;
     for (auto& iport: _iports)
         input_values[k++] = x[iport];
@@ -86,7 +88,7 @@ uint Base::_process(double t, NamedValues& x, bool reset)
 Ports Base::_all_iports;
 Ports Base::_all_oports;
 
-uint Integrator::_process(double t, NamedValues& x, bool reset)
+uint Integrator::_process(double t, NamedSignals& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -98,7 +100,7 @@ uint Integrator::_process(double t, NamedValues& x, bool reset)
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 
-uint Memory::_process(double t, NamedValues& x, bool reset)
+uint Memory::_process(double t, NamedSignals& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -145,7 +147,7 @@ Node Submodel::auto_signal_name(bool makenew)
     return _auto_signal_name;
 }
 
-uint Submodel::_process(double t, NamedValues& x, bool reset)
+uint Submodel::_process(double t, NamedSignals& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -170,8 +172,10 @@ uint Submodel::_process(double t, NamedValues& x, bool reset)
 bool Submodel::traverse(TraverseCallback cb)
 {
     for (auto& component: _components)
+    {
         if (not component->traverse(cb))
             return false;
+    }
 
     return Base::traverse(cb);
 }

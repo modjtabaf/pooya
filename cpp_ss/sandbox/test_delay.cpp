@@ -36,11 +36,9 @@ int main()
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [](double t, const VectorXd& x, NamedValues& inputs) -> void
+        [](double t, const Signal& x, NamedSignals& inputs) -> void
         {
-            auto foo = VectorXd(1);
-            foo << std::sin(M_PI * t / 5);
-            inputs.insert_or_assign("x", foo);
+            inputs.insert_or_assign("x", S(std::sin(M_PI * t / 5)));
         });
 
     Gnuplot gp;

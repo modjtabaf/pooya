@@ -18,12 +18,10 @@ int main()
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [](double t, const VectorXd& x, NamedValues& inputs) -> void
+        [](double t, const Signal& x, NamedSignals& inputs) -> void
         {
-            auto foo = VectorXd(1);
-            foo << (t < 3 or t > 7 ? 1 : 0);
-            inputs.insert_or_assign("xd", foo);
-        }, NamedValues(), rk4);
+            inputs.insert_or_assign("xd", S(t < 3 or t > 7 ? 1 : 0));
+        }, NamedSignals(), rk4);
 
     Gnuplot gp;
 	gp << "set xrange [0:100]\n";

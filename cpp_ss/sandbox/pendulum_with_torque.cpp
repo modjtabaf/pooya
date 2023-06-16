@@ -15,13 +15,13 @@ class SSModel : public Submodel
 public:
     SSModel() : Submodel("pendulum")
     {
-        auto phi   = N("phi");
-        auto dphi  = N("dphi");
-        auto d2phi = N("d2phi");
-        auto tau   = N("tau");
-        auto m     = N("m");
-        auto g     = N("g");
-        auto l     = N("l");
+        Node   phi(  "phi");
+        Node  dphi( "dphi");
+        Node d2phi("d2phi");
+        Node tau("tau");
+        Node m("m");
+        Node g("g");
+        Node l("l");
 
         enter();
         {
@@ -32,10 +32,10 @@ public:
                 {
                     return x.sin();
                 }, phi);
-            // new Sin("sin(phi)", {phi});
-            new MulDiv("g/l", "**/", {N(), g, l}, N("-1"));
-            new MulDiv("", "*///", {tau, m, l, l}, {N("-2")});
-            new AddSub("", "+-", {N("-2"), N("-1")}, {N("d2phi")});
+            // new Sin("sin(phi)", phi);
+            new MulDiv("g/l", "**/", {Node(), g, l}, -1);
+            new MulDiv("", "*///", {tau, m, l, l}, -2);
+            new AddSub("", "+-", {Node(-2), Node(-1)}, "d2phi");
         }
         exit();
     }

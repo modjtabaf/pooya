@@ -8,14 +8,9 @@
 namespace blocks
 {
 
-Base::Base(const char* name, const Ports& iports, const Ports& oports, bool register_oports) :
+Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool register_oports) :
     _name(name)
 {
-    // if not isinstance(iports, (list, tuple)):
-    //     iports = [iports]
-    // if not isinstance(oports, (list, tuple)):
-    //     oports = [oports]
-
     auto* parent = Submodel::current();
 
     if (parent)
@@ -85,8 +80,8 @@ uint Base::_process(double t, NamedSignals& x, bool reset)
     return 1;
 }
 
-Ports Base::_all_iports;
-Ports Base::_all_oports;
+Nodes Base::_all_iports;
+Nodes Base::_all_oports;
 
 uint Integrator::_process(double t, NamedSignals& x, bool reset)
 {
@@ -135,11 +130,11 @@ Node Submodel::auto_signal_name(bool makenew)
 {
     if (makenew)
     {
-        constexpr auto N = 10;
-        char name[N + 2] = "-";
-        for (auto i = 1; i < N + 1; i++)
+        constexpr auto Node = 10;
+        char name[Node + 2] = "-";
+        for (auto i = 1; i < Node + 1; i++)
             name[i] = char(std::experimental::randint(int('a'), int('z')));
-        name[N + 1] = 0;
+        name[Node + 1] = 0;
         _auto_signal_name = name;
     }
     else

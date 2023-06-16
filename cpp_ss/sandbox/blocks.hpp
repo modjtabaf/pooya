@@ -3,6 +3,7 @@
 #define __BLOCKS_HPP__
 
 #include <cstring>
+#include <initializer_list>
 #include <string>
 #include <map>
 #include <vector>
@@ -14,26 +15,6 @@ using namespace Eigen;
 
 namespace blocks
 {
-
-// class State:
-// class State
-// {
-// protected:
-//     std::string _state;
-//     double _deriv;
-//     double _value;
-
-// public:
-//     State(const std::string& state, double deriv, double value) :
-//         _state(state), _deriv(deriv), _value(value) {}
-
-//     std::string repr() const
-//     {
-//         std::stringstream ss;
-//         ss << _state << ", " << _deriv << ", " << _value;
-//         return ss.str();
-//     }
-// };
 
 using Signal = ArrayXd;
 
@@ -74,65 +55,45 @@ protected:
     bool _name_locked = true;
 
 public:
-    Node(const std::string& str="", bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
+    Node(const std::string& str, bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
+    Node(const char* str="", bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
+    Node(int n, bool name_locked=true) : std::string(std::to_string(n)), _name_locked(name_locked) {}
 
     bool name_locked() const {return _name_locked;}
 };
 
-template<class T>
-Node N(const T& s, bool name_locked=true)
+class Nodes : public std::vector<Node>
 {
-    return dynamic_cast<const Node*>(&s) ? s : Node(s, name_locked);
-}
+protected:
+    using Parent = std::vector<Node>;
 
-inline Node N(const char* s, bool name_locked=true)
-{
-    return Node(s, name_locked);
-}
-
-inline Node N()
-{
-    return Node("-", false);
-}
-
-template<class T>
-std::vector<Node> N(const std::vector<T>& s, bool name_locked=true)
-{
-    std::vector<Node> ret;
-    ret.reserve(s.size());
-    for (auto& p: s)
+public:
+    Nodes() = default;
+    Nodes(const Node& node)
     {
-        ret.push_back(N(p, name_locked));
+        push_back(node);
     }
-    return ret;
-}
-
-using Ports = std::vector<Node>;
-// class Ports : public std::vector<Node>
-// {
-// public:
-//     Ports() = default;
-//     Ports(const Node& node)
-//     {
-//         push_back(node);
-//     }
-// };
+    Nodes(std::initializer_list<Node> nodes) :
+        Parent(nodes)
+    {
+    }
+};
 
 class Base
 {
 protected:
-    static Ports _all_iports;
-    static Ports _all_oports;
+    static Nodes _all_iports;
+    static Nodes _all_oports;
 
-    Ports _iports;
-    Ports _oports;
+    Nodes _iports;
+    Nodes _oports;
     NamedSignals _known_values;
 
     std::string _name;
     bool _processed{false};
 
 public:
-    Base(const char* name, const Ports& iports=Ports(), const Ports& oports=Ports(), bool register_oports=true);
+    Base(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
 
     virtual void get_states(States& states) {}
     virtual void step(double t, const NamedSignals& states) {}
@@ -147,8 +108,8 @@ public:
 
     bool is_processed() const {return _processed;}
     const std::string& name() const {return _name;}
-    const Ports& iports() const {return _iports;}
-    const Ports& oports() const {return _oports;}
+    const Nodes& iports() const {return _iports;}
+    const Nodes& oports() const {return _oports;}
 
     virtual uint _process(double t, NamedSignals& x, bool reset);
 
@@ -226,11 +187,11 @@ protected:
     Signal _value;
 
 public:
-    Const(const char* name, const Signal& value, const Ports& oport=Ports({N()})) :
-        Base(name, Ports(), oport), _value(value) {}
+    Const(const char* name, const Signal& value, const Nodes& oport=Nodes({Node()})) :
+        Base(name, Nodes(), oport), _value(value) {}
 
-    Const(const char* name, double value, const Ports& oport={N()}) :
-        Base(name, Ports(), oport), _value(1)
+    Const(const char* name, double value, const Nodes& oport={Node()}) :
+        Base(name, Nodes(), oport), _value(1)
     {
          _value << value;
     }
@@ -247,7 +208,7 @@ protected:
     double _k;
 
 public:
-    Gain(const char* name, double k, const Ports& iport=Ports({N()}), const Ports& oport=Ports({N()})) :
+    Gain(const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
         Base(name, iport, oport), _k(k) {}
 
     Signals activation_function(double t, const Signals& x) override
@@ -259,7 +220,7 @@ public:
 class Sin : public Base
 {
 public:
-    Sin(const char* name, const Ports& iports=Ports({N()}), const Ports& oports=Ports({N()})) :
+    Sin(const char* name, const Nodes& iports=Nodes({Node()}), const Nodes& oports=Nodes({Node()})) :
         Base(name, iports, oports) {}
 
     Signals activation_function(double t, const Signals& x) override
@@ -274,7 +235,7 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(const char* name, ActFunction act_func, const Node& iport=N(), const Node& oport=N()) :
+    Function(const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
         Base(name, {iport}, {oport}), _act_func(act_func) {}
 
     Signals activation_function(double t, const Signals& x) override
@@ -298,7 +259,7 @@ protected:
     double      _initial;
 
 public:
-    AddSub(const char* name, const char* operators, const Ports& iports, const Node& oport=N(), double initial=0.0) :
+    AddSub(const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
         Base(name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
@@ -329,7 +290,7 @@ protected:
     double      _initial;
 
 public:
-    MulDiv(const char* name, const char* operators, const Ports& iports, const Node& oport=N(), double initial=1.0) :
+    MulDiv(const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
         Base(name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
@@ -359,8 +320,8 @@ protected:
     double _value;
 
 public:
-    Integrator(const char* name, const Node& iport=N(), const Node& oport=N(), double ic=0.0) :
-        Base(name, Ports({iport}), Ports({oport})), _value(ic) {}
+    Integrator(const char* name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
+        Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void get_states(States& states) override
     {
@@ -404,7 +365,7 @@ protected:
     Signals  _x;
 
 public:
-    Delay(const char* name, const Ports& iports, const Ports& oport=Ports({N()}), double lifespan=10.0) :
+    Delay(const char* name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
         Base(name, iports, oport), _lifespan(lifespan) {}
 
     void step(double t, const NamedSignals& states) override
@@ -462,8 +423,8 @@ protected:
     Signal _value;
 
 public:
-    Memory(const char* name, const Node& iport=N(), const Node& oport=N(), const Signal& ic=Signal::Zero(1)) :
-        Base(name, Ports({iport}), Ports({oport})), _value(ic) {}
+    Memory(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Signal& ic=Signal::Zero(1)) :
+        Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void step(double t, const NamedSignals& states) override
     {
@@ -519,7 +480,7 @@ protected:
     std::string _auto_signal_name;
 
 public:
-    Submodel(const char* name, const Ports& iports=Ports(), const Ports& oports=Ports()) :
+    Submodel(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
         Base(name, iports, oports, false) {}
 
     void enter() {_current_submodels.push_back(this);}

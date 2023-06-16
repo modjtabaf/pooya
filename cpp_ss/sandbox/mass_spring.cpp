@@ -15,15 +15,15 @@ class SSModel : public Submodel
 public:
     SSModel() : Submodel("")
     {
-        auto x   = N("x"  );
-        auto xd  = N("xd" );
-        auto xdd = N("xdd");
+        Node x("x");
+        Node xd("xd");
+        Node xdd("xdd");
 
         enter();
         {
             new Integrator("xd", xdd, xd, 0.1);
             new Integrator("x", xd, x);
-            new Gain("-k/m", -1.0/1.0, Ports({x}), Ports({xdd}));
+            new Gain("-k/m", -1.0/1.0, x, xdd);
         }
         exit();
     }

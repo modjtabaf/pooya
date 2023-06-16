@@ -15,11 +15,11 @@ class SSModel : public Submodel
 public:
     SSModel() : Submodel("pendulum")
     {
-        auto phi   = N("phi");
-        auto dphi  = N("dphi");
-        auto d2phi = N("d2phi");
-        auto g     = N("g");
-        auto l     = N("l");
+        Node   phi(  "phi");
+        Node  dphi( "dphi");
+        Node d2phi("d2phi");
+        Node g("g");
+        Node l("l");
 
         enter();
         {
@@ -30,8 +30,8 @@ public:
                 {
                     return x.sin();
                 }, phi);
-            // new Sin("sin(phi)", {phi}, {N()});
-            new MulDiv("-g/l", "**/", {N(), g, l}, d2phi, -1);
+            // new Sin("sin(phi)", {phi}, {Node()});
+            new MulDiv("-g/l", "**/", {Node(), g, l}, d2phi, -1);
         }
         exit();
     }

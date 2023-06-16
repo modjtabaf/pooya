@@ -15,14 +15,14 @@ class SSModel : public Submodel
 public:
     SSModel() : Submodel("")
     {
-        auto x  = N("x" );
-        auto xd = N("xd");
+        Node x("x");
+        Node xd("xd");
 
         enter();
         {
-            new Const("", 2.7435, Ports({N("-time_delay")}));
-            new Const("", 0.0, Ports({N("-initial")}));
-            new Delay("", Ports({x, N("-time_delay"), N("-initial")}), Ports({xd}));
+            new Const("", 2.7435, {"-time_delay"});
+            new Const("", 0.0, {"-initial"});
+            new Delay("", {x, "-time_delay", "-initial"}, xd);
         }
         exit();
     }

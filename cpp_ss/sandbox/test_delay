@@ -1,0 +1,1 @@
+g++ -o test_delay.o test_delay.cpp blocks.cpp solver.cpp helper.cpp -lboost_iostreams -lboost_system -lboost_filesystem && echo "Running..." && ./test_delay.o

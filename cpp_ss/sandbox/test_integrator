@@ -1,0 +1,1 @@
+g++ -o test_integrator.o test_integrator.cpp blocks.cpp solver.cpp helper.cpp -lboost_iostreams -lboost_system -lboost_filesystem && echo "Running..." && ./test_integrator.o

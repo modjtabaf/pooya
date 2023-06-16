@@ -2,8 +2,6 @@
 #ifndef __BLOCKS_HPP__
 #define __BLOCKS_HPP__
 
-#include <cstring>
-#include <initializer_list>
 #include <string>
 #include <map>
 #include <vector>
@@ -20,6 +18,7 @@ class Value : public ArrayXd
 {
 public:
     using ArrayXd::ArrayXd;
+
     Value(double v) : ArrayXd(1)
     {
         (*this)[0] = v;
@@ -48,26 +47,22 @@ protected:
 
 public:
     Node(const std::string& str, bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
-    Node(const char* str="", bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
+    Node(const char* str, bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
     Node(int n, bool name_locked=true) : std::string(std::to_string(n)), _name_locked(name_locked) {}
+    Node() : std::string("-"), _name_locked(false) {}
 
     bool name_locked() const {return _name_locked;}
 };
 
 class Nodes : public std::vector<Node>
 {
-protected:
-    using Parent = std::vector<Node>;
-
 public:
-    Nodes() = default;
+    using Parent = std::vector<Node>;
+    using Parent::vector;
+
     Nodes(const Node& node)
     {
         push_back(node);
-    }
-    Nodes(std::initializer_list<Node> nodes) :
-        Parent(nodes)
-    {
     }
 };
 
@@ -75,7 +70,7 @@ class Base;
 
 using Scalars          = std::vector<double>;
 using Values           = std::vector<Value>;
-using NodeValues       = std::map<std::string, Value>;
+using NodeValues       = std::map<Node, Value>;
 using States           = std::map<std::string, StateData>;
 using TraverseCallback = std::function<bool(const Base&)>;
 using ActFunction      = std::function<Value(double, const Value&)>;

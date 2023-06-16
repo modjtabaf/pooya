@@ -7,9 +7,9 @@
 namespace blocks
 {
 
-History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const NamedSignals& parameters, Solver stepper)
+History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeValues& parameters, Solver stepper)
 {
-    auto process = [](Base& model, double t, NamedSignals& x) -> uint
+    auto process = [](Base& model, double t, NodeValues& x) -> uint
     {
         uint n_processed = model._process(t, x, true);
         while (true)
@@ -46,14 +46,14 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
     };
 
     History history;
-    NamedSignals inputs;
+    NodeValues inputs;
 
     States states;
     model.get_states(states);
 
-    auto stepper_callback = [&](double t, const Signal& x) -> Signal
+    auto stepper_callback = [&](double t, const Value& x) -> Value
     {
-        NamedSignals y;
+        NodeValues y;
 
         uint k = 0;
         for (auto& state: states)
@@ -75,7 +75,7 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
 
         process(model, t, y);
 
-        Signal ret(x.size());
+        Value ret(x.size());
         k = 0;
         for (const auto& state: states)
         {
@@ -91,7 +91,7 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
     uint n = 0;
     for (const auto& state: states)
         n += state.second._value.size();
-    Signal x(n);
+    Value x(n);
     n = 0;
     for (auto& state: states)
     {
@@ -99,9 +99,9 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
         n += state.second._value.size();
     }
 
-    auto update_history = [&](double t, const Signal& x, const NamedSignals& inputs) -> void
+    auto update_history = [&](double t, const Value& x, const NodeValues& inputs) -> void
     {
-        NamedSignals y;
+        NodeValues y;
         
         uint k = 0;
         for (const auto& state: states)
@@ -123,10 +123,10 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const Na
 
         if (history.empty())
         {
-            history.insert_or_assign("t", Signal());
+            history.insert_or_assign("t", Value());
             for (const auto& v: y)
                 if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
-                    history.insert_or_assign(v.first, Signal());
+                    history.insert_or_assign(v.first, Value());
         }
 
         auto& h = history["t"];

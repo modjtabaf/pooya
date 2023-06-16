@@ -37,7 +37,7 @@ int main()
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, NamedSignals(), rk4);
+        nullptr, NodeValues(), rk4);
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

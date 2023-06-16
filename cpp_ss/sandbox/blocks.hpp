@@ -16,35 +16,26 @@ using namespace Eigen;
 namespace blocks
 {
 
-using Signal = ArrayXd;
+using Value = ArrayXd;
 
 class StateData
 {
 public:
-    StateData(const std::string& deriv, const Signal& value) :
+    StateData(const std::string& deriv, const Value& value) :
         _deriv(deriv), _value(value) {}
     StateData(const std::string& deriv, double value) :
         _deriv(deriv), _value(1)
     {
-        _value << value;
+        _value[0] = value;
     }
 
     std::string _deriv;
-    Signal      _value;
+    Value       _value;
 };
 
-class Base;
-
-using Scalars          = std::vector<double>;
-using Signals          = std::vector<Signal>;
-using NamedSignals     = std::map<std::string, Signal>;
-using States           = std::map<std::string, StateData>;
-using TraverseCallback = std::function<bool(const Base&)>;
-using ActFunction      = std::function<Signal(double, const Signal&)>;
-
-inline Signal S(double x)
+inline Value S(double x)
 {
-    Signal ret(1);
+    Value ret(1);
     ret[0] = x;
     return ret;
 }
@@ -79,6 +70,15 @@ public:
     }
 };
 
+class Base;
+
+using Scalars          = std::vector<double>;
+using Values           = std::vector<Value>;
+using NodeValues       = std::map<std::string, Value>;
+using States           = std::map<std::string, StateData>;
+using TraverseCallback = std::function<bool(const Base&)>;
+using ActFunction      = std::function<Value(double, const Value&)>;
+
 class Base
 {
 protected:
@@ -87,7 +87,7 @@ protected:
 
     Nodes _iports;
     Nodes _oports;
-    NamedSignals _known_values;
+    NodeValues _known_values;
 
     std::string _name;
     bool _processed{false};
@@ -96,11 +96,11 @@ public:
     Base(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
 
     virtual void get_states(States& states) {}
-    virtual void step(double t, const NamedSignals& states) {}
-    virtual Signals activation_function(double t, const Signals& x)
+    virtual void step(double t, const NodeValues& states) {}
+    virtual Values activation_function(double t, const Values& x)
     {
         assert(false);
-        return Signals();
+        return Values();
     }
 
     // def get_ports(self):
@@ -111,7 +111,7 @@ public:
     const Nodes& iports() const {return _iports;}
     const Nodes& oports() const {return _oports;}
 
-    virtual uint _process(double t, NamedSignals& x, bool reset);
+    virtual uint _process(double t, NodeValues& x, bool reset);
 
     // def __repr__(self):
     //     return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
@@ -122,7 +122,7 @@ public:
     }
 }; // class Base
 
-// class Signal(Base):
+// class Value(Base):
 //     def activation_function(self, t, x):
 //         return [x[0]]
 
@@ -184,10 +184,10 @@ public:
 class Const : public Base
 {
 protected:
-    Signal _value;
+    Value _value;
 
 public:
-    Const(const char* name, const Signal& value, const Nodes& oport=Nodes({Node()})) :
+    Const(const char* name, const Value& value, const Nodes& oport=Nodes({Node()})) :
         Base(name, Nodes(), oport), _value(value) {}
 
     Const(const char* name, double value, const Nodes& oport={Node()}) :
@@ -196,9 +196,9 @@ public:
          _value << value;
     }
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
-        return Signals{{_value}};
+        return Values{{_value}};
     }
 };
 
@@ -211,7 +211,7 @@ public:
     Gain(const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
         Base(name, iport, oport), _k(k) {}
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
         return {_k * x[0]};
     }
@@ -223,7 +223,7 @@ public:
     Sin(const char* name, const Nodes& iports=Nodes({Node()}), const Nodes& oports=Nodes({Node()})) :
         Base(name, iports, oports) {}
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
         return {x[0].sin()};
     }
@@ -238,7 +238,7 @@ public:
     Function(const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
         Base(name, {iport}, {oport}), _act_func(act_func) {}
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
         return {_act_func(t, x[0])};
     }
@@ -265,9 +265,9 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
-        Signal ret = Signal::Constant(x[0].size(), _initial);
+        Value ret = Value::Constant(x[0].size(), _initial);
         const char* p = _operators.c_str();
         for (const auto& v: x)
         {
@@ -296,9 +296,9 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
-        Signal ret = Signal::Constant(x[0].size(), _initial);
+        Value ret = Value::Constant(x[0].size(), _initial);
         const char* p = _operators.c_str();
         for (const auto& v: x)
         {
@@ -328,12 +328,12 @@ public:
         states.insert_or_assign(_oports.front(), StateData(_iports.front(), _value));
     }
 
-    void step(double t, const NamedSignals& states) override
+    void step(double t, const NodeValues& states) override
     {
         _value = states.at(_oports.front())[0];
     }
 
-    uint _process(double t, NamedSignals& x, bool reset) override;
+    uint _process(double t, NodeValues& x, bool reset) override;
 };
 
 // # it is still unclear how to deal with states when using this numerical integrator
@@ -362,13 +362,13 @@ class Delay : public Base
 protected:
     double  _lifespan;
     Scalars _t;
-    Signals  _x;
+    Values  _x;
 
 public:
     Delay(const char* name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
         Base(name, iports, oport), _lifespan(lifespan) {}
 
-    void step(double t, const NamedSignals& states) override
+    void step(double t, const NodeValues& states) override
     {
         if (not _t.empty())
         {
@@ -389,7 +389,7 @@ public:
         _x.push_back(states.at(_iports.front()));
     }
 
-    Signals activation_function(double t, const Signals& x) override
+    Values activation_function(double t, const Values& x) override
     {
         if (_t.empty())
             return {S(x[2][0])};
@@ -420,13 +420,13 @@ public:
 class Memory : public Base
 {
 protected:
-    Signal _value;
+    Value _value;
 
 public:
-    Memory(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Signal& ic=Signal::Zero(1)) :
+    Memory(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
         Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
-    void step(double t, const NamedSignals& states) override
+    void step(double t, const NodeValues& states) override
     {
         _value = states.at(_iports.front());
     }
@@ -439,7 +439,7 @@ public:
     // # def activation_function(self, t, x):
     // #     return [self._value]
 
-    uint _process(double t, NamedSignals& x, bool reset) override;
+    uint _process(double t, NodeValues& x, bool reset) override;
 };
 
 // class Derivative(Base):
@@ -501,7 +501,7 @@ public:
             component->get_states(states);
     }
 
-    void step(double t, const NamedSignals& states) override
+    void step(double t, const NodeValues& states) override
     {
         for (auto& component: _components)
             component->step(t, states);
@@ -509,7 +509,7 @@ public:
 
     Node make_signal_name(const Node& name);
     Node auto_signal_name(bool makenew);
-    uint _process(double t, NamedSignals& x, bool reset) override;
+    uint _process(double t, NodeValues& x, bool reset) override;
     bool traverse(TraverseCallback cb) override;
 
 }; // class Submodel

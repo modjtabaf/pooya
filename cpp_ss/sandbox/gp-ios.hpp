@@ -14,14 +14,14 @@ namespace gnuplotio
 {
 
 template<>
-class ArrayTraits<Signal>
+class ArrayTraits<Value>
 {
 public:
     static constexpr int depth = 1;
 
-	typedef IteratorRange<typename Signal::const_iterator, typename Signal::value_type> range_type;
+	typedef IteratorRange<typename Value::const_iterator, typename Value::value_type> range_type;
 
-	static range_type get_range(const Signal& arg)
+	static range_type get_range(const Value& arg)
     {
 		return range_type(arg.begin(), arg.end());
 	}
@@ -29,7 +29,7 @@ public:
 
 template<> std::string Gnuplot::file1d(const MatrixXd &arg, const std::string &filename)
 {
-    return file1d(Signal{arg.reshaped()}, filename);
+    return file1d(Value{arg.reshaped()}, filename);
 }
 
 }

@@ -9,11 +9,11 @@ using namespace Eigen;
 namespace blocks
 {
 
-using SolverCallback = std::function<Signal(double, const Signal&)>;
-using Solver         = std::function<Signal(SolverCallback, double, double, const Signal&)>;
+using SolverCallback = std::function<Value(double, const Value&)>;
+using Solver         = std::function<Value(SolverCallback, double, double, const Value&)>;
 
-Signal rk4   (SolverCallback callback, double t0, double t1, const Signal& x0);
-Signal simple(SolverCallback callback, double t0, double t1, const Signal& x0);
+Value rk4   (SolverCallback callback, double t0, double t1, const Value& x0);
+Value simple(SolverCallback callback, double t0, double t1, const Value& x0);
 
 }
 

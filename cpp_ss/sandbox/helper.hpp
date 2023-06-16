@@ -10,11 +10,11 @@
 namespace blocks
 {
 
-using InputCallback = std::function<void(double, const Signal&, NamedSignals&)>;
+using InputCallback = std::function<void(double, const Value&, NodeValues&)>;
 using TimeCallback  = std::function<bool(uint k, double& t)>;
 using History       = std::map<std::string, MatrixXd>;
 
-History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb=nullptr, const NamedSignals& parameters=NamedSignals(), Solver stepper=nullptr);
+History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb=nullptr, const NodeValues& parameters=NodeValues(), Solver stepper=nullptr);
 bool arange(uint k, double& t, double t_init, double t_end, double dt);
 
 }

@@ -28,7 +28,7 @@ public:
             new Integrator("dphi", d2phi, dphi, M_PI_4);
             new Integrator("phi", dphi, phi);
             new Function("sin(phi)",
-                [](double t, const Signal& x) -> Signal
+                [](double t, const Value& x) -> Value
                 {
                     return x.sin();
                 }, phi);
@@ -43,7 +43,7 @@ public:
 
 int main()
 {
-    NamedSignals parameters = {
+    NodeValues parameters = {
         {"m", S(0.2)},
         {"l", S(0.1)},
         {"g", S(9.81)},

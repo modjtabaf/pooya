@@ -48,7 +48,7 @@ Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool regi
             _all_iports.push_back(port);
 }
 
-uint Base::_process(double t, NamedSignals& x, bool reset)
+uint Base::_process(double t, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -67,7 +67,7 @@ uint Base::_process(double t, NamedSignals& x, bool reset)
     for (auto& oport: _oports)
         assert(x.find(oport) == x.end());
 
-    Signals input_values(_iports.size());
+    Values input_values(_iports.size());
     uint k = 0;
     for (auto& iport: _iports)
         input_values[k++] = x[iport];
@@ -83,7 +83,7 @@ uint Base::_process(double t, NamedSignals& x, bool reset)
 Nodes Base::_all_iports;
 Nodes Base::_all_oports;
 
-uint Integrator::_process(double t, NamedSignals& x, bool reset)
+uint Integrator::_process(double t, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -95,7 +95,7 @@ uint Integrator::_process(double t, NamedSignals& x, bool reset)
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 
-uint Memory::_process(double t, NamedSignals& x, bool reset)
+uint Memory::_process(double t, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -142,7 +142,7 @@ Node Submodel::auto_signal_name(bool makenew)
     return _auto_signal_name;
 }
 
-uint Submodel::_process(double t, NamedSignals& x, bool reset)
+uint Submodel::_process(double t, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;

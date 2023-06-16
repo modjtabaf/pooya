@@ -40,8 +40,8 @@ public:
 int main()
 {
     NodeValues parameters = {
-        {"l", S(0.1)},
-        {"g", S(9.81)},
+        {"l", 0.1},
+        {"g", 9.81},
         };
 
     auto model = SSModel();

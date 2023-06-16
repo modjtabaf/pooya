@@ -20,7 +20,7 @@ int main()
         },
         [](double t, const Value& x, NodeValues& inputs) -> void
         {
-            inputs.insert_or_assign("xd", S(t < 3 or t > 7 ? 1 : 0));
+            inputs.insert_or_assign("xd", t < 3 or t > 7 ? 1 : 0);
         }, NodeValues(), rk4);
 
     Gnuplot gp;

@@ -38,7 +38,7 @@ int main()
         },
         [](double t, const Value& x, NodeValues& inputs) -> void
         {
-            inputs.insert_or_assign("x", S(std::sin(M_PI * t / 5)));
+            inputs.insert_or_assign("x", std::sin(M_PI * t / 5));
         });
 
     Gnuplot gp;

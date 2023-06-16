@@ -44,10 +44,10 @@ public:
 int main()
 {
     NodeValues parameters = {
-        {"m", S(0.2)},
-        {"l", S(0.1)},
-        {"g", S(9.81)},
-        {"tau", S(0.13)},
+        {"m", 0.2},
+        {"l", 0.1},
+        {"g", 9.81},
+        {"tau", 0.13},
         };
 
     auto model = SSModel();

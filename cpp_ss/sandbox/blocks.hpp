@@ -16,7 +16,15 @@ using namespace Eigen;
 namespace blocks
 {
 
-using Value = ArrayXd;
+class Value : public ArrayXd
+{
+public:
+    using ArrayXd::ArrayXd;
+    Value(double v) : ArrayXd(1)
+    {
+        (*this)[0] = v;
+    }
+};
 
 class StateData
 {
@@ -32,13 +40,6 @@ public:
     std::string _deriv;
     Value       _value;
 };
-
-inline Value S(double x)
-{
-    Value ret(1);
-    ret[0] = x;
-    return ret;
-}
 
 class Node : public std::string
 {
@@ -392,7 +393,7 @@ public:
     Values activation_function(double t, const Values& x) override
     {
         if (_t.empty())
-            return {S(x[2][0])};
+            return {x[2][0]};
     
         const double delay = x[1][0];
         t -= delay;
@@ -413,7 +414,7 @@ public:
             k++;
         }
 
-        return {S((_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0])};
+        return {(_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]};
     }
 };
 

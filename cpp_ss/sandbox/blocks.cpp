@@ -23,13 +23,13 @@ Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool regi
         _iports.reserve(iports.size());
         for (auto& p: iports)
         {
-            _iports.emplace_back(p == "-" ? parent->auto_signal_name(false) : parent->make_signal_name(p));
+            _iports.emplace_back(parent->get_node_name(p, false));
         }
 
         _oports.reserve(oports.size());
         for (auto& p: oports)
         {
-            _oports.emplace_back(p == "-" ? parent->auto_signal_name(true) : parent->make_signal_name(p));
+            _oports.emplace_back(parent->get_node_name(p, true));
         }
     }
     else
@@ -114,38 +114,45 @@ uint Memory::_process(double t, NodeValues& x, bool reset)
 
 std::vector<Submodel*> Submodel::_current_submodels;
 
-Node Submodel::make_signal_name(const Node& name)
+Node Submodel::get_node_name(const Node& node, bool makenew)
 {
-    if (name.name_locked())
-        return name;
+    Node ret = node.empty() ? "-" : node;
 
-    Node ret;
+    // don't alter global node names
+    if (ret[0] != '-')
+        return ret;
+
+    // an auto-generated local node name?
+    bool auto_gen = false;
+    if (ret == "-")
+    {
+        if (makenew)
+        {
+            constexpr auto N = 10;
+            char name[N + 2] = "-";
+            for (auto i = 1; i < N + 1; i++)
+                name[i] = char(std::experimental::randint(int('a'), int('z')));
+            name[N + 1] = 0;
+            ret = name;
+            auto_gen = true;
+        }
+        else
+        {
+            assert(not _auto_signal_name.empty());
+            return _auto_signal_name;
+        }
+    }
+
+    // non-auto local node name
     if (not _name.empty())
     {
-        if (name[0] == '-')
-            ret = "-" + _name + "." + &name[1];
-        else
-            ret = _name + "." + name;
+        ret = "-" + _name + "." + &ret[1];
     }
-    return ret;
-}
 
-Node Submodel::auto_signal_name(bool makenew)
-{
-    if (makenew)
-    {
-        constexpr auto N = 10;
-        char name[N + 2] = "-";
-        for (auto i = 1; i < N + 1; i++)
-            name[i] = char(std::experimental::randint(int('a'), int('z')));
-        name[N + 1] = 0;
-        _auto_signal_name = name;
-    }
-    else
-    {
-        assert(not _auto_signal_name.empty());
-    }
-    return _auto_signal_name;
+    if (auto_gen)
+        _auto_signal_name = ret;
+
+    return ret;
 }
 
 uint Submodel::_process(double t, NodeValues& x, bool reset)

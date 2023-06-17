@@ -25,7 +25,7 @@ public:
         enter();
         {
             new MulDiv("tau/ml2", "*///", {tau, m, l, l});
-            new AddSub("err", "+-", {Node(), Node(-1, false)});
+            new AddSub("err", "+-", {Node(), Node(-1)});
             new Integrator("dphi", Node(), dphi);
             new Integrator("phi", dphi, phi);
             // new Function("sin(phi)",
@@ -34,7 +34,7 @@ public:
             //         return x.sin();
             //     }, phi);
             new Sin("sin(phi)", {phi});
-            new MulDiv("g/l", "**/", {Node(), g, l}, Node(-1, false));
+            new MulDiv("g/l", "**/", {Node(), g, l}, Node(-1));
         }
         exit();
     }
@@ -52,10 +52,10 @@ public:
         // blocks
         enter();
         {
-            new Gain("Kp", Kp, x, Node(-1, false));
+            new Gain("Kp", Kp, x, Node(-1));
             new Integrator("ix", x, Node(), x0);
             new Gain("Ki", Ki);
-            new AddSub("", "++", {Node(-1, false), Node()}, oport);
+            new AddSub("", "++", {Node(-1), Node()}, oport);
         }
         exit();
     }

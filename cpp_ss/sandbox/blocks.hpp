@@ -42,16 +42,15 @@ public:
 
 class Node : public std::string
 {
-protected:
-    bool _name_locked = true;
-
 public:
-    Node(const std::string& str, bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
-    Node(const char* str, bool name_locked=true) : std::string(str), _name_locked(name_locked) {}
-    Node(int n, bool name_locked=true) : std::string(std::to_string(n)), _name_locked(name_locked) {}
-    Node() : std::string("-"), _name_locked(false) {}
+    using Parent = std::string;
 
-    bool name_locked() const {return _name_locked;}
+    Node(const std::string& str) : std::string(str) {}
+    Node(const char* str, bool name_locked=true) : std::string(str) {}
+    Node(int n) : std::string(std::to_string(n)) {}
+    Node() : std::string("-") {}
+
+    using Parent::operator=;
 };
 
 class Nodes : public std::vector<Node>
@@ -503,8 +502,7 @@ public:
             component->step(t, states);
     }
 
-    Node make_signal_name(const Node& name);
-    Node auto_signal_name(bool makenew);
+    Node get_node_name(const Node& node, bool makenew);
     uint _process(double t, NodeValues& x, bool reset) override;
     bool traverse(TraverseCallback cb) override;
 

@@ -20,9 +20,9 @@ public:
 
         enter();
         {
-            new Const("", 2.7435, {"-time_delay"});
-            new Const("", 0.0, {"-initial"});
-            new Delay("", {x, "-time_delay", "-initial"}, xd);
+            new Const("TimeDelay", 2.7435, {"-time_delay"});
+            new Const("Initial", 0.0, {"-initial"});
+            new Delay("Delay", {x, "-time_delay", "-initial"}, xd);
         }
         exit();
     }

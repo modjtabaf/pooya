@@ -22,11 +22,15 @@ Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool regi
 
         _iports.reserve(iports.size());
         for (auto& p: iports)
+        {
             _iports.emplace_back(p == "-" ? parent->auto_signal_name(false) : parent->make_signal_name(p));
+        }
 
         _oports.reserve(oports.size());
         for (auto& p: oports)
+        {
             _oports.emplace_back(p == "-" ? parent->auto_signal_name(true) : parent->make_signal_name(p));
+        }
     }
     else
     {
@@ -36,14 +40,14 @@ Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool regi
 
     if (register_oports)
     {
-        for (auto& port: oports)
+        for (auto& port: _oports)
         {
             assert(std::find(_all_oports.cbegin(), _all_oports.cend(), port) == _all_oports.cend());
             _all_oports.push_back(port);
         }
     }
 
-    for (auto& port: iports)
+    for (auto& port: _iports)
         if (std::find(_all_iports.cbegin(), _all_iports.cend(), port) == _all_iports.cend())
             _all_iports.push_back(port);
 }
@@ -130,15 +134,17 @@ Node Submodel::auto_signal_name(bool makenew)
 {
     if (makenew)
     {
-        constexpr auto Node = 10;
-        char name[Node + 2] = "-";
-        for (auto i = 1; i < Node + 1; i++)
+        constexpr auto N = 10;
+        char name[N + 2] = "-";
+        for (auto i = 1; i < N + 1; i++)
             name[i] = char(std::experimental::randint(int('a'), int('z')));
-        name[Node + 1] = 0;
+        name[N + 1] = 0;
         _auto_signal_name = name;
     }
     else
+    {
         assert(not _auto_signal_name.empty());
+    }
     return _auto_signal_name;
 }
 

@@ -1,0 +1,1 @@
+g++ -o pendulum_with_pi.o pendulum_with_pi.cpp blocks.cpp solver.cpp helper.cpp -lboost_iostreams -lboost_system -lboost_filesystem && echo "Running..." && ./pendulum_with_pi.o

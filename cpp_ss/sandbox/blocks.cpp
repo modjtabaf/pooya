@@ -138,8 +138,8 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
         }
         else
         {
-            assert(not _auto_signal_name.empty());
-            return _auto_signal_name;
+            assert(not _auto_node_name.empty());
+            return _auto_node_name;
         }
     }
 
@@ -150,7 +150,7 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
     }
 
     if (auto_gen)
-        _auto_signal_name = ret;
+        _auto_node_name = ret;
 
     return ret;
 }

@@ -437,27 +437,40 @@ public:
     uint _process(double t, NodeValues& x, bool reset) override;
 };
 
-// class Derivative(Base):
-//     def __init__(self, name, iport='-', oport='-', y0=0):
-//         super().__init__(name, iports=iport, oports=oport)
-//         self._t = None
-//         self._x = None
-//         self._y = y0
+class Derivative : public Base
+{
+protected:
+    bool _first_step{true};
+    double _t;
+    Value  _x;
+    Value  _y;
 
-//     def step(self, t, states):
-//         self._t = t
-//         self._x = states[self._iports[0]]
-//         self._y = states[self._oports[0]]
+public:
+    Derivative(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
+        Base(name, iport, oport), _y(y0) {}
 
-//     def activation_function(self, t, x):
-//         if self._t is None:
-//             self._t = t
-//             self._x = x[0]
-//             return [self._y]
-//         elif self._t == t:
-//             return [self._y]
-//         else:
-//             return [(x[0] - self._x)/(t - self._t)]
+    void step(double t, const NodeValues& states) override
+    {
+        _t = t;
+        _x = states.at(_iports.front());
+        _y = states.at(_oports.front());
+        _first_step = false;
+    }
+
+    Values activation_function(double t, const Values& x) override
+    {
+        if (_first_step)
+        {
+            _t = t;
+            _x = x[0];
+            return {_y};
+        }
+        else if (_t == t)
+            return {_y};
+
+        return {(x[0] - _x)/(t - _t)};
+    }
+};
 
 class Submodel : public Base
 {
@@ -472,7 +485,7 @@ public:
 
 protected:
     std::vector<Base*> _components;
-    std::string _auto_signal_name;
+    std::string _auto_node_name;
 
 public:
     Submodel(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :

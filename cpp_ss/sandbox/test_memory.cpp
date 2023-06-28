@@ -18,7 +18,7 @@ int main()
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [](double t, const Value& x, NodeValues& inputs) -> void
+        [](double t, const NodeValues& /*x*/, NodeValues& inputs) -> void
         {
             inputs.insert_or_assign("x", std::sin(M_PI * t / 5));
         });

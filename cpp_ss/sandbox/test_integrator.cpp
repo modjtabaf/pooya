@@ -18,7 +18,7 @@ int main()
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [](double t, const Value& x, NodeValues& inputs) -> void
+        [](double t, const NodeValues& /*x*/, NodeValues& inputs) -> void
         {
             inputs.insert_or_assign("xd", t < 3 or t > 7 ? 1 : 0);
         }, NodeValues(), rk4);

@@ -108,12 +108,12 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
                 if k not in parameters and k[0] != '-' \
                     and isinstance(v, (int, float, np.ndarray)):
                     history[k] = []
-    
+
         history['t'].append(t)
         for k, v in y.items():
             if k not in parameters and k[0] != '-' \
                     and isinstance(v, (int, float, np.ndarray)):
-                    history[k].append(v)
+                history[k].append(v)
 
     if states:
         t = T[0]
@@ -140,7 +140,7 @@ def run(model, T, inputs_cb=lambda t, x: {}, parameters={}, stepper=solver.rk4):
 def load_mat_files_as_bus(root, prefix):
     prefix += '.'
     ret = {}
-    dirpath, dirnames, filenames = next(os.walk(root))
+    dirpath, _, filenames = next(os.walk(root))
     for filename in filenames:
         if not (filename.startswith(prefix) and filename.endswith('.mat')):
             continue

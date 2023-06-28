@@ -28,14 +28,14 @@ public:
             new Integrator("dphi", d2phi, dphi, M_PI_4);
             new Integrator("phi", dphi, phi);
             new Function("sin(phi)",
-                [](double t, const Value& x) -> Value
+                [](double /*t*/, const Value& x) -> Value
                 {
                     return x.sin();
                 }, phi);
             // new Sin("sin(phi)", phi);
-            new MulDiv("g/l", "**/", {Node(), g, l}, -1);
+            new MulDiv("g/l", "**/", {"", g, l}, -1);
             new MulDiv("", "*///", {tau, m, l, l}, -2);
-            new AddSub("", "+-", {Node(-2), Node(-1)}, "d2phi");
+            new AddSub("", "+-", {-2, -1}, "d2phi");
         }
         exit();
     }
@@ -44,9 +44,9 @@ public:
 int main()
 {
     NodeValues parameters = {
-        {"m", 0.2},
-        {"l", 0.1},
-        {"g", 9.81},
+        {  "m", 0.2 },
+        {  "l", 0.1 },
+        {  "g", 9.81},
         {"tau", 0.13},
         };
 

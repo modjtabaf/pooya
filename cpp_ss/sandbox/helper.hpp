@@ -10,7 +10,7 @@
 namespace blocks
 {
 
-using InputCallback = std::function<void(double, const Value&, NodeValues&)>;
+using InputCallback = std::function<void(double, const NodeValues&, NodeValues&)>;
 using TimeCallback  = std::function<bool(uint k, double& t)>;
 using History       = std::map<std::string, MatrixXd>;
 

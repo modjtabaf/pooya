@@ -42,6 +42,8 @@ Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool regi
     {
         for (auto& port: _oports)
         {
+            if (std::find(_all_oports.cbegin(), _all_oports.cend(), port) != _all_oports.cend())
+                std::cout << *std::find(_all_oports.cbegin(), _all_oports.cend(), port) << "\n";
             assert(std::find(_all_oports.cbegin(), _all_oports.cend(), port) == _all_oports.cend());
             _all_oports.push_back(port);
         }
@@ -62,23 +64,23 @@ uint Base::_process(double t, NodeValues& x, bool reset)
 
     for (auto& iport: _iports)
     {
-        if (x.find(iport) == x.end())
+        if (x.find(iport) == x.first.end())
             return 0;
     }
 
     _known_values = x;
 
     for (auto& oport: _oports)
-        assert(x.find(oport) == x.end());
+        assert(x.find(oport) == x.first.end());
 
-    Values input_values(_iports.size());
-    uint k = 0;
+    Values input_values;
+    input_values.reserve(_iports.size());
     for (auto& iport: _iports)
-        input_values[k++] = x[iport];
-    auto output_values = activation_function(t, input_values);
-    k = 0;
-    for (auto& oport: _oports)
-        x[oport] = output_values[k++];
+        input_values.push_back(x.at(iport));
+    auto output_values = activation_function(t, NodeValues(_iports, input_values));
+    auto node_it = output_values.first.begin();
+    for (auto& v: output_values.second)
+        x.insert_or_assign(*(node_it++), v);
 
     _processed = true;
     return 1;
@@ -87,7 +89,7 @@ uint Base::_process(double t, NodeValues& x, bool reset)
 Nodes Base::_all_iports;
 Nodes Base::_all_oports;
 
-uint Integrator::_process(double t, NodeValues& x, bool reset)
+uint Integrator::_process(double /*t*/, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -95,11 +97,11 @@ uint Integrator::_process(double t, NodeValues& x, bool reset)
     if (_processed)
         return 0;
 
-    _processed = x.find(_iports.front()) != x.end();
+    _processed = x.find(_iports.front()) != x.first.end();
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 
-uint Memory::_process(double t, NodeValues& x, bool reset)
+uint Memory::_process(double /*t*/, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -116,7 +118,10 @@ std::vector<Submodel*> Submodel::_current_submodels;
 
 Node Submodel::get_node_name(const Node& node, bool makenew)
 {
-    Node ret = node.empty() ? "-" : node;
+    if (node.is_locked())
+        return node;
+
+    Node ret = node.empty() ? Node() : node;
 
     // don't alter global node names
     if (ret[0] != '-')
@@ -130,7 +135,7 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
         {
             constexpr auto N = 10;
             char name[N + 2] = "-";
-            for (auto i = 1; i < N + 1; i++)
+            for (auto i = 1; i <= N; i++)
                 name[i] = char(std::experimental::randint(int('a'), int('z')));
             name[N + 1] = 0;
             ret = name;
@@ -152,6 +157,7 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
     if (auto_gen)
         _auto_node_name = ret;
 
+    ret.lock();
     return ret;
 }
 

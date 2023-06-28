@@ -12,13 +12,12 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
     auto process = [](Base& model, double t, NodeValues& x) -> uint
     {
         uint n_processed = model._process(t, x, true);
-        while (true)
+        uint n;
+        do
         {
-            auto n = model._process(t, x, false);
-            if (n == 0)
-                break;
+            n = model._process(t, x, false);
             n_processed += n;
-        }
+        } while(n);
 
         std::vector<const Base*> unprocessed;
 
@@ -37,9 +36,9 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
             {
                 std::cout << "- " << c->name() << "\n";
                 for (const auto& p: c->iports())
-                    std::cout << "  - i: " << (x.find(p) == x.end() ? "*" : " ") <<  p << "\n";
+                    std::cout << "  - i: " << (x.find(p) == x.first.end() ? "*" : " ") <<  p << "\n";
                 for (const auto& p: c->oports())
-                    std::cout << "  - o: " << (x.find(p) == x.end() ? "*" : " ") <<  p << "\n";
+                    std::cout << "  - o: " << (x.find(p) == x.first.end() ? "*" : " ") <<  p << "\n";
             }
         }
         return n_processed;
@@ -51,71 +50,34 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
     States states;
     model.get_states(states);
 
-    auto stepper_callback = [&](double t, const Value& x) -> Value
+    auto stepper_callback = [&](double t, const NodeValues& x) -> Values
     {
-        NodeValues y;
+        NodeValues y(x);
 
-        uint k = 0;
-        for (auto& state: states)
-        {
-            uint n = state.second._value.size();
-            y.insert_or_assign(state.first, x.segment(k, n));
-            k += n;
-        }
-
-        for (auto& v: parameters)
-        {
-            y.insert_or_assign(v.first, v.second);
-        }
-
-        for (auto& v: inputs)
-        {
-            y.insert_or_assign(v.first, v.second);
-        }
+        y.join(parameters);
+        y.join(inputs);
 
         process(model, t, y);
 
-        Value ret(x.size());
-        k = 0;
-        for (const auto& state: states)
+        Values ret;
+        ret.reserve(x.first.size());
+        for (const auto& state: std::get<2>(states))
         {
-            auto& deriv = y[state.second._deriv];
-            uint n = deriv.size();
-            ret.segment(k, n) = deriv;
-            k += n;
+            auto& deriv = y.at(state);
+            ret.push_back(deriv);
         }
 
         return ret;
     };
 
-    uint n = 0;
-    for (const auto& state: states)
-        n += state.second._value.size();
-    Value x(n);
-    n = 0;
-    for (auto& state: states)
+    NodeValues x(std::get<0>(states), std::get<1>(states));
+
+    auto update_history = [&](double t, const NodeValues& x, const NodeValues& inputs) -> void
     {
-        x.segment(n, state.second._value.size()) = state.second._value;
-        n += state.second._value.size();
-    }
+        NodeValues y(x);
 
-    auto update_history = [&](double t, const Value& x, const NodeValues& inputs) -> void
-    {
-        NodeValues y;
-        
-        uint k = 0;
-        for (const auto& state: states)
-        {
-            auto n = state.second._value.size();
-            y.insert_or_assign(state.first, x.segment(k, n));
-            k += n;
-        }
-
-        for (const auto& p: parameters)
-            y.insert_or_assign(p.first, p.second);
-
-        for (const auto& p: inputs)
-            y.insert_or_assign(p.first, p.second);
+        y.join(parameters);
+        y.join(inputs);
 
         process(model, t, y);
 
@@ -124,25 +86,29 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         if (history.empty())
         {
             history.insert_or_assign("t", Value());
-            for (const auto& v: y)
-                if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
-                    history.insert_or_assign(v.first, Value());
+            for (const auto& v: y.first)
+                if ((parameters.find(v) ==  parameters.first.end()) && (v[0] != '-'))
+                    history.insert_or_assign(v, Value());
         }
 
         auto& h = history["t"];
         auto nrows = h.rows() + 1;
         h.conservativeResize(nrows, NoChange);
         h(nrows - 1, 0) = t;
-        for (const auto& v: y)
-            if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
+        uint k = 0;
+        for (const auto& v: y.first)
+        {
+            if ((parameters.find(v) ==  parameters.first.end()) && (v[0] != '-'))
             {
-                auto& h = history[v.first];
+                auto& h = history[v];
                 h.conservativeResize(nrows, NoChange);
-                history[v.first].bottomRows<1>() = v.second;
+                history[v].bottomRows<1>() = y.at(v);
             }
+            k++;
+        }
     };
 
-    if (states.size())
+    if (std::get<0>(states).size())
     {
         assert(stepper);
         uint k = 0;
@@ -178,7 +144,7 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         {
             if (inputs_cb)
                 inputs_cb(t, x, inputs);
-            x = stepper_callback(t, x);
+            x.second = stepper_callback(t, x);
             update_history(t, x, inputs);
         }
     }
@@ -229,6 +195,8 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
 
 bool arange(uint k, double& t, double t_init, double t_end, double dt)
 {
+    if (k < 0)
+        return false;
     t = t_init + k * dt;
     return t <= t_end;
 }

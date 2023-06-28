@@ -2,6 +2,9 @@
 #ifndef __BLOCKS_HPP__
 #define __BLOCKS_HPP__
 
+#include <algorithm>
+#include <initializer_list>
+#include <iterator>
 #include <string>
 #include <map>
 #include <vector>
@@ -19,38 +22,30 @@ class Value : public ArrayXd
 public:
     using ArrayXd::ArrayXd;
 
-    Value(double v) : ArrayXd(1)
+    Value(double v=0) : ArrayXd(1)
     {
         (*this)[0] = v;
     }
 };
 
-class StateData
-{
-public:
-    StateData(const std::string& deriv, const Value& value) :
-        _deriv(deriv), _value(value) {}
-    StateData(const std::string& deriv, double value) :
-        _deriv(deriv), _value(1)
-    {
-        _value[0] = value;
-    }
-
-    std::string _deriv;
-    Value       _value;
-};
-
 class Node : public std::string
 {
+protected:
+    bool _is_locked{false};
+
 public:
     using Parent = std::string;
 
     Node(const std::string& str) : std::string(str) {}
-    Node(const char* str, bool name_locked=true) : std::string(str) {}
+    Node(const char* str) : std::string(str) {}
     Node(int n) : std::string(std::to_string(n)) {}
     Node() : std::string("-") {}
+    Node(const Node& node) = default;
 
-    using Parent::operator=;
+    void lock() {_is_locked = true;}
+    bool is_locked() const {return _is_locked;}
+
+    Node& operator=(const Node& rhs) = default;
 };
 
 class Nodes : public std::vector<Node>
@@ -66,13 +61,127 @@ public:
 };
 
 class Base;
+class NodeValues;
 
 using Scalars          = std::vector<double>;
 using Values           = std::vector<Value>;
-using NodeValues       = std::map<Node, Value>;
-using States           = std::map<std::string, StateData>;
 using TraverseCallback = std::function<bool(const Base&)>;
 using ActFunction      = std::function<Value(double, const Value&)>;
+
+std::ostream& operator<<(std::ostream&, const class NodeValues&);
+
+class NodeValues : public std::pair<Nodes, Values>
+{
+protected:
+    using Parent = std::pair<Nodes, Values>;
+
+public:
+    using Parent::pair;
+    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list)
+    {
+        first.reserve(list.size());
+        second.reserve(list.size());
+        for (const auto& v: list)
+        {
+            first.push_back(v.first);
+            second.push_back(v.second);
+        }
+    }
+
+    Nodes::const_iterator find(const Node& node) const
+    {
+        assert(first.size() == second.size());
+        return std::find(first.cbegin(), first.cend(), node);
+    }
+
+    const Value& at(const Node& node) const
+    {
+        assert(first.size() == second.size());
+        auto k = std::distance(first.begin(), find(node));
+        return second.at(k);
+    }
+
+    void insert_or_assign(const Node& node, const Value& value)
+    {
+        assert(first.size() == second.size());
+        auto it = find(node);
+        if (it == first.cend())
+        {
+            first.push_back(node);
+            second.push_back(value);
+        }
+        else
+        {
+            auto k = std::distance(first.cbegin(), it);
+            second.at(k) = value;
+        }
+    }
+
+    void join(const NodeValues& other)
+    {
+        assert(first.size() == second.size());
+        auto node = other.first.begin();
+        for(const auto& value: other.second)
+            insert_or_assign(*(node++), value);
+    }
+};
+
+class States : public std::tuple<Nodes, Values, Nodes> // state, value, derivative
+{
+protected:
+    using Parent = std::tuple<Nodes, Values, Nodes>;
+
+public:
+    using Parent::tuple;
+
+    Nodes::const_iterator find(const Node& state) const
+    {
+        const auto& states = std::get<0>(*this);
+        assert(states.size() == std::get<1>(*this).size());
+        assert(states.size() == std::get<2>(*this).size());
+        return std::find(states.cbegin(), states.cend(), state);
+    }
+
+    std::pair<Value, Node> at(const Node& state) const
+    {
+        const auto& states = std::get<0>(*this);
+        assert(states.size() == std::get<1>(*this).size());
+        assert(states.size() == std::get<2>(*this).size());
+        auto k = std::distance(states.begin(), find(state));
+        return {std::get<1>(*this).at(k), std::get<2>(*this).at(k)};
+    }
+
+    void insert_or_assign(const Node& state, const Value& value, const Node& deriv)
+    {
+        auto& states = std::get<0>(*this);
+        assert(states.size() == std::get<1>(*this).size());
+        assert(states.size() == std::get<2>(*this).size());
+        auto it = find(state);
+        if (it == states.cend())
+        {
+            states.push_back(state);
+            std::get<1>(*this).push_back(value);
+            std::get<2>(*this).push_back(deriv);
+        }
+        else
+        {
+            auto k = std::distance(states.cbegin(), it);
+            std::get<1>(*this).at(k) = value;
+            std::get<2>(*this).at(k) = deriv;
+        }
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const NodeValues& nv)
+{
+    auto node = nv.first.begin();
+    for (auto& value: nv.second)
+    {
+        os << "  - " << *node << ": " << value << "\n";
+        node++;
+    }
+    return os << "\n";
+}
 
 class Base
 {
@@ -90,16 +199,13 @@ protected:
 public:
     Base(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
 
-    virtual void get_states(States& states) {}
-    virtual void step(double t, const NodeValues& states) {}
-    virtual Values activation_function(double t, const Values& x)
+    virtual void get_states(States& /*states*/) {}
+    virtual void step(double /*t*/, const NodeValues& /*states*/) {}
+    virtual NodeValues activation_function(double /*t*/, const NodeValues& /*x*/)
     {
         assert(false);
-        return Values();
+        return NodeValues();
     }
-
-    // def get_ports(self):
-    //     return self._iports, self._oports
 
     bool is_processed() const {return _processed;}
     const std::string& name() const {return _name;}
@@ -121,25 +227,47 @@ public:
 //     def activation_function(self, t, x):
 //         return [x[0]]
 
-// class Bus(Base):
-//     class BusValues(list):
-//         def __init__(self, names, *args):
-//             super().__init__(args)
-//             self._names = names
-        
-//         def __repr__(self):
-//             return 'BusValues(' + super().__repr__() + ')'
+class Bus : public Base
+{
+protected:
+    std::vector<std::string> _raw_names;
 
-//     def __init__(self, name, iports='-', oport='-'):
-//         super().__init__(name, iports, oport)
-        
-//         if not isinstance(iports, (list, tuple)):
-//             iports = [iports]
-//         self._raw_names = [n for n in iports]
+public:
+    // class BusValues : public Values
+    // {
+    // protected:
+    //     Nodes _names;
 
-//     def activation_function(self, t, x):
-//         ret = [Bus.BusValues(self._raw_names, *x)]
-//         return ret
+    // public:
+    //     BusValues(const Nodes& names, const Values& values) :
+    //         Values(values), _names(names) {}
+    
+    //     // def __repr__(self):
+    //     //     return 'BusValues(' + super().__repr__() + ')'
+    // };
+
+    Bus(const char* name, const Nodes& iports=Node(), const Node& oport=Node()) :
+        Base(name, iports, oport)
+    {
+        _raw_names.reserve(iports.size());
+        for (const auto& p: iports)
+            _raw_names.push_back(p);
+    }
+
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
+    {
+        assert(x.first.size() == _raw_names.size());
+        NodeValues ret;
+        ret.first.reserve(_raw_names.size());
+        ret.second.reserve(_raw_names.size());
+        auto p = x.second.begin();
+        for (const auto& name: _raw_names)
+        {
+            ret.insert_or_assign(name, *(p++));
+        }
+        return ret;
+    }
+};
 
 // class BusSelector(Base):
 //     def __init__(self, name, iport='-', signals=[], oports=[]):
@@ -165,16 +293,25 @@ public:
 //                              for s in self._signals]
 //         return [bus_values[k] for k in self._indices]
 
-// class InitialValue(Base):
-//     def __init__(self, name, iport='-', oport='-'):
-//         super().__init__(name, iport, oport)
-//         self._value = None
+class InitialValue : public Base
+{
+protected:
+    Value _value;
 
-//     def activation_function(self, t, x):
-//         if self._value is None:
-//             self._value = x[0]
-//             self._iports = []
-//         return [self._value]
+public:
+    InitialValue(const char* name, const Node& iport=Node(), const Node& oport=Node()) :
+        Base(name, iport, oport) {}
+
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
+    {
+        if (_value.size() == 0)
+        {
+            _value = x.second[0];
+            _iports.clear();
+        }
+        return NodeValues(_oports, {_value});
+    }
+};
 
 class Const : public Base
 {
@@ -191,9 +328,9 @@ public:
          _value << value;
     }
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double /*t*/, const NodeValues& /*x*/) override
     {
-        return Values{{_value}};
+        return NodeValues(_oports, {_value});
     }
 };
 
@@ -206,9 +343,9 @@ public:
     Gain(const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
         Base(name, iport, oport), _k(k) {}
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        return {_k * x[0]};
+        return NodeValues(_oports, {_k * x.second[0]});
     }
 };
 
@@ -218,9 +355,9 @@ public:
     Sin(const char* name, const Nodes& iports=Nodes({Node()}), const Nodes& oports=Nodes({Node()})) :
         Base(name, iports, oports) {}
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        return {x[0].sin()};
+        return NodeValues(_oports, {x.second[0].sin()});
     }
 };
 
@@ -233,9 +370,9 @@ public:
     Function(const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
         Base(name, {iport}, {oport}), _act_func(act_func) {}
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double t, const NodeValues& x) override
     {
-        return {_act_func(t, x[0])};
+        return NodeValues(_oports, {_act_func(t, x.second[0])});
     }
 };
 
@@ -260,11 +397,11 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        Value ret = Value::Constant(x[0].size(), _initial);
+        Value ret = Value::Constant(x.second[0].size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& v: x)
+        for (const auto& v: x.second)
         {
             if (*p == '+')
                 ret += v;
@@ -274,7 +411,7 @@ public:
                  assert(false);
             p++;
         }
-        return {ret};
+        return NodeValues(_oports, {ret});
     }
 };
 
@@ -291,11 +428,11 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        Value ret = Value::Constant(x[0].size(), _initial);
+        Value ret = Value::Constant(x.second[0].size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& v: x)
+        for (const auto& v: x.second)
         {
             if (*p == '*')
                 ret *= v;
@@ -305,7 +442,7 @@ public:
                  assert(false);
             p++;
         }
-        return {ret};
+        return NodeValues(_oports, {ret});
     }
 };
 
@@ -320,10 +457,10 @@ public:
 
     void get_states(States& states) override
     {
-        states.insert_or_assign(_oports.front(), StateData(_iports.front(), _value));
+        states.insert_or_assign(_oports.front(), _value, _iports.front());
     }
 
-    void step(double t, const NodeValues& states) override
+    void step(double /*t*/, const NodeValues& states) override
     {
         _value = states.at(_oports.front())[0];
     }
@@ -384,20 +521,20 @@ public:
         _x.push_back(states.at(_iports.front()));
     }
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double t, const NodeValues& x) override
     {
         if (_t.empty())
-            return {x[2][0]};
+            return NodeValues(_oports, {x.second[2][0]});
     
-        const double delay = x[1][0];
+        const double delay = x.second[1][0];
         t -= delay;
         if (t <= _t.front())
         {
-            return {x[2]};
+            return NodeValues(_oports, {x.second[2]});
         }
         else if (t >= _t.back())
         {
-            return {_x.back()};
+            return NodeValues(_oports, {_x.back()});
         }
 
         int k = 0;
@@ -408,7 +545,7 @@ public:
             k++;
         }
 
-        return {(_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]};
+        return NodeValues(_oports, {(_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]});
     }
 };
 
@@ -421,7 +558,7 @@ public:
     Memory(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
         Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
-    void step(double t, const NodeValues& states) override
+    void step(double /*t*/, const NodeValues& states) override
     {
         _value = states.at(_iports.front());
     }
@@ -457,18 +594,18 @@ public:
         _first_step = false;
     }
 
-    Values activation_function(double t, const Values& x) override
+    NodeValues activation_function(double t, const NodeValues& x) override
     {
         if (_first_step)
         {
             _t = t;
-            _x = x[0];
-            return {_y};
+            _x = x.second[0];
+            return NodeValues(_oports, {_y});
         }
         else if (_t == t)
-            return {_y};
+            return NodeValues(_oports, {_y});
 
-        return {(x[0] - _x)/(t - _t)};
+        return NodeValues(_oports, {((x.second[0] - _x)/(t - _t))});
     }
 };
 
@@ -477,17 +614,15 @@ class Submodel : public Base
 protected:
     static std::vector<Submodel*> _current_submodels;
 
+    std::vector<Base*> _components;
+    std::string _auto_node_name;
+
 public:
     static Submodel* current()
     {
         return Submodel::_current_submodels.empty() ? nullptr : Submodel::_current_submodels.back();
     }
 
-protected:
-    std::vector<Base*> _components;
-    std::string _auto_node_name;
-
-public:
     Submodel(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
         Base(name, iports, oports, false) {}
 

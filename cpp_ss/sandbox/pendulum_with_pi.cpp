@@ -16,17 +16,17 @@ public:
     Pendulum(const Node& tau, const Node& phi) : Submodel("pendulum", {tau}, {phi})
     {
         // nodes
-        auto dphi  = Node("dphi");
-        auto m     = Node("m");
-        auto g     = Node("g");
-        auto l     = Node("l");
+        auto dphi  = "dphi";
+        auto m     = "m";
+        auto g     = "g";
+        auto l     = "l";
 
         // blocks
         enter();
         {
             new MulDiv("tau/ml2", "*///", {tau, m, l, l});
-            new AddSub("err", "+-", {Node(), Node(-1)});
-            new Integrator("dphi", Node(), dphi);
+            new AddSub("err", "+-", {"", -1});
+            new Integrator("dphi", "", dphi);
             new Integrator("phi", dphi, phi);
             // new Function("sin(phi)",
             //     [](double t, const Value& x) -> Value
@@ -34,7 +34,7 @@ public:
             //         return x.sin();
             //     }, phi);
             new Sin("sin(phi)", {phi});
-            new MulDiv("g/l", "**/", {Node(), g, l}, Node(-1));
+            new MulDiv("g/l", "**/", {"", g, l}, -1);
         }
         exit();
     }
@@ -52,10 +52,10 @@ public:
         // blocks
         enter();
         {
-            new Gain("Kp", Kp, x, Node(-1));
-            new Integrator("ix", x, Node(), x0);
+            new Gain("Kp", Kp, x, {-1});
+            new Integrator("ix", x, "", x0);
             new Gain("Ki", Ki);
-            new AddSub("", "++", {Node(-1), Node()}, oport);
+            new AddSub("", "++", {-1, ""}, oport);
         }
         exit();
     }
@@ -74,7 +74,7 @@ public:
         // blocks
         enter();
         {
-            new AddSub("", "+-", {Node("des_phi"), phi}, err);
+            new AddSub("", "+-", {"des_phi", phi}, err);
             new PI(40.0, 20.0, err, tau);
             new Pendulum(tau, phi);
         }
@@ -85,9 +85,9 @@ public:
 int main()
 {
     NodeValues parameters = {
-        {"m", 0.2},
-        {"l", 0.1},
-        {"g", 9.81},
+        {      "m", 0.2   },
+        {      "l", 0.1   },
+        {      "g", 9.81  },
         {"des_phi", M_PI_4},
         };
 

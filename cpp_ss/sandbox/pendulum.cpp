@@ -26,12 +26,12 @@ public:
             new Integrator("dphi", d2phi, dphi);
             new Integrator("phi", dphi, phi, M_PI_4);
             new Function("sin(phi)",
-                [](double t, const Value& x) -> Value
+                [](double /*t*/, const Value& x) -> Value
                 {
                     return x.sin();
                 }, phi);
             // new Sin("sin(phi)", {phi}, {Node()});
-            new MulDiv("-g/l", "**/", {Node(), g, l}, d2phi, -1);
+            new MulDiv("-g/l", "**/", {"", g, l}, d2phi, -1);
         }
         exit();
     }
@@ -40,7 +40,7 @@ public:
 int main()
 {
     NodeValues parameters = {
-        {"l", 0.1},
+        {"l", 0.1 },
         {"g", 9.81},
         };
 

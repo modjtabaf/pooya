@@ -1,1 +1,0 @@
-g++ -o pendulum.o pendulum.cpp blocks.cpp solver.cpp helper.cpp -lboost_iostreams -lboost_system -lboost_filesystem && echo "Running..." && ./pendulum.o

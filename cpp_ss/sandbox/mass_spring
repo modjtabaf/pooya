@@ -1,1 +1,0 @@
-g++ -o mass_spring.o mass_spring.cpp blocks.cpp solver.cpp helper.cpp -lboost_iostreams -lboost_system -lboost_filesystem && echo "Running..." && ./mass_spring.o

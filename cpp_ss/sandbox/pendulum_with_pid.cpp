@@ -13,7 +13,7 @@ using namespace blocks;
 class Pendulum : public Submodel
 {
 public:
-    Pendulum(const Node& tau, const Node& phi) : Submodel("pendulum", {tau}, {phi})
+    Pendulum(Submodel* parent, const Node& tau, const Node& phi) : Submodel(parent, "pendulum", {tau}, {phi})
     {
         // nodes
         Node dphi("dphi");
@@ -22,51 +22,43 @@ public:
         Node l("l");
 
         // blocks
-        enter();
-        {
-            new MulDiv("tau/ml2", "*///", {tau, m, l, l});
-            new AddSub("err", "+-", {"", -1});
-            new Integrator("dphi", "", dphi);
-            new Integrator("phi", dphi, phi);
-            // new Function("sin(phi)",
-            //     [](double t, const Value& x) -> Value
-            //     {
-            //         return x.sin();
-            //     }, phi);
-            new Sin("sin(phi)", {phi});
-            new MulDiv("g/l", "**/", {"", g, l}, -1);
-        }
-        exit();
+        new MulDiv(this, "tau/ml2", "*///", {tau, m, l, l});
+        new AddSub(this, "err", "+-", {"", -1});
+        new Integrator(this, "dphi", "", dphi);
+        new Integrator(this, "phi", dphi, phi);
+        // new Function(this, "sin(phi)",
+        //     [](double t, const Value& x) -> Value
+        //     {
+        //         return x.sin();
+        //     }, phi);
+        new Sin(this, "sin(phi)", {phi});
+        new MulDiv(this, "g/l", "**/", {"", g, l}, -1);
     }
 };
 
 class PID : public Submodel
 {
 public:
-    PID(double Kp, double Ki, double Kd, Node& iport, Node& oport, double x0=0.0) :
-        Submodel("PID", iport, oport)
+    PID(Submodel* parent, double Kp, double Ki, double Kd, Node& iport, Node& oport, double x0=0.0) :
+        Submodel(parent, "PID", iport, oport)
     {
         // nodes
         auto& x = iport;
 
         // blocks
-        enter();
-        {
-            new Gain("Kp", Kp, x, {-1});
-            new Integrator("ix", x, "", x0);
-            new Gain("Ki", Ki, {""}, {-2});
-            new Derivative("dx", x, "");
-            new Gain("Kd", Kd, {""}, {-3});
-            new AddSub("", "+++", {-1, -2, -3}, oport);
-        }
-        exit();
+        new Gain(this, "Kp", Kp, x, {-1});
+        new Integrator(this, "ix", x, "", x0);
+        new Gain(this, "Ki", Ki, {""}, {-2});
+        new Derivative(this, "dx", x, "");
+        new Gain(this, "Kd", Kd, {""}, {-3});
+        new AddSub(this, "", "+++", {-1, -2, -3}, oport);
     }
 };
 
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel("pendulum_with_PID")
+    SSModel() : Submodel(nullptr, "pendulum_with_PID")
     {
         // nodes
         Node phi("phi");
@@ -74,13 +66,9 @@ public:
         Node err("err");
 
         // blocks
-        enter();
-        {
-            new AddSub("", "+-", {"des_phi", phi}, err);
-            new PID(40.0, 20.0, 0.05, err, tau);
-            new Pendulum(tau, phi);
-        }
-        exit();
+        new AddSub(this, "", "+-", {"des_phi", phi}, err);
+        new PID(this, 40.0, 20.0, 0.05, err, tau);
+        new Pendulum(this, tau, phi);
     }
 };
 

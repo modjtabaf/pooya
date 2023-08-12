@@ -61,6 +61,7 @@ public:
 };
 
 class Base;
+class Submodel;
 class NodeValues;
 
 using Scalars          = std::vector<double>;
@@ -197,7 +198,7 @@ protected:
     bool _processed{false};
 
 public:
-    Base(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
+    Base(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
 
     virtual void get_states(States& /*states*/) {}
     virtual void step(double /*t*/, const NodeValues& /*states*/) {}
@@ -246,8 +247,8 @@ public:
     //     //     return 'BusValues(' + super().__repr__() + ')'
     // };
 
-    Bus(const char* name, const Nodes& iports=Node(), const Node& oport=Node()) :
-        Base(name, iports, oport)
+    Bus(Submodel* parent, const char* name, const Nodes& iports=Node(), const Node& oport=Node()) :
+        Base(parent, name, iports, oport)
     {
         _raw_names.reserve(iports.size());
         for (const auto& p: iports)
@@ -299,8 +300,8 @@ protected:
     Value _value;
 
 public:
-    InitialValue(const char* name, const Node& iport=Node(), const Node& oport=Node()) :
-        Base(name, iport, oport) {}
+    InitialValue(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node()) :
+        Base(parent, name, iport, oport) {}
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
@@ -319,11 +320,11 @@ protected:
     Value _value;
 
 public:
-    Const(const char* name, const Value& value, const Nodes& oport=Nodes({Node()})) :
-        Base(name, Nodes(), oport), _value(value) {}
+    Const(Submodel* parent, const char* name, const Value& value, const Nodes& oport=Nodes({Node()})) :
+        Base(parent, name, Nodes(), oport), _value(value) {}
 
-    Const(const char* name, double value, const Nodes& oport={Node()}) :
-        Base(name, Nodes(), oport), _value(1)
+    Const(Submodel* parent, const char* name, double value, const Nodes& oport={Node()}) :
+        Base(parent, name, Nodes(), oport), _value(1)
     {
          _value << value;
     }
@@ -340,8 +341,8 @@ protected:
     double _k;
 
 public:
-    Gain(const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
-        Base(name, iport, oport), _k(k) {}
+    Gain(Submodel* parent, const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
+        Base(parent, name, iport, oport), _k(k) {}
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
@@ -352,8 +353,8 @@ public:
 class Sin : public Base
 {
 public:
-    Sin(const char* name, const Nodes& iports=Nodes({Node()}), const Nodes& oports=Nodes({Node()})) :
-        Base(name, iports, oports) {}
+    Sin(Submodel* parent, const char* name, const Nodes& iports=Nodes({Node()}), const Nodes& oports=Nodes({Node()})) :
+        Base(parent, name, iports, oports) {}
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
@@ -367,8 +368,8 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
-        Base(name, {iport}, {oport}), _act_func(act_func) {}
+    Function(Submodel* parent, const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
+        Base(parent, name, {iport}, {oport}), _act_func(act_func) {}
 
     NodeValues activation_function(double t, const NodeValues& x) override
     {
@@ -391,8 +392,8 @@ protected:
     double      _initial;
 
 public:
-    AddSub(const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
-        Base(name, iports, {oport}), _operators(operators), _initial(initial)
+    AddSub(Submodel* parent, const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
+        Base(parent, name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
     }
@@ -422,8 +423,8 @@ protected:
     double      _initial;
 
 public:
-    MulDiv(const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
-        Base(name, iports, {oport}), _operators(operators), _initial(initial)
+    MulDiv(Submodel* parent, const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
+        Base(parent, name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
     }
@@ -452,8 +453,8 @@ protected:
     double _value;
 
 public:
-    Integrator(const char* name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
-        Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Integrator(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
+        Base(parent, name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void get_states(States& states) override
     {
@@ -497,8 +498,8 @@ protected:
     Values  _x;
 
 public:
-    Delay(const char* name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
-        Base(name, iports, oport), _lifespan(lifespan) {}
+    Delay(Submodel* parent, const char* name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
+        Base(parent, name, iports, oport), _lifespan(lifespan) {}
 
     void step(double t, const NodeValues& states) override
     {
@@ -555,8 +556,8 @@ protected:
     Value _value;
 
 public:
-    Memory(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
-        Base(name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Memory(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
+        Base(parent, name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void step(double /*t*/, const NodeValues& states) override
     {
@@ -583,8 +584,8 @@ protected:
     Value  _y;
 
 public:
-    Derivative(const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
-        Base(name, iport, oport), _y(y0) {}
+    Derivative(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
+        Base(parent, name, iport, oport), _y(y0) {}
 
     void step(double t, const NodeValues& states) override
     {
@@ -612,26 +613,12 @@ public:
 class Submodel : public Base
 {
 protected:
-    static std::vector<Submodel*> _current_submodels;
-
     std::vector<Base*> _components;
     std::string _auto_node_name;
 
 public:
-    static Submodel* current()
-    {
-        return Submodel::_current_submodels.empty() ? nullptr : Submodel::_current_submodels.back();
-    }
-
-    Submodel(const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
-        Base(name, iports, oports, false) {}
-
-    void enter() {_current_submodels.push_back(this);}
-    void exit()
-    {
-        assert(_current_submodels.back() == this);
-        _current_submodels.pop_back();
-    }
+    Submodel(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
+        Base(parent, name, iports, oports, false) {}
 
     void add_component(Base& component)
     {

@@ -13,7 +13,7 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel("pendulum")
+    SSModel() : Submodel(nullptr, "pendulum")
     {
         Node   phi(  "phi");
         Node  dphi( "dphi");
@@ -21,19 +21,15 @@ public:
         Node g("g");
         Node l("l");
 
-        enter();
-        {
-            new Integrator("dphi", d2phi, dphi);
-            new Integrator("phi", dphi, phi, M_PI_4);
-            new Function("sin(phi)",
-                [](double /*t*/, const Value& x) -> Value
-                {
-                    return x.sin();
-                }, phi);
-            // new Sin("sin(phi)", {phi}, {Node()});
-            new MulDiv("-g/l", "**/", {"", g, l}, d2phi, -1);
-        }
-        exit();
+        new Integrator(this, "dphi", d2phi, dphi);
+        new Integrator(this, "phi", dphi, phi, M_PI_4);
+        new Function(this, "sin(phi)",
+            [](double /*t*/, const Value& x) -> Value
+            {
+                return x.sin();
+            }, phi);
+        // new Sin(this, "sin(phi)", {phi}, {Node()});
+        new MulDiv(this, "-g/l", "**/", {"", g, l}, d2phi, -1);
     }
 };
 

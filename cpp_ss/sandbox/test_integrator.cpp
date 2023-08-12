@@ -12,7 +12,7 @@ using namespace blocks;
 
 int main()
 {
-    auto blk = Integrator("", "xd", "x", 1.0);
+    auto blk = Integrator(nullptr, "", "xd", "x", 1.0);
     auto history = run(blk,
         [](uint k, double& t) -> bool
         {

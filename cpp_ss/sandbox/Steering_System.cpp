@@ -17,7 +17,7 @@ using namespace blocks;
 class PT : public Submodel
 {
 public:
-    PT(const Nodes& iports, const Node& y_out) : Submodel("PT", iports, {y_out})
+    PT(Submodel* parent, const Nodes& iports, const Node& y_out) : Submodel(parent, "PT", iports, {y_out})
     {
         // nodes
         const auto& y_in = _iports[0];
@@ -26,23 +26,19 @@ public:
         const auto& y0   = _iports[2];
 
         // blocks
-        enter();
-        {
-            new AddSub("+-1", "+-", {y_in, y_out}, "001");
-            new MulDiv("*/", "*/", {"001", tau}, "002");
-            new Integrator("Int", "002", -1);
-            new InitialValue("IV", y0, "003");
-            new AddSub("+-2", "++", {-1, "003"}, y_out);
-        }
-        exit();
+        new AddSub(this, "+-1", "+-", {y_in, y_out}, "001");
+        new MulDiv(this, "*/", "*/", {"001", tau}, "002");
+        new Integrator(this, "Int", "002", -1);
+        new InitialValue(this, "IV", y0, "003");
+        new AddSub(this, "+-2", "++", {-1, "003"}, y_out);
     }
 };
 
 class ComputeFrontWheelAngleRightLeftPinpoint : public Submodel
 {
 public:
-    ComputeFrontWheelAngleRightLeftPinpoint(const Node& front_wheel_angle, const Nodes& oports) :
-        Submodel("ComputeFrontWheelAngleRightLeftPinpoint", front_wheel_angle, oports)
+    ComputeFrontWheelAngleRightLeftPinpoint(Submodel* parent, const Node& front_wheel_angle, const Nodes& oports) :
+        Submodel(parent, "ComputeFrontWheelAngleRightLeftPinpoint", front_wheel_angle, oports)
     {
         // nodes
         const auto& front_wheel_angle_right = oports[0];
@@ -51,24 +47,20 @@ public:
         Node tractor_Width("tractor_Width");
 
         // blocks
-        enter();
-        {
-            new MulDiv("*/1", "*/", {tractor_wheelbase, front_wheel_angle}, -1);
-            new AddSub("+-1", "++", {-1, tractor_Width}, "004");
-            new MulDiv("*/2", "*/", {tractor_wheelbase, "004"}, front_wheel_angle_right);
-            new Gain("K", 0.5, tractor_Width, {"005"});
-            new AddSub("+-2", "+-", {-1, "005"}, "006");
-            new MulDiv("*/3", "*/", {tractor_wheelbase, "006"}, front_wheel_angle_left);
-        }
-        exit();
+        new MulDiv(this, "*/1", "*/", {tractor_wheelbase, front_wheel_angle}, -1);
+        new AddSub(this, "+-1", "++", {-1, tractor_Width}, "004");
+        new MulDiv(this, "*/2", "*/", {tractor_wheelbase, "004"}, front_wheel_angle_right);
+        new Gain(this, "K", 0.5, tractor_Width, {"005"});
+        new AddSub(this, "+-2", "+-", {-1, "005"}, "006");
+        new MulDiv(this, "*/3", "*/", {tractor_wheelbase, "006"}, front_wheel_angle_left);
     }
 };
 
 class SteeringSystem : public Submodel
 {
 public:
-    SteeringSystem(const Node& ad_DsrdFtWhlAngl_Rq_VD, const Node& steering_info) :
-        Submodel("Steering_System", ad_DsrdFtWhlAngl_Rq_VD, steering_info)
+    SteeringSystem(Submodel* parent, const Node& ad_DsrdFtWhlAngl_Rq_VD, const Node& steering_info) :
+        Submodel(parent, "Steering_System", ad_DsrdFtWhlAngl_Rq_VD, steering_info)
     {
         // nodes
         Node front_wheel_angle("front_wheel_angle");
@@ -79,30 +71,26 @@ public:
         Node AxFr_front_left("AxFr_front_left");
 
         // blocks
-        enter();
-        {
-            new MulDiv("*/", "**", {ad_DsrdFtWhlAngl_Rq_VD, "front_wheel_ang_gain"}, "007");
-            new Delay("Delay", {"007", "front_wheel_ang_delay", "front_wheel_ang_init_value"}, {-2});
-            new Function("Clamp",
-                [](double /*t*/, const Value& x) -> Value
-                {
-                    return x.max(0.001).min(10);
-                }, "front_wheel_ang_t_const", "008");
-            new PT({-2, "008", -2}, front_wheel_angle);
-            new Derivative("Derivative", front_wheel_angle, front_wheel_angle_rate);
-            new Gain("K1", -1, front_wheel_angle, front_wheel_angle_neg);
-            new Gain("K2", -1, front_wheel_angle_rate, front_wheel_angle_rate_neg);
-            new ComputeFrontWheelAngleRightLeftPinpoint(front_wheel_angle, {AxFr_front_right, AxFr_front_left});
-            new Bus("Bus", {
-                front_wheel_angle,
-                front_wheel_angle_rate,
-                front_wheel_angle_neg,
-                front_wheel_angle_rate_neg,
-                AxFr_front_right,
-                AxFr_front_left
-                }, steering_info);
-        }
-        exit();
+        new MulDiv(this, "*/", "**", {ad_DsrdFtWhlAngl_Rq_VD, "front_wheel_ang_gain"}, "007");
+        new Delay(this, "Delay", {"007", "front_wheel_ang_delay", "front_wheel_ang_init_value"}, {-2});
+        new Function(this, "Clamp",
+            [](double /*t*/, const Value& x) -> Value
+            {
+                return x.max(0.001).min(10);
+            }, "front_wheel_ang_t_const", "008");
+        new PT(this, {-2, "008", -2}, front_wheel_angle);
+        new Derivative(this, "Derivative", front_wheel_angle, front_wheel_angle_rate);
+        new Gain(this, "K1", -1, front_wheel_angle, front_wheel_angle_neg);
+        new Gain(this, "K2", -1, front_wheel_angle_rate, front_wheel_angle_rate_neg);
+        new ComputeFrontWheelAngleRightLeftPinpoint(this, front_wheel_angle, {AxFr_front_right, AxFr_front_left});
+        new Bus(this, "Bus", {
+            front_wheel_angle,
+            front_wheel_angle_rate,
+            front_wheel_angle_neg,
+            front_wheel_angle_rate_neg,
+            AxFr_front_right,
+            AxFr_front_left
+            }, steering_info);
     }
 };
 
@@ -138,7 +126,7 @@ int main()
         {"front_wheel_ang_init_value", 0.0},
         };
 
-    auto steering_system = SteeringSystem(
+    auto steering_system = SteeringSystem(nullptr,
         "front_wheel_angle_Rq",
         "steering_info");
     auto history = run(steering_system,

@@ -13,18 +13,14 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel("")
+    SSModel() : Submodel(nullptr, "")
     {
         Node x("x");
         Node xd("xd");
 
-        enter();
-        {
-            new Const("TimeDelay", 2.7435, {"-time_delay"});
-            new Const("Initial", 0.0, {"-initial"});
-            new Delay("Delay", {x, "-time_delay", "-initial"}, xd);
-        }
-        exit();
+        new Const(this, "TimeDelay", 2.7435, {"-time_delay"});
+        new Const(this, "Initial", 0.0, {"-initial"});
+        new Delay(this, "Delay", {x, "-time_delay", "-initial"}, xd);
     }
 };
 

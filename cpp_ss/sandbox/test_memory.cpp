@@ -12,7 +12,7 @@ using namespace blocks;
 
 int main()
 {
-    auto memory = Memory("", "x", "xd");
+    auto memory = Memory(nullptr, "", "x", "xd");
     auto history = run(memory,
         [](uint k, double& t) -> bool
         {

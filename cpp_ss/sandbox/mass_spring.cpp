@@ -13,19 +13,15 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel("")
+    SSModel() : Submodel(nullptr, "")
     {
         Node x("x");
         Node xd("xd");
         Node xdd("xdd");
 
-        enter();
-        {
-            new Integrator("xd", xdd, xd, 0.1);
-            new Integrator("x", xd, x);
-            new Gain("-k/m", -1.0/1.0, x, xdd);
-        }
-        exit();
+        new Integrator(this, "xd", xdd, xd, 0.1);
+        new Integrator(this, "x", xd, x);
+        new Gain(this, "-k/m", -1.0/1.0, x, xdd);
     }
 };
 

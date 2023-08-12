@@ -8,11 +8,9 @@
 namespace blocks
 {
 
-Base::Base(const char* name, const Nodes& iports, const Nodes& oports, bool register_oports) :
+Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes& oports, bool register_oports) :
     _name(name)
 {
-    auto* parent = Submodel::current();
-
     if (parent)
     {
         if (parent->name() != "")
@@ -113,8 +111,6 @@ uint Memory::_process(double /*t*/, NodeValues& x, bool reset)
     _processed = true;
     return 1;
 }
-
-std::vector<Submodel*> Submodel::_current_submodels;
 
 Node Submodel::get_node_name(const Node& node, bool makenew)
 {

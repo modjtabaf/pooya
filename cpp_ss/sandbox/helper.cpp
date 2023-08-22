@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <fstream>
 
 #include "blocks.hpp"
 #include "helper.hpp"
@@ -197,6 +198,28 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 {
     t = t_init + k * dt;
     return t <= t_end;
+}
+
+void export_csv(const History& history, std::string filename)
+{
+    if (history.size() == 0)
+        return;
+
+    std::ofstream ofs(filename);
+
+    // header
+    for (const auto& h: history)
+        ofs << h.first << ",";
+    ofs << "\n";
+
+    // values
+    auto n = history.begin()->second.size();
+    for (int k = 0; k < n; k++)
+    {
+        for (const auto& h: history)
+            ofs << h.second(k) << ",";
+        ofs << "\n";
+    }
 }
 
 }

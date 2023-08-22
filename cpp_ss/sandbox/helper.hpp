@@ -16,6 +16,7 @@ using History       = std::map<std::string, MatrixXd>;
 
 History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb=nullptr, const NodeValues& parameters=NodeValues(), Solver stepper=nullptr);
 bool arange(uint k, double& t, double t_init, double t_end, double dt);
+void export_csv(const History& history, std::string filename);
 
 }
 

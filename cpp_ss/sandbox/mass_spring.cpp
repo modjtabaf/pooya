@@ -39,6 +39,8 @@ int main()
         },
         nullptr, NodeValues(), rk4);
 
+    export_csv(history, "mass_spring.csv");
+
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";
     gp << "set yrange [-0.15:0.15]\n";

@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := pendulum_with_pi
+TARGET   := test04_mass_spring
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	pendulum_with_pi.cpp \
+	test04_mass_spring.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info pendulum_with_pi
+.PHONY: all build clean debug release run info test04_mass_spring
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# pendulum_with_pi: SRC += pendulum_with_pi.cpp
-# pendulum_with_pi: TARGET += pendulum_with_pi
-# pendulum_with_pi: release
+# test04_mass_spring: SRC += test04_mass_spring.cpp
+# test04_mass_spring: TARGET += test04_mass_spring
+# test04_mass_spring: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

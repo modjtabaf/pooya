@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := mass_spring
+TARGET   := test06_pendulum_with_torque
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	mass_spring.cpp \
+	test06_pendulum_with_torque.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info mass_spring
+.PHONY: all build clean debug release run info test06_pendulum_with_torque
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# mass_spring: SRC += mass_spring.cpp
-# mass_spring: TARGET += mass_spring
-# mass_spring: release
+# test06_pendulum_with_torque: SRC += test06_pendulum_with_torque.cpp
+# test06_pendulum_with_torque: TARGET += test06_pendulum_with_torque
+# test06_pendulum_with_torque: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

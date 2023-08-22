@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := test_memory
+TARGET   := test08_pendulum_with_pid
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	test_memory.cpp \
+	test08_pendulum_with_pid.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info test_memory
+.PHONY: all build clean debug release run info test08_pendulum_with_pid
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# test_memory: SRC += test_memory.cpp
-# test_memory: TARGET += test_memory
-# test_memory: release
+# test08_pendulum_with_pid: SRC += test08_pendulum_with_pid.cpp
+# test08_pendulum_with_pid: TARGET += test08_pendulum_with_pid
+# test08_pendulum_with_pid: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

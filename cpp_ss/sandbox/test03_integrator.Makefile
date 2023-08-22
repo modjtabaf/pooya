@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := pendulum_with_pid
+TARGET   := test03_integrator
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	pendulum_with_pid.cpp \
+	test03_integrator.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info pendulum_with_pid
+.PHONY: all build clean debug release run info test03_integrator
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# pendulum_with_pid: SRC += pendulum_with_pid.cpp
-# pendulum_with_pid: TARGET += pendulum_with_pid
-# pendulum_with_pid: release
+# test03_integrator: SRC += test03_integrator.cpp
+# test03_integrator: TARGET += test03_integrator
+# test03_integrator: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

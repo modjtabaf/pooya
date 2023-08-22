@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := test_delay
+TARGET   := test01_memory
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	test_delay.cpp \
+	test01_memory.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info test_delay
+.PHONY: all build clean debug release run info test01_memory
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# test_delay: SRC += test_delay.cpp
-# test_delay: TARGET += test_delay
-# test_delay: release
+# test01_memory: SRC += test01_memory.cpp
+# test01_memory: TARGET += test01_memory
+# test01_memory: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

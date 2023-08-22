@@ -4,10 +4,10 @@ LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_fi
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := pendulum_with_torque
+TARGET   := test02_delay
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	pendulum_with_torque.cpp \
+	test02_delay.cpp \
 	blocks.cpp     \
 	helper.cpp     \
 	solver.cpp
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info pendulum_with_torque
+.PHONY: all build clean debug release run info test02_delay
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# pendulum_with_torque: SRC += pendulum_with_torque.cpp
-# pendulum_with_torque: TARGET += pendulum_with_torque
-# pendulum_with_torque: release
+# test02_delay: SRC += test02_delay.cpp
+# test02_delay: TARGET += test02_delay
+# test02_delay: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

@@ -3,6 +3,7 @@
 #define __HELPER_HPP__
 
 #include <vector>
+#include <fstream>
 
 #include "blocks.hpp"
 #include "solver.hpp"

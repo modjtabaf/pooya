@@ -46,6 +46,10 @@ public:
     bool is_locked() const {return _is_locked;}
 
     Node& operator=(const Node& rhs) = default;
+    std::size_t operator()(const Node& node) const
+    {
+        return operator()(*static_cast<const Parent*>(&node));
+    }
 };
 
 class Nodes : public std::vector<Node>
@@ -68,62 +72,72 @@ using Scalars          = std::vector<double>;
 using Values           = std::vector<Value>;
 using TraverseCallback = std::function<bool(const Base&)>;
 using ActFunction      = std::function<Value(double, const Value&)>;
-
+ 
 std::ostream& operator<<(std::ostream&, const class NodeValues&);
 
-class NodeValues : public std::pair<Nodes, Values>
+class NodeValues : public std::unordered_map<std::string, Value>
 {
 protected:
-    using Parent = std::pair<Nodes, Values>;
+    using Parent = std::unordered_map<std::string, Value>;
 
 public:
-    using Parent::pair;
-    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list)
+    // using Parent::unordered_map;
+    NodeValues() = default;
+    NodeValues(const std::initializer_list<std::pair<std::string, Value>>& list)
     {
-        first.reserve(list.size());
-        second.reserve(list.size());
+        // first.reserve(list.size());
+        // second.reserve(list.size());
         for (const auto& v: list)
         {
-            first.push_back(v.first);
-            second.push_back(v.second);
+            insert_or_assign(v.first, v.second);
+            // first.push_back(v.first);
+            // second.push_back(v.second);
         }
     }
-
-    Nodes::const_iterator find(const Node& node) const
+    NodeValues(const Nodes& nodes, const Values& values)
     {
-        assert(first.size() == second.size());
-        return std::find(first.cbegin(), first.cend(), node);
-    }
-
-    const Value& at(const Node& node) const
-    {
-        assert(first.size() == second.size());
-        auto k = std::distance(first.begin(), find(node));
-        return second.at(k);
-    }
-
-    void insert_or_assign(const Node& node, const Value& value)
-    {
-        assert(first.size() == second.size());
-        auto it = find(node);
-        if (it == first.cend())
+        auto value = values.begin();
+        for (const auto& node: nodes)
         {
-            first.push_back(node);
-            second.push_back(value);
-        }
-        else
-        {
-            auto k = std::distance(first.cbegin(), it);
-            second.at(k) = value;
+            insert_or_assign(node, *(value++));
         }
     }
+
+    // Nodes::const_iterator find(const Node& node) const
+    // {
+    //     assert(first.size() == second.size());
+    //     return std::find(first.cbegin(), first.cend(), node);
+    // }
+
+    // const Value& at(const Node& node) const
+    // {
+    //     assert(first.size() == second.size());
+    //     auto k = std::distance(first.begin(), find(node));
+    //     return second.at(k);
+    // }
+
+    // void insert_or_assign(const Node& node, const Value& value)
+    // {
+    //     assert(first.size() == second.size());
+    //     auto it = find(node);
+    //     if (it == first.cend())
+    //     {
+    //         first.push_back(node);
+    //         second.push_back(value);
+    //     }
+    //     else
+    //     {
+    //         auto k = std::distance(first.cbegin(), it);
+    //         second.at(k) = value;
+    //     }
+    // }
 
     void join(const NodeValues& other)
     {
-        assert(first.size() == second.size());
-        auto node = other.first.begin();
-        for(const auto& value: other.second)
-            insert_or_assign(*(node++), value);
+        // assert(first.size() == second.size());
+        // auto node = other.first.begin();
+        for(const auto& value: other)
+            insert_or_assign(value.first, value.second);
     }
 };
 
@@ -173,13 +187,13 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const NodeValues& nv)
+inline std::ostream& operator<<(std::ostream& os, const NodeValues& nvs)
 {
-    auto node = nv.first.begin();
-    for (auto& value: nv.second)
+    // auto node = nv.first.begin();
+    for (auto& nv: nvs)
     {
-        os << "  - " << *node << ": " << value << "\n";
-        node++;
+        os << "  - " << nv.first << ": " << nv.second << "\n";
+        // node++;
     }
     return os << "\n";
 }
@@ -257,14 +271,14 @@ public:
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        assert(x.first.size() == _raw_names.size());
+        // assert(x.first.size() == _raw_names.size());
         NodeValues ret;
-        ret.first.reserve(_raw_names.size());
-        ret.second.reserve(_raw_names.size());
-        auto p = x.second.begin();
+        // ret.first.reserve(_raw_names.size());
+        // ret.second.reserve(_raw_names.size());
+        // auto p = x.second.begin();
         for (const auto& name: _raw_names)
         {
-            ret.insert_or_assign(name, *(p++));
+            ret.insert_or_assign(name, x.at(name));
         }
         return ret;
     }
@@ -307,10 +321,10 @@ public:
     {
         if (_value.size() == 0)
         {
-            _value = x.second[0];
+            _value = x.begin()->second;
             _iports.clear();
         }
-        return NodeValues(_oports, {_value});
+        return NodeValues({{_oports[0], _value}});
     }
 };
 
@@ -346,7 +360,7 @@ public:
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        return NodeValues(_oports, {_k * x.second[0]});
+        return NodeValues(_oports, {_k * x.begin()->second[0]});
     }
 };
 
@@ -358,7 +372,7 @@ public:
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        return NodeValues(_oports, {x.second[0].sin()});
+        return NodeValues(_oports, {x.begin()->second.sin()});
     }
 };
 
@@ -373,7 +387,7 @@ public:
 
     NodeValues activation_function(double t, const NodeValues& x) override
     {
-        return NodeValues(_oports, {_act_func(t, x.second[0])});
+        return NodeValues(_oports, {_act_func(t, x.begin()->second[0])});
     }
 };
 
@@ -400,10 +414,11 @@ public:
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        Value ret = Value::Constant(x.second[0].size(), _initial);
+        Value ret = Value::Constant(x.begin()->second.size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& v: x.second)
+        for (const auto& node: _iports)
         {
+            const auto& v = x.at(node);
             if (*p == '+')
                 ret += v;
             else if (*p == '-')
@@ -431,10 +446,11 @@ public:
 
     NodeValues activation_function(double /*t*/, const NodeValues& x) override
     {
-        Value ret = Value::Constant(x.second[0].size(), _initial);
+        Value ret = Value::Constant(x.begin()->second.size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& v: x.second)
+        for (const auto& node: _iports)
         {
+            const auto &v = x.at(node);
             if (*p == '*')
                 ret *= v;
             else if (*p == '/')
@@ -525,13 +541,13 @@ public:
     NodeValues activation_function(double t, const NodeValues& x) override
     {
         if (_t.empty())
-            return NodeValues(_oports, {x.second[2][0]});
+            return NodeValues(_oports, {x.at(_iports[2])[0]});
     
-        const double delay = x.second[1][0];
+        const double delay = x.at(_iports[1])[0];
         t -= delay;
         if (t <= _t.front())
         {
-            return NodeValues(_oports, {x.second[2]});
+            return NodeValues(_oports, {x.at(_iports[2])});
         }
         else if (t >= _t.back())
         {
@@ -600,13 +616,13 @@ public:
         if (_first_step)
         {
             _t = t;
-            _x = x.second[0];
+            _x = x.begin()->second;
             return NodeValues(_oports, {_y});
         }
         else if (_t == t)
             return NodeValues(_oports, {_y});
 
-        return NodeValues(_oports, {((x.second[0] - _x)/(t - _t))});
+        return NodeValues(_oports, {((x.begin()->second - _x)/(t - _t))});
     }
 };
 

@@ -62,23 +62,22 @@ uint Base::_process(double t, NodeValues& x, bool reset)
 
     for (auto& iport: _iports)
     {
-        if (x.find(iport) == x.first.end())
+        if (x.find(iport) == x.end())
             return 0;
     }
 
     _known_values = x;
 
     for (auto& oport: _oports)
-        assert(x.find(oport) == x.first.end());
+        assert(x.find(oport) == x.end());
 
     Values input_values;
     input_values.reserve(_iports.size());
     for (auto& iport: _iports)
         input_values.push_back(x.at(iport));
     auto output_values = activation_function(t, NodeValues(_iports, input_values));
-    auto node_it = output_values.first.begin();
-    for (auto& v: output_values.second)
-        x.insert_or_assign(*(node_it++), v);
+    for (auto& nv: output_values)
+        x.insert_or_assign(nv.first, nv.second);
 
     _processed = true;
     return 1;
@@ -95,7 +94,7 @@ uint Integrator::_process(double /*t*/, NodeValues& x, bool reset)
     if (_processed)
         return 0;
 
-    _processed = x.find(_iports.front()) != x.first.end();
+    _processed = x.find(_iports.front()) != x.end();
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 

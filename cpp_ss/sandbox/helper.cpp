@@ -37,9 +37,9 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
             {
                 std::cout << "- " << c->name() << "\n";
                 for (const auto& p: c->iports())
-                    std::cout << "  - i: " << (x.find(p) == x.first.end() ? "*" : " ") <<  p << "\n";
+                    std::cout << "  - i: " << (x.find(p) == x.end() ? "*" : " ") <<  p << "\n";
                 for (const auto& p: c->oports())
-                    std::cout << "  - o: " << (x.find(p) == x.first.end() ? "*" : " ") <<  p << "\n";
+                    std::cout << "  - o: " << (x.find(p) == x.end() ? "*" : " ") <<  p << "\n";
             }
         }
         return n_processed;
@@ -50,25 +50,48 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
 
     States states;
     model.get_states(states);
+    // std::cout << "53: states\n";
+    // auto value = std::get<1>(states).begin();
+    // auto deriv = std::get<2>(states).begin();
+    // for (auto& state: std::get<0>(states))
+    //     std::cout << "  - " << state << " = " << *(value++) << " (d/dt = " << *(deriv++) << ")\n";
 
-    auto stepper_callback = [&](double t, const NodeValues& x) -> Values
+    auto stepper_callback = [&](double t, const NodeValues& x) -> NodeValues
     {
         NodeValues y(x);
 
         y.join(parameters);
         y.join(inputs);
+        // std::cout << "65: y\n";
+        // for (const auto& v: y)
+        //     std::cout << " - " << v.first << " = " << v.second << "\n";
 
         process(model, t, y);
+        // std::cout << "70: y\n";
+        // for (const auto& v: y)
+        //     std::cout << " - " << v.first << " = " << v.second << "\n";
 
-        Values ret;
-        ret.reserve(x.first.size());
-        for (const auto& state: std::get<2>(states))
+        NodeValues dx;
+        dx.reserve(x.size());
+        auto state = std::get<0>(states).begin();
+        for (const auto& deriv: std::get<2>(states))
         {
-            auto& deriv = y.at(state);
-            ret.push_back(deriv);
+            auto& v = y.at(deriv);
+            // std::cout << "80: d/dt " << *state << " = " << deriv << "\n";
+            dx[*state] = v;
+            state++;
         }
 
-        return ret;
+        // Values ret;
+        // ret.reserve(x.size());
+        // for (const auto& state: x)
+        //     ret.push_back(dx.at(state.first));
+        // // std::cout << "81: ret\n";
+        // // for (const auto& v: ret)
+        // //     std::cout << " - " << v << "\n";
+
+        // return ret;
+        return dx;
     };
 
     NodeValues x(std::get<0>(states), std::get<1>(states));
@@ -87,9 +110,9 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         if (history.empty())
         {
             history.insert_or_assign("t", Value());
-            for (const auto& v: y.first)
-                if ((parameters.find(v) ==  parameters.first.end()) && (v[0] != '-'))
-                    history.insert_or_assign(v, Value());
+            for (const auto& v: y)
+                if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
+                    history.insert_or_assign(v.first, Value());
         }
 
         auto& h = history["t"];
@@ -97,19 +120,19 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         h.conservativeResize(nrows, NoChange);
         h(nrows - 1, 0) = t;
         uint k = 0;
-        for (const auto& v: y.first)
+        for (const auto& v: y)
         {
-            if ((parameters.find(v) ==  parameters.first.end()) && (v[0] != '-'))
+            if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
             {
-                auto& h = history[v];
+                auto& h = history[v.first];
                 h.conservativeResize(nrows, NoChange);
-                history[v].bottomRows<1>() = y.at(v);
+                history[v.first].bottomRows<1>() = y.at(v.first);
             }
             k++;
         }
     };
 
-    if (std::get<0>(states).size())
+    if (std::get<0>(states).size() > 0)
     {
         assert(stepper);
         uint k = 0;
@@ -145,7 +168,9 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         {
             if (inputs_cb)
                 inputs_cb(t, x, inputs);
-            x.second = stepper_callback(t, x);
+            auto foo = stepper_callback(t, x);
+            for (auto& v: x)
+                v.second = foo[v.first];
             update_history(t, x, inputs);
         }
     }

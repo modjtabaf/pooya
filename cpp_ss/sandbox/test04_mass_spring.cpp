@@ -32,6 +32,8 @@ int main()
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
+            // return arange(k, t, 0, 0.02, 0.01);
+            // return arange(k, t, 0, 0.01, 0.01);
         },
         nullptr, NodeValues(), rk4);
 

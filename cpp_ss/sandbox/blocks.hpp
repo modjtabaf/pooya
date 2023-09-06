@@ -66,13 +66,14 @@ public:
 
 class Base;
 class Submodel;
+class Model;
 class NodeValues;
 
 using Scalars          = std::vector<double>;
 using Values           = std::vector<Value>;
 using TraverseCallback = std::function<bool(const Base&)>;
 using ActFunction      = std::function<Value(double, const Value&)>;
- 
+
 std::ostream& operator<<(std::ostream&, const class NodeValues&);
 
 class NodeValues : public std::unordered_map<std::string, Value>
@@ -201,18 +202,14 @@ inline std::ostream& operator<<(std::ostream& os, const NodeValues& nvs)
 class Base
 {
 protected:
-    static Nodes _all_iports;
-    static Nodes _all_oports;
-
     Nodes _iports;
     Nodes _oports;
-    NodeValues _known_values;
-
+    Submodel* const _parent;
     std::string _name;
     bool _processed{false};
 
 public:
-    Base(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes(), bool register_oports=true);
+    Base(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()/*, bool register_oports=true*/);
 
     virtual void get_states(States& /*states*/) {}
     virtual void step(double /*t*/, const NodeValues& /*states*/) {}
@@ -221,6 +218,7 @@ public:
         assert(false);
         return NodeValues();
     }
+    virtual Model* get_model();
 
     bool is_processed() const {return _processed;}
     const std::string& name() const {return _name;}
@@ -634,7 +632,7 @@ protected:
 
 public:
     Submodel(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
-        Base(parent, name, iports, oports, false) {}
+        Base(parent, name, iports, oports/*, false*/) {}
 
     void add_component(Base& component)
     {
@@ -658,6 +656,29 @@ public:
     bool traverse(TraverseCallback cb) override;
 
 }; // class Submodel
+
+class Model final : public Submodel
+{
+protected:
+    using NodeBlocksMap = std::unordered_map<std::string, std::pair<bool, std::vector<Base*>>>;
+    NodeBlocksMap _all_iports;
+    // NodeBlocksMap _all_oports;
+
+public:
+    Model(const char* name="model") : Submodel(nullptr, name) {}
+
+    void register_iport(const Node& node, Base& block)
+    {
+        auto blocks = _all_iports.insert({node, {false, {}}}).first;
+        if (std::find(blocks->second.second.begin(), blocks->second.second.end(), &block) == blocks->second.second.end())
+            blocks->second.second.push_back(&block);
+    }
+
+    Model* get_model() override
+    {
+        return this;
+    }
+};
 
 }
 

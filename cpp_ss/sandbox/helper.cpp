@@ -8,9 +8,9 @@
 namespace blocks
 {
 
-History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeValues& parameters, Solver stepper)
+History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeValues& parameters, Solver stepper)
 {
-    auto process = [](Base& model, double t, NodeValues& x) -> uint
+    auto process = [&](double t, NodeValues& x) -> uint
     {
         uint n_processed = model._process(t, x, true);
         uint n;
@@ -66,7 +66,7 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         // for (const auto& v: y)
         //     std::cout << " - " << v.first << " = " << v.second << "\n";
 
-        process(model, t, y);
+        process(t, y);
         // std::cout << "70: y\n";
         // for (const auto& v: y)
         //     std::cout << " - " << v.first << " = " << v.second << "\n";
@@ -103,7 +103,7 @@ History run(Base& model, TimeCallback time_cb, InputCallback inputs_cb, const No
         y.join(parameters);
         y.join(inputs);
 
-        process(model, t, y);
+        process(t, y);
 
         model.step(t, y);
 

@@ -8,8 +8,8 @@
 namespace blocks
 {
 
-Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes& oports, bool register_oports) :
-    _name(name)
+Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes& oports/*, bool register_oports*/) :
+    _parent(parent), _name(name)
 {
     if (parent)
     {
@@ -36,20 +36,23 @@ Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes&
         _oports = oports;
     }
 
-    if (register_oports)
+    auto* model = get_model();
+    if (model)
     {
-        for (auto& port: _oports)
-        {
-            if (std::find(_all_oports.cbegin(), _all_oports.cend(), port) != _all_oports.cend())
-                std::cout << *std::find(_all_oports.cbegin(), _all_oports.cend(), port) << "\n";
-            assert(std::find(_all_oports.cbegin(), _all_oports.cend(), port) == _all_oports.cend());
-            _all_oports.push_back(port);
-        }
-    }
+        // if (register_oports)
+        // {
+        //     for (auto& port: _oports)
+        //     {
+        //         if (std::find(_all_oports.cbegin(), _all_oports.cend(), port) != _all_oports.cend())
+        //             std::cout << *std::find(_all_oports.cbegin(), _all_oports.cend(), port) << "\n";
+        //         assert(std::find(_all_oports.cbegin(), _all_oports.cend(), port) == _all_oports.cend());
+        //         _all_oports.push_back(port);
+        //     }
+        // }
 
-    for (auto& port: _iports)
-        if (std::find(_all_iports.cbegin(), _all_iports.cend(), port) == _all_iports.cend())
-            _all_iports.push_back(port);
+        for (auto& port: _iports)
+            model->register_iport(port, *this);
+    }
 }
 
 uint Base::_process(double t, NodeValues& x, bool reset)
@@ -66,8 +69,6 @@ uint Base::_process(double t, NodeValues& x, bool reset)
             return 0;
     }
 
-    _known_values = x;
-
     for (auto& oport: _oports)
         assert(x.find(oport) == x.end());
 
@@ -83,8 +84,10 @@ uint Base::_process(double t, NodeValues& x, bool reset)
     return 1;
 }
 
-Nodes Base::_all_iports;
-Nodes Base::_all_oports;
+Model* Base::get_model()
+{
+    return _parent ? _parent->get_model() : nullptr;
+}
 
 uint Integrator::_process(double /*t*/, NodeValues& x, bool reset)
 {
@@ -160,8 +163,6 @@ uint Submodel::_process(double t, NodeValues& x, bool reset)
 {
     if (reset)
         _processed = false;
-
-    _known_values = x;
 
     uint n_processed = 0;
     if (not _processed)

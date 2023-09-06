@@ -130,10 +130,11 @@ int main()
         {"front_wheel_ang_init_value", 0.0},
         };
 
-    auto steering_system = SteeringSystem(nullptr,
+    auto model = Model();
+    auto steering_system = SteeringSystem(&model,
         "front_wheel_angle_Rq",
         "steering_info");
-    auto history = run(steering_system,
+    auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(),

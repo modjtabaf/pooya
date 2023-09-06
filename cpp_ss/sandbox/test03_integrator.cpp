@@ -16,8 +16,9 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto blk = Integrator(nullptr, "", "xd", "x", 1.0);
-    auto history = run(blk,
+    auto model = Model();
+    auto blk = Integrator(&model, "", "xd", "x", 1.0);
+    auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);

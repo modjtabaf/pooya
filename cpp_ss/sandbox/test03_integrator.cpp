@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <chrono>
 
 #include "blocks.hpp"
 #include "helper.hpp"
@@ -12,6 +13,9 @@ using namespace blocks;
 
 int main()
 {
+    using milli = std::chrono::milliseconds;
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto blk = Integrator(nullptr, "", "xd", "x", 1.0);
     auto history = run(blk,
         [](uint k, double& t) -> bool
@@ -22,6 +26,11 @@ int main()
         {
             inputs.insert_or_assign("xd", t < 3 or t > 7 ? 1 : 0);
         }, NodeValues(), rk4);
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::cout << "It took "
+              << std::chrono::duration_cast<milli>(finish - start).count()
+              << " milliseconds\n";
 
     Gnuplot gp;
 	gp << "set xrange [0:100]\n";

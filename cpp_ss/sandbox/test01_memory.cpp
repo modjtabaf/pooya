@@ -16,8 +16,9 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto memory = Memory(nullptr, "", "x", "xd");
-    auto history = run(memory,
+    auto model = Model();
+    auto memory = Memory(&model, "", "x", "xd");
+    auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);

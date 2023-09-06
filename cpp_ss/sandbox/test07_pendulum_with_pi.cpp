@@ -57,7 +57,7 @@ public:
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel(nullptr, "pendulum_with_PI")
+    SSModel(Submodel* parent) : Submodel(parent, "pendulum_with_PI")
     {
         // nodes
         Node phi("phi");
@@ -83,7 +83,8 @@ int main()
         {"des_phi", M_PI_4},
         };
 
-    auto model = SSModel();
+    auto model = Model();
+    auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

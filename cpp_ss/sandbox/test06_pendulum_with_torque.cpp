@@ -14,7 +14,7 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel(nullptr, "pendulum")
+    SSModel(Submodel* parent) : Submodel(parent, "pendulum")
     {
         Node   phi(  "phi");
         Node  dphi( "dphi");
@@ -50,7 +50,8 @@ int main()
         {"tau", 0.13},
         };
 
-    auto model = SSModel();
+    auto model = Model();
+    auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

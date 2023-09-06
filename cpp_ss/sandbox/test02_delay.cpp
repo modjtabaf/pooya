@@ -14,7 +14,7 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel() : Submodel(nullptr, "")
+    SSModel(Submodel* parent) : Submodel(parent, "")
     {
         Node x("x");
         Node xd("xd");
@@ -30,7 +30,8 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = SSModel();
+    auto model = Model();
+    auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

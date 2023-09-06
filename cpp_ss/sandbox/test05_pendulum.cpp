@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <chrono>
 
 #include "blocks.hpp"
 #include "helper.hpp"
@@ -35,6 +36,9 @@ public:
 
 int main()
 {
+    using milli = std::chrono::milliseconds;
+    auto start = std::chrono::high_resolution_clock::now();
+
     NodeValues parameters = {
         {"l", 0.1 },
         {"g", 9.81},
@@ -47,6 +51,11 @@ int main()
             return arange(k, t, 0, 5, 0.01);
         },
         nullptr, parameters, rk4);
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::cout << "It took "
+              << std::chrono::duration_cast<milli>(finish - start).count()
+              << " milliseconds\n";
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

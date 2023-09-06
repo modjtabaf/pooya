@@ -4,6 +4,7 @@
 #include <iterator>
 #include <math.h>
 #include <vector>
+#include <chrono>
 
 #include "blocks.hpp"
 #include "helper.hpp"
@@ -113,6 +114,9 @@ double interp1d(double x, const std::vector<double>& X, const std::vector<double
 
 int main()
 {
+    using milli = std::chrono::milliseconds;
+    auto start = std::chrono::high_resolution_clock::now();
+
     // front_wheel_angle_Rq = helper.load_mat_files_as_bus(
     //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",
     //     "front_wheel_angle_Rq")
@@ -141,6 +145,11 @@ int main()
                 interp1d(t, FRONT_WHEEL_ANGLE_RQ_X, FRONT_WHEEL_ANGLE_RQ_Y));
         },
         parameters, rk4);
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::cout << "It took "
+              << std::chrono::duration_cast<milli>(finish - start).count()
+              << " milliseconds\n";
 
     // steering_info = helper.load_mat_files_as_bus(
     //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",

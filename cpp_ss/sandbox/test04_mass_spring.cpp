@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <chrono>
 
 #include "blocks.hpp"
 #include "helper.hpp"
@@ -27,6 +28,9 @@ public:
 
 int main()
 {
+    using milli = std::chrono::milliseconds;
+    auto start = std::chrono::high_resolution_clock::now();
+
     auto model = SSModel();
     auto history = run(model,
         [](uint k, double& t) -> bool
@@ -36,6 +40,11 @@ int main()
             // return arange(k, t, 0, 0.01, 0.01);
         },
         nullptr, NodeValues(), rk4);
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::cout << "It took "
+              << std::chrono::duration_cast<milli>(finish - start).count()
+              << " milliseconds\n";
 
     export_csv(history, "mass_spring.csv");
 

@@ -8,6 +8,36 @@
 namespace blocks
 {
 
+Node::Node(const std::string& str, Model& model) : std::string(str)
+{
+    model.register_node(*this);
+}
+
+Node::Node(const char* str, Model& model) : std::string(str)
+{
+    model.register_node(*this);
+}
+
+Node::Node(int n, Model& model) : std::string(std::to_string(n))
+{
+    model.register_node(*this);
+}
+
+Node::Node(Model& model) : std::string("-")
+{
+    model.register_node(*this);
+}
+
+NodeIdValues::NodeIdValues(const std::initializer_list<std::pair<Node, Value>>& list, Model& model)
+{
+    for (const auto& v: list)
+    {
+        auto node(v.first);
+        model.register_node(node);
+        insert_or_assign(node, v.second);
+    }
+}
+
 Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes& oports/*, bool register_oports*/) :
     _parent(parent), _name(name)
 {
@@ -20,21 +50,26 @@ Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes&
 
         _iports.reserve(iports.size());
         for (auto& p: iports)
-        {
-            _iports.emplace_back(parent->get_node_name(p, false));
-        }
+            _iports.emplace_back(parent->register_node(p, false));
 
         _oports.reserve(oports.size());
         for (auto& p: oports)
-        {
-            _oports.emplace_back(parent->get_node_name(p, true));
-        }
+            _oports.emplace_back(parent->register_node(p, true));
     }
     else
     {
         _iports = iports;
         _oports = oports;
     }
+
+    _iport_ids.reserve(iports.size());
+    for (auto& p: _iports)
+        _iport_ids.emplace_back(p);
+
+    _oport_ids.reserve(oports.size());
+    for (auto& p: _oports)
+        _oport_ids.emplace_back(p);
+
 
     auto* model = get_model();
     if (model)
@@ -55,7 +90,7 @@ Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes&
     }
 }
 
-uint Base::_process(double t, NodeValues& x, bool reset)
+uint Base::_process(double t, NodeIdValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -63,20 +98,20 @@ uint Base::_process(double t, NodeValues& x, bool reset)
     if (_processed)
         return 0;
 
-    for (auto& iport: _iports)
+    for (auto& iport: _iport_ids)
     {
         if (x.find(iport) == x.end())
             return 0;
     }
 
-    for (auto& oport: _oports)
+    for (auto& oport: _oport_ids)
         assert(x.find(oport) == x.end());
 
     Values input_values;
-    input_values.reserve(_iports.size());
-    for (auto& iport: _iports)
+    input_values.reserve(_iport_ids.size());
+    for (auto& iport: _iport_ids)
         input_values.push_back(x.at(iport));
-    auto output_values = activation_function(t, NodeValues(_iports, input_values));
+    auto output_values = activation_function(t, NodeIdValues(_iport_ids, input_values));
     for (auto& nv: output_values)
         x.insert_or_assign(nv.first, nv.second);
 
@@ -89,7 +124,29 @@ Model* Base::get_model()
     return _parent ? _parent->get_model() : nullptr;
 }
 
-uint Integrator::_process(double /*t*/, NodeValues& x, bool reset)
+NodeIdValues Bus::activation_function(double /*t*/, const NodeIdValues& x)
+{
+    if (_update_node_ids)
+    {
+        auto* model = get_model();
+        if (model)
+            for (auto& node: _raw_names)
+                model->register_node(node);
+        _update_node_ids = false;
+    }
+    // assert(x.first.size() == _raw_names.size());
+    NodeIdValues ret;
+    // ret.first.reserve(_raw_names.size());
+    // ret.second.reserve(_raw_names.size());
+    // auto p = x.second.begin();
+    for (const auto& node: _raw_names)
+    {
+        ret.insert_or_assign(node, x.at(node));
+    }
+    return ret;
+}
+
+uint Integrator::_process(double /*t*/, NodeIdValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -97,11 +154,11 @@ uint Integrator::_process(double /*t*/, NodeValues& x, bool reset)
     if (_processed)
         return 0;
 
-    _processed = x.find(_iports.front()) != x.end();
+    _processed = x.find(_iport_ids.front()) != x.end();
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 
-uint Memory::_process(double /*t*/, NodeValues& x, bool reset)
+uint Memory::_process(double /*t*/, NodeIdValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -109,21 +166,26 @@ uint Memory::_process(double /*t*/, NodeValues& x, bool reset)
     if (_processed)
         return 0;
 
-    x.insert_or_assign(_oports.front(), _value);
+    x.insert_or_assign(_oport_ids.front(), _value);
     _processed = true;
     return 1;
 }
 
-Node Submodel::get_node_name(const Node& node, bool makenew)
+Node Submodel::register_node(const Node& node, bool makenew)
 {
-    if (node.is_locked())
+    if (node > 0)
         return node;
 
-    Node ret = node.empty() ? Node() : node;
+    Node ret = node.empty() ? Node("-") : node;
+    auto* model = get_model();
 
     // don't alter global node names
     if (ret[0] != '-')
+    {
+        if (model)
+            model->register_node(ret);
         return ret;
+    }
 
     // an auto-generated local node name?
     bool auto_gen = false;
@@ -141,8 +203,11 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
         }
         else
         {
-            assert(not _auto_node_name.empty());
-            return _auto_node_name;
+            assert(!_auto_node_name.empty());
+            ret = _auto_node_name;
+            if (model)
+                model->register_node(ret);
+            return ret;
         }
     }
 
@@ -155,11 +220,13 @@ Node Submodel::get_node_name(const Node& node, bool makenew)
     if (auto_gen)
         _auto_node_name = ret;
 
-    ret.lock();
+    if (model)
+        model->register_node(ret);
+
     return ret;
 }
 
-uint Submodel::_process(double t, NodeValues& x, bool reset)
+uint Submodel::_process(double t, NodeIdValues& x, bool reset)
 {
     if (reset)
         _processed = false;
@@ -188,6 +255,23 @@ bool Submodel::traverse(TraverseCallback cb)
     }
 
     return Base::traverse(cb);
+}
+
+void Model::register_node(Node& node)
+{
+    if (node > 0)
+        return;
+
+    auto it = std::find(_nodes_with_id.begin(), _nodes_with_id.end(), node);
+    if (it == _nodes_with_id.end())
+    {
+        node._id = _nodes_with_id.size();
+        _nodes_with_id.push_back(node);
+    }
+    else
+    {
+        node._id = std::distance(_nodes_with_id.begin(), it);
+    }
 }
 
 }

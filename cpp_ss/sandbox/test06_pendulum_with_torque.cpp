@@ -43,14 +43,18 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    NodeValues parameters = {
+    auto model = Model();
+
+    NodeIdValues parameters({
         {  "m", 0.2 },
         {  "l", 0.1 },
         {  "g", 9.81},
         {"tau", 0.13},
-        };
+        }, model);
 
-    auto model = Model();
+    auto phi  = Node("phi",  model);
+    auto dphi = Node("dphi", model);
+
     auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
@@ -67,8 +71,8 @@ int main()
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";
     gp << "set yrange [-8:8]\n";
-	gp << "plot" << gp.file1d(history["phi"]) << "with lines title 'phi',"
-	    << gp.file1d(history["dphi"]) << "with lines title 'dphi'\n";
+	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi',"
+	    << gp.file1d(history[dphi]) << "with lines title 'dphi'\n";
 
     return 0;
 }

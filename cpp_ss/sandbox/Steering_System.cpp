@@ -121,18 +121,21 @@ int main()
     //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",
     //     "front_wheel_angle_Rq")
 
-    NodeValues parameters = {
+    auto model = Model();
+
+    NodeIdValues parameters({
         {"tractor_wheelbase", 5.8325},
         {"tractor_Width", 2.5},
         {"front_wheel_ang_t_const", 0.1},
         {"front_wheel_ang_delay", 0.02},
         {"front_wheel_ang_gain", 1.0},
         {"front_wheel_ang_init_value", 0.0},
-        };
+        }, model);
 
-    auto model = Model();
+    auto front_wheel_angle_Rq = Node("front_wheel_angle_Rq", model);
+
     auto steering_system = SteeringSystem(&model,
-        "front_wheel_angle_Rq",
+        front_wheel_angle_Rq,
         "steering_info");
     auto history = run(model,
         [](uint k, double& t) -> bool
@@ -140,9 +143,9 @@ int main()
             return arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(),
                 FRONT_WHEEL_ANGLE_RQ_X.back(), 0.1);
         },
-        [](double t, const NodeValues& /*x*/, NodeValues& inputs) -> void
+        [&](double t, const NodeIdValues& /*x*/, NodeIdValues& inputs) -> void
         {
-            inputs.insert_or_assign("front_wheel_angle_Rq",
+            inputs.insert_or_assign(front_wheel_angle_Rq,
                 interp1d(t, FRONT_WHEEL_ANGLE_RQ_X, FRONT_WHEEL_ANGLE_RQ_Y));
         },
         parameters, rk4);

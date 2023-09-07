@@ -9,7 +9,7 @@
 namespace blocks
 {
 
-NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& x0)
+NodeIdValues rk4(SolverCallback callback, double t0, double t1, const NodeIdValues& x0)
 {
     // std::cout << "14: x0\n";
     // for (const auto& v: x0)
@@ -17,7 +17,7 @@ NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& 
     auto n = x0.size();
     double h = t1 - t0;
 
-    Nodes nodes;
+    NodeIds nodes;
     nodes.reserve(n);
     for (const auto& v: x0)
         nodes.push_back(v.first);
@@ -40,7 +40,7 @@ NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& 
         x1.push_back(x0.at(node) + *(k1_it++)/2);
 
     // k2 = h*callback(t0 + h/2, x1)
-    dx = callback(t0 + h/2, NodeValues(nodes, x1));
+    dx = callback(t0 + h/2, NodeIdValues(nodes, x1));
     Values k2;
     k2.reserve(n);
     for (const auto& node: nodes)
@@ -54,7 +54,7 @@ NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& 
         x2.push_back(x0.at(node) + *(k2_it++)/2);
 
     // k3 = h*callback(t0 + h/2, x2)
-    dx = callback(t0 + h/2, NodeValues(nodes, x2));
+    dx = callback(t0 + h/2, NodeIdValues(nodes, x2));
     Values k3;
     k3.reserve(n);
     for (const auto& node: nodes)
@@ -68,7 +68,7 @@ NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& 
         x3.push_back(x0.at(node) + *(k3_it++));
 
     // k4 = h*callback(t1, x3)
-    dx = callback(t1, NodeValues(nodes, x3));
+    dx = callback(t1, NodeIdValues(nodes, x3));
     Values k4;
     k4.reserve(n);
     for (const auto& node: nodes)
@@ -84,15 +84,15 @@ NodeValues rk4(SolverCallback callback, double t0, double t1, const NodeValues& 
     for (const auto& node: nodes)
         ret.push_back(x0.at(node) + *(k1_it++)/6 + *(k2_it++)/3 + *(k3_it++)/3 + *(k4_it++)/6);
 
-    return NodeValues(nodes, ret);
+    return NodeIdValues(nodes, ret);
 }
 
-NodeValues simple(SolverCallback callback, double t0, double t1, const NodeValues& x0)
+NodeIdValues simple(SolverCallback callback, double t0, double t1, const NodeIdValues& x0)
 {
     auto n = x0.size();
     double h = t1 - t0;
 
-    Nodes nodes;
+    NodeIds nodes;
     nodes.reserve(n);
     for (const auto& v: x0)
         nodes.push_back(v.first);
@@ -104,7 +104,7 @@ NodeValues simple(SolverCallback callback, double t0, double t1, const NodeValue
     for (auto& node: nodes)
         ret.push_back(x0.at(node) + h*dx.at(node));
 
-    return NodeValues(nodes, ret);
+    return NodeIdValues(nodes, ret);
 }
 
 }

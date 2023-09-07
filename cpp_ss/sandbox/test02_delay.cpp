@@ -31,15 +31,17 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model();
+    auto x  = Node("x",  model);
+    auto xd = Node("xd", model);
     auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [](double t, const NodeValues& /*x*/, NodeValues& inputs) -> void
+        [&](double t, const NodeIdValues& /*X*/, NodeIdValues& inputs) -> void
         {
-            inputs.insert_or_assign("x", std::sin(M_PI * t / 5));
+            inputs.insert_or_assign(x, std::sin(M_PI * t / 5));
         });
 
     auto finish = std::chrono::high_resolution_clock::now();
@@ -50,8 +52,8 @@ int main()
     Gnuplot gp;
 	gp << "set xrange [0:100]\n";
     gp << "set yrange [-1:1]\n";
-	gp << "plot" << gp.file1d(history["x"]) << "with lines title 'x',"
-		<< gp.file1d(history["xd"]) << "with lines title 'xd'\n";
+	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
+		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
 
     return 0;
 }

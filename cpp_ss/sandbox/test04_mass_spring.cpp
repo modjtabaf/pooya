@@ -32,15 +32,15 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model();
+    auto x  = Node("x", model);
+    auto xd = Node("xd", model);
     auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
-            // return arange(k, t, 0, 0.02, 0.01);
-            // return arange(k, t, 0, 0.01, 0.01);
         },
-        nullptr, NodeValues(), rk4);
+        nullptr, NodeIdValues(), rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "
@@ -52,8 +52,8 @@ int main()
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";
     gp << "set yrange [-0.15:0.15]\n";
-	gp << "plot" << gp.file1d(history["x"]) << "with lines title 'x',"
-		<< gp.file1d(history["xd"]) << "with lines title 'xd'\n";
+	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
+		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
 
     return 0;
 }

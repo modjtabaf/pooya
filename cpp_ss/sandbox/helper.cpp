@@ -8,9 +8,9 @@
 namespace blocks
 {
 
-History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeValues& parameters, Solver stepper)
+History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeIdValues& parameters, Solver stepper)
 {
-    auto process = [&](double t, NodeValues& x) -> uint
+    auto process = [&](double t, NodeIdValues& x) -> uint
     {
         uint n_processed = model._process(t, x, true);
         uint n;
@@ -46,7 +46,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
     };
 
     History history;
-    NodeValues inputs;
+    NodeIdValues inputs;
 
     States states;
     model.get_states(states);
@@ -56,9 +56,9 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
     // for (auto& state: std::get<0>(states))
     //     std::cout << "  - " << state << " = " << *(value++) << " (d/dt = " << *(deriv++) << ")\n";
 
-    auto stepper_callback = [&](double t, const NodeValues& x) -> NodeValues
+    auto stepper_callback = [&](double t, const NodeIdValues& x) -> NodeIdValues
     {
-        NodeValues y(x);
+        NodeIdValues y(x);
 
         y.join(parameters);
         y.join(inputs);
@@ -71,7 +71,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         // for (const auto& v: y)
         //     std::cout << " - " << v.first << " = " << v.second << "\n";
 
-        NodeValues dx;
+        NodeIdValues dx;
         dx.reserve(x.size());
         auto state = std::get<0>(states).begin();
         for (const auto& deriv: std::get<2>(states))
@@ -94,11 +94,11 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         return dx;
     };
 
-    NodeValues x(std::get<0>(states), std::get<1>(states));
+    NodeIdValues x(std::get<0>(states), std::get<1>(states));
 
-    auto update_history = [&](double t, const NodeValues& x, const NodeValues& inputs) -> void
+    auto update_history = [&](double t, const NodeIdValues& x, const NodeIdValues& inputs) -> void
     {
-        NodeValues y(x);
+        NodeIdValues y(x);
 
         y.join(parameters);
         y.join(inputs);
@@ -109,20 +109,20 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
 
         if (history.empty())
         {
-            history.insert_or_assign("t", Value());
+            history.insert_or_assign(0, Value()); // t
             for (const auto& v: y)
-                if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
+                if ((parameters.find(v.first) ==  parameters.end()) && (model.get_node_by_id(v.first)[0] != '-'))
                     history.insert_or_assign(v.first, Value());
         }
 
-        auto& h = history["t"];
+        auto& h = history[0]; // t
         auto nrows = h.rows() + 1;
         h.conservativeResize(nrows, NoChange);
         h(nrows - 1, 0) = t;
         uint k = 0;
         for (const auto& v: y)
         {
-            if ((parameters.find(v.first) ==  parameters.end()) && (v.first[0] != '-'))
+            if ((parameters.find(v.first) ==  parameters.end()) && (model.get_node_by_id(v.first)[0] != '-'))
             {
                 auto& h = history[v.first];
                 h.conservativeResize(nrows, NoChange);

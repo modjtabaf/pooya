@@ -73,13 +73,11 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
 
         NodeIdValues dx;
         dx.reserve(x.size());
-        auto state = std::get<0>(states).begin();
-        for (const auto& deriv: std::get<2>(states))
+        for (const auto& state: states)
         {
-            auto& v = y.at(deriv);
+            auto& v = y.at(state.second.second);
             // std::cout << "80: d/dt " << *state << " = " << deriv << "\n";
-            dx[*state] = v;
-            state++;
+            dx[state.first] = v;
         }
 
         // Values ret;
@@ -94,7 +92,10 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         return dx;
     };
 
-    NodeIdValues x(std::get<0>(states), std::get<1>(states));
+    NodeIdValues x;
+    x.reserve(states.size());
+    for (const auto& state: states)
+        x.insert_or_assign(state.first, state.second.first);
 
     auto update_history = [&](double t, const NodeIdValues& x, const NodeIdValues& inputs) -> void
     {
@@ -132,7 +133,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         }
     };
 
-    if (std::get<0>(states).size() > 0)
+    if (states.size() > 0)
     {
         assert(stepper);
         uint k = 0;

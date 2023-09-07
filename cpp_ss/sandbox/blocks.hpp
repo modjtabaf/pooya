@@ -164,49 +164,18 @@ public:
     }
 };
 
-class States : public std::tuple<NodeIds, Values, NodeIds> // state, value, derivative
+class States : public std::unordered_map<Node::Id, std::pair<Value, Node::Id>> // state, value, derivative
 {
 protected:
-    using Parent = std::tuple<NodeIds, Values, NodeIds>;
+    using Pair = std::pair<Value, Node::Id>;
+    using Parent = std::unordered_map<Node::Id, Pair>;
 
 public:
-    using Parent::tuple;
-
-    NodeIds::const_iterator find(Node::Id state) const
-    {
-        const auto& states = std::get<0>(*this);
-        assert(states.size() == std::get<1>(*this).size());
-        assert(states.size() == std::get<2>(*this).size());
-        return std::find(states.cbegin(), states.cend(), state);
-    }
-
-    std::pair<Value, Node::Id> at(Node::Id state) const
-    {
-        const auto& states = std::get<0>(*this);
-        assert(states.size() == std::get<1>(*this).size());
-        assert(states.size() == std::get<2>(*this).size());
-        auto k = std::distance(states.begin(), find(state));
-        return {std::get<1>(*this).at(k), std::get<2>(*this).at(k)};
-    }
+    using Parent::unordered_map;
 
     void insert_or_assign(Node::Id state, const Value& value, Node::Id deriv)
     {
-        auto& states = std::get<0>(*this);
-        assert(states.size() == std::get<1>(*this).size());
-        assert(states.size() == std::get<2>(*this).size());
-        auto it = find(state);
-        if (it == states.cend())
-        {
-            states.push_back(state);
-            std::get<1>(*this).push_back(value);
-            std::get<2>(*this).push_back(deriv);
-        }
-        else
-        {
-            auto k = std::distance(states.cbegin(), it);
-            std::get<1>(*this).at(k) = value;
-            std::get<2>(*this).at(k) = deriv;
-        }
+        Parent::insert_or_assign(state, Pair(value, deriv));
     }
 };
 
@@ -486,7 +455,7 @@ public:
 
     void get_states(States& states) override
     {
-        states.insert_or_assign(_oport_ids.front(), _value, _iport_ids.front());
+        states.insert_or_assign(_oport_ids.front(), Value(_value), _iport_ids.front());
     }
 
     void step(double /*t*/, const NodeIdValues& states) override

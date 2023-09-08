@@ -136,7 +136,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
     {
         assert(stepper);
         uint k = 0;
-        double t, t1;
+        double t{0}, t1;
         while (time_cb(k, t1))
         {
             if (k%100 == 0)

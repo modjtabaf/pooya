@@ -14,7 +14,7 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "")
+    SSModel(Submodel* parent) : Submodel(parent, "SSModel")
     {
         Node x("x");
         Node xd("xd");
@@ -30,7 +30,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test02");
     auto x  = Node("x",  model);
     auto xd = Node("xd", model);
     auto ss_model = SSModel(&model);

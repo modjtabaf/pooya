@@ -98,7 +98,7 @@ public:
 
 using Scalars          = std::vector<double>;
 using Values           = std::vector<Value>;
-using TraverseCallback = std::function<bool(const Base&)>;
+using TraverseCallback = std::function<bool(const Base&, uint32_t level)>;
 using ActFunction      = std::function<Value(double, const Value&)>;
 
 std::ostream& operator<<(std::ostream&, const class NodeIdValues&);
@@ -198,11 +198,14 @@ protected:
     Nodes _oports;
     NodeIds _oport_ids;
     Submodel* const _parent;
+    std::string _given_name;
     std::string _name;
+
     bool _processed{false};
+    void _assign_valid_given_name(std::string given_name);
 
 public:
-    Base(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()/*, bool register_oports=true*/);
+    Base(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()/*, bool register_oports=true*/);
 
     virtual void get_states(States& /*states*/) {}
     virtual void step(double /*t*/, const NodeIdValues& /*states*/) {}
@@ -213,7 +216,8 @@ public:
     }
     virtual Model* get_model();
 
-    bool is_processed() const {return _processed;}
+    bool processed() const {return _processed;}
+    const std::string& given_name() const {return _given_name;}
     const std::string& name() const {return _name;}
     const Nodes& iports() const {return _iports;}
     const Nodes& oports() const {return _oports;}
@@ -223,10 +227,12 @@ public:
     // def __repr__(self):
     //     return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
 
-    virtual bool traverse(TraverseCallback cb)
+    virtual bool traverse(TraverseCallback cb, uint32_t level, bool /*go_deep=true*/)
     {
-        return cb(*this);
+        return cb(*this, level);
     }
+
+    static std::string generate_random_name(int len = 10);
 }; // class Base
 
 // class Value(Base):
@@ -253,8 +259,8 @@ public:
     //     //     return 'BusValues(' + super().__repr__() + ')'
     // };
 
-    Bus(Submodel* parent, const char* name, const Nodes& iports=Node(), const Node& oport=Node()) :
-        Base(parent, name, iports, oport)
+    Bus(Submodel* parent, std::string given_name, const Nodes& iports=Node(), const Node& oport=Node()) :
+        Base(parent, given_name, iports, oport)
     {
         _raw_names.reserve(iports.size());
         for (const auto& p: iports)
@@ -294,8 +300,8 @@ protected:
     Value _value;
 
 public:
-    InitialValue(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node()) :
-        Base(parent, name, iport, oport) {}
+    InitialValue(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node()) :
+        Base(parent, given_name, iport, oport) {}
 
     NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
     {
@@ -315,11 +321,11 @@ protected:
     Value _value;
 
 public:
-    Const(Submodel* parent, const char* name, const Value& value, const Nodes& oport=Nodes({Node()})) :
-        Base(parent, name, Nodes(), oport), _value(value) {}
+    Const(Submodel* parent, std::string given_name, const Value& value, const Nodes& oport=Nodes({Node()})) :
+        Base(parent, given_name, Nodes(), oport), _value(value) {}
 
-    Const(Submodel* parent, const char* name, double value, const Nodes& oport={Node()}) :
-        Base(parent, name, Nodes(), oport), _value(1)
+    Const(Submodel* parent, std::string given_name, double value, const Nodes& oport={Node()}) :
+        Base(parent, given_name, Nodes(), oport), _value(1)
     {
          _value << value;
     }
@@ -336,8 +342,8 @@ protected:
     double _k;
 
 public:
-    Gain(Submodel* parent, const char* name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
-        Base(parent, name, iport, oport), _k(k) {}
+    Gain(Submodel* parent, std::string given_name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
+        Base(parent, given_name, iport, oport), _k(k) {}
 
     NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
     {
@@ -348,8 +354,8 @@ public:
 class Sin : public Base
 {
 public:
-    Sin(Submodel* parent, const char* name, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
-        Base(parent, name, iport, oport) {}
+    Sin(Submodel* parent, std::string given_name, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
+        Base(parent, given_name, iport, oport) {}
 
     NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
     {
@@ -363,8 +369,8 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(Submodel* parent, const char* name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
-        Base(parent, name, {iport}, {oport}), _act_func(act_func) {}
+    Function(Submodel* parent, std::string given_name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
+        Base(parent, given_name, {iport}, {oport}), _act_func(act_func) {}
 
     NodeIdValues activation_function(double t, const NodeIdValues& x) override
     {
@@ -387,8 +393,8 @@ protected:
     double      _initial;
 
 public:
-    AddSub(Submodel* parent, const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
-        Base(parent, name, iports, {oport}), _operators(operators), _initial(initial)
+    AddSub(Submodel* parent, std::string given_name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
+        Base(parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
     }
@@ -419,8 +425,8 @@ protected:
     double      _initial;
 
 public:
-    MulDiv(Submodel* parent, const char* name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
-        Base(parent, name, iports, {oport}), _operators(operators), _initial(initial)
+    MulDiv(Submodel* parent, std::string given_name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
+        Base(parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
     }
@@ -450,8 +456,8 @@ protected:
     double _value;
 
 public:
-    Integrator(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
-        Base(parent, name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Integrator(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
+        Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void get_states(States& states) override
     {
@@ -495,8 +501,8 @@ protected:
     Values  _x;
 
 public:
-    Delay(Submodel* parent, const char* name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
-        Base(parent, name, iports, oport), _lifespan(lifespan) {}
+    Delay(Submodel* parent, std::string given_name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
+        Base(parent, given_name, iports, oport), _lifespan(lifespan) {}
 
     void step(double t, const NodeIdValues& states) override
     {
@@ -553,8 +559,8 @@ protected:
     Value _value;
 
 public:
-    Memory(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
-        Base(parent, name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Memory(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
+        Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
     void step(double /*t*/, const NodeIdValues& states) override
     {
@@ -581,8 +587,8 @@ protected:
     Value  _y;
 
 public:
-    Derivative(Submodel* parent, const char* name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
-        Base(parent, name, iport, oport), _y(y0) {}
+    Derivative(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
+        Base(parent, given_name, iport, oport), _y(y0) {}
 
     void step(double t, const NodeIdValues& states) override
     {
@@ -614,8 +620,8 @@ protected:
     std::string _auto_node_name;
 
 public:
-    Submodel(Submodel* parent, const char* name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
-        Base(parent, name, iports, oports/*, false*/) {}
+    Submodel(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
+        Base(parent, given_name, iports, oports/*, false*/) {}
 
     void add_component(Base& component)
     {
@@ -636,7 +642,7 @@ public:
 
     Node register_node(const Node& node, bool makenew);
     uint _process(double t, NodeIdValues& x, bool reset) override;
-    bool traverse(TraverseCallback cb) override;
+    bool traverse(TraverseCallback cb, uint32_t level, bool go_deep=true) override;
 
 }; // class Submodel
 
@@ -649,7 +655,7 @@ protected:
     std::vector<std::string> _nodes_with_id{"t"}; // time has an id of 0
 
 public:
-    Model(const char* name="model") : Submodel(nullptr, name) {}
+    Model(std::string name="model") : Submodel(nullptr, name) {}
 
     void register_iport(const Node& node, Base& block)
     {

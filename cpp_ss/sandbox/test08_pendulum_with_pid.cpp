@@ -23,7 +23,7 @@ public:
         Node l("l");
 
         // blocks
-        new MulDiv(this, "tau/ml2", "*///", {tau, m, l, l});
+        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l});
         new AddSub(this, "err", "+-", {"", -1});
         new Integrator(this, "dphi", "", dphi);
         new Integrator(this, "phi", dphi, phi);
@@ -33,7 +33,7 @@ public:
         //         return x.sin();
         //     }, phi);
         new Sin(this, "sin(phi)", {phi});
-        new MulDiv(this, "g/l", "**/", {"", g, l}, -1);
+        new MulDiv(this, "g\\l", "**/", {"", g, l}, -1);
     }
 };
 
@@ -78,7 +78,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test08");
 
     NodeIdValues parameters({
         {      "m", 0.2   },

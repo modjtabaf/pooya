@@ -22,14 +22,14 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
 
         std::vector<const Base*> unprocessed;
 
-        auto find_unprocessed_cb = [&] (const Base& c) -> bool
+        auto find_unprocessed_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
         {
-            if (not c.is_processed())
+            if (!c.processed())
                 unprocessed.push_back(&c);
             return true;
         };
 
-        model.traverse(find_unprocessed_cb);
+        model.traverse(find_unprocessed_cb, 0);
         if (unprocessed.size())
         {
             std::cout << "-- unprocessed blocks detected:\n";

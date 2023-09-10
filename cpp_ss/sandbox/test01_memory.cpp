@@ -16,10 +16,10 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test01");
     auto x  = Node("x",  model);
     auto xd = Node("xd", model);
-    auto memory = Memory(&model, "", x, xd);
+    auto memory = Memory(&model, "memory", x, xd);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

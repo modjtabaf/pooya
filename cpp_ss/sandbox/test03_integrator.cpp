@@ -16,10 +16,10 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test03");
     auto x  = Node("x",  model);
     auto xd = Node("xd", model);
-    auto blk = Integrator(&model, "", xd, x, 1.0);
+    auto blk = Integrator(&model, "integ", xd, x, 1.0);
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

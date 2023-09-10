@@ -32,8 +32,8 @@ public:
                 return x.sin();
             }, phi);
         // new Sin(this, "sin(phi)", phi);
-        new MulDiv(this, "g/l", "**/", {"", g, l}, -1);
-        new MulDiv(this, "", "*///", {tau, m, l, l}, -2);
+        new MulDiv(this, "g\\l", "**/", {"", g, l}, -1);
+        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, -2);
         new AddSub(this, "", "+-", {-2, -1}, "d2phi");
     }
 };
@@ -43,7 +43,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test06");
 
     NodeIdValues parameters({
         {  "m", 0.2 },

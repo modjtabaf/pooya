@@ -14,7 +14,7 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "")
+    SSModel(Submodel* parent) : Submodel(parent, "SSModel")
     {
         Node x("x");
         Node xd("xd");
@@ -22,7 +22,7 @@ public:
 
         new Integrator(this, "xd", xdd, xd, 0.1);
         new Integrator(this, "x", xd, x);
-        new Gain(this, "-k/m", -1.0/1.0, x, xdd);
+        new Gain(this, "-k\\m", -1.0/1.0, x, xdd);
     }
 };
 
@@ -31,7 +31,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    auto model = Model("test04");
     auto x  = Node("x", model);
     auto xd = Node("xd", model);
     auto ss_model = SSModel(&model);

@@ -28,7 +28,7 @@ public:
 
         // blocks
         new AddSub(this, "+-1", "+-", {y_in, y_out}, "001");
-        new MulDiv(this, "*/", "*/", {"001", tau}, "002");
+        new MulDiv(this, "*\\", "*/", {"001", tau}, "002");
         new Integrator(this, "Int", "002", -1);
         new InitialValue(this, "IV", y0, "003");
         new AddSub(this, "+-2", "++", {-1, "003"}, y_out);
@@ -48,12 +48,12 @@ public:
         Node tractor_Width("tractor_Width");
 
         // blocks
-        new MulDiv(this, "*/1", "*/", {tractor_wheelbase, front_wheel_angle}, -1);
+        new MulDiv(this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, -1);
         new AddSub(this, "+-1", "++", {-1, tractor_Width}, "004");
-        new MulDiv(this, "*/2", "*/", {tractor_wheelbase, "004"}, front_wheel_angle_right);
+        new MulDiv(this, "*\\2", "*/", {tractor_wheelbase, "004"}, front_wheel_angle_right);
         new Gain(this, "K", 0.5, tractor_Width, {"005"});
         new AddSub(this, "+-2", "+-", {-1, "005"}, "006");
-        new MulDiv(this, "*/3", "*/", {tractor_wheelbase, "006"}, front_wheel_angle_left);
+        new MulDiv(this, "*\\3", "*/", {tractor_wheelbase, "006"}, front_wheel_angle_left);
     }
 };
 

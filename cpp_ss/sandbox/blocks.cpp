@@ -38,14 +38,14 @@ NodeIdValues::NodeIdValues(const std::initializer_list<std::pair<Node, Value>>& 
     }
 }
 
-Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes& oports/*, bool register_oports*/) :
-    _parent(parent), _name(name)
+Base::Base(Submodel* parent, std::string given_name, const Nodes& iports, const Nodes& oports/*, bool register_oports*/) :
+    _parent(parent)
 {
+    _assign_valid_given_name(given_name);
+    _name = _parent ? (_parent->name() + "/" + _given_name) : ("/" + _given_name);
+
     if (parent)
     {
-        if (parent->name() != "")
-            _name = parent->name() + "." + _name;
-
         parent->add_component(*this);
 
         _iports.reserve(iports.size());
@@ -90,6 +90,49 @@ Base::Base(Submodel *parent, const char* name, const Nodes& iports, const Nodes&
     }
 }
 
+void Base::_assign_valid_given_name(std::string given_name)
+{
+    auto verify_unique_name_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
+    {
+        return c.name() != given_name;
+    };
+
+    if (given_name.empty())
+    {
+        given_name = generate_random_name();
+        std::cout << "Warning: given_name cannot be empty. Proceeding with the random name \"" << given_name << "\" instead.\n";
+    }
+    else if (given_name.find_first_of("./ ") != std::string::npos)
+    {
+        std::cout << "Warning: the given name \"" << given_name << "\" contains invalid characters.";
+        given_name = generate_random_name();
+        std::cout << " Proceeding with the random name \"" << given_name << "\" instead.\n";
+    }
+    else if (_parent)
+    {
+        if (!_parent->traverse(verify_unique_name_cb, 0, false))
+        {
+            std::cout << "Warning: the given name \"" << given_name << "\" is already in use.";
+            given_name = generate_random_name();
+            std::cout << " Proceeding with the random name \"" << given_name << "\" instead.\n";
+        }
+    }
+    else
+    {
+        _given_name = given_name;
+        return;
+    }
+
+    while (!_parent->traverse(verify_unique_name_cb, 0, false))
+    {
+        std::cout << "Warning: the given name \"" << given_name << "\" is already in use.";
+        given_name = generate_random_name();
+        std::cout << "Proceeding with the random name \"" << given_name << "\" instead.\n";
+    }
+
+    _given_name = given_name;
+}
+
 uint Base::_process(double t, NodeIdValues& x, bool reset)
 {
     if (reset)
@@ -122,6 +165,15 @@ uint Base::_process(double t, NodeIdValues& x, bool reset)
 Model* Base::get_model()
 {
     return _parent ? _parent->get_model() : nullptr;
+}
+
+std::string Base::generate_random_name(int len)
+{
+    std::string name;
+    name.reserve(len);
+    for (auto i = 0; i < len; i++)
+        name += char(std::experimental::randint(int('a'), int('z')));
+    return name;
 }
 
 NodeIdValues Bus::activation_function(double /*t*/, const NodeIdValues& x)
@@ -238,7 +290,7 @@ uint Submodel::_process(double t, NodeIdValues& x, bool reset)
         for (auto& component: _components)
         {
             n_processed += component->_process(t, x, reset);
-            if (not component->is_processed())
+            if (not component->processed())
                 _processed = false;
         }
     }
@@ -246,15 +298,17 @@ uint Submodel::_process(double t, NodeIdValues& x, bool reset)
     return n_processed;
 }
 
-bool Submodel::traverse(TraverseCallback cb)
+bool Submodel::traverse(TraverseCallback cb, uint32_t level, bool go_deep)
 {
-    for (auto& component: _components)
-    {
-        if (not component->traverse(cb))
-            return false;
-    }
+    if (!Base::traverse(cb, level, go_deep))
+        return false;
 
-    return Base::traverse(cb);
+    if (go_deep)
+        for (auto& component: _components)
+            if (!component->traverse(cb, level + 1, true))
+                return false;
+
+    return true;
 }
 
 void Model::register_node(Node& node)

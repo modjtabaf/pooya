@@ -94,7 +94,7 @@ void Base::_assign_valid_given_name(std::string given_name)
 {
     auto verify_unique_name_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
     {
-        return c.name() != given_name;
+        return (&c == static_cast<Base*>(_parent)) || (c._given_name != given_name);
     };
 
     if (given_name.empty())
@@ -110,7 +110,7 @@ void Base::_assign_valid_given_name(std::string given_name)
     }
     else if (_parent)
     {
-        if (!_parent->traverse(verify_unique_name_cb, 0, false))
+        if (!_parent->traverse(verify_unique_name_cb, 0, 1))
         {
             std::cout << "Warning: the given name \"" << given_name << "\" is already in use.";
             given_name = generate_random_name();
@@ -298,14 +298,17 @@ uint Submodel::_process(double t, NodeIdValues& x, bool reset)
     return n_processed;
 }
 
-bool Submodel::traverse(TraverseCallback cb, uint32_t level, bool go_deep)
+bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
-    if (!Base::traverse(cb, level, go_deep))
+    if (level > max_level)
+        return true;
+
+    if (!Base::traverse(cb, level, max_level))
         return false;
 
-    if (go_deep)
-        for (auto& component: _components)
-            if (!component->traverse(cb, level + 1, true))
+    if (level < max_level)
+        for (auto* component: _components)
+            if (!component->traverse(cb, level + 1, max_level))
                 return false;
 
     return true;

@@ -227,9 +227,9 @@ public:
     // def __repr__(self):
     //     return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
 
-    virtual bool traverse(TraverseCallback cb, uint32_t level, bool /*go_deep=true*/)
+    virtual bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max())
     {
-        return cb(*this, level);
+        return (level > max_level) || cb(*this, level);
     }
 
     static std::string generate_random_name(int len = 10);
@@ -642,7 +642,7 @@ public:
 
     Node register_node(const Node& node, bool makenew);
     uint _process(double t, NodeIdValues& x, bool reset) override;
-    bool traverse(TraverseCallback cb, uint32_t level, bool go_deep=true) override;
+    bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 
 }; // class Submodel
 

@@ -155,6 +155,16 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
+    auto AxFr_front_right = Node("AxFr_front_right", model);
+    auto AxFr_front_left  = Node("AxFr_front_left",  model);
+
+    Gnuplot gp;
+	gp << "set xrange [0:2000]\n";
+    gp << "set yrange [-0.6:0.6]\n";
+	gp << "plot" << gp.file1d((history[front_wheel_angle_Rq] * (180/M_PI)).eval()) << "with lines title 'front\\_wheel\\_angle\\_Rq',"
+	    << gp.file1d(((history[AxFr_front_right] + history[AxFr_front_left])/2 * (180/M_PI)).eval()) << "with lines title 'dphi',"
+        "\n";
+
     // steering_info = helper.load_mat_files_as_bus(
     //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",
     //     "steering_info")

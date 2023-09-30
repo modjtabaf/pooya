@@ -18,9 +18,9 @@ using namespace blocks;
 class PT : public Submodel
 {
 public:
-    PT(Submodel* parent, const Nodes& iports, const Node& y_out) : Submodel(parent, "PT", iports, {y_out})
+    PT(Submodel* parent, const Signals& iports, const Signal& y_out) : Submodel(parent, "PT", iports, {y_out})
     {
-        // nodes
+        // signals
         const auto& y_in = _iports[0];
         const auto& tau  = _iports[1];
         const auto& y0   = _iports[2];
@@ -37,14 +37,14 @@ public:
 class ComputeFrontWheelAngleRightLeftPinpoint : public Submodel
 {
 public:
-    ComputeFrontWheelAngleRightLeftPinpoint(Submodel* parent, const Node& front_wheel_angle, const Nodes& oports) :
+    ComputeFrontWheelAngleRightLeftPinpoint(Submodel* parent, const Signal& front_wheel_angle, const Signals& oports) :
         Submodel(parent, "ComputeFrontWheelAngleRightLeftPinpoint", front_wheel_angle, oports)
     {
-        // nodes
+        // signals
         const auto& front_wheel_angle_right = oports[0];
         const auto& front_wheel_angle_left  = oports[1];
-        auto tractor_wheelbase = get_model()->create_node("tractor_wheelbase");
-        auto tractor_Width = get_model()->create_node("tractor_Width");
+        auto tractor_wheelbase = get_model()->create_signal("tractor_wheelbase");
+        auto tractor_Width = get_model()->create_signal("tractor_Width");
 
         // blocks
         new MulDiv(this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, 10);
@@ -59,10 +59,10 @@ public:
 class SteeringSystem : public Submodel
 {
 public:
-    SteeringSystem(Submodel* parent, const Node& ad_DsrdFtWhlAngl_Rq_VD, const Nodes& steering_info) :
+    SteeringSystem(Submodel* parent, const Signal& ad_DsrdFtWhlAngl_Rq_VD, const Signals& steering_info) :
         Submodel(parent, "Steering_System", ad_DsrdFtWhlAngl_Rq_VD, steering_info)
     {
-        // nodes
+        // signals
         const auto& front_wheel_angle = _oports[0];
         const auto& front_wheel_angle_rate = _oports[1];
         const auto& front_wheel_angle_neg = _oports[2];
@@ -70,10 +70,10 @@ public:
         const auto& AxFr_front_right = _oports[4];
         const auto& AxFr_front_left = _oports[5];
 
-        auto front_wheel_ang_gain = get_model()->create_node("front_wheel_ang_gain");
-        auto front_wheel_ang_delay = get_model()->create_node("front_wheel_ang_delay");
-        auto front_wheel_ang_init_value = get_model()->create_node("front_wheel_ang_init_value");
-        auto front_wheel_ang_t_const = get_model()->create_node("front_wheel_ang_t_const");
+        auto front_wheel_ang_gain = get_model()->create_signal("front_wheel_ang_gain");
+        auto front_wheel_ang_delay = get_model()->create_signal("front_wheel_ang_delay");
+        auto front_wheel_ang_init_value = get_model()->create_signal("front_wheel_ang_init_value");
+        auto front_wheel_ang_t_const = get_model()->create_signal("front_wheel_ang_t_const");
 
         // blocks
         new MulDiv(this, "*\\", "**", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, 10);
@@ -127,7 +127,7 @@ int main()
 
     auto model = Model();
 
-    NodeValues parameters({
+    SignalValues parameters({
         {"tractor_wheelbase", 5.8325},
         {"tractor_Width", 2.5},
         {"front_wheel_ang_t_const", 0.1},
@@ -136,14 +136,14 @@ int main()
         {"front_wheel_ang_init_value", 0.0},
         }, model);
 
-    auto front_wheel_angle_Rq = model.create_node("front_wheel_angle_Rq");
+    auto front_wheel_angle_Rq = model.create_signal("front_wheel_angle_Rq");
 
-    auto front_wheel_angle = model.create_node("front_wheel_angle");
-    auto front_wheel_angle_rate = model.create_node("front_wheel_angle_rate");
-    auto front_wheel_angle_neg = model.create_node("front_wheel_angle_neg");
-    auto front_wheel_angle_rate_neg = model.create_node("front_wheel_angle_rate_neg");
-    auto AxFr_front_right = model.create_node("AxFr_front_right");
-    auto AxFr_front_left = model.create_node("AxFr_front_left");
+    auto front_wheel_angle = model.create_signal("front_wheel_angle");
+    auto front_wheel_angle_rate = model.create_signal("front_wheel_angle_rate");
+    auto front_wheel_angle_neg = model.create_signal("front_wheel_angle_neg");
+    auto front_wheel_angle_rate_neg = model.create_signal("front_wheel_angle_rate_neg");
+    auto AxFr_front_right = model.create_signal("AxFr_front_right");
+    auto AxFr_front_left = model.create_signal("AxFr_front_left");
 
     auto steering_system = SteeringSystem(&model,
         front_wheel_angle_Rq,

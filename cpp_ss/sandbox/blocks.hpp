@@ -32,7 +32,7 @@ public:
     }
 };
 
-class Node
+class Signal
 {
 public:
     using Id = std::size_t;
@@ -46,13 +46,13 @@ protected:
     std::string _make_valid_given_name(const std::string& given_name) const;
 
 public:
-    Node(const std::string& given_name) : _given_name(_make_valid_given_name(given_name)) {}
-    Node(const char* given_name) : _given_name(_make_valid_given_name(given_name)) {}
-    Node(int n) : _given_name(_make_valid_given_name(std::to_string(n))) {}
-    Node() : _given_name(_make_valid_given_name("-")) {}
-    Node(const Node& node) = default;
+    Signal(const std::string& given_name) : _given_name(_make_valid_given_name(given_name)) {}
+    Signal(const char* given_name) : _given_name(_make_valid_given_name(given_name)) {}
+    Signal(int n) : _given_name(_make_valid_given_name(std::to_string(n))) {}
+    Signal() : _given_name(_make_valid_given_name("-")) {}
+    Signal(const Signal& signal) = default;
 
-    Node& operator=(const Node& rhs) = default;
+    Signal& operator=(const Signal& rhs) = default;
 
     operator Id() const {return _id;}
     Id id() const {return _id;}
@@ -62,59 +62,59 @@ public:
     bool set_owner(Submodel& owner);
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Node& node)
+inline std::ostream& operator<<(std::ostream& os, const Signal& signal)
 {
-    return os << "node [" << node.given_name() << "] = " << node.id() << "\n";
+    return os << "signal [" << signal.given_name() << "] = " << signal.id() << "\n";
 }
 
-struct NodeHash
+struct SignalHash
 {
-    std::size_t operator()(const Node& node) const noexcept
+    std::size_t operator()(const Signal& signal) const noexcept
     {
-        assert(!node.name().empty());
-        std::size_t h = std::hash<std::string>{}(node.name());
-        return h ^ (node.id() << 1);
+        assert(!signal.name().empty());
+        std::size_t h = std::hash<std::string>{}(signal.name());
+        return h ^ (signal.id() << 1);
     }
 };
 
-class Nodes : public std::vector<Node>
+class Signals : public std::vector<Signal>
 {
 public:
-    using Parent = std::vector<Node>;
+    using Parent = std::vector<Signal>;
     using Parent::vector;
 
-    Nodes(const Node& node)
+    Signals(const Signal& signal)
     {
-        push_back(node);
+        push_back(signal);
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Nodes& nodes)
+inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
 {
-    os << "nodes:\n";
-    for (const auto& node: nodes)
-        os << "- " << node;
+    os << "signals:\n";
+    for (const auto& signal: signals)
+        os << "- " << signal;
     return os;
 }
 
 using Scalars          = std::vector<double>;
 using TraverseCallback = std::function<bool(const Base&, uint32_t level)>;
 
-class NodeValues : public std::unordered_map<Node, Value, NodeHash>
+class SignalValues : public std::unordered_map<Signal, Value, SignalHash>
 {
 protected:
-    using Parent = std::unordered_map<Node, Value, NodeHash>;
+    using Parent = std::unordered_map<Signal, Value, SignalHash>;
 
 public:
-    NodeValues() = default;
-    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list, Submodel& owner);
-    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list)
+    SignalValues() = default;
+    SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list, Submodel& owner);
+    SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list)
     {
         for (const auto& v: list)
             insert_or_assign(v.first, v.second);
     }
 
-    void join(const NodeValues& other)
+    void join(const SignalValues& other)
     {
         for(const auto& value: other)
             insert_or_assign(value.first, value.second);
@@ -141,16 +141,16 @@ public:
 
     std::size_t size() const {return _values.size();}
 
-    const Value* get(Node::Id id) const
+    const Value* get(Signal::Id id) const
     {
-        assert(id != Node::NoId);
+        assert(id != Signal::NoId);
         const auto& bv = _values[id];
         return bv._valid ? &bv._value : nullptr;
     }
 
-    void set(Node::Id id, const Value& value)
+    void set(Signal::Id id, const Value& value)
     {
-        assert(id != Node::NoId);
+        assert(id != Signal::NoId);
         auto& bv = _values[id];
         bv._value = value;
         bv._valid = true;
@@ -180,16 +180,16 @@ inline std::ostream& operator<<(std::ostream& os, const Values& values)
     return os;
 }
 
-class StatesInfo : public std::unordered_map<Node::Id, std::pair<Value, Node::Id>> // state, value, derivative
+class StatesInfo : public std::unordered_map<Signal::Id, std::pair<Value, Signal::Id>> // state, value, derivative
 {
 protected:
-    using Pair = std::pair<Value, Node::Id>;
-    using Parent = std::unordered_map<Node::Id, Pair>;
+    using Pair = std::pair<Value, Signal::Id>;
+    using Parent = std::unordered_map<Signal::Id, Pair>;
 
 public:
     using Parent::unordered_map;
 
-    void insert_or_assign(Node::Id state, const Value& value, Node::Id deriv)
+    void insert_or_assign(Signal::Id state, const Value& value, Signal::Id deriv)
     {
         Parent::insert_or_assign(state, Pair(value, deriv));
     }
@@ -198,8 +198,8 @@ public:
 class Base
 {
 protected:
-    Nodes _iports;
-    Nodes _oports;
+    Signals _iports;
+    Signals _oports;
     Submodel* const _parent;
     std::string _given_name;
     std::string _name;
@@ -208,7 +208,7 @@ protected:
     void _assign_valid_given_name(std::string given_name);
 
 public:
-    Base(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()/*, bool register_oports=true*/);
+    Base(Submodel* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()/*, bool register_oports=true*/);
 
     virtual void get_states(StatesInfo& /*states*/) {}
     virtual void step(double /*t*/, const Values& /*states*/) {}
@@ -218,8 +218,8 @@ public:
     bool processed() const {return _processed;}
     const std::string& given_name() const {return _given_name;}
     const std::string& name() const {return _name;}
-    const Nodes& iports() const {return _iports;}
-    const Nodes& oports() const {return _oports;}
+    const Signals& iports() const {return _iports;}
+    const Signals& oports() const {return _oports;}
 
     virtual uint _process(double t, Values& values, bool reset);
 
@@ -234,24 +234,24 @@ public:
 // class Bus : public Base
 // {
 // protected:
-//     bool _update_node_ids{true};
-//     std::vector<Node> _raw_names;
+//     bool _update_signal_ids{true};
+//     std::vector<Signal> _raw_names;
 
 // public:
 //     // class BusValues : public Values
 //     // {
 //     // protected:
-//     //     Nodes _names;
+//     //     Signals _names;
 
 //     // public:
-//     //     BusValues(const Nodes& names, const Values& values) :
+//     //     BusValues(const Signals& names, const Values& values) :
 //     //         Values(values), _names(names) {}
     
 //     //     // def __repr__(self):
 //     //     //     return 'BusValues(' + super().__repr__() + ')'
 //     // };
 
-//     Bus(Submodel* parent, std::string given_name, const Nodes& iports=Node(), const Node& oport=Node()) :
+//     Bus(Submodel* parent, std::string given_name, const Signals& iports=Signal(), const Signal& oport=Signal()) :
 //         Base(parent, given_name, iports, oport)
 //     {
 //         _raw_names.reserve(iports.size());
@@ -292,7 +292,7 @@ protected:
     Value _value;
 
 public:
-    InitialValue(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node()) :
+    InitialValue(Submodel* parent, std::string given_name, const Signal& iport=Signal(), const Signal& oport=Signal()) :
         Base(parent, given_name, iport, oport) {}
 
     void activation_function(double /*t*/, Values& values) override
@@ -312,11 +312,11 @@ protected:
     Value _value;
 
 public:
-    Const(Submodel* parent, std::string given_name, const Value& value, const Node& oport=Node()) :
-        Base(parent, given_name, Nodes(), oport), _value(value) {}
+    Const(Submodel* parent, std::string given_name, const Value& value, const Signal& oport=Signal()) :
+        Base(parent, given_name, Signals(), oport), _value(value) {}
 
-    Const(Submodel* parent, std::string given_name, double value, const Node& oport=Node()) :
-        Base(parent, given_name, Nodes(), oport), _value(1)
+    Const(Submodel* parent, std::string given_name, double value, const Signal& oport=Signal()) :
+        Base(parent, given_name, Signals(), oport), _value(1)
     {
          _value << value;
     }
@@ -333,7 +333,7 @@ protected:
     double _k;
 
 public:
-    Gain(Submodel* parent, std::string given_name, double k, const Node& iport=Node(), const Node& oport=Node()) :
+    Gain(Submodel* parent, std::string given_name, double k, const Signal& iport=Signal(), const Signal& oport=Signal()) :
         Base(parent, given_name, iport, oport), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
@@ -346,7 +346,7 @@ public:
 class Sin : public Base
 {
 public:
-    Sin(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node()) :
+    Sin(Submodel* parent, std::string given_name, const Signal& iport=Signal(), const Signal& oport=Signal()) :
         Base(parent, given_name, iport, oport) {}
 
     void activation_function(double /*t*/, Values& values) override
@@ -364,7 +364,7 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(Submodel* parent, std::string given_name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
+    Function(Submodel* parent, std::string given_name, ActFunction act_func, const Signal& iport=Signal(), const Signal& oport=Signal()) :
         Base(parent, given_name, {iport}, {oport}), _act_func(act_func) {}
 
     void activation_function(double t, Values& values) override
@@ -380,7 +380,7 @@ protected:
     double      _initial;
 
 public:
-    AddSub(Submodel* parent, std::string given_name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=0.0) :
+    AddSub(Submodel* parent, std::string given_name, const char* operators, const Signals& iports, const Signal& oport=Signal(), double initial=0.0) :
         Base(parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
@@ -390,9 +390,9 @@ public:
     {
         Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& node: _iports)
+        for (const auto& signal: _iports)
         {
-            const auto &v = *values.get(node);
+            const auto &v = *values.get(signal);
             if (*p == '+')
                 ret += v;
             else if (*p == '-')
@@ -412,7 +412,7 @@ protected:
     double      _initial;
 
 public:
-    MulDiv(Submodel* parent, std::string given_name, const char* operators, const Nodes& iports, const Node& oport=Node(), double initial=1.0) :
+    MulDiv(Submodel* parent, std::string given_name, const char* operators, const Signals& iports, const Signal& oport=Signal(), double initial=1.0) :
         Base(parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
     {
         assert(std::strlen(operators) == iports.size());
@@ -422,9 +422,9 @@ public:
     {
         Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& node: _iports)
+        for (const auto& signal: _iports)
         {
-            const auto &v = *values.get(node);
+            const auto &v = *values.get(signal);
             if (*p == '*')
                 ret *= v;
             else if (*p == '/')
@@ -443,8 +443,8 @@ protected:
     double _value;
 
 public:
-    Integrator(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
-        Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Integrator(Submodel* parent, std::string given_name, const Signal& iport=Signal(), const Signal& oport=Signal(), double ic=0.0) :
+        Base(parent, given_name, Signals({iport}), Signals({oport})), _value(ic) {}
 
     void get_states(StatesInfo& states) override
     {
@@ -489,7 +489,7 @@ protected:
     std::vector<Value> _x;
 
 public:
-    Delay(Submodel* parent, std::string given_name, const Nodes& iports, const Node& oport=Node(), double lifespan=10.0) :
+    Delay(Submodel* parent, std::string given_name, const Signals& iports, const Signal& oport=Signal(), double lifespan=10.0) :
         Base(parent, given_name, iports, oport), _lifespan(lifespan) {}
 
     void step(double t, const Values& values) override
@@ -556,8 +556,8 @@ protected:
     Value _value;
 
 public:
-    Memory(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
-        Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
+    Memory(Submodel* parent, std::string given_name, const Signal& iport=Signal(), const Signal& oport=Signal(), const Value& ic=Value::Zero(1)) :
+        Base(parent, given_name, Signals({iport}), Signals({oport})), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
     {
@@ -585,7 +585,7 @@ protected:
     Value  _y;
 
 public:
-    Derivative(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
+    Derivative(Submodel* parent, std::string given_name, const Signal& iport=Signal(), const Signal& oport=Signal(), const Value& y0=Value::Zero(1)) :
         Base(parent, given_name, iport, oport), _y(y0) {}
 
     void step(double t, const Values& states) override
@@ -617,7 +617,7 @@ protected:
     std::vector<Base*> _components;
 
 public:
-    Submodel(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
+    Submodel(Submodel* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()) :
         Base(parent, given_name, iports, oports/*, false*/) {}
 
     void add_component(Base& component)
@@ -637,8 +637,8 @@ public:
             component->step(t, values);
     }
 
-    std::string make_node_name(const std::string& given_name);
-    Node create_node(const std::string& given_name);
+    std::string make_signal_name(const std::string& given_name);
+    Signal create_signal(const std::string& given_name);
     uint _process(double t, Values& values, bool reset) override;
     bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 
@@ -647,19 +647,19 @@ public:
 class Model final : public Submodel
 {
 protected:
-    std::vector<std::string> _registered_nodes;
+    std::vector<std::string> _registered_signals;
 
 public:
     Model(std::string name="model");
 
     Model* get_model() override {return this;}
-    std::size_t num_nodes() const {return _registered_nodes.size();}
+    std::size_t num_signals() const {return _registered_signals.size();}
 
-    const std::string& get_node_by_id(Node::Id id) const
+    const std::string& get_signal_by_id(Signal::Id id) const
     {
-        return _registered_nodes[id];
+        return _registered_signals[id];
     }
-    Node::Id get_or_register_node(const std::string& name);
+    Signal::Id get_or_register_signal(const std::string& name);
 };
 
 }

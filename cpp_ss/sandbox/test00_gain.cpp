@@ -17,8 +17,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test00");
-    auto x = model.create_node("x");
-    auto y = model.create_node("y");
+    auto x = model.create_signal("x");
+    auto y = model.create_signal("y");
     auto gain = Gain(&model, "gain", 2.0, x, y);
 
     auto history = run(model,

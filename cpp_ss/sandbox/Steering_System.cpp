@@ -22,16 +22,15 @@ public:
     {
         // nodes
         const auto& y_in = _iports[0];
-        std::cout << "y_in: " << y_in << "\n";
         const auto& tau  = _iports[1];
         const auto& y0   = _iports[2];
 
         // blocks
-        new AddSub(this, "+-1", "+-", {y_in, y_out}, "001");
-        new MulDiv(this, "*\\", "*/", {"001", tau}, "002");
-        new Integrator(this, "Int", "002", -1);
-        new InitialValue(this, "IV", y0, "003");
-        new AddSub(this, "+-2", "++", {-1, "003"}, y_out);
+        new AddSub(this, "+-1", "+-", {y_in, y_out}, 10);
+        new MulDiv(this, "*\\", "*/", {10, tau}, 20);
+        new Integrator(this, "Int", 20, 30);
+        new InitialValue(this, "IV", y0, 40);
+        new AddSub(this, "+-2", "++", {30, 40}, y_out);
     }
 };
 
@@ -44,54 +43,59 @@ public:
         // nodes
         const auto& front_wheel_angle_right = oports[0];
         const auto& front_wheel_angle_left  = oports[1];
-        Node tractor_wheelbase("tractor_wheelbase");
-        Node tractor_Width("tractor_Width");
+        auto tractor_wheelbase = get_model()->create_node("tractor_wheelbase");
+        auto tractor_Width = get_model()->create_node("tractor_Width");
 
         // blocks
-        new MulDiv(this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, -1);
-        new AddSub(this, "+-1", "++", {-1, tractor_Width}, "004");
-        new MulDiv(this, "*\\2", "*/", {tractor_wheelbase, "004"}, front_wheel_angle_right);
-        new Gain(this, "K", 0.5, tractor_Width, {"005"});
-        new AddSub(this, "+-2", "+-", {-1, "005"}, "006");
-        new MulDiv(this, "*\\3", "*/", {tractor_wheelbase, "006"}, front_wheel_angle_left);
+        new MulDiv(this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, 10);
+        new AddSub(this, "+-1", "++", {10, tractor_Width}, 20);
+        new MulDiv(this, "*\\2", "*/", {tractor_wheelbase, 20}, front_wheel_angle_right);
+        new Gain(this, "K", 0.5, tractor_Width, 30);
+        new AddSub(this, "+-2", "+-", {10, 30}, 40);
+        new MulDiv(this, "*\\3", "*/", {tractor_wheelbase, 40}, front_wheel_angle_left);
     }
 };
 
 class SteeringSystem : public Submodel
 {
 public:
-    SteeringSystem(Submodel* parent, const Node& ad_DsrdFtWhlAngl_Rq_VD, const Node& steering_info) :
+    SteeringSystem(Submodel* parent, const Node& ad_DsrdFtWhlAngl_Rq_VD, const Nodes& steering_info) :
         Submodel(parent, "Steering_System", ad_DsrdFtWhlAngl_Rq_VD, steering_info)
     {
         // nodes
-        Node front_wheel_angle("front_wheel_angle");
-        Node front_wheel_angle_rate("front_wheel_angle_rate");
-        Node front_wheel_angle_neg("front_wheel_angle_neg");
-        Node front_wheel_angle_rate_neg("front_wheel_angle_rate_neg");
-        Node AxFr_front_right("AxFr_front_right");
-        Node AxFr_front_left("AxFr_front_left");
+        const auto& front_wheel_angle = _oports[0];
+        const auto& front_wheel_angle_rate = _oports[1];
+        const auto& front_wheel_angle_neg = _oports[2];
+        const auto& front_wheel_angle_rate_neg = _oports[3];
+        const auto& AxFr_front_right = _oports[4];
+        const auto& AxFr_front_left = _oports[5];
+
+        auto front_wheel_ang_gain = get_model()->create_node("front_wheel_ang_gain");
+        auto front_wheel_ang_delay = get_model()->create_node("front_wheel_ang_delay");
+        auto front_wheel_ang_init_value = get_model()->create_node("front_wheel_ang_init_value");
+        auto front_wheel_ang_t_const = get_model()->create_node("front_wheel_ang_t_const");
 
         // blocks
-        new MulDiv(this, "*/", "**", {ad_DsrdFtWhlAngl_Rq_VD, "front_wheel_ang_gain"}, "007");
-        new Delay(this, "Delay", {"007", "front_wheel_ang_delay", "front_wheel_ang_init_value"}, {-2});
+        new MulDiv(this, "*\\", "**", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, 10);
+        new Delay(this, "Delay", {10, front_wheel_ang_delay, front_wheel_ang_init_value}, 20);
         new Function(this, "Clamp",
             [](double /*t*/, const Value& x) -> Value
             {
                 return x.max(0.001).min(10);
-            }, "front_wheel_ang_t_const", "008");
-        new PT(this, {-2, "008", -2}, front_wheel_angle);
+            }, front_wheel_ang_t_const, 30);
+        new PT(this, {20, 30, 20}, front_wheel_angle);
         new Derivative(this, "Derivative", front_wheel_angle, front_wheel_angle_rate);
         new Gain(this, "K1", -1, front_wheel_angle, front_wheel_angle_neg);
         new Gain(this, "K2", -1, front_wheel_angle_rate, front_wheel_angle_rate_neg);
         new ComputeFrontWheelAngleRightLeftPinpoint(this, front_wheel_angle, {AxFr_front_right, AxFr_front_left});
-        new Bus(this, "Bus", {
-            front_wheel_angle,
-            front_wheel_angle_rate,
-            front_wheel_angle_neg,
-            front_wheel_angle_rate_neg,
-            AxFr_front_right,
-            AxFr_front_left
-            }, steering_info);
+        // new Bus(this, "Bus", {
+        //     front_wheel_angle,
+        //     front_wheel_angle_rate,
+        //     front_wheel_angle_neg,
+        //     front_wheel_angle_rate_neg,
+        //     AxFr_front_right,
+        //     AxFr_front_left
+        //     }, steering_info);
     }
 };
 
@@ -123,7 +127,7 @@ int main()
 
     auto model = Model();
 
-    NodeIdValues parameters({
+    NodeValues parameters({
         {"tractor_wheelbase", 5.8325},
         {"tractor_Width", 2.5},
         {"front_wheel_ang_t_const", 0.1},
@@ -132,20 +136,34 @@ int main()
         {"front_wheel_ang_init_value", 0.0},
         }, model);
 
-    auto front_wheel_angle_Rq = Node("front_wheel_angle_Rq", model);
+    auto front_wheel_angle_Rq = model.create_node("front_wheel_angle_Rq");
+
+    auto front_wheel_angle = model.create_node("front_wheel_angle");
+    auto front_wheel_angle_rate = model.create_node("front_wheel_angle_rate");
+    auto front_wheel_angle_neg = model.create_node("front_wheel_angle_neg");
+    auto front_wheel_angle_rate_neg = model.create_node("front_wheel_angle_rate_neg");
+    auto AxFr_front_right = model.create_node("AxFr_front_right");
+    auto AxFr_front_left = model.create_node("AxFr_front_left");
 
     auto steering_system = SteeringSystem(&model,
         front_wheel_angle_Rq,
-        "steering_info");
+        {
+            front_wheel_angle,
+            front_wheel_angle_rate,
+            front_wheel_angle_neg,
+            front_wheel_angle_rate_neg,
+            AxFr_front_right,
+            AxFr_front_left
+        });
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(),
                 FRONT_WHEEL_ANGLE_RQ_X.back(), 0.1);
         },
-        [&](double t, const NodeIdValues& /*x*/, NodeIdValues& inputs) -> void
+        [&](double t, Values& values) -> void
         {
-            inputs.insert_or_assign(front_wheel_angle_Rq,
+            values.set(front_wheel_angle_Rq,
                 interp1d(t, FRONT_WHEEL_ANGLE_RQ_X, FRONT_WHEEL_ANGLE_RQ_Y));
         },
         parameters, rk4);
@@ -154,9 +172,6 @@ int main()
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
-
-    auto AxFr_front_right = Node("AxFr_front_right", model);
-    auto AxFr_front_left  = Node("AxFr_front_left",  model);
 
     Gnuplot gp;
 	gp << "set xrange [0:2000]\n";

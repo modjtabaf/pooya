@@ -9,102 +9,137 @@
 namespace blocks
 {
 
-NodeIdValues rk4(SolverCallback callback, double t0, double t1, const NodeIdValues& x0)
+void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_nodes)
 {
-    // std::cout << "14: x0\n";
-    // for (const auto& v: x0)
-    //     std::cout << " - " << v.first << " = " << v.second << "\n";
-    auto n = x0.size();
     double h = t1 - t0;
 
-    NodeIds nodes;
-    nodes.reserve(n);
-    for (const auto& v: x0)
-        nodes.push_back(v.first);
+    Values X0(num_nodes);
+    for (const auto& state: states)
+        X0.set(state.first, state.second.first);
 
-    // k1 = h*callback(t0, x0)
-    auto dx = callback(t0, x0);
-    // std::cout << "27: xdot\n";
-    // for (const auto& v: dx)
-    //     std::cout << " - " << v << "\n";
-    Values k1;
-    k1.reserve(n);
-    for (const auto& node: nodes)
-        k1.push_back(h*dx.at(node));
+    // K1 = h*callback(t0, X0)
 
-    // x1 = x0 + k1/2
-    Values x1;
-    x1.reserve(n);
-    auto k1_it = k1.begin();
-    for (const auto& node: nodes)
-        x1.push_back(x0.at(node) + *(k1_it++)/2);
+    callback(t0, X0);
 
-    // k2 = h*callback(t0 + h/2, x1)
-    dx = callback(t0 + h/2, NodeIdValues(nodes, x1));
-    Values k2;
-    k2.reserve(n);
-    for (const auto& node: nodes)
-        k2.push_back(h*dx.at(node));
+    Values K1(states.size());
+    int k = 0;
+    for (auto& state: states)
+    {
+        const auto* dx = X0.get(state.second.second);
+        if (!dx)
+        {
+            std::cout << "Error: not all state derivatives are present. Aborting...\n";
+            return;
+        }
+        K1.set(k++, h * (*dx));
+    }
 
-    // x2 = x0 + k2/2
-    Values x2;
-    x2.reserve(n);
-    auto k2_it = k2.begin();
-    for (const auto& node: nodes)
-        x2.push_back(x0.at(node) + *(k2_it++)/2);
+    // X1 = X0 + K1/2
 
-    // k3 = h*callback(t0 + h/2, x2)
-    dx = callback(t0 + h/2, NodeIdValues(nodes, x2));
-    Values k3;
-    k3.reserve(n);
-    for (const auto& node: nodes)
-        k3.push_back(h*dx.at(node));
+    Values X1(num_nodes);
+    k = 0;
+    for (const auto& state: states)
+        X1.set(state.first, *X0.get(state.first) + (*K1.get(k++)) / 2);
 
-    // x3 = x0 + k3
-    Values x3;
-    x3.reserve(n);
-    auto k3_it = k3.begin();
-    for (const auto& node: nodes)
-        x3.push_back(x0.at(node) + *(k3_it++));
+    // K2 = h*callback(t0 + h/2, X1)
 
-    // k4 = h*callback(t1, x3)
-    dx = callback(t1, NodeIdValues(nodes, x3));
-    Values k4;
-    k4.reserve(n);
-    for (const auto& node: nodes)
-        k4.push_back(h*dx.at(node));
+    callback(t0 + h/2, X1);
 
-    // ret = x0 + k1/6 + k2/3 + k3/3 + k4/6
-    Values ret;
-    ret.reserve(n);
-    k1_it = k1.begin();
-    k2_it = k2.begin();
-    k3_it = k3.begin();
-    auto k4_it = k4.begin();
-    for (const auto& node: nodes)
-        ret.push_back(x0.at(node) + *(k1_it++)/6 + *(k2_it++)/3 + *(k3_it++)/3 + *(k4_it++)/6);
+    Values K2(states.size());
+    k = 0;
+    for (auto& state: states)
+    {
+        const auto* dx = X1.get(state.second.second);
+        if (!dx)
+        {
+            std::cout << "Error: not all state derivatives are present. Aborting...\n";
+            return;
+        }
+        K2.set(k++, h * (*dx));
+    }
 
-    return NodeIdValues(nodes, ret);
+    // X2 = X0 + K2/2
+
+    Values X2(num_nodes);
+    k = 0;
+    for (const auto& state: states)
+        X2.set(state.first, *X0.get(state.first) + (*K2.get(k++)) / 2);
+
+    // K3 = h*callback(t0 + h/2, X2)
+
+    callback(t0 + h/2, X2);
+
+    Values K3(states.size());
+    k = 0;
+    for (auto& state: states)
+    {
+        const auto* dx = X2.get(state.second.second);
+        if (!dx)
+        {
+            std::cout << "Error: not all state derivatives are present. Aborting...\n";
+            return;
+        }
+        K3.set(k++, h * (*dx));
+    }
+
+    // X3 = X0 + K3
+
+    Values X3(num_nodes);
+    k = 0;
+    for (const auto& state: states)
+        X3.set(state.first, *X0.get(state.first) + (*K3.get(k++)));
+
+    // K4 = h*callback(t1, X3)
+
+    callback(t1, X3);
+
+    Values K4(states.size());
+    k = 0;
+    for (auto& state: states)
+    {
+        const auto* dx = X3.get(state.second.second);
+        if (!dx)
+        {
+            std::cout << "Error: not all state derivatives are present. Aborting...\n";
+            return;
+        }
+        K4.set(k++, h * (*dx));
+    }
+
+    // ret = X0 + K1/6 + K2/3 + K3/3 + K4/6
+
+    k = 0;
+    for (auto& state: states)
+    {
+        state.second.first = *X0.get(state.first) + (*K1.get(k)) / 6 + (*K2.get(k)) / 3 + (*K3.get(k)) / 3 + (*K4.get(k)) / 6;
+        k++;
+    }
 }
 
-NodeIdValues simple(SolverCallback callback, double t0, double t1, const NodeIdValues& x0)
+void simple(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_nodes)
 {
-    auto n = x0.size();
     double h = t1 - t0;
 
-    NodeIds nodes;
-    nodes.reserve(n);
-    for (const auto& v: x0)
-        nodes.push_back(v.first);
-
     // ret = x0 + (t1 - t0)*callback(t0, x0)
-    auto dx = callback(t0, x0);
-    Values ret;
-    ret.reserve(dx.size());
-    for (auto& node: nodes)
-        ret.push_back(x0.at(node) + h*dx.at(node));
+    
+    Values values(num_nodes);
 
-    return NodeIdValues(nodes, ret);
+    for (const auto& state: states)
+        values.set(state.first, state.second.first);
+
+    callback(t0, values);
+
+    for (auto& state: states)
+    {
+        const auto* x = values.get(state.first);
+        const auto* dx = values.get(state.second.second);
+        if (!dx)
+        {
+            std::cout << "Error: not all state derivatives are present. Aborting...\n";
+            return;
+        }
+        state.second.first = *x + h*(*dx);
+    }
 }
 
 }

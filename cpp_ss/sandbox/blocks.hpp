@@ -20,7 +20,6 @@ namespace blocks
 class Base;
 class Submodel;
 class Model;
-class NodeIdValues;
 
 class Value : public ArrayXd
 {
@@ -33,54 +32,48 @@ public:
     }
 };
 
-class Node : public std::string
+class Node
 {
-    friend class Model;
-
 public:
-    using Id = uint32_t;
+    using Id = std::size_t;
+    static const Id NoId = std::string::npos;
 
 protected:
-    Id _id{0};
+    std::string _given_name;
+    std::string _name;
+    std::size_t _id{NoId};
+
+    std::string _make_valid_given_name(const std::string& given_name) const;
 
 public:
-    using Parent = std::string;
-
-    Node(const std::string& str) : std::string(str) {}
-    Node(const char* str) : std::string(str) {}
-    Node(int n) : std::string(std::to_string(n)) {}
-    Node() : std::string("-") {}
-    Node(const std::string& str, Model& model);
-    Node(const char* str, Model& model);
-    Node(int n, Model& model);
-    Node(Model& model);
+    Node(const std::string& given_name) : _given_name(_make_valid_given_name(given_name)) {}
+    Node(const char* given_name) : _given_name(_make_valid_given_name(given_name)) {}
+    Node(int n) : _given_name(_make_valid_given_name(std::to_string(n))) {}
+    Node() : _given_name(_make_valid_given_name("-")) {}
     Node(const Node& node) = default;
 
     Node& operator=(const Node& rhs) = default;
-    std::size_t operator()(const Node& node) const
-    {
-        return operator()(*static_cast<const Parent*>(&node));
-    }
-    operator Id() const
-    {
-        return _id;
-    }
+
+    operator Id() const {return _id;}
     Id id() const {return _id;}
+    const std::string& given_name() const {return _given_name;}
+    const std::string& name() const {return _name;} // todo: create a shared parent with Base named NamedObject
+
+    bool set_owner(Submodel& owner);
 };
 
-class NodeIds : public std::vector<Node::Id>
+inline std::ostream& operator<<(std::ostream& os, const Node& node)
 {
-public:
-    using Parent = std::vector<Node::Id>;
-    using Parent::vector;
+    return os << "node [" << node.given_name() << "] = " << node.id() << "\n";
+}
 
-    NodeIds(Node::Id node)
+struct NodeHash
+{
+    std::size_t operator()(const Node& node) const noexcept
     {
-        push_back(node);
-    }
-    NodeIds(const Node& node)
-    {
-        push_back(node);
+        assert(!node.name().empty());
+        std::size_t h = std::hash<std::string>{}(node.name());
+        return h ^ (node.id() << 1);
     }
 };
 
@@ -96,75 +89,98 @@ public:
     }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const Nodes& nodes)
+{
+    os << "nodes:\n";
+    for (const auto& node: nodes)
+        os << "- " << node;
+    return os;
+}
+
 using Scalars          = std::vector<double>;
-using Values           = std::vector<Value>;
 using TraverseCallback = std::function<bool(const Base&, uint32_t level)>;
-using ActFunction      = std::function<Value(double, const Value&)>;
 
-std::ostream& operator<<(std::ostream&, const class NodeIdValues&);
-
-class NodeIdValues : public std::unordered_map<Node::Id, Value>
+class NodeValues : public std::unordered_map<Node, Value, NodeHash>
 {
 protected:
-    using Parent = std::unordered_map<Node::Id, Value>;
+    using Parent = std::unordered_map<Node, Value, NodeHash>;
 
 public:
-    // using Parent::unordered_map;
-    NodeIdValues() = default;
-    NodeIdValues(const std::initializer_list<std::pair<Node, Value>>& list, Model& model);
-    NodeIdValues(const std::initializer_list<std::pair<Node::Id, Value>>& list)
+    NodeValues() = default;
+    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list, Submodel& owner);
+    NodeValues(const std::initializer_list<std::pair<Node, Value>>& list)
     {
         for (const auto& v: list)
             insert_or_assign(v.first, v.second);
     }
-    NodeIdValues(const NodeIds& nodes, const Values& values)
+
+    void join(const NodeValues& other)
     {
-        auto value = values.begin();
-        for (const auto& node: nodes)
-        {
-            insert_or_assign(node, *(value++));
-        }
-    }
-
-    // NodeIds::const_iterator find(const Node& node) const
-    // {
-    //     assert(first.size() == second.size());
-    //     return std::find(first.cbegin(), first.cend(), node);
-    // }
-
-    // const Value& at(const Node& node) const
-    // {
-    //     assert(first.size() == second.size());
-    //     auto k = std::distance(first.begin(), find(node));
-    //     return second.at(k);
-    // }
-
-    // void insert_or_assign(const Node& node, const Value& value)
-    // {
-    //     assert(first.size() == second.size());
-    //     auto it = find(node);
-    //     if (it == first.cend())
-    //     {
-    //         first.push_back(node);
-    //         second.push_back(value);
-    //     }
-    //     else
-    //     {
-    //         auto k = std::distance(first.cbegin(), it);
-    //         second.at(k) = value;
-    //     }
-    // }
-
-    void join(const NodeIdValues& other)
-    {
-        // assert(first.size() == second.size());
-        // auto node = other.first.begin();
         for(const auto& value: other)
             insert_or_assign(value.first, value.second);
     }
 };
 
-class States : public std::unordered_map<Node::Id, std::pair<Value, Node::Id>> // state, value, derivative
+class Values
+{
+protected:
+    struct BoolValue
+    {
+        bool _valid{false};
+        Value _value;
+    };
+    std::vector<BoolValue> _values;
+
+public:
+    Values(std::size_t n)
+    {
+        _values.reserve(n);
+        for (std::size_t k=0; k < n; k++)
+            _values.emplace_back(BoolValue());
+    }
+
+    std::size_t size() const {return _values.size();}
+
+    const Value* get(Node::Id id) const
+    {
+        assert(id != Node::NoId);
+        const auto& bv = _values[id];
+        return bv._valid ? &bv._value : nullptr;
+    }
+
+    void set(Node::Id id, const Value& value)
+    {
+        assert(id != Node::NoId);
+        auto& bv = _values[id];
+        bv._value = value;
+        bv._valid = true;
+    }
+
+    void invalidate()
+    {
+        for (auto& v: _values) v._valid = false;
+    }
+
+    void stream(std::ostream& os) const
+    {
+        int k = 0;
+        for (const auto& v: _values)
+        {
+            if (v._valid)
+                os << "- " << k << ": " << v._value << "\n";
+            k++;
+        }
+        os << "\n";
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Values& values)
+{
+    values.stream(os);
+    return os;
+}
+
+class StatesInfo : public std::unordered_map<Node::Id, std::pair<Value, Node::Id>> // state, value, derivative
 {
 protected:
     using Pair = std::pair<Value, Node::Id>;
@@ -179,24 +195,11 @@ public:
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const NodeIdValues& nvs)
-{
-    // auto node = nv.first.begin();
-    for (auto& nv: nvs)
-    {
-        os << "  - " << nv.first << ": " << nv.second << "\n";
-        // node++;
-    }
-    return os << "\n";
-}
-
 class Base
 {
 protected:
     Nodes _iports;
-    NodeIds _iport_ids;
     Nodes _oports;
-    NodeIds _oport_ids;
     Submodel* const _parent;
     std::string _given_name;
     std::string _name;
@@ -207,13 +210,9 @@ protected:
 public:
     Base(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()/*, bool register_oports=true*/);
 
-    virtual void get_states(States& /*states*/) {}
-    virtual void step(double /*t*/, const NodeIdValues& /*states*/) {}
-    virtual NodeIdValues activation_function(double /*t*/, const NodeIdValues& /*x*/)
-    {
-        assert(false);
-        return NodeIdValues();
-    }
+    virtual void get_states(StatesInfo& /*states*/) {}
+    virtual void step(double /*t*/, const Values& /*states*/) {}
+    virtual void activation_function(double /*t*/, Values& /*x*/) {}
     virtual Model* get_model();
 
     bool processed() const {return _processed;}
@@ -222,10 +221,7 @@ public:
     const Nodes& iports() const {return _iports;}
     const Nodes& oports() const {return _oports;}
 
-    virtual uint _process(double t, NodeIdValues& x, bool reset);
-
-    // def __repr__(self):
-    //     return str(type(self)) + ":" + self._name + ", iports:" + str(self._iports) + ", oports:" + str(self._oports)
+    virtual uint _process(double t, Values& values, bool reset);
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max())
     {
@@ -235,40 +231,36 @@ public:
     static std::string generate_random_name(int len = 10);
 }; // class Base
 
-// class Value(Base):
-//     def activation_function(self, t, x):
-//         return [x[0]]
+// class Bus : public Base
+// {
+// protected:
+//     bool _update_node_ids{true};
+//     std::vector<Node> _raw_names;
 
-class Bus : public Base
-{
-protected:
-    bool _update_node_ids{true};
-    std::vector<Node> _raw_names;
+// public:
+//     // class BusValues : public Values
+//     // {
+//     // protected:
+//     //     Nodes _names;
 
-public:
-    // class BusValues : public Values
-    // {
-    // protected:
-    //     Nodes _names;
-
-    // public:
-    //     BusValues(const Nodes& names, const Values& values) :
-    //         Values(values), _names(names) {}
+//     // public:
+//     //     BusValues(const Nodes& names, const Values& values) :
+//     //         Values(values), _names(names) {}
     
-    //     // def __repr__(self):
-    //     //     return 'BusValues(' + super().__repr__() + ')'
-    // };
+//     //     // def __repr__(self):
+//     //     //     return 'BusValues(' + super().__repr__() + ')'
+//     // };
 
-    Bus(Submodel* parent, std::string given_name, const Nodes& iports=Node(), const Node& oport=Node()) :
-        Base(parent, given_name, iports, oport)
-    {
-        _raw_names.reserve(iports.size());
-        for (const auto& p: iports)
-            _raw_names.push_back(p);
-    }
+//     Bus(Submodel* parent, std::string given_name, const Nodes& iports=Node(), const Node& oport=Node()) :
+//         Base(parent, given_name, iports, oport)
+//     {
+//         _raw_names.reserve(iports.size());
+//         for (const auto& p: iports)
+//             _raw_names.push_back(p);
+//     }
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override;
-};
+//     void activation_function(double /*t*/, Values& /*x*/) override;
+// };
 
 // class BusSelector(Base):
 //     def __init__(self, name, iport='-', signals=[], oports=[]):
@@ -303,15 +295,14 @@ public:
     InitialValue(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node()) :
         Base(parent, given_name, iport, oport) {}
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
+    void activation_function(double /*t*/, Values& values) override
     {
         if (_value.size() == 0)
         {
-            _value = x.begin()->second;
+            _value = *values.get(_iports[0]);
             _iports.clear();
-            _iport_ids.clear();
         }
-        return NodeIdValues(_oport_ids.front(), {_value});
+        values.set(_oports[0], _value);
     }
 };
 
@@ -321,18 +312,18 @@ protected:
     Value _value;
 
 public:
-    Const(Submodel* parent, std::string given_name, const Value& value, const Nodes& oport=Nodes({Node()})) :
+    Const(Submodel* parent, std::string given_name, const Value& value, const Node& oport=Node()) :
         Base(parent, given_name, Nodes(), oport), _value(value) {}
 
-    Const(Submodel* parent, std::string given_name, double value, const Nodes& oport={Node()}) :
+    Const(Submodel* parent, std::string given_name, double value, const Node& oport=Node()) :
         Base(parent, given_name, Nodes(), oport), _value(1)
     {
          _value << value;
     }
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& /*x*/) override
+    void activation_function(double /*t*/, Values& values) override
     {
-        return NodeIdValues(_oport_ids.front(), {_value});
+        values.set(_oports[0], _value);
     }
 };
 
@@ -342,29 +333,33 @@ protected:
     double _k;
 
 public:
-    Gain(Submodel* parent, std::string given_name, double k, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
+    Gain(Submodel* parent, std::string given_name, double k, const Node& iport=Node(), const Node& oport=Node()) :
         Base(parent, given_name, iport, oport), _k(k) {}
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
+    void activation_function(double /*t*/, Values& values) override
     {
-        return NodeIdValues(_oport_ids.front(), {_k * x.begin()->second[0]});
+        const auto& x = *values.get(_iports[0]);
+        values.set(_oports[0], _k * x);
     }
 };
 
 class Sin : public Base
 {
 public:
-    Sin(Submodel* parent, std::string given_name, const Nodes& iport=Nodes({Node()}), const Nodes& oport=Nodes({Node()})) :
+    Sin(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node()) :
         Base(parent, given_name, iport, oport) {}
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
+    void activation_function(double /*t*/, Values& values) override
     {
-        return NodeIdValues(_oport_ids.front(), {x.begin()->second.sin()});
+        values.set(_oports[0], values.get(_iports[0])->sin());
     }
 };
 
 class Function : public Base
 {
+public:
+    using ActFunction = std::function<Value(double, const Value&)>;
+
 protected:
     ActFunction _act_func;
 
@@ -372,19 +367,11 @@ public:
     Function(Submodel* parent, std::string given_name, ActFunction act_func, const Node& iport=Node(), const Node& oport=Node()) :
         Base(parent, given_name, {iport}, {oport}), _act_func(act_func) {}
 
-    NodeIdValues activation_function(double t, const NodeIdValues& x) override
+    void activation_function(double t, Values& values) override
     {
-        return NodeIdValues(_oport_ids.front(), {_act_func(t, x.begin()->second[0])});
+        values.set(_oports[0], _act_func(t, *values.get(_iports[0])));
     }
 };
-
-// class MIMOFunction(Base):
-//     def __init__(self, name, act_func, iports, oports):
-//         super().__init__(name, iports=iports, oports=oports)
-//         self._act_func = act_func
-
-//     def activation_function(self, t, x):
-//         return self._act_func(t, x)
 
 class AddSub : public Base
 {
@@ -399,13 +386,13 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
+    void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(x.begin()->second.size(), _initial);
+        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& node: _iport_ids)
+        for (const auto& node: _iports)
         {
-            const auto& v = x.at(node);
+            const auto &v = *values.get(node);
             if (*p == '+')
                 ret += v;
             else if (*p == '-')
@@ -414,7 +401,7 @@ public:
                  assert(false);
             p++;
         }
-        return NodeIdValues(_oport_ids.front(), {ret});
+        values.set(_oports[0], ret);
     }
 };
 
@@ -431,13 +418,13 @@ public:
         assert(std::strlen(operators) == iports.size());
     }
 
-    NodeIdValues activation_function(double /*t*/, const NodeIdValues& x) override
+    void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(x.begin()->second.size(), _initial);
+        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
         const char* p = _operators.c_str();
-        for (const auto& node: _iport_ids)
+        for (const auto& node: _iports)
         {
-            const auto &v = x.at(node);
+            const auto &v = *values.get(node);
             if (*p == '*')
                 ret *= v;
             else if (*p == '/')
@@ -446,7 +433,7 @@ public:
                  assert(false);
             p++;
         }
-        return NodeIdValues(_oport_ids.front(), {ret});
+        values.set(_oports[0], ret);
     }
 };
 
@@ -459,17 +446,18 @@ public:
     Integrator(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), double ic=0.0) :
         Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
-    void get_states(States& states) override
+    void get_states(StatesInfo& states) override
     {
-        states.insert_or_assign(_oport_ids.front(), Value(_value), _iport_ids.front());
+        states.insert_or_assign(_oports.front(), Value(_value), _iports.front());
     }
 
-    void step(double /*t*/, const NodeIdValues& states) override
+    void step(double /*t*/, const Values& values) override
     {
-        _value = states.at(_oport_ids.front())[0];
+        assert(values.get(_oports.front()));
+        _value = (*values.get(_oports.front()))[0];
     }
 
-    uint _process(double t, NodeIdValues& x, bool reset) override;
+    uint _process(double t, Values& values, bool reset) override;
 };
 
 // # it is still unclear how to deal with states when using this numerical integrator
@@ -498,13 +486,13 @@ class Delay : public Base
 protected:
     double  _lifespan;
     Scalars _t;
-    Values  _x;
+    std::vector<Value> _x;
 
 public:
-    Delay(Submodel* parent, std::string given_name, const Nodes& iports, const Nodes& oport=Nodes({Node()}), double lifespan=10.0) :
+    Delay(Submodel* parent, std::string given_name, const Nodes& iports, const Node& oport=Node(), double lifespan=10.0) :
         Base(parent, given_name, iports, oport), _lifespan(lifespan) {}
 
-    void step(double t, const NodeIdValues& states) override
+    void step(double t, const Values& values) override
     {
         if (not _t.empty())
         {
@@ -522,34 +510,43 @@ public:
 
         assert(_t.empty() or (t > _t.back()));
         _t.push_back(t);
-        _x.push_back(states.at(_iport_ids.front()));
+        assert(values.get(_iports.front()));
+        _x.push_back(*values.get(_iports.front()));
     }
 
-    NodeIdValues activation_function(double t, const NodeIdValues& x) override
+    void activation_function(double t, Values& values) override
     {
         if (_t.empty())
-            return NodeIdValues(_oport_ids.front(), {x.at(_iport_ids[2])[0]});
+        {
+            assert(values.get(_iports[2]));
+            values.set(_oports.front(), {(*values.get(_iports[2]))[0]});
+            return;
+        }
     
-        const double delay = x.at(_iport_ids[1])[0];
+        assert(values.get(_iports[1]));
+        const double delay = (*values.get(_iports[1]))[0];
         t -= delay;
         if (t <= _t.front())
         {
-            return NodeIdValues(_oport_ids.front(), {x.at(_iport_ids[2])});
+            assert(values.get(_iports[2]));
+            values.set(_oports.front(), *values.get(_iports[2]));
         }
         else if (t >= _t.back())
         {
-            return NodeIdValues(_oport_ids.front(), {_x.back()});
+            values.set(_oports.front(), _x.back());
         }
-
-        int k = 0;
-        for (const auto& v: _t)
+        else
         {
-            if (v >= t)
-                break;
-            k++;
-        }
+            int k = 0;
+            for (const auto& v: _t)
+            {
+                if (v >= t)
+                    break;
+                k++;
+            }
 
-        return NodeIdValues(_oport_ids.front(), {(_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]});
+            values.set(_oports.front(), (_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]);
+        }
     }
 };
 
@@ -562,9 +559,10 @@ public:
     Memory(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& ic=Value::Zero(1)) :
         Base(parent, given_name, Nodes({iport}), Nodes({oport})), _value(ic) {}
 
-    void step(double /*t*/, const NodeIdValues& states) override
+    void step(double /*t*/, const Values& values) override
     {
-        _value = states.at(_iport_ids.front());
+        assert(values.get(_iports.front()));
+        _value = *values.get(_iports.front());
     }
 
     // # Memory can be implemented either by defining the following activation function
@@ -575,7 +573,7 @@ public:
     // # def activation_function(self, t, x):
     // #     return [self._value]
 
-    uint _process(double t, NodeIdValues& x, bool reset) override;
+    uint _process(double t, Values& values, bool reset) override;
 };
 
 class Derivative : public Base
@@ -590,26 +588,26 @@ public:
     Derivative(Submodel* parent, std::string given_name, const Node& iport=Node(), const Node& oport=Node(), const Value& y0=Value::Zero(1)) :
         Base(parent, given_name, iport, oport), _y(y0) {}
 
-    void step(double t, const NodeIdValues& states) override
+    void step(double t, const Values& states) override
     {
         _t = t;
-        _x = states.at(_iport_ids.front());
-        _y = states.at(_oport_ids.front());
+        _x = *states.get(_iports[0]);
+        _y = *states.get(_oports[0]);
         _first_step = false;
     }
 
-    NodeIdValues activation_function(double t, const NodeIdValues& x) override
+    void activation_function(double t, Values& values) override
     {
         if (_first_step)
         {
             _t = t;
-            _x = x.begin()->second;
-            return NodeIdValues(_oport_ids.front(), {_y});
+            _x = *values.get(_iports[0]);
+            values.set(_oports[0], _y);
         }
         else if (_t == t)
-            return NodeIdValues(_oport_ids.front(), {_y});
-
-        return NodeIdValues(_oport_ids.front(), {((x.begin()->second - _x)/(t - _t))});
+            values.set(_oports[0], _y);
+        else
+            values.set(_oports[0], ((*values.get(_iports[0]) - _x)/(t - _t)));
     }
 };
 
@@ -617,7 +615,6 @@ class Submodel : public Base
 {
 protected:
     std::vector<Base*> _components;
-    std::string _auto_node_name;
 
 public:
     Submodel(Submodel* parent, std::string given_name, const Nodes& iports=Nodes(), const Nodes& oports=Nodes()) :
@@ -628,20 +625,21 @@ public:
         _components.push_back(&component);
     }
 
-    void get_states(States& states) override
+    void get_states(StatesInfo& states) override
     {
         for (auto* component: _components)
             component->get_states(states);
     }
 
-    void step(double t, const NodeIdValues& states) override
+    void step(double t, const Values& values) override
     {
         for (auto& component: _components)
-            component->step(t, states);
+            component->step(t, values);
     }
 
-    Node register_node(const Node& node, bool makenew);
-    uint _process(double t, NodeIdValues& x, bool reset) override;
+    std::string make_node_name(const std::string& given_name);
+    Node create_node(const std::string& given_name);
+    uint _process(double t, Values& values, bool reset) override;
     bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 
 }; // class Submodel
@@ -649,31 +647,19 @@ public:
 class Model final : public Submodel
 {
 protected:
-    using NodeBlocksMap = std::unordered_map<std::string, std::pair<bool, std::vector<Base*>>>;
-    NodeBlocksMap _all_iports;
-    // NodeBlocksMap _all_oports;
-    std::vector<std::string> _nodes_with_id{"t"}; // time has an id of 0
+    std::vector<std::string> _registered_nodes;
 
 public:
-    Model(std::string name="model") : Submodel(nullptr, name) {}
+    Model(std::string name="model");
 
-    void register_iport(const Node& node, Base& block)
-    {
-        auto blocks = _all_iports.insert({node, {false, {}}}).first;
-        if (std::find(blocks->second.second.begin(), blocks->second.second.end(), &block) == blocks->second.second.end())
-            blocks->second.second.push_back(&block);
-    }
+    Model* get_model() override {return this;}
+    std::size_t num_nodes() const {return _registered_nodes.size();}
 
-    Model* get_model() override
+    const std::string& get_node_by_id(Node::Id id) const
     {
-        return this;
+        return _registered_nodes[id];
     }
-
-    void register_node(Node& node);
-    Node get_node_by_id(Node::Id id)
-    {
-        return _nodes_with_id[id];
-    }
+    Node::Id get_or_register_node(const std::string& name);
 };
 
 }

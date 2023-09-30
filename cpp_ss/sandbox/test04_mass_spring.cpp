@@ -16,9 +16,9 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "SSModel")
     {
-        Node x("x");
-        Node xd("xd");
-        Node xdd("xdd");
+        auto   x = parent->create_node(  "x");
+        auto  xd = parent->create_node( "xd");
+        auto xdd = parent->create_node("xdd");
 
         new Integrator(this, "xd", xdd, xd, 0.1);
         new Integrator(this, "x", xd, x);
@@ -32,22 +32,23 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test04");
-    auto x  = Node("x", model);
-    auto xd = Node("xd", model);
+    auto x  = model.create_node("x");
+    auto xd = model.create_node("xd");
     auto ss_model = SSModel(&model);
+
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, NodeIdValues(), rk4);
+        nullptr, NodeValues(), rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    export_csv(history, "mass_spring.csv");
+    // export_csv(history, "mass_spring.csv");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

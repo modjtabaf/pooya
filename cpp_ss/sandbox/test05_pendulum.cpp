@@ -16,21 +16,21 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "pendulum")
     {
-        Node   phi(  "phi");
-        Node  dphi( "dphi");
-        Node d2phi("d2phi");
-        Node g("g");
-        Node l("l");
+        auto   phi = parent->create_node(  "phi");
+        auto  dphi = parent->create_node( "dphi");
+        auto d2phi = parent->create_node("d2phi");
+        auto g = parent->create_node("g");
+        auto l = parent->create_node("l");
 
         new Integrator(this, "dphi", d2phi, dphi);
         new Integrator(this, "phi", dphi, phi, M_PI_4);
-        new Function(this, "sin(phi)",
-            [](double /*t*/, const Value& x) -> Value
-            {
-                return x.sin();
-            }, phi);
-        // new Sin(this, "sin(phi)", {phi}, {Node()});
-        new MulDiv(this, "-g\\l", "**/", {"", g, l}, d2phi, -1);
+        // new Function(this, "sin(phi)",
+        //     [](double /*t*/, const Value& x) -> Value
+        //     {
+        //         return x.sin();
+        //     }, phi, 1);
+        new Sin(this, "sin(phi)", phi, 10);
+        new MulDiv(this, "-g\\l", "**/", {10, g, l}, d2phi, -1);
     }
 };
 
@@ -41,13 +41,14 @@ int main()
 
     auto model = Model("test05");
 
-    NodeIdValues parameters({
+    NodeValues parameters({
         {"l", 0.1 },
         {"g", 9.81},
         }, model);
 
-    auto phi = Node("phi", model);
+    auto phi = model.create_node("phi");
     auto ss_model = SSModel(&model);
+
     auto history = run(model,
         [](uint k, double& t) -> bool
         {

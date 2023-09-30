@@ -35,7 +35,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const S
             std::cout << "-- unprocessed blocks detected:\n";
             for (const auto& c: unprocessed)
             {
-                std::cout << "- " << c->name() << "\n";
+                std::cout << "- " << c->full_name() << "\n";
                 for (const auto& p: c->iports())
                     std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p << "\n";
                 for (const auto& p: c->oports())
@@ -158,7 +158,7 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
     return t <= t_end;
 }
 
-void export_csv(const History& history, std::string filename)
+void export_csv(const Model& model, const History& history, std::string filename)
 {
     if (history.size() == 0)
         return;
@@ -167,7 +167,7 @@ void export_csv(const History& history, std::string filename)
 
     // header
     for (const auto& h: history)
-        ofs << h.first << ",";
+        ofs << model.get_signal_by_id(h.first) << ",";
     ofs << "\n";
 
     // values

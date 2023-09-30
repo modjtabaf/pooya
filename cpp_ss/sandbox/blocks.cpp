@@ -32,18 +32,18 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
 
 bool Signal::set_owner(Submodel& owner)
 {
-    assert(_name.empty() && (_id == NoId));
-    if (!_name.empty() || (_id != NoId)) return false;
+    assert(_full_name.empty() && (_id == NoId));
+    if (!_full_name.empty() || (_id != NoId)) return false;
 
     auto* model = owner.get_model();
     if (!model) return false;
 
     std::string reg_name = owner.make_signal_name(_given_name);
-    _id = model->get_or_register_signal(reg_name);
+    _id = model->find_or_register_signal(reg_name);
     if (_id == NoId)
         return false;
 
-    _name = reg_name;
+    _full_name = reg_name;
     return true;
 }
 
@@ -61,7 +61,7 @@ Base::Base(Submodel* parent, std::string given_name, const Signals& iports, cons
     _parent(parent)
 {
     _assign_valid_given_name(given_name);
-    _name = _parent ? (_parent->name() + "/" + _given_name) : ("/" + _given_name);
+    _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
     if (parent)
     {
@@ -232,7 +232,7 @@ uint Memory::_process(double /*t*/, Values& values, bool reset)
 
 std::string Submodel::make_signal_name(const std::string& given_name)
 {
-    return _name + "." + given_name;
+    return _full_name + "." + given_name;
 }
 
 Signal Submodel::signal(const std::string& given_name)
@@ -242,13 +242,22 @@ Signal Submodel::signal(const std::string& given_name)
     return signal;
 }
 
+Signal Submodel::parameter(const std::string& given_name)
+{
+    auto* model = get_model();
+    assert(model);
+    Signal signal(given_name);
+    signal.set_owner(*model);
+    return signal;
+}
+
 uint Submodel::_process(double t, Values& values, bool reset)
 {
     if (reset)
         _processed = false;
 
     uint n_processed = 0;
-    if (not _processed)
+    if (!_processed)
     {
         _processed = true;
         for (auto& component: _components)
@@ -282,7 +291,7 @@ Model::Model(std::string name) : Submodel(nullptr, name)
 {
 }
 
-Signal::Id Model::get_or_register_signal(const std::string& name)
+Signal::Id Model::find_or_register_signal(const std::string& name)
 {
     assert(!name.empty());
     if (name.empty()) return Signal::NoId;
@@ -301,6 +310,15 @@ Signal::Id Model::get_or_register_signal(const std::string& name)
     }
 
     return ret;
+}
+
+Signal::Id Model::find_signal(const std::string& name) const
+{
+    assert(!name.empty());
+    if (name.empty()) return Signal::NoId;
+
+    auto it = std::find(_registered_signals.begin(), _registered_signals.end(), name);
+    return it == _registered_signals.end() ? Signal::NoId : std::distance(_registered_signals.begin(), it);
 }
 
 }

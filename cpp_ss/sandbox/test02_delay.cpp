@@ -14,14 +14,14 @@ using namespace blocks;
 class SSModel : public Submodel
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "SSModel")
+    SSModel(Submodel* parent, const Signal& x, const Signal& xd) : Submodel(parent, "SSModel", x, xd)
     {
-        auto x = parent->signal("x");
-        auto xd = parent->signal("xd");
+        auto time_delay = signal("time_delay");
+        auto initial = signal("initial");
 
-        new Const(this, "TimeDelay", 2.7435, "time_delay");
-        new Const(this, "Initial", 0.0, "initial");
-        new Delay(this, "Delay", {x, "time_delay", "initial"}, xd);
+        new Const(this, "TimeDelay", 2.7435, time_delay);
+        new Const(this, "Initial", 0.0, initial);
+        new Delay(this, "Delay", {x, time_delay, initial}, xd);
     }
 };
 
@@ -33,7 +33,7 @@ int main()
     auto model = Model("test02");
     auto x  = model.signal("x");
     auto xd = model.signal("xd");
-    auto ss_model = SSModel(&model);
+    auto ss_model = SSModel(&model, x, xd);
 
     auto history = run(model,
         [](uint k, double& t) -> bool

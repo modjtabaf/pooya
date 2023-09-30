@@ -16,13 +16,14 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "pendulum")
     {
-        auto   phi = parent->signal(  "phi");
-        auto  dphi = parent->signal( "dphi");
-        auto d2phi = parent->signal("d2phi");
-        auto   tau = parent->signal(  "tau");
-        auto     m = parent->signal(    "m");
-        auto     g = parent->signal(    "g");
-        auto     l = parent->signal(    "l");
+        auto   phi = signal(  "phi");
+        auto  dphi = signal( "dphi");
+        auto d2phi = signal("d2phi");
+
+        auto tau = parameter("tau");
+        auto m = parameter("m");
+        auto g = parameter("g");
+        auto l = parameter("l");
 
         new Integrator(this, "dphi", d2phi, dphi, M_PI_4);
         new Integrator(this, "phi", dphi, phi);
@@ -52,9 +53,6 @@ int main()
         {"tau", 0.13},
         }, model);
 
-    auto phi  = model.signal("phi");
-    auto dphi = model.signal("dphi");
-
     auto ss_model = SSModel(&model);
     auto history = run(model,
         [](uint k, double& t) -> bool
@@ -67,6 +65,9 @@ int main()
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
+
+    auto phi  = ss_model.signal("phi");
+    auto dphi = ss_model.signal("dphi");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

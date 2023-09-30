@@ -40,7 +40,7 @@ public:
 
 protected:
     std::string _given_name;
-    std::string _name;
+    std::string _full_name;
     std::size_t _id{NoId};
 
     std::string _make_valid_given_name(const std::string& given_name) const;
@@ -57,7 +57,7 @@ public:
     operator Id() const {return _id;}
     Id id() const {return _id;}
     const std::string& given_name() const {return _given_name;}
-    const std::string& name() const {return _name;} // todo: create a shared parent with Base named NamedObject
+    const std::string& full_name() const {return _full_name;} // todo: create a shared parent with Base named NamedObject
 
     bool set_owner(Submodel& owner);
 };
@@ -71,8 +71,8 @@ struct SignalHash
 {
     std::size_t operator()(const Signal& signal) const noexcept
     {
-        assert(!signal.name().empty());
-        std::size_t h = std::hash<std::string>{}(signal.name());
+        assert(!signal.full_name().empty());
+        std::size_t h = std::hash<std::string>{}(signal.full_name());
         return h ^ (signal.id() << 1);
     }
 };
@@ -167,7 +167,7 @@ public:
         for (const auto& v: _values)
         {
             if (v._valid)
-                os << "- " << k << ": " << v._value << "\n";
+                os << "- [" << k << "]: " << v._value << "\n";
             k++;
         }
         os << "\n";
@@ -202,7 +202,7 @@ protected:
     Signals _oports;
     Submodel* const _parent;
     std::string _given_name;
-    std::string _name;
+    std::string _full_name;
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
@@ -217,7 +217,7 @@ public:
 
     bool processed() const {return _processed;}
     const std::string& given_name() const {return _given_name;}
-    const std::string& name() const {return _name;}
+    const std::string& full_name() const {return _full_name;}
     const Signals& iports() const {return _iports;}
     const Signals& oports() const {return _oports;}
 
@@ -639,6 +639,7 @@ public:
 
     std::string make_signal_name(const std::string& given_name);
     Signal signal(const std::string& given_name);
+    Signal parameter(const std::string& given_name);
     uint _process(double t, Values& values, bool reset) override;
     bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 
@@ -659,7 +660,9 @@ public:
     {
         return _registered_signals[id];
     }
-    Signal::Id get_or_register_signal(const std::string& name);
+
+    Signal::Id find_signal(const std::string& name) const;
+    Signal::Id find_or_register_signal(const std::string& name);
 };
 
 }

@@ -12,25 +12,25 @@
 namespace blocks
 {
 
-std::string Node::_make_valid_given_name(const std::string& given_name) const
+std::string Signal::_make_valid_given_name(const std::string& given_name) const
 {
     std::string ret(given_name);
     if (given_name.empty())
     {
-        std::cout << "Warning: node name cannot be empty.";
+        std::cout << "Warning: signal name cannot be empty.";
         ret = Base::generate_random_name();
         std::cout << " Proceeding with the random name \"" << ret << "\".\n";
     }
     else if (given_name.find_first_of("/. ") != std::string::npos)
     {
-        std::cout << "Warning: the node name \"" << given_name << "\" contains invalid characters.";
+        std::cout << "Warning: the signal name \"" << given_name << "\" contains invalid characters.";
         ret = Base::generate_random_name();
         std::cout << " Proceeding with the random name \"" << ret << "\" instead.\n";
     }
     return ret;
 }
 
-bool Node::set_owner(Submodel& owner)
+bool Signal::set_owner(Submodel& owner)
 {
     assert(_name.empty() && (_id == NoId));
     if (!_name.empty() || (_id != NoId)) return false;
@@ -38,8 +38,8 @@ bool Node::set_owner(Submodel& owner)
     auto* model = owner.get_model();
     if (!model) return false;
 
-    std::string reg_name = owner.make_node_name(_given_name);
-    _id = model->get_or_register_node(reg_name);
+    std::string reg_name = owner.make_signal_name(_given_name);
+    _id = model->get_or_register_signal(reg_name);
     if (_id == NoId)
         return false;
 
@@ -47,17 +47,17 @@ bool Node::set_owner(Submodel& owner)
     return true;
 }
 
-NodeValues::NodeValues(const std::initializer_list<std::pair<Node, Value>>& list, Submodel& owner)
+SignalValues::SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list, Submodel& owner)
 {
     for (const auto& v: list)
     {
-        auto node(v.first);
-        node.set_owner(owner);
-        insert_or_assign(node, v.second);
+        auto signal(v.first);
+        signal.set_owner(owner);
+        insert_or_assign(signal, v.second);
     }
 }
 
-Base::Base(Submodel* parent, std::string given_name, const Nodes& iports, const Nodes& oports/*, bool register_oports*/) :
+Base::Base(Submodel* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
     _parent(parent)
 {
     _assign_valid_given_name(given_name);
@@ -71,14 +71,14 @@ Base::Base(Submodel* parent, std::string given_name, const Nodes& iports, const 
         for (const auto& p: iports)
         {
             _iports.push_back(p);
-            if (p.id() == Node::NoId) _iports.back().set_owner(*parent);
+            if (p.id() == Signal::NoId) _iports.back().set_owner(*parent);
         }
 
         _oports.reserve(oports.size());
         for (auto& p: oports)
         {
             _oports.push_back(p);
-            if (p.id() == Node::NoId) _oports.back().set_owner(*parent);
+            if (p.id() == Signal::NoId) _oports.back().set_owner(*parent);
         }
     }
     else
@@ -185,22 +185,22 @@ std::string Base::generate_random_name(int len)
 
 // NodeIdValues Bus::activation_function(double /*t*/, const NodeIdValues& x)
 // {
-//     if (_update_node_ids)
+//     if (_update_signal_ids)
 //     {
 //         auto* model = get_model();
 //         if (model)
-//             for (auto& node: _raw_names)
-//                 model->register_node(node);
-//         _update_node_ids = false;
+//             for (auto& signal: _raw_names)
+//                 model->register_signal(signal);
+//         _update_signal_ids = false;
 //     }
 //     // assert(x.first.size() == _raw_names.size());
 //     NodeIdValues ret;
 //     // ret.first.reserve(_raw_names.size());
 //     // ret.second.reserve(_raw_names.size());
 //     // auto p = x.second.begin();
-//     for (const auto& node: _raw_names)
+//     for (const auto& signal: _raw_names)
 //     {
-//         ret.insert_or_assign(node, x.at(node));
+//         ret.insert_or_assign(signal, x.at(signal));
 //     }
 //     return ret;
 // }
@@ -230,16 +230,16 @@ uint Memory::_process(double /*t*/, Values& values, bool reset)
     return 1;
 }
 
-std::string Submodel::make_node_name(const std::string& given_name)
+std::string Submodel::make_signal_name(const std::string& given_name)
 {
     return _name + "." + given_name;
 }
 
-Node Submodel::create_node(const std::string& given_name)
+Signal Submodel::create_signal(const std::string& given_name)
 {
-    Node node(given_name);
-    node.set_owner(*this);
-    return node;
+    Signal signal(given_name);
+    signal.set_owner(*this);
+    return signal;
 }
 
 uint Submodel::_process(double t, Values& values, bool reset)
@@ -282,22 +282,22 @@ Model::Model(std::string name) : Submodel(nullptr, name)
 {
 }
 
-Node::Id Model::get_or_register_node(const std::string& name)
+Signal::Id Model::get_or_register_signal(const std::string& name)
 {
     assert(!name.empty());
-    if (name.empty()) return Node::NoId;
+    if (name.empty()) return Signal::NoId;
 
-    Node::Id ret;
+    Signal::Id ret;
 
-    auto it = std::find(_registered_nodes.begin(), _registered_nodes.end(), name);
-    if (it == _registered_nodes.end())
+    auto it = std::find(_registered_signals.begin(), _registered_signals.end(), name);
+    if (it == _registered_signals.end())
     {
-        ret = _registered_nodes.size();
-        _registered_nodes.push_back(name);
+        ret = _registered_signals.size();
+        _registered_signals.push_back(name);
     }
     else
     {
-        ret = std::distance(_registered_nodes.begin(), it);
+        ret = std::distance(_registered_signals.begin(), it);
     }
 
     return ret;

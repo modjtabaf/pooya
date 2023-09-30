@@ -9,11 +9,11 @@
 namespace blocks
 {
 
-void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_nodes)
+void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_signals)
 {
     double h = t1 - t0;
 
-    Values X0(num_nodes);
+    Values X0(num_signals);
     for (const auto& state: states)
         X0.set(state.first, state.second.first);
 
@@ -36,7 +36,7 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X1 = X0 + K1/2
 
-    Values X1(num_nodes);
+    Values X1(num_signals);
     k = 0;
     for (const auto& state: states)
         X1.set(state.first, *X0.get(state.first) + (*K1.get(k++)) / 2);
@@ -60,7 +60,7 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X2 = X0 + K2/2
 
-    Values X2(num_nodes);
+    Values X2(num_signals);
     k = 0;
     for (const auto& state: states)
         X2.set(state.first, *X0.get(state.first) + (*K2.get(k++)) / 2);
@@ -84,7 +84,7 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X3 = X0 + K3
 
-    Values X3(num_nodes);
+    Values X3(num_signals);
     k = 0;
     for (const auto& state: states)
         X3.set(state.first, *X0.get(state.first) + (*K3.get(k++)));
@@ -116,13 +116,13 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
     }
 }
 
-void simple(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_nodes)
+void simple(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_signals)
 {
     double h = t1 - t0;
 
     // ret = x0 + (t1 - t0)*callback(t0, x0)
-    
-    Values values(num_nodes);
+
+    Values values(num_signals);
 
     for (const auto& state: states)
         values.set(state.first, state.second.first);

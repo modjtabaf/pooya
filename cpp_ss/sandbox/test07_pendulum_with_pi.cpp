@@ -14,13 +14,13 @@ using namespace blocks;
 class Pendulum : public Submodel
 {
 public:
-    Pendulum(Submodel* parent, const Node& tau, const Node& phi) : Submodel(parent, "pendulum", {tau}, {phi})
+    Pendulum(Submodel* parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
     {
-        // nodes
-        auto dphi = get_model()->create_node( "dphi");
-        auto    m = get_model()->create_node(    "m");
-        auto    g = get_model()->create_node(    "g");
-        auto    l = get_model()->create_node(    "l");
+        // signals
+        auto dphi = get_model()->create_signal( "dphi");
+        auto    m = get_model()->create_signal(    "m");
+        auto    g = get_model()->create_signal(    "g");
+        auto    l = get_model()->create_signal(    "l");
 
         // blocks
         new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, 10);
@@ -40,10 +40,10 @@ public:
 class PI : public Submodel
 {
 public:
-    PI(Submodel* parent, double Kp, double Ki, Node& iport, Node& oport, double x0=0.0) :
+    PI(Submodel* parent, double Kp, double Ki, Signal& iport, Signal& oport, double x0=0.0) :
         Submodel(parent, "PI", iport, oport)
     {
-        // nodes
+        // signals
         auto& x = iport;
 
         // blocks
@@ -59,11 +59,11 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "pendulum_with_PI")
     {
-        // nodes
-        auto phi = get_model()->create_node("phi");
-        auto tau = get_model()->create_node("tau");
-        auto err = get_model()->create_node("err");
-        auto des_phi = get_model()->create_node("des_phi");
+        // signals
+        auto phi = get_model()->create_signal("phi");
+        auto tau = get_model()->create_signal("tau");
+        auto err = get_model()->create_signal("err");
+        auto des_phi = get_model()->create_signal("des_phi");
 
         // blocks
         new AddSub(this, "AddSub", "+-", {des_phi, phi}, err);
@@ -79,16 +79,16 @@ int main()
 
     auto model = Model("test07");
 
-    NodeValues parameters({
+    SignalValues parameters({
         {      "m", 0.2   },
         {      "l", 0.1   },
         {      "g", 9.81  },
         {"des_phi", M_PI_4},
         }, model);
 
-    auto  phi = model.create_node( "phi");
-    auto dphi = model.create_node("dphi");
-    auto  tau = model.create_node( "tau");
+    auto  phi = model.create_signal( "phi");
+    auto dphi = model.create_signal("dphi");
+    auto  tau = model.create_signal( "tau");
 
     auto ss_model = SSModel(&model);
     auto history = run(model,

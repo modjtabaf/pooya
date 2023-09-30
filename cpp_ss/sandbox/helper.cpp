@@ -8,7 +8,7 @@
 namespace blocks
 {
 
-History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const NodeValues& parameters, Solver stepper)
+History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const SignalValues& parameters, Solver stepper)
 {
     auto process = [&](double t, Values& values) -> uint
     {
@@ -61,7 +61,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         process(t, values);
     };
 
-    Values values(model.num_nodes());
+    Values values(model.num_signals());
 
     auto update_history = [&](double t, Values& values) -> void
     {
@@ -70,10 +70,10 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         if (history.empty())
         {
             history.reserve(values.size());
-            for (Node::Id id = 0; id < model.num_nodes(); id++)
+            for (Signal::Id id = 0; id < model.num_signals(); id++)
             {
                 history[id] = Value();
-                // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_node_by_id(v.first)[0] != '-')) // todo: exclude parameters
+                // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_signal_by_id(v.first)[0] != '-')) // todo: exclude parameters
                 //     history.insert_or_assign(v.first, Value());
             }
         }
@@ -82,9 +82,9 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
         auto nrows = h.rows() + 1;
         h.conservativeResize(nrows, NoChange);
         h(nrows - 1, 0) = t;
-        for (Node::Id id = 0; id < model.num_nodes(); id++)
+        for (Signal::Id id = 0; id < model.num_signals(); id++)
         {
-            // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_node_by_id(v.first)[0] != '-')) // todo: exclude parameters
+            // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_signal_by_id(v.first)[0] != '-')) // todo: exclude parameters
             auto& h = history[id];
             h.conservativeResize(nrows, NoChange);
             const auto* v = values.get(id);
@@ -110,7 +110,7 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const N
                 continue;
             }
 
-            stepper(stepper_callback, t, t1, states, model.num_nodes());
+            stepper(stepper_callback, t, t1, states, model.num_signals());
 
             values.invalidate();
             for (auto& state: states)

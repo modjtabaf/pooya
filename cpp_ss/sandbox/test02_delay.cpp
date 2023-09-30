@@ -16,8 +16,8 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "SSModel")
     {
-        auto x = parent->create_node("x");
-        auto xd = parent->create_node("xd");
+        auto x = parent->create_signal("x");
+        auto xd = parent->create_signal("xd");
 
         new Const(this, "TimeDelay", 2.7435, "time_delay");
         new Const(this, "Initial", 0.0, "initial");
@@ -31,8 +31,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test02");
-    auto x  = model.create_node("x");
-    auto xd = model.create_node("xd");
+    auto x  = model.create_signal("x");
+    auto xd = model.create_signal("xd");
     auto ss_model = SSModel(&model);
 
     auto history = run(model,

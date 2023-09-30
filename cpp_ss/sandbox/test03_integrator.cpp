@@ -17,8 +17,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test03");
-    auto x  = model.create_node("x");
-    auto xd = model.create_node("xd");
+    auto x  = model.create_signal("x");
+    auto xd = model.create_signal("xd");
     auto blk = Integrator(&model, "integ", xd, x, 1.0);
 
     auto history = run(model,
@@ -29,7 +29,7 @@ int main()
         [&](double t, Values& values) -> void
         {
             values.set(xd, t < 3 or t > 7 ? 1 : 0);
-        }, NodeValues(), rk4);
+        }, SignalValues(), rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

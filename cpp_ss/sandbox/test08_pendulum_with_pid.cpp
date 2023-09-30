@@ -17,10 +17,10 @@ public:
     Pendulum(Submodel* parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
     {
         // signals
-        auto dphi = get_model()->create_signal( "dphi");
-        auto    m = get_model()->create_signal(    "m");
-        auto    g = get_model()->create_signal(    "g");
-        auto    l = get_model()->create_signal(    "l");
+        auto dphi = get_model()->signal( "dphi");
+        auto    m = get_model()->signal(    "m");
+        auto    g = get_model()->signal(    "g");
+        auto    l = get_model()->signal(    "l");
 
         // blocks
         new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, 10);
@@ -62,10 +62,10 @@ public:
     SSModel(Submodel* parent) : Submodel(parent, "pendulum_with_PID")
     {
         // signals
-        auto phi = get_model()->create_signal("phi");
-        auto tau = get_model()->create_signal("tau");
-        auto err = get_model()->create_signal("err");
-        auto des_phi = get_model()->create_signal("des_phi");
+        auto phi = get_model()->signal("phi");
+        auto tau = get_model()->signal("tau");
+        auto err = get_model()->signal("err");
+        auto des_phi = get_model()->signal("des_phi");
 
         // blocks
         new AddSub(this, "AddSub", "+-", {des_phi, phi}, err);
@@ -88,9 +88,9 @@ int main()
         {"des_phi", M_PI_4},
         }, model);
 
-    auto  phi = model.create_signal( "phi");
-    auto dphi = model.create_signal("dphi");
-    auto  tau = model.create_signal( "tau");
+    auto  phi = model.signal( "phi");
+    auto dphi = model.signal("dphi");
+    auto  tau = model.signal( "tau");
 
     auto ss_model = SSModel(&model);
     auto history = run(model,

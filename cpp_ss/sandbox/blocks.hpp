@@ -638,7 +638,7 @@ public:
     }
 
     std::string make_signal_name(const std::string& given_name);
-    Signal create_signal(const std::string& given_name);
+    Signal signal(const std::string& given_name);
     uint _process(double t, Values& values, bool reset) override;
     bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 

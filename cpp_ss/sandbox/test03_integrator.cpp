@@ -17,8 +17,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test03");
-    auto x  = model.create_signal("x");
-    auto xd = model.create_signal("xd");
+    auto x  = model.signal("x");
+    auto xd = model.signal("xd");
     auto blk = Integrator(&model, "integ", xd, x, 1.0);
 
     auto history = run(model,

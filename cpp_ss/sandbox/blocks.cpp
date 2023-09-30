@@ -235,7 +235,7 @@ std::string Submodel::make_signal_name(const std::string& given_name)
     return _name + "." + given_name;
 }
 
-Signal Submodel::create_signal(const std::string& given_name)
+Signal Submodel::signal(const std::string& given_name)
 {
     Signal signal(given_name);
     signal.set_owner(*this);

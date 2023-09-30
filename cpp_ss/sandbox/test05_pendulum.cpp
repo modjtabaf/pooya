@@ -16,11 +16,11 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "pendulum")
     {
-        auto   phi = parent->create_signal(  "phi");
-        auto  dphi = parent->create_signal( "dphi");
-        auto d2phi = parent->create_signal("d2phi");
-        auto g = parent->create_signal("g");
-        auto l = parent->create_signal("l");
+        auto   phi = parent->signal(  "phi");
+        auto  dphi = parent->signal( "dphi");
+        auto d2phi = parent->signal("d2phi");
+        auto g = parent->signal("g");
+        auto l = parent->signal("l");
 
         new Integrator(this, "dphi", d2phi, dphi);
         new Integrator(this, "phi", dphi, phi, M_PI_4);
@@ -46,7 +46,7 @@ int main()
         {"g", 9.81},
         }, model);
 
-    auto phi = model.create_signal("phi");
+    auto phi = model.signal("phi");
     auto ss_model = SSModel(&model);
 
     auto history = run(model,

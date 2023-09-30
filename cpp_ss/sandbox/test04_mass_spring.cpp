@@ -16,9 +16,9 @@ class SSModel : public Submodel
 public:
     SSModel(Submodel* parent) : Submodel(parent, "SSModel")
     {
-        auto   x = parent->create_signal(  "x");
-        auto  xd = parent->create_signal( "xd");
-        auto xdd = parent->create_signal("xdd");
+        auto   x = parent->signal(  "x");
+        auto  xd = parent->signal( "xd");
+        auto xdd = parent->signal("xdd");
 
         new Integrator(this, "xd", xdd, xd, 0.1);
         new Integrator(this, "x", xd, x);
@@ -32,8 +32,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test04");
-    auto x  = model.create_signal("x");
-    auto xd = model.create_signal("xd");
+    auto x  = model.signal("x");
+    auto xd = model.signal("xd");
     auto ss_model = SSModel(&model);
 
     auto history = run(model,

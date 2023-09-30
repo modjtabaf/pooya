@@ -17,18 +17,19 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test03");
-    auto x  = Node("x",  model);
-    auto xd = Node("xd", model);
+    auto x  = model.create_node("x");
+    auto xd = model.create_node("xd");
     auto blk = Integrator(&model, "integ", xd, x, 1.0);
+
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [&](double t, const NodeIdValues& /*X*/, NodeIdValues& inputs) -> void
+        [&](double t, Values& values) -> void
         {
-            inputs.insert_or_assign(xd, t < 3 or t > 7 ? 1 : 0);
-        }, NodeIdValues(), rk4);
+            values.set(xd, t < 3 or t > 7 ? 1 : 0);
+        }, NodeValues(), rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

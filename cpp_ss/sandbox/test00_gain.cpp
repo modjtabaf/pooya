@@ -17,17 +17,18 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test00");
-    auto x = Node("x",  model);
-    auto y = Node("y", model);
+    auto x = model.create_node("x");
+    auto y = model.create_node("y");
     auto gain = Gain(&model, "gain", 2.0, x, y);
+
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);
         },
-        [&](double t, const NodeIdValues& /*X*/, NodeIdValues& inputs) -> void
+        [&](double t, Values& values) -> void
         {
-            inputs.insert_or_assign(x, std::sin(M_PI * t / 5));
+            values.set(x, std::sin(M_PI * t / 5));
         });
 
     auto finish = std::chrono::high_resolution_clock::now();

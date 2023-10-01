@@ -30,8 +30,8 @@ public:
         //     {
         //         return x.sin();
         //     }, phi, 1);
-        new Sin(this, "sin(phi)", phi, 10);
-        new MulDiv(this, "-g\\l", "**/", {10, g, l}, d2phi, -1);
+        new Sin(this, "sin(phi)", phi, signal(10));
+        new MulDiv(this, "-g\\l", "**/", {signal(10), g, l}, d2phi, -1);
     }
 };
 
@@ -41,12 +41,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test05");
-
-    SignalValues parameters({
-        {"l", 0.1 },
-        {"g", 9.81},
-        }, model);
-
+    auto l = model.signal("l");
+    auto g = model.signal("g");
     auto ss_model = SSModel(&model);
 
     auto history = run(model,
@@ -54,7 +50,12 @@ int main()
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, parameters, rk4);
+        [&](double /*t*/, Values& values) -> void
+        {
+            values.set(l, 0.1);
+            values.set(g, 9.81);
+        },
+        rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

@@ -48,7 +48,6 @@ protected:
 public:
     Signal(const std::string& given_name) : _given_name(_make_valid_given_name(given_name)) {}
     Signal(const char* given_name) : _given_name(_make_valid_given_name(given_name)) {}
-    Signal(int n) : _given_name(_make_valid_given_name(std::to_string(n))) {}
     Signal() : _given_name(_make_valid_given_name("-")) {}
     Signal(const Signal& signal) = default;
 
@@ -100,27 +99,6 @@ inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
 using Scalars          = std::vector<double>;
 using TraverseCallback = std::function<bool(const Base&, uint32_t level)>;
 
-class SignalValues : public std::unordered_map<Signal, Value, SignalHash>
-{
-protected:
-    using Parent = std::unordered_map<Signal, Value, SignalHash>;
-
-public:
-    SignalValues() = default;
-    SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list, Submodel& owner);
-    SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list)
-    {
-        for (const auto& v: list)
-            insert_or_assign(v.first, v.second);
-    }
-
-    void join(const SignalValues& other)
-    {
-        for(const auto& value: other)
-            insert_or_assign(value.first, value.second);
-    }
-};
-
 class Values
 {
 protected:
@@ -148,6 +126,8 @@ public:
         return bv._valid ? &bv._value : nullptr;
     }
 
+    const Value* get(const Signal& signal) const {return get(signal.id());}
+
     void set(Signal::Id id, const Value& value)
     {
         assert(id != Signal::NoId);
@@ -155,6 +135,8 @@ public:
         bv._value = value;
         bv._valid = true;
     }
+
+    void set(const Signal& signal, const Value& value) {set(signal.id(), value);}
 
     void invalidate()
     {
@@ -643,6 +625,7 @@ public:
     uint _process(double t, Values& values, bool reset) override;
     bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
 
+    Signal signal(int n) {return signal(std::to_string(n));}
 }; // class Submodel
 
 class Model final : public Submodel

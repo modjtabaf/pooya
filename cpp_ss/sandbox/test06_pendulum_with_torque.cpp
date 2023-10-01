@@ -31,11 +31,11 @@ public:
             [](double /*t*/, const Value& x) -> Value
             {
                 return x.sin();
-            }, phi, 10);
-        // new Sin(this, "sin(phi)", phi, 10);
-        new MulDiv(this, "g\\l", "**/", {10, g, l}, 20);
-        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, 30);
-        new AddSub(this, "d2phi", "+-", {30, 20}, d2phi);
+            }, phi, signal(10));
+        // new Sin(this, "sin(phi)", phi, signal(10));
+        new MulDiv(this, "g\\l", "**/", {signal(10), g, l}, signal(20));
+        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, signal(30));
+        new AddSub(this, "d2phi", "+-", {signal(30), signal(20)}, d2phi);
     }
 };
 
@@ -45,21 +45,25 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test06");
-
-    SignalValues parameters({
-        {  "m", 0.2 },
-        {  "l", 0.1 },
-        {  "g", 9.81},
-        {"tau", 0.13},
-        }, model);
-
+    auto m = model.signal("m");
+    auto l = model.signal("l");
+    auto g = model.signal("g");
+    auto tau = model.signal("tau");
     auto ss_model = SSModel(&model);
+
     auto history = run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, parameters, rk4);
+        [&](double /*t*/, Values& values) -> void
+        {
+            values.set(m, 0.2);
+            values.set(l, 0.1);
+            values.set(g, 9.81);
+            values.set(tau, 0.13);
+        },
+        rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

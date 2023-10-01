@@ -67,10 +67,8 @@ public:
         // blocks
         new AddSub(this, "AddSub", "+-", {des_phi, phi}, err);
         new PI(this, 40.0, 20.0, err, tau);
-        pendulum = new Pendulum(this, tau, phi);
+        new Pendulum(this, tau, phi);
     }
-
-    Pendulum* pendulum;
 };
 
 int main()

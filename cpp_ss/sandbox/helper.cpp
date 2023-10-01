@@ -115,20 +115,6 @@ void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, OutputCall
         uint k = -1;
         double t{0}, t1;
 
-        auto call_outputs_cb = [&]() -> void
-        {
-            if (outputs_cb)
-            {
-                values.invalidate();
-                for (auto& state: states)
-                    values.set(state.first, state.second.first);
-                if (inputs_cb)
-                    inputs_cb(t, values);
-                process(t, values);
-                outputs_cb(k, t, values);
-            }
-        };
-
         while (time_cb(++k, t1))
         {
             if (k%100 == 0)
@@ -140,7 +126,16 @@ void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, OutputCall
                 model.step(t, values);
             }
 
-            call_outputs_cb(); // todo: used only once. Move the code here
+            if (outputs_cb)
+            {
+                values.invalidate();
+                for (auto& state: states)
+                    values.set(state.first, state.second.first);
+                if (inputs_cb)
+                    inputs_cb(t, values);
+                process(t, values);
+                outputs_cb(k, t, values);
+            }
 
             t = t1;
         }

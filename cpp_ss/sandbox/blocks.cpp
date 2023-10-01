@@ -5,10 +5,6 @@
 
 #include "blocks.hpp"
 
-// todo:
-// - define and implement an interface for input and output values
-// - define inputs and outputs for Submodel block
-
 namespace blocks
 {
 

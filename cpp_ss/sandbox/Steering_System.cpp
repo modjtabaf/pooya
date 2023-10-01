@@ -113,10 +113,6 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    // front_wheel_angle_Rq = helper.load_mat_files_as_bus(
-    //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",
-    //     "front_wheel_angle_Rq")
-
     auto model = Model();
 
     auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
@@ -128,14 +124,7 @@ int main()
     auto AxFr_front_right = model.signal("AxFr_front_right");
     auto AxFr_front_left = model.signal("AxFr_front_left");
 
-    auto tractor_wheelbase = model.parameter("tractor_wheelbase");
-    auto tractor_Width = model.parameter("tractor_Width");
-    auto front_wheel_ang_t_const = model.parameter("front_wheel_ang_t_const");
-    auto front_wheel_ang_delay = model.parameter("front_wheel_ang_delay");
-    auto front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
-    auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
-
-    auto steering_system = SteeringSystem(&model,
+    new SteeringSystem(&model,
         front_wheel_angle_Rq,
         {
             front_wheel_angle,
@@ -145,7 +134,17 @@ int main()
             AxFr_front_right,
             AxFr_front_left
         });
-    auto history = run(model,
+
+    auto tractor_wheelbase = model.parameter("tractor_wheelbase");
+    auto tractor_Width = model.parameter("tractor_Width");
+    auto front_wheel_ang_t_const = model.parameter("front_wheel_ang_t_const");
+    auto front_wheel_ang_delay = model.parameter("front_wheel_ang_delay");
+    auto front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
+    auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
+
+    History history(model);
+
+    run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(),
@@ -162,6 +161,10 @@ int main()
             values.set(front_wheel_ang_gain, 1.0);
             values.set(front_wheel_ang_init_value, 0.0);
         },
+        [&](uint k, double t, Values& values) -> void
+        {
+            history.update(k, t, values);
+        },
         rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
@@ -175,47 +178,4 @@ int main()
 	gp << "plot" << gp.file1d((history[front_wheel_angle_Rq] * (180/M_PI)).eval()) << "with lines title 'front\\_wheel\\_angle\\_Rq',"
 	    << gp.file1d(((history[AxFr_front_right] + history[AxFr_front_left])/2 * (180/M_PI)).eval()) << "with lines title 'dphi',"
         "\n";
-
-    // steering_info = helper.load_mat_files_as_bus(
-    //     "/home/fathi/torc/git/playground/py_ss/data/processed_mat",
-    //     "steering_info")
-
-    // print(history.keys())
-
-    // T = history["t"]
-
-    // for f, mat in steering_info.items():
-    //     print(f)
-    //     if callable(mat):
-    //         mat = mat.y
-    //     mat = mat[slc]
-        
-    //     blk = history["Steering_System." + f]
-        
-    //     plt.figure()
-        
-    //     if blk.ndim == 2:
-    //         n = blk.shape[1]
-    //         for k in range(n):
-    //             plt.subplot(n, 1, k+1)
-    //             if k == 0:
-    //                 plt.title(f)
-    //             blk_k = blk[:, k]
-    //             if mat.ndim == 2:
-    //                 mat_k = mat[:, k]
-    //                 plt.plot(T, mat_k, "rx")
-    //             else:
-    //                 mat_k = mat[k]
-    //                 plt.plot(T[0], mat_k, "rx")
-    //             plt.plot(T, blk_k, "b-")
-    //             plt.plot(T, blk_k - mat_k, "g-")
-    //             plt.grid()
-    //     else:
-    //         plt.title(f)
-    //         plt.plot(T, mat, "rx")
-    //         plt.plot(T, blk, "b-")
-    //         plt.plot(T, blk - mat, "g-")
-    //         plt.grid()
-
-    // plt.show()
 }

@@ -19,9 +19,11 @@ int main()
     auto model = Model("test03");
     auto x  = model.signal("x");
     auto xd = model.signal("xd");
-    auto blk = Integrator(&model, "integ", xd, x, 1.0);
+    new Integrator(&model, "integ", xd, x, 1.0);
 
-    auto history = run(model,
+    History history(model);
+
+    run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 10, 0.1);
@@ -29,6 +31,10 @@ int main()
         [&](double t, Values& values) -> void
         {
             values.set(xd, t < 3 or t > 7 ? 1 : 0);
+        },
+        [&](uint k, double t, Values& values) -> void
+        {
+            history.update(k, t, values);
         }, rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();

@@ -302,12 +302,22 @@ Signal::Id Model::find_or_register_signal(const std::string& name)
     return ret;
 }
 
-Signal::Id Model::find_signal(const std::string& name) const
+Signal::Id Model::find_signal(const std::string& name, bool exact_match) const
 {
     assert(!name.empty());
     if (name.empty()) return Signal::NoId;
 
-    auto it = std::find(_registered_signals.begin(), _registered_signals.end(), name);
+    auto name_len = name.length();
+
+    auto it = exact_match ?
+        std::find(_registered_signals.begin(), _registered_signals.end(), name) :
+        std::find_if(_registered_signals.begin(), _registered_signals.end(),
+            [&] (const std::string& str) -> bool
+            {
+                auto str_len = str.length();
+                return ((str_len >= name_len) && (str.substr(str_len - name_len) == name));
+            });
+
     return it == _registered_signals.end() ? Signal::NoId : std::distance(_registered_signals.begin(), it);
 }
 

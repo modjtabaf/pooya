@@ -39,7 +39,7 @@ int main()
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, SignalValues(), rk4);
+        nullptr, rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

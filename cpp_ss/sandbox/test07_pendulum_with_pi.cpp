@@ -24,17 +24,17 @@ public:
         auto l = parameter("l");
 
         // blocks
-        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, 10);
-        new AddSub(this, "err", "+-", {10, 20}, 30);
-        new Integrator(this, "dphi", 30, dphi);
+        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, signal(10));
+        new AddSub(this, "err", "+-", {signal(10), signal(20)}, signal(30));
+        new Integrator(this, "dphi", signal(30), dphi);
         new Integrator(this, "phi", dphi, phi);
         // new Function(this, "sin(phi)",
         //     [](double t, const Value& x) -> Value
         //     {
         //         return x.sin();
         //     }, phi, 40);
-        new Sin(this, "sin(phi)", phi, 40);
-        new MulDiv(this, "g\\l", "**/", {40, g, l}, 20);
+        new Sin(this, "sin(phi)", phi, signal(40));
+        new MulDiv(this, "g\\l", "**/", {signal(40), g, l}, signal(20));
     }
 };
 
@@ -45,10 +45,10 @@ public:
         Submodel(parent, "PI", x, y)
     {
         // blocks
-        new Gain(this, "Kp", Kp, x, 10);
-        new Integrator(this, "ix", x, 20, x0);
-        new Gain(this, "Ki", Ki, 20, 30);
-        new AddSub(this, "AddSub", "++", {10, 30}, y);
+        new Gain(this, "Kp", Kp, x, signal(10));
+        new Integrator(this, "ix", x, signal(20), x0);
+        new Gain(this, "Ki", Ki, signal(20), signal(30));
+        new AddSub(this, "AddSub", "++", {signal(10), signal(30)}, y);
     }
 };
 
@@ -79,13 +79,10 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test07");
-
-    SignalValues parameters({
-        {      "m", 0.2   },
-        {      "l", 0.1   },
-        {      "g", 9.81  },
-        {"des_phi", M_PI_4},
-        }, model);
+    auto m = model.signal("m");
+    auto l = model.signal("l");
+    auto g = model.signal("g");
+    auto des_phi = model.signal("des_phi");
 
     auto ss_model = SSModel(&model);
     auto history = run(model,
@@ -93,7 +90,14 @@ int main()
         {
             return arange(k, t, 0, 2, 0.01);
         },
-        nullptr, parameters, rk4);
+        [&](double /*t*/, Values& values) -> void
+        {
+            values.set(m, 0.2);
+            values.set(l, 0.1);
+            values.set(g, 9.81);
+            values.set(des_phi, M_PI_4);
+        },
+        rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

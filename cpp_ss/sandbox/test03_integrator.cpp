@@ -29,7 +29,7 @@ int main()
         [&](double t, Values& values) -> void
         {
             values.set(xd, t < 3 or t > 7 ? 1 : 0);
-        }, SignalValues(), rk4);
+        }, rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

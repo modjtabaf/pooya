@@ -8,7 +8,7 @@
 namespace blocks
 {
 
-History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const SignalValues& parameters, Solver stepper)
+History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, Solver stepper)
 {
     auto process = [&](double t, Values& values) -> uint
     {
@@ -37,9 +37,9 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const S
             {
                 std::cout << "- " << c->full_name() << "\n";
                 for (const auto& p: c->iports())
-                    std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p << "\n";
+                    std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
                 for (const auto& p: c->oports())
-                    std::cout << "  - o: " << (values.get(p) ? " " : "*") <<  p << "\n";
+                    std::cout << "  - o: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
             }
         }
         return n_processed;
@@ -52,9 +52,6 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const S
 
     auto stepper_callback = [&](double t, Values& values) -> void
     {
-        for (const auto& nv: parameters)
-            values.set(nv.first, nv.second);
-    
         if (inputs_cb)
             inputs_cb(t, values);
 
@@ -115,8 +112,6 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const S
             values.invalidate();
             for (auto& state: states)
                 values.set(state.first, state.second.first);
-            for (const auto& nv: parameters)
-                values.set(nv.first, nv.second);
             if (inputs_cb)
                 inputs_cb(t, values);
             process(t, values);
@@ -128,8 +123,6 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, const S
         values.invalidate();
         for (auto& state: states)
             values.set(state.first, state.second.first);
-        for (const auto& nv: parameters)
-            values.set(nv.first, nv.second);
         if (inputs_cb)
             inputs_cb(t, values);
         process(t, values);

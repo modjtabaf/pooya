@@ -47,16 +47,6 @@ bool Signal::set_owner(Submodel& owner)
     return true;
 }
 
-SignalValues::SignalValues(const std::initializer_list<std::pair<Signal, Value>>& list, Submodel& owner)
-{
-    for (const auto& v: list)
-    {
-        auto signal(v.first);
-        signal.set_owner(owner);
-        insert_or_assign(signal, v.second);
-    }
-}
-
 Base::Base(Submodel* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
     _parent(parent)
 {

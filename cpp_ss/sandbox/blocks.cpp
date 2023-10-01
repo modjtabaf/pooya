@@ -270,8 +270,8 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
         return false;
 
     if (level < max_level)
-        for (auto* component: _components)
-            if (!component->traverse(cb, level + 1, max_level))
+        for (auto it = _components.begin(); it != _components.end(); it++)
+            if (!(*it)->traverse(cb, level + 1, max_level))
                 return false;
 
     return true;

@@ -9,6 +9,7 @@
 #include <map>
 #include <vector>
 #include <cassert>
+#include <memory>
 
 #include "../3rdparty/eigen/Eigen/Core"
 
@@ -197,6 +198,7 @@ public:
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
     virtual Model* get_model();
 
+    Submodel* parent() {return _parent;}
     bool processed() const {return _processed;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;}
@@ -596,21 +598,25 @@ public:
 class Submodel : public Base
 {
 protected:
-    std::vector<Base*> _components;
+    std::vector<std::unique_ptr<Base>> _components;
 
 public:
     Submodel(Submodel* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()) :
         Base(parent, given_name, iports, oports/*, false*/) {}
 
-    void add_component(Base& component)
+    bool add_component(Base& component)
     {
-        _components.push_back(&component);
+        if (component.parent() != this) return false;
+        for (auto it = _components.begin(); it != _components.end(); it++)
+            if (it->get() == &component) return false;
+        _components.emplace_back(&component);
+        return true;
     }
 
     void get_states(StatesInfo& states) override
     {
-        for (auto* component: _components)
-            component->get_states(states);
+        for (auto it = _components.begin(); it != _components.end(); it++)
+            (*it)->get_states(states);
     }
 
     void step(double t, const Values& values) override

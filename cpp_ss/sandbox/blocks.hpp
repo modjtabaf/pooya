@@ -37,7 +37,7 @@ class Signal
 {
 public:
     using Id = std::size_t;
-    static const Id NoId = std::string::npos;
+    static constexpr Id NoId = std::string::npos;
 
 protected:
     std::string _given_name;
@@ -650,7 +650,7 @@ public:
         return _registered_signals[id];
     }
 
-    Signal::Id find_signal(const std::string& name) const;
+    Signal::Id find_signal(const std::string& name, bool exact_match = false) const;
     Signal::Id find_or_register_signal(const std::string& name);
 };
 

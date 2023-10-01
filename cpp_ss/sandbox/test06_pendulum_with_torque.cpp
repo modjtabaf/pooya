@@ -45,13 +45,16 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test06");
+    new SSModel(&model);
+
     auto m = model.signal("m");
     auto l = model.signal("l");
     auto g = model.signal("g");
     auto tau = model.signal("tau");
-    auto ss_model = SSModel(&model);
 
-    auto history = run(model,
+    History history(model);
+
+    run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
@@ -63,6 +66,10 @@ int main()
             values.set(g, 9.81);
             values.set(tau, 0.13);
         },
+        [&](uint k, double t, Values& values) -> void
+        {
+            history.update(k, t, values);
+        },
         rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
@@ -70,8 +77,8 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi  = ss_model.signal("phi");
-    auto dphi = ss_model.signal("dphi");
+    auto  phi = model.find_signal("/test06/pendulum.phi");
+    auto dphi = model.find_signal("/test06/pendulum.dphi");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

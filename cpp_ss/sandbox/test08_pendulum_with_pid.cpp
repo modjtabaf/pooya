@@ -79,12 +79,16 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test08");
+    new SSModel(&model);
+
     auto m = model.signal("m");
     auto l = model.signal("l");
     auto g = model.signal("g");
     auto des_phi = model.signal("des_phi");
-    auto ss_model = SSModel(&model);
-    auto history = run(model,
+
+    History history(model);
+
+    run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 2, 0.01);
@@ -96,6 +100,10 @@ int main()
             values.set(g, 9.81);
             values.set(des_phi, M_PI_4);
         },
+        [&](uint k, double t, Values& values) -> void
+        {
+            history.update(k, t, values);
+        },
         rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
@@ -103,16 +111,16 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = history[model.find_signal("/test08/pendulum_with_PID.phi")];
-    auto dphi = history[model.find_signal("/test08/pendulum_with_PID/pendulum.dphi")];
-    auto  tau = history[model.find_signal("/test08/pendulum_with_PID.tau")];
- 
+    auto  phi = model.find_signal("/test08/pendulum_with_PID.phi", true); // find using the exact name
+    auto dphi = model.find_signal(".dphi"); // find using the partial name
+    auto  tau = model.find_signal("tau"); // find using the partial name
+
     Gnuplot gp;
-	gp << "set xrange [0:" << phi.size() << "]\n";
+	gp << "set xrange [0:" << history[phi].size() << "]\n";
     gp << "set yrange [-80:80]\n";
-	gp << "plot" << gp.file1d((phi * (180/M_PI)).eval()) << "with lines title 'phi',"
-	    << gp.file1d(dphi) << "with lines title 'dphi',"
-	    << gp.file1d(tau) << "with lines title 'tau'\n";
+	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
+	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"
+	    << gp.file1d(history[tau]) << "with lines title 'tau'\n";
 
     return 0;
 }

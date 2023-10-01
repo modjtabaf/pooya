@@ -32,21 +32,28 @@ int main()
     auto model = Model("test04");
     auto x  = model.signal("x");
     auto xd = model.signal("xd");
-    auto ss_model = SSModel(&model, x, xd);
+    new SSModel(&model, x, xd);
 
-    auto history = run(model,
+    History history(model);
+
+    run(model,
         [](uint k, double& t) -> bool
         {
             return arange(k, t, 0, 5, 0.01);
         },
-        nullptr, rk4);
+        nullptr,
+        [&](uint k, double t, Values& values) -> void
+        {
+            history.update(k, t, values);
+        },
+        rk4);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    export_csv(model, history, "mass_spring.csv");
+    history.export_csv("mass_spring.csv");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

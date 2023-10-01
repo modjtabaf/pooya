@@ -8,7 +8,58 @@
 namespace blocks
 {
 
-History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, Solver stepper)
+void History::update(uint k, double t, const Values& values)
+{
+    if (empty()) // todo: consider reserving space for values
+    {
+        reserve(values.size() + 1);
+        insert_or_assign(time_id, Value()); // t
+        for (Signal::Id id = 0; id < _model.num_signals(); id++)
+            insert_or_assign(id, Value());
+    }
+
+    auto& h = at(time_id); // t
+    if (k >= h.rows())
+        h.conservativeResize(k + 1, NoChange);
+    h(k, 0) = t;
+    for (Signal::Id id = 0; id < _model.num_signals(); id++)
+    {
+        auto& h = at(id);
+        if (k >= h.rows())
+            h.conservativeResize(k + 1, NoChange);
+        const auto* v = values.get(id);
+        assert(v);
+        h.row(k) = *v;
+    }
+}
+
+void History::export_csv(std::string filename)
+{
+    if (size() == 0)
+        return;
+
+    std::ofstream ofs(filename);
+
+    // header
+    ofs << "time";
+    for (const auto& h: *this)
+        if (h.first != time_id)
+            ofs << "," << _model.get_signal_by_id(h.first);
+    ofs << "\n";
+
+    // values
+    auto n = at(time_id).size();
+    for (int k = 0; k < n; k++)
+    {
+        ofs << at(time_id)(k);
+        for (const auto& h: *this)
+            if (h.first != time_id)
+                ofs << "," << h.second(k);
+        ofs << "\n";
+    }
+}
+
+void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, OutputCallback outputs_cb, Solver stepper)
 {
     auto process = [&](double t, Values& values) -> uint
     {
@@ -45,8 +96,6 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, Solver 
         return n_processed;
     };
 
-    History history;
-
     StatesInfo states;
     model.get_states(states);
 
@@ -60,117 +109,63 @@ History run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, Solver 
 
     Values values(model.num_signals());
 
-    auto update_history = [&](double t, Values& values) -> void
-    {
-        model.step(t, values);
-
-        if (history.empty())
-        {
-            history.reserve(values.size());
-            for (Signal::Id id = 0; id < model.num_signals(); id++)
-            {
-                history[id] = Value();
-                // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_signal_by_id(v.first)[0] != '-')) // todo: exclude parameters
-                //     history.insert_or_assign(v.first, Value());
-            }
-        }
-
-        auto& h = history[0]; // t
-        auto nrows = h.rows() + 1;
-        h.conservativeResize(nrows, NoChange);
-        h(nrows - 1, 0) = t;
-        for (Signal::Id id = 0; id < model.num_signals(); id++)
-        {
-            // if ((parameters.find(v.first) ==  parameters.end()) && (model.get_signal_by_id(v.first)[0] != '-')) // todo: exclude parameters
-            auto& h = history[id];
-            h.conservativeResize(nrows, NoChange);
-            const auto* v = values.get(id);
-            assert(v);
-            history[id].bottomRows<1>() = *v;
-        }
-    };
-
     if (states.size() > 0)
     {
         assert(stepper);
         uint k = -1;
         double t{0}, t1;
 
+        auto call_outputs_cb = [&]() -> void
+        {
+            if (outputs_cb)
+            {
+                values.invalidate();
+                for (auto& state: states)
+                    values.set(state.first, state.second.first);
+                if (inputs_cb)
+                    inputs_cb(t, values);
+                process(t, values);
+                outputs_cb(k, t, values);
+            }
+        };
+
         while (time_cb(++k, t1))
         {
             if (k%100 == 0)
                 std::cout << k << ": " << t1 << "\n";
 
-            if (k == 0) // todo: why?
+            if (k > 0)
             {
-                t = t1;
-                continue;
+                stepper(stepper_callback, t, t1, states, model.num_signals());
+                model.step(t, values);
             }
 
-            stepper(stepper_callback, t, t1, states, model.num_signals());
-
-            values.invalidate();
-            for (auto& state: states)
-                values.set(state.first, state.second.first);
-            if (inputs_cb)
-                inputs_cb(t, values);
-            process(t, values);
-            update_history(t, values);
+            call_outputs_cb(); // todo: used only once. Move the code here
 
             t = t1;
         }
-
-        values.invalidate();
-        for (auto& state: states)
-            values.set(state.first, state.second.first);
-        if (inputs_cb)
-            inputs_cb(t, values);
-        process(t, values);
-        update_history(t, values);
     }
     else
     {
-        uint k = 0;
+        uint k = -1;
         double t;
-        while (time_cb(k++, t))
+        while (time_cb(++k, t))
         {
             values.invalidate();
 
             stepper_callback(t, values);
+            model.step(t, values);
 
-            update_history(t, values);
+            if (outputs_cb)
+                outputs_cb(k, t, values);
         }
     }
-
-    return history;
 }
 
 bool arange(uint k, double& t, double t_init, double t_end, double dt)
 {
     t = t_init + k * dt;
     return t <= t_end;
-}
-
-void export_csv(const Model& model, const History& history, std::string filename)
-{
-    if (history.size() == 0)
-        return;
-
-    std::ofstream ofs(filename);
-
-    // header
-    for (const auto& h: history)
-        ofs << model.get_signal_by_id(h.first) << ",";
-    ofs << "\n";
-
-    // values
-    auto n = history.begin()->second.size();
-    for (int k = 0; k < n; k++)
-    {
-        for (const auto& h: history)
-            ofs << h.second(k) << ",";
-        ofs << "\n";
-    }
 }
 
 }

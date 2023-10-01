@@ -17,9 +17,9 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     auto model = Model("test01");
-    auto x  = model.signal("x");
-    auto xd = model.signal("xd");
-    new Memory(&model, "memory", x, xd);
+    auto x = model.signal("x");
+    auto y = model.signal("y");
+    new Memory(&model, "memory", x, y);
 
     History history(model);
 
@@ -46,7 +46,7 @@ int main()
 	gp << "set xrange [0:100]\n";
     gp << "set yrange [-1:1]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
+		<< gp.file1d(history[y]) << "with lines title 'y'\n";
 
     return 0;
 }

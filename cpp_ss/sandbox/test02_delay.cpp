@@ -11,10 +11,10 @@
 
 using namespace blocks;
 
-class SSModel : public Submodel
+class MyModel : public Submodel
 {
 public:
-    SSModel(Submodel* parent, const Signal& x, const Signal& y) : Submodel(parent, "SSModel", x, y)
+    MyModel(Submodel* parent, const Signal& x, const Signal& y) : Submodel(parent, "MyModel", x, y)
     {
         auto time_delay = signal("time_delay");
         auto initial = signal("initial");
@@ -33,7 +33,7 @@ int main()
     auto model = Model("test02");
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new SSModel(&model, x, y);
+    new MyModel(&model, x, y);
 
     History history(model);
 

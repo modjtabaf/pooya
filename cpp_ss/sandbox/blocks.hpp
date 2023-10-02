@@ -207,7 +207,7 @@ public:
 
     virtual uint _process(double t, Values& values, bool reset);
 
-    virtual bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max())
+    virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
     {
         return (level > max_level) || cb(*this, level);
     }
@@ -629,12 +629,12 @@ public:
     Signal signal(const std::string& given_name);
     Signal parameter(const std::string& given_name);
     uint _process(double t, Values& values, bool reset) override;
-    bool traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level=std::numeric_limits<decltype(level)>::max()) override;
+    bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
 
     Signal signal(int n) {return signal(std::to_string(n));}
 }; // class Submodel
 
-class Model final : public Submodel
+class Model : public Submodel
 {
 protected:
     std::vector<std::string> _registered_signals;

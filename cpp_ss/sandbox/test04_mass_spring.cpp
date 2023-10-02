@@ -11,11 +11,13 @@
 
 using namespace blocks;
 
-class SSModel : public Submodel
+class MyModel : public Model
 {
 public:
-    SSModel(Submodel* parent, const Signal& x, const Signal& xd) : Submodel(parent, "SSModel", {x, xd})
+    MyModel() : Model("MyModel")
     {
+        auto   x = signal(  "x");
+        auto  xd = signal( "xd");
         auto xdd = signal("xdd");
 
         new Integrator(this, "xd", xdd, xd, 0.1);
@@ -29,10 +31,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test04");
-    auto x  = model.signal("x");
-    auto xd = model.signal("xd");
-    new SSModel(&model, x, xd);
+    auto model = MyModel();
 
     History history(model);
 
@@ -53,6 +52,9 @@ int main()
               << " milliseconds\n";
 
     history.export_csv("mass_spring.csv");
+
+    auto x  = model.find_signal("x");
+    auto xd = model.find_signal("xd");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

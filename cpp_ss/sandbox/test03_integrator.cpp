@@ -23,19 +23,21 @@ int main()
 
     History history(model);
 
-    run(model,
-        [](uint k, double& t) -> bool
-        {
-            return arange(k, t, 0, 10, 0.1);
-        },
+    Simulator sim(model,
         [&](double t, Values& values) -> void
         {
             values.set(xd, t < 3 or t > 7 ? 1 : 0);
         },
-        [&](uint k, double t, Values& values) -> void
-        {
-            history.update(k, t, values);
-        }, rk4);
+        rk4);
+
+    uint k = 0;
+    double t;
+    while (arange(k, t, 0, 10, 0.1))
+    {
+        sim.run(t);
+        history.update(k, t, sim.values());
+        k++;
+    }
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

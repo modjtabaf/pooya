@@ -72,24 +72,6 @@ Base::Base(Submodel* parent, std::string given_name, const Signals& iports, cons
         _iports = iports;
         _oports = oports;
     }
-
-    // auto* model = get_model();
-    // if (model)
-    // {
-    //     if (register_oports)
-    //     {
-    //         for (auto& port: _oports)
-    //         {
-    //             if (std::find(_all_oports.cbegin(), _all_oports.cend(), port) != _all_oports.cend())
-    //                 std::cout << *std::find(_all_oports.cbegin(), _all_oports.cend(), port) << "\n";
-    //             assert(std::find(_all_oports.cbegin(), _all_oports.cend(), port) == _all_oports.cend());
-    //             _all_oports.push_back(port);
-    //         }
-    //     }
-
-    //     for (auto& port: _iports)
-    //         model->register_iport(port, *this);
-    // }
 }
 
 void Base::_assign_valid_given_name(std::string given_name)

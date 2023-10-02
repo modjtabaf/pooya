@@ -11,10 +11,10 @@
 
 using namespace blocks;
 
-class SSModel : public Submodel
+class MyModel : public Model
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "pendulum")
+    MyModel() : Model("pendulum")
     {
         auto   phi = signal(  "phi");
         auto  dphi = signal( "dphi");
@@ -44,8 +44,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test06");
-    new SSModel(&model);
+    auto model = MyModel();
 
     auto m = model.signal("m");
     auto l = model.signal("l");
@@ -78,8 +77,8 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/test06/pendulum.phi");
-    auto dphi = model.find_signal("/test06/pendulum.dphi");
+    auto  phi = model.find_signal("/pendulum.phi");
+    auto dphi = model.find_signal(".dphi");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

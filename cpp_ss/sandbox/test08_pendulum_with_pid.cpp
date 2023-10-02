@@ -54,10 +54,10 @@ public:
     }
 };
 
-class SSModel : public Submodel
+class MyModel : public Model
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "pendulum_with_PID")
+    MyModel() : Model("pendulum_with_PID")
     {
         // signals
         auto phi = signal("phi");
@@ -78,8 +78,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test08");
-    new SSModel(&model);
+    auto model = MyModel();
 
     auto m = model.signal("m");
     auto l = model.signal("l");
@@ -112,7 +111,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/test08/pendulum_with_PID.phi", true); // find using the exact name
+    auto  phi = model.find_signal("/pendulum_with_PID.phi", true); // find using the exact name
     auto dphi = model.find_signal(".dphi"); // find using the partial name
     auto  tau = model.find_signal("tau"); // find using the partial name
 

@@ -104,7 +104,7 @@ uint Simulator::_process(double t, Values& values)
         }
     }
     return n_processed;
-};
+}
 
 void Simulator::run(double t)
 {

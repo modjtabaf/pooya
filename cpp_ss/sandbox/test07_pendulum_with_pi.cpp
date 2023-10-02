@@ -52,10 +52,10 @@ public:
     }
 };
 
-class SSModel : public Submodel
+class MyModel : public Model
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "pendulum_with_PI")
+    MyModel() : Model("pendulum_with_PI")
     {
         // signals
         auto phi = signal("phi");
@@ -76,8 +76,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test07");
-    new SSModel(&model);
+    auto model = MyModel();
 
     auto m = model.signal("m");
     auto l = model.signal("l");
@@ -110,9 +109,9 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/test07/pendulum_with_PI.phi");
-    auto dphi = model.find_signal("/test07/pendulum_with_PI/pendulum.dphi");
-    auto  tau = model.find_signal("/test07/pendulum_with_PI.tau");
+    auto  phi = model.find_signal(".phi");
+    auto dphi = model.find_signal(".dphi");
+    auto  tau = model.find_signal(".tau");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history[phi].size() << "]\n";

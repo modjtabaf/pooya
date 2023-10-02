@@ -11,10 +11,10 @@
 
 using namespace blocks;
 
-class SSModel : public Submodel
+class MyModel : public Model
 {
 public:
-    SSModel(Submodel* parent) : Submodel(parent, "pendulum")
+    MyModel() : Model("pendulum")
     {
         auto   phi = signal(  "phi");
         auto  dphi = signal( "dphi");
@@ -40,12 +40,12 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test05");
-    auto l = model.signal("l");
-    auto g = model.signal("g");
-    new SSModel(&model);
+    auto model = MyModel();
 
     History history(model);
+
+    auto l = model.signal("l");
+    auto g = model.signal("g");
 
     Simulator sim(model,
         [&](double /*t*/, Values& values) -> void
@@ -69,7 +69,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.find_signal("/test05/pendulum.phi");
+    auto phi = model.find_signal("/pendulum.phi", true);
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";

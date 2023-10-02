@@ -59,110 +59,87 @@ void History::export_csv(std::string filename)
     }
 }
 
-void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, OutputCallback outputs_cb, Solver stepper)
-{
-    auto process = [&](double t, Values& values) -> uint
-    {
-        uint n_processed = model._process(t, values, true);
-        uint n;
-        do
-        {
-            n = model._process(t, values, false);
-            n_processed += n;
-        } while(n);
-
-        std::vector<const Base*> unprocessed;
-
-        auto find_unprocessed_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
-        {
-            if (!c.processed())
-                unprocessed.push_back(&c);
-            return true;
-        };
-
-        model.traverse(find_unprocessed_cb, 0);
-        if (unprocessed.size())
-        {
-            std::cout << "-- unprocessed blocks detected:\n";
-            for (const auto& c: unprocessed)
-            {
-                std::cout << "- " << c->full_name() << "\n";
-                for (const auto& p: c->iports())
-                    std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
-                for (const auto& p: c->oports())
-                    std::cout << "  - o: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
-            }
-        }
-        return n_processed;
-    };
-
-    StatesInfo states;
-    model.get_states(states);
-
-    auto stepper_callback = [&](double t, Values& values) -> void
-    {
-        if (inputs_cb)
-            inputs_cb(t, values);
-
-        process(t, values);
-    };
-
-    Values values(model.num_signals());
-
-    if (states.size() > 0)
-    {
-        assert(stepper);
-        uint k = -1;
-        double t{0}, t1;
-
-        while (time_cb(++k, t1))
-        {
-            if (k%100 == 0)
-                std::cout << k << ": " << t1 << "\n";
-
-            if (k > 0)
-            {
-                // todo: activate the adaptive solver
-                double new_h;
-                stepper(stepper_callback, t, t1, states, model.num_signals(), new_h);
-                model.step(t, values);
-            }
-
-            if (outputs_cb)
-            {
-                values.invalidate();
-                for (auto& state: states)
-                    values.set(state.first, state.second.first);
-                if (inputs_cb)
-                    inputs_cb(t, values);
-                process(t, values);
-                outputs_cb(k, t, values);
-            }
-
-            t = t1;
-        }
-    }
-    else
-    {
-        uint k = -1;
-        double t;
-        while (time_cb(++k, t))
-        {
-            values.invalidate();
-
-            stepper_callback(t, values);
-            model.step(t, values);
-
-            if (outputs_cb)
-                outputs_cb(k, t, values);
-        }
-    }
-}
-
 bool arange(uint k, double& t, double t_init, double t_end, double dt)
 {
     t = t_init + k * dt;
     return t <= t_end;
+}
+
+Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper) :
+    _model(model), _inputs_cb(inputs_cb), _values(model.num_signals()), _stepper(stepper)
+{
+    model.get_states(_states);
+}
+
+uint Simulator::_process(double t, Values& values)
+{
+    uint n_processed = _model._process(t, values, true);
+    uint n;
+    do
+    {
+        n = _model._process(t, values, false);
+        n_processed += n;
+    } while(n);
+
+    std::vector<const Base*> unprocessed;
+
+    auto find_unprocessed_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
+    {
+        if (!c.processed())
+            unprocessed.push_back(&c);
+        return true;
+    };
+
+    _model.traverse(find_unprocessed_cb, 0);
+    if (unprocessed.size())
+    {
+        std::cout << "-- unprocessed blocks detected:\n";
+        for (const auto& c: unprocessed)
+        {
+            std::cout << "- " << c->full_name() << "\n";
+            for (const auto& p: c->iports())
+                std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
+            for (const auto& p: c->oports())
+                std::cout << "  - o: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
+        }
+    }
+    return n_processed;
+};
+
+void Simulator::run(double t)
+{
+    auto stepper_callback = [&](double t, Values& values) -> void
+    {
+        if (_inputs_cb)
+            _inputs_cb(t, values);
+        _process(t, values);
+    };
+
+    if (_states.size() > 0)
+    {
+        assert(_stepper);
+        assert(t >= _t_prev);
+
+        if (!_first_iter)
+        {
+            // todo: activate the adaptive solver
+            double new_h;
+            _stepper(stepper_callback, _t_prev, t, _states, _model.num_signals(), new_h);
+        }
+    }
+
+    if (_first_iter)
+        _first_iter = false;
+
+    _values.invalidate();
+    for (auto& state: _states)
+        _values.set(state.first, state.second.first);
+    if (_inputs_cb)
+        _inputs_cb(t, _values);
+    _process(t, _values);
+    _model.step(t, _values);
+
+    _t_prev = t;
 }
 
 }

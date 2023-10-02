@@ -144,12 +144,7 @@ int main()
 
     History history(model);
 
-    run(model,
-        [](uint k, double& t) -> bool
-        {
-            return arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(),
-                FRONT_WHEEL_ANGLE_RQ_X.back(), 0.1);
-        },
+    Simulator sim(model,
         [&](double t, Values& values) -> void
         {
             values.set(front_wheel_angle_Rq,
@@ -161,11 +156,16 @@ int main()
             values.set(front_wheel_ang_gain, 1.0);
             values.set(front_wheel_ang_init_value, 0.0);
         },
-        [&](uint k, double t, Values& values) -> void
-        {
-            history.update(k, t, values);
-        },
-        rk4);
+        rkf45);
+
+    uint k = 0;
+    double t;
+    while (arange(k, t, FRONT_WHEEL_ANGLE_RQ_X.front(), FRONT_WHEEL_ANGLE_RQ_X.back(), 0.1))
+    {
+        sim.run(t);
+        history.update(k, t, sim.values());
+        k++;
+    }
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

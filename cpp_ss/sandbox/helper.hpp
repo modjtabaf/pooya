@@ -11,10 +11,6 @@
 namespace blocks
 {
 
-using TimeCallback   = std::function<bool(uint k, double& t)>;
-using InputCallback  = std::function<void(double, Values&)>;
-using OutputCallback = std::function<void(uint k, double, Values&)>;
-
 class History : public std::unordered_map<Signal::Id, MatrixXd>
 {
 public:
@@ -30,7 +26,30 @@ public:
     void export_csv(std::string filename);
 };
 
-void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb=nullptr, OutputCallback outputs_cb=nullptr, Solver stepper=nullptr);
+using InputCallback  = std::function<void(double, Values&)>;
+
+class Simulator
+{
+protected:
+    Model& _model;
+    double _t_prev{0};
+    InputCallback _inputs_cb;
+    Values _values;
+    StatesInfo _states;
+    Solver _stepper;
+    bool _first_iter{true};
+
+    uint _process(double t, Values& values);
+    void _update_values(double t);
+
+public:
+    Simulator(Model& model, InputCallback inputs_cb = nullptr, Solver stepper = nullptr);
+
+    void run(double t);
+
+    const Values& values() const {return _values;}
+};
+
 bool arange(uint k, double& t, double t_init, double t_end, double dt);
 
 }

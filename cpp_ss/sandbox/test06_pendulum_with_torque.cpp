@@ -54,11 +54,7 @@ int main()
 
     History history(model);
 
-    run(model,
-        [](uint k, double& t) -> bool
-        {
-            return arange(k, t, 0, 5, 0.01);
-        },
+    Simulator sim(model,
         [&](double /*t*/, Values& values) -> void
         {
             values.set(m, 0.2);
@@ -66,11 +62,16 @@ int main()
             values.set(g, 9.81);
             values.set(tau, 0.13);
         },
-        [&](uint k, double t, Values& values) -> void
-        {
-            history.update(k, t, values);
-        },
         rk4);
+
+    uint k = 0;
+    double t;
+    while (arange(k, t, 0, 5, 0.01))
+    {
+        sim.run(t);
+        history.update(k, t, sim.values());
+        k++;
+    }
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

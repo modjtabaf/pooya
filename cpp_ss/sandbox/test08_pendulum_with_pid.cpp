@@ -104,7 +104,7 @@ int main()
         {
             history.update(k, t, values);
         },
-        rk4);
+        rkf45);
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

@@ -122,7 +122,9 @@ void run(Model& model, TimeCallback time_cb, InputCallback inputs_cb, OutputCall
 
             if (k > 0)
             {
-                stepper(stepper_callback, t, t1, states, model.num_signals());
+                // todo: activate the adaptive solver
+                double new_h;
+                stepper(stepper_callback, t, t1, states, model.num_signals(), new_h);
                 model.step(t, values);
             }
 

@@ -45,7 +45,7 @@ protected:
 public:
     Simulator(Model& model, InputCallback inputs_cb = nullptr, Solver stepper = nullptr);
 
-    void run(double t);
+    void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
 
     const Values& values() const {return _values;}
 };

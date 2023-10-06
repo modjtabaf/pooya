@@ -106,7 +106,7 @@ uint Simulator::_process(double t, Values& values)
     return n_processed;
 }
 
-void Simulator::run(double t)
+void Simulator::run(double t, double min_time_step, double max_time_step)
 {
     auto stepper_callback = [&](double t, Values& values) -> void
     {
@@ -119,12 +119,55 @@ void Simulator::run(double t)
     {
         assert(_stepper);
         assert(t >= _t_prev);
+        assert(min_time_step > 0);
+        assert(max_time_step > min_time_step);
+
+        StatesInfo states_orig(_states);
 
         if (!_first_iter)
         {
-            // todo: activate the adaptive solver
             double new_h;
-            _stepper(stepper_callback, _t_prev, t, _states, _model.num_signals(), new_h);
+            double t1 = _t_prev;
+            double t2 = t;
+
+            StatesInfo states_orig(_states);
+            bool force_accept = false;
+            while (t1 < t)
+            {
+                _stepper(stepper_callback, t1, t2, _states, _model.num_signals(), new_h);
+
+                double h = t2 - t1;
+                if (force_accept || (new_h >= h) || (h <= min_time_step))
+                {
+                    // accept this step
+                    force_accept = false;
+                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                    t1 = t2;
+                    t2 = std::min(t1 + new_h, t);
+
+                    if (t1 < t)
+                    {
+                        _values.invalidate();
+                        for (auto& state: _states)
+                            _values.set(state.first, state.second.first);
+                        if (_inputs_cb)
+                            _inputs_cb(t2, _values);
+                        _process(t2, _values);
+                        _model.step(t2, _values);
+                    }
+                }
+                else
+                {
+                    // redo this step
+                    force_accept = new_h <= min_time_step;
+                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                    auto it = states_orig.begin();
+                    for (auto& state: _states)
+                        state.second.first = (it++)->second.first;
+                    t2 = t1 + new_h;
+                }
+            }
+            
         }
     }
 

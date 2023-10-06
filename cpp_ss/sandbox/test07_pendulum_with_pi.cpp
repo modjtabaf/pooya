@@ -93,11 +93,11 @@ int main()
             values.set(g, 9.81);
             values.set(des_phi, M_PI_4);
         },
-        rk4);
+        rkf45);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 2, 0.01))
+    while (arange(k, t, 0, 5, 0.001))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -110,15 +110,15 @@ int main()
               << " milliseconds\n";
 
     auto  phi = model.find_signal(".phi");
-    auto dphi = model.find_signal(".dphi");
-    auto  tau = model.find_signal(".tau");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history[phi].size() << "]\n";
-    gp << "set yrange [-80:80]\n";
-	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
-	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"
-	    << gp.file1d(history[tau]) << "with lines title 'tau'\n";
+    gp << "set yrange [-2:4]\n";
+	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi'"
+        ","
+	    // << gp.file1d(history[model.find_signal(".dphi")]) << "with lines title 'dphi',"
+	    // << gp.file1d(history[model.find_signal(".tau")]) << "with lines title 'tau'"
+        "\n";
 
     return 0;
 }

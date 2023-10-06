@@ -99,7 +99,7 @@ int main()
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 2, 0.01))
+    while (arange(k, t, 0, 5, 0.001))
     {
         sim.run(t);
         history.update(k, t, sim.values());

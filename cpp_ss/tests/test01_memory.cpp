@@ -29,10 +29,10 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test00");
+    auto model = Model("test01");
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new Gain(&model, "gain", 2.0, x, y);
+    new Memory(model, "memory", x, y);
 
     History history(model);
 
@@ -58,7 +58,7 @@ int main()
 
     Gnuplot gp;
 	gp << "set xrange [0:100]\n";
-    gp << "set yrange [-2:2]\n";
+    gp << "set yrange [-1:1]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
 		<< gp.file1d(history[y]) << "with lines title 'y'\n";
 

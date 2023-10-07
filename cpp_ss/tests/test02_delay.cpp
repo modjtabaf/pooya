@@ -24,18 +24,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Model
+class MyModel : public Submodel
 {
 public:
-    MyModel() : Model("MyModel")
+    MyModel(Parent& parent, const Signal& x, const Signal& y) : Submodel(parent, "MyModel", x, y)
     {
-        auto   x = signal(  "x");
-        auto  xd = signal( "xd");
-        auto xdd = signal("xdd");
+        auto time_delay = signal("time_delay");
+        auto initial = signal("initial");
 
-        new Integrator(this, "xd", xdd, xd, 0.1);
-        new Integrator(this, "x", xd, x);
-        new Gain(this, "-k\\m", -1.0/1.0, x, xdd);
+        new Const(*this, "TimeDelay", 2.7435, time_delay);
+        new Const(*this, "Initial", 0.0, initial);
+        new Delay(*this, "Delay", {x, time_delay, initial}, y);
     }
 };
 
@@ -44,15 +43,22 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    auto model = Model("test02");
+    auto x = model.signal("x");
+    auto y = model.signal("y");
+    new MyModel(model, x, y);
 
     History history(model);
 
-    Simulator sim(model, nullptr, rk4);
+    Simulator sim(model,
+        [&](double t, Values& values) -> void
+        {
+            values.set(x, std::sin(M_PI * t / 5));
+        });
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.01))
+    while (arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -64,16 +70,11 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    history.export_csv("mass_spring.csv");
-
-    auto x  = model.find_signal("x");
-    auto xd = model.find_signal("xd");
-
     Gnuplot gp;
-	gp << "set xrange [0:500]\n";
-    gp << "set yrange [-0.15:0.15]\n";
+	gp << "set xrange [0:100]\n";
+    gp << "set yrange [-1:1]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
+		<< gp.file1d(history[y]) << "with lines title 'xd'\n";
 
     return 0;
 }

@@ -1,16 +1,16 @@
-CXX      := -c++
+CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
 LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
-BUILD    := ./build
+BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := test06_pendulum_with_torque
-INCLUDE  := # -Iinclude/
+TARGET   := test05_pendulum
+INCLUDE  := -I../src -I../3rdparty
 SRC      :=        \
-	test06_pendulum_with_torque.cpp \
-	pooya.cpp     \
-	helper.cpp     \
-	solver.cpp
+	test05_pendulum.cpp \
+	../src/pooya.cpp     \
+	../src/helper.cpp     \
+	../src/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info test06_pendulum_with_torque
+.PHONY: all build clean debug release run info test05_pendulum
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# test06_pendulum_with_torque: SRC += test06_pendulum_with_torque.cpp
-# test06_pendulum_with_torque: TARGET += test06_pendulum_with_torque
-# test06_pendulum_with_torque: release
+# test05_pendulum: SRC += test05_pendulum.cpp
+# test05_pendulum: TARGET += test05_pendulum
+# test05_pendulum: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

@@ -1,33 +1,23 @@
-CXX      := -c++
+CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
 LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
-BUILD    := ./build
+BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-# TARGET   := pendulum
-INCLUDE  := # -Iinclude/
+TARGET   := test02_delay
+INCLUDE  := -I../src -I../3rdparty
 SRC      :=        \
-	pooya.cpp     \
-	helper.cpp     \
-	solver.cpp
+	test02_delay.cpp \
+	../src/pooya.cpp     \
+	../src/helper.cpp     \
+	../src/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \
 
-.PHONY: all objects_list build clean debug release run info pendulum
-
-objects_list: OBJECTS := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
-
-pendulum: SRC += pendulum.cpp
-	echo "$(SRC)"
-
-pendulum: TARGET := pendulum
-	echo "$(TARGET)"
-
-pendulum: objects_list
-	echo "$(OBJECTS)"
-
-DEPENDENCIES := $(OBJECTS:.o=.d)
+OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
+DEPENDENCIES \
+         := $(OBJECTS:.o=.d)
 
 all: build $(APP_DIR)/$(TARGET)
 
@@ -41,6 +31,8 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
+.PHONY: all build clean debug release run info test02_delay
+
 build:
 	@mkdir -p $(APP_DIR)
 	@mkdir -p $(OBJ_DIR)
@@ -51,7 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-pendulum: release
+# test02_delay: SRC += test02_delay.cpp
+# test02_delay: TARGET += test02_delay
+# test02_delay: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

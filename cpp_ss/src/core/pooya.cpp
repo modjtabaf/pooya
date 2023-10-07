@@ -39,16 +39,15 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
     return ret;
 }
 
-bool Signal::set_owner(Submodel& owner)
+bool Signal::set_owner(Parent& owner)
 {
     assert(_full_name.empty() && (_id == NoId));
     if (!_full_name.empty() || (_id != NoId)) return false;
 
-    auto* model = owner.get_model();
-    if (!model) return false;
+    auto& model = owner.model();
 
     std::string reg_name = owner.make_signal_name(_given_name);
-    _id = model->find_or_register_signal(reg_name);
+    _id = model.find_or_register_signal(reg_name);
     if (_id == NoId)
         return false;
 
@@ -56,7 +55,7 @@ bool Signal::set_owner(Submodel& owner)
     return true;
 }
 
-Base::Base(Submodel* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
+Base::Base(Parent* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
     _parent(parent)
 {
     _assign_valid_given_name(given_name);
@@ -150,9 +149,10 @@ uint Base::_process(double t, Values& values, bool reset)
     return 1;
 }
 
-Model* Base::get_model()
+Model& Base::model()
 {
-    return _parent ? _parent->get_model() : nullptr;
+    assert(_parent);
+    return _parent->model();
 }
 
 std::string Base::generate_random_name(int len)
@@ -211,28 +211,26 @@ uint Memory::_process(double /*t*/, Values& values, bool reset)
     return 1;
 }
 
-std::string Submodel::make_signal_name(const std::string& given_name)
+std::string Parent::make_signal_name(const std::string& given_name)
 {
     return _full_name + "." + given_name;
 }
 
-Signal Submodel::signal(const std::string& given_name)
+Signal Parent::signal(const std::string& given_name)
 {
     Signal signal(given_name);
     signal.set_owner(*this);
     return signal;
 }
 
-Signal Submodel::parameter(const std::string& given_name)
+Signal Parent::parameter(const std::string& given_name)
 {
-    auto* model = get_model();
-    assert(model);
     Signal signal(given_name);
-    signal.set_owner(*model);
+    signal.set_owner(model());
     return signal;
 }
 
-uint Submodel::_process(double t, Values& values, bool reset)
+uint Parent::_process(double t, Values& values, bool reset)
 {
     if (reset)
         _processed = false;
@@ -252,7 +250,7 @@ uint Submodel::_process(double t, Values& values, bool reset)
     return n_processed;
 }
 
-bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
+bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
     if (level > max_level)
         return true;
@@ -268,7 +266,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
     return true;
 }
 
-Model::Model(std::string name) : Submodel(nullptr, name)
+Model::Model(std::string name) : Parent(nullptr, name)
 {
 }
 

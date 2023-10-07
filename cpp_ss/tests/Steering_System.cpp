@@ -31,40 +31,40 @@ using namespace pooya;
 class PT : public Submodel
 {
 public:
-    PT(Submodel* parent, const Signal& y_in, const Signal& tau, const Signal& y0, const Signal& y_out) : Submodel(parent, "PT", {y_in, tau, y0}, y_out)
+    PT(Parent& parent, const Signal& y_in, const Signal& tau, const Signal& y0, const Signal& y_out) : Submodel(parent, "PT", {y_in, tau, y0}, y_out)
     {
         // blocks
-        new AddSub(this, "+-1", "+-", {y_in, y_out}, signal(10));
-        new MulDiv(this, "*\\", "*/", {signal(10), tau}, signal(20));
-        new Integrator(this, "Int", signal(20), signal(30));
-        new InitialValue(this, "IV", y0, signal(40));
-        new AddSub(this, "+-2", "++", {signal(30), signal(40)}, y_out);
+        new AddSub(*this, "+-1", "+-", {y_in, y_out}, signal(10));
+        new MulDiv(*this, "*\\", "*/", {signal(10), tau}, signal(20));
+        new Integrator(*this, "Int", signal(20), signal(30));
+        new InitialValue(*this, "IV", y0, signal(40));
+        new AddSub(*this, "+-2", "++", {signal(30), signal(40)}, y_out);
     }
 };
 
 class ComputeFrontWheelAngleRightLeftPinpoint : public Submodel
 {
 public:
-    ComputeFrontWheelAngleRightLeftPinpoint(Submodel* parent, const Signal& front_wheel_angle, const Signal& front_wheel_angle_right, const Signal& front_wheel_angle_left) :
+    ComputeFrontWheelAngleRightLeftPinpoint(Parent& parent, const Signal& front_wheel_angle, const Signal& front_wheel_angle_right, const Signal& front_wheel_angle_left) :
         Submodel(parent, "ComputeFrontWheelAngleRightLeftPinpoint", front_wheel_angle, {front_wheel_angle_right, front_wheel_angle_left})
     {
         auto tractor_wheelbase = parameter("tractor_wheelbase");
         auto tractor_Width = parameter("tractor_Width");
 
         // blocks
-        new MulDiv(this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, signal(10));
-        new AddSub(this, "+-1", "++", {signal(10), tractor_Width}, signal(20));
-        new MulDiv(this, "*\\2", "*/", {tractor_wheelbase, signal(20)}, front_wheel_angle_right);
-        new Gain(this, "K", 0.5, tractor_Width, signal(30));
-        new AddSub(this, "+-2", "+-", {signal(10), signal(30)}, signal(40));
-        new MulDiv(this, "*\\3", "*/", {tractor_wheelbase, signal(40)}, front_wheel_angle_left);
+        new MulDiv(*this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, signal(10));
+        new AddSub(*this, "+-1", "++", {signal(10), tractor_Width}, signal(20));
+        new MulDiv(*this, "*\\2", "*/", {tractor_wheelbase, signal(20)}, front_wheel_angle_right);
+        new Gain(*this, "K", 0.5, tractor_Width, signal(30));
+        new AddSub(*this, "+-2", "+-", {signal(10), signal(30)}, signal(40));
+        new MulDiv(*this, "*\\3", "*/", {tractor_wheelbase, signal(40)}, front_wheel_angle_left);
     }
 };
 
 class SteeringSystem : public Submodel
 {
 public:
-    SteeringSystem(Submodel* parent, const Signal& ad_DsrdFtWhlAngl_Rq_VD, const Signals& steering_info) :
+    SteeringSystem(Parent& parent, const Signal& ad_DsrdFtWhlAngl_Rq_VD, const Signals& steering_info) :
         Submodel(parent, "Steering_System", ad_DsrdFtWhlAngl_Rq_VD, steering_info)
     {
         // signals
@@ -81,19 +81,19 @@ public:
         auto front_wheel_ang_t_const = parameter("front_wheel_ang_t_const");
 
         // blocks
-        new MulDiv(this, "*\\", "**", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, signal(10));
-        new Delay(this, "Delay", {signal(10), front_wheel_ang_delay, front_wheel_ang_init_value}, signal(20));
-        new Function(this, "Clamp",
+        new MulDiv(*this, "*\\", "**", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, signal(10));
+        new Delay(*this, "Delay", {signal(10), front_wheel_ang_delay, front_wheel_ang_init_value}, signal(20));
+        new Function(*this, "Clamp",
             [](double /*t*/, const Value& x) -> Value
             {
                 return x.max(0.001).min(10);
             }, front_wheel_ang_t_const, signal(30));
-        new PT(this, signal(20), signal(30), signal(20), front_wheel_angle);
-        new Derivative(this, "Derivative", front_wheel_angle, front_wheel_angle_rate);
-        new Gain(this, "K1", -1, front_wheel_angle, front_wheel_angle_neg);
-        new Gain(this, "K2", -1, front_wheel_angle_rate, front_wheel_angle_rate_neg);
-        new ComputeFrontWheelAngleRightLeftPinpoint(this, front_wheel_angle, AxFr_front_right, AxFr_front_left);
-        // new Bus(this, "Bus", {
+        new PT(*this, signal(20), signal(30), signal(20), front_wheel_angle);
+        new Derivative(*this, "Derivative", front_wheel_angle, front_wheel_angle_rate);
+        new Gain(*this, "K1", -1, front_wheel_angle, front_wheel_angle_neg);
+        new Gain(*this, "K2", -1, front_wheel_angle_rate, front_wheel_angle_rate_neg);
+        new ComputeFrontWheelAngleRightLeftPinpoint(*this, front_wheel_angle, AxFr_front_right, AxFr_front_left);
+        // new Bus(*this, "Bus", {
         //     front_wheel_angle,
         //     front_wheel_angle_rate,
         //     front_wheel_angle_neg,
@@ -137,7 +137,7 @@ int main()
     auto AxFr_front_right = model.signal("AxFr_front_right");
     auto AxFr_front_left = model.signal("AxFr_front_left");
 
-    new SteeringSystem(&model,
+    new SteeringSystem(model,
         front_wheel_angle_Rq,
         {
             front_wheel_angle,

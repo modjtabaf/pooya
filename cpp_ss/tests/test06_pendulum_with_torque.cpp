@@ -38,17 +38,17 @@ public:
         auto g = parameter("g");
         auto l = parameter("l");
 
-        new Integrator(this, "dphi", d2phi, dphi, M_PI_4);
-        new Integrator(this, "phi", dphi, phi);
-        new Function(this, "sin(phi)",
+        new Integrator(*this, "dphi", d2phi, dphi, M_PI_4);
+        new Integrator(*this, "phi", dphi, phi);
+        new Function(*this, "sin(phi)",
             [](double /*t*/, const Value& x) -> Value
             {
                 return x.sin();
             }, phi, signal(10));
-        // new Sin(this, "sin(phi)", phi, signal(10));
-        new MulDiv(this, "g\\l", "**/", {signal(10), g, l}, signal(20));
-        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, signal(30));
-        new AddSub(this, "d2phi", "+-", {signal(30), signal(20)}, d2phi);
+        // new Sin(*this, "sin(phi)", phi, signal(10));
+        new MulDiv(*this, "g\\l", "**/", {signal(10), g, l}, signal(20));
+        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, signal(30));
+        new AddSub(*this, "d2phi", "+-", {signal(30), signal(20)}, d2phi);
     }
 };
 

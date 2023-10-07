@@ -1,17 +1,16 @@
-CXX      := -c++
+CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
 LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
-BUILD    := ./build
+BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := Steering_System
-INCLUDE  := # -Iinclude/
+TARGET   := test07_pendulum_with_pi
+INCLUDE  := -I../src -I../3rdparty
 SRC      :=        \
-	Steering_System.cpp \
-	pooya.cpp     \
-	helper.cpp     \
-	solver.cpp     \
-	front_wheel_angle_Rq.cpp
+	test07_pendulum_with_pi.cpp \
+	../src/pooya.cpp     \
+	../src/helper.cpp     \
+	../src/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \
@@ -32,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info Steering_System
+.PHONY: all build clean debug release run info test07_pendulum_with_pi
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -44,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# Steering_System: SRC += Steering_System.cpp
-# Steering_System: TARGET += Steering_System
-# Steering_System: release
+# test07_pendulum_with_pi: SRC += test07_pendulum_with_pi.cpp
+# test07_pendulum_with_pi: TARGET += test07_pendulum_with_pi
+# test07_pendulum_with_pi: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

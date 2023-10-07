@@ -1,16 +1,16 @@
-CXX      := -c++
+CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
 LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
-BUILD    := ./build
+BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test01_memory
-INCLUDE  := # -Iinclude/
+INCLUDE  := -I../src -I../3rdparty
 SRC      :=        \
 	test01_memory.cpp \
-	pooya.cpp     \
-	helper.cpp     \
-	solver.cpp
+	../src/pooya.cpp     \
+	../src/helper.cpp     \
+	../src/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \

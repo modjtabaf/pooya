@@ -27,7 +27,7 @@ using namespace pooya;
 class Pendulum : public Submodel
 {
 public:
-    Pendulum(Submodel* parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
+    Pendulum(Parent& parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
     {
         // signals
         auto dphi = signal( "dphi");
@@ -37,40 +37,38 @@ public:
         auto l = parameter("l");
 
         // blocks
-        new MulDiv(this, "tau\\ml2", "*///", {tau, m, l, l}, signal(10));
-        new AddSub(this, "err", "+-", {signal(10), signal(20)}, signal(30));
-        new Integrator(this, "dphi", signal(30), dphi);
-        new Integrator(this, "phi", dphi, phi);
+        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, signal(10));
+        new AddSub(*this, "err", "+-", {signal(10), signal(20)}, signal(30));
+        new Integrator(*this, "dphi", signal(30), dphi);
+        new Integrator(*this, "phi", dphi, phi);
         // new Function(this, "sin(phi)",
         //     [](double t, const Value& x) -> Value
         //     {
         //         return x.sin();
-        //     }, phi, signal(40));
-        new Sin(this, "sin(phi)", phi, signal(40));
-        new MulDiv(this, "g\\l", "**/", {signal(40), g, l}, signal(20));
+        //     }, phi, 40);
+        new Sin(*this, "sin(phi)", phi, signal(40));
+        new MulDiv(*this, "g\\l", "**/", {signal(40), g, l}, signal(20));
     }
 };
 
-class PID : public Submodel
+class PI : public Submodel
 {
 public:
-    PID(Submodel* parent, double Kp, double Ki, double Kd, Signal& x, Signal& y, double x0=0.0) :
-        Submodel(parent, "PID", x, y)
+    PI(Parent& parent, double Kp, double Ki, const Signal& x, const Signal& y, double x0=0.0) :
+        Submodel(parent, "PI", x, y)
     {
         // blocks
-        new Gain(this, "Kp", Kp, x, signal(10));
-        new Integrator(this, "ix", x, signal(20), x0);
-        new Gain(this, "Ki", Ki, signal(20), signal(30));
-        new Derivative(this, "dx", x, signal(40));
-        new Gain(this, "Kd", Kd, signal(40), signal(50));
-        new AddSub(this, "AddSub", "+++", {signal(10), signal(30), signal(50)}, y);
+        new Gain(*this, "Kp", Kp, x, signal(10));
+        new Integrator(*this, "ix", x, signal(20), x0);
+        new Gain(*this, "Ki", Ki, signal(20), signal(30));
+        new AddSub(*this, "AddSub", "++", {signal(10), signal(30)}, y);
     }
 };
 
 class MyModel : public Model
 {
 public:
-    MyModel() : Model("pendulum_with_PID")
+    MyModel() : Model("pendulum_with_PI")
     {
         // signals
         auto phi = signal("phi");
@@ -80,9 +78,9 @@ public:
         auto des_phi = parameter("des_phi");
 
         // blocks
-        new AddSub(this, "AddSub", "+-", {des_phi, phi}, err);
-        new PID(this, 40.0, 20.0, 0.05, err, tau);
-        new Pendulum(this, tau, phi);
+        new AddSub(*this, "AddSub", "+-", {des_phi, phi}, err);
+        new PI(*this, 40.0, 20.0, err, tau);
+        new Pendulum(*this, tau, phi);
     }
 };
 
@@ -124,16 +122,16 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/pendulum_with_PID.phi", true); // find using the exact name
-    auto dphi = model.find_signal(".dphi"); // find using the partial name
-    auto  tau = model.find_signal("tau"); // find using the partial name
+    auto  phi = model.find_signal(".phi");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history[phi].size() << "]\n";
-    gp << "set yrange [-80:80]\n";
-	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
-	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"
-	    << gp.file1d(history[tau]) << "with lines title 'tau'\n";
+    gp << "set yrange [-2:4]\n";
+	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi'"
+        ","
+	    // << gp.file1d(history[model.find_signal(".dphi")]) << "with lines title 'dphi',"
+	    // << gp.file1d(history[model.find_signal(".tau")]) << "with lines title 'tau'"
+        "\n";
 
     return 0;
 }

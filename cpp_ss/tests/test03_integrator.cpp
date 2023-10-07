@@ -13,7 +13,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <chrono>
 
@@ -29,18 +29,19 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test01");
-    auto x = model.signal("x");
-    auto y = model.signal("y");
-    new Memory(&model, "memory", x, y);
+    auto model = Model("test03");
+    auto x  = model.signal("x");
+    auto xd = model.signal("xd");
+    new Integrator(model, "integ", xd, x, 1.0);
 
     History history(model);
 
     Simulator sim(model,
         [&](double t, Values& values) -> void
         {
-            values.set(x, std::sin(M_PI * t / 5));
-        });
+            values.set(xd, t < 3 or t > 7 ? 1 : 0);
+        },
+        rk4);
 
     uint k = 0;
     double t;
@@ -58,9 +59,9 @@ int main()
 
     Gnuplot gp;
 	gp << "set xrange [0:100]\n";
-    gp << "set yrange [-1:1]\n";
+	gp << "set yrange [-1:7]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[y]) << "with lines title 'y'\n";
+		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
 
     return 0;
 }

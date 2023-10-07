@@ -6,3 +6,4 @@
 * use clang instead of gcc
 - logging
 - use gtest
+* make parents mandatory

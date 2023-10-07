@@ -27,24 +27,15 @@ using namespace pooya;
 class MyModel : public Model
 {
 public:
-    MyModel() : Model("pendulum")
+    MyModel() : Model("MyModel")
     {
-        auto   phi = signal(  "phi");
-        auto  dphi = signal( "dphi");
-        auto d2phi = signal("d2phi");
+        auto   x = signal(  "x");
+        auto  xd = signal( "xd");
+        auto xdd = signal("xdd");
 
-        auto g = parameter("g");
-        auto l = parameter("l");
-
-        new Integrator(this, "dphi", d2phi, dphi);
-        new Integrator(this, "phi", dphi, phi, M_PI_4);
-        // new Function(this, "sin(phi)",
-        //     [](double /*t*/, const Value& x) -> Value
-        //     {
-        //         return x.sin();
-        //     }, phi, 1);
-        new Sin(this, "sin(phi)", phi, signal(10));
-        new MulDiv(this, "-g\\l", "**/", {signal(10), g, l}, d2phi, -1);
+        new Integrator(*this, "xd", xdd, xd, 0.1);
+        new Integrator(*this, "x", xd, x);
+        new Gain(*this, "-k\\m", -1.0/1.0, x, xdd);
     }
 };
 
@@ -57,16 +48,7 @@ int main()
 
     History history(model);
 
-    auto l = model.signal("l");
-    auto g = model.signal("g");
-
-    Simulator sim(model,
-        [&](double /*t*/, Values& values) -> void
-        {
-            values.set(l, 0.1);
-            values.set(g, 9.81);
-        },
-        rk4);
+    Simulator sim(model, nullptr, rk4);
 
     uint k = 0;
     double t;
@@ -82,12 +64,16 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.find_signal("/pendulum.phi", true);
+    history.export_csv("mass_spring.csv");
+
+    auto x  = model.find_signal("x");
+    auto xd = model.find_signal("xd");
 
     Gnuplot gp;
 	gp << "set xrange [0:500]\n";
-    gp << "set yrange [-0.8:0.8]\n";
-	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'x'\n";
+    gp << "set yrange [-0.15:0.15]\n";
+	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
+		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
 
     return 0;
 }

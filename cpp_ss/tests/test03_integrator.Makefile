@@ -1,16 +1,16 @@
-CXX      := -c++
+CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
 LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
-BUILD    := ./build
+BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
-TARGET   := test04_mass_spring
-INCLUDE  := # -Iinclude/
+TARGET   := test03_integrator
+INCLUDE  := -I../src -I../3rdparty
 SRC      :=        \
-	test04_mass_spring.cpp \
-	pooya.cpp     \
-	helper.cpp     \
-	solver.cpp
+	test03_integrator.cpp \
+	../src/pooya.cpp     \
+	../src/helper.cpp     \
+	../src/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \
@@ -31,7 +31,7 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 
 -include $(DEPENDENCIES)
 
-.PHONY: all build clean debug release run info test04_mass_spring
+.PHONY: all build clean debug release run info test03_integrator
 
 build:
 	@mkdir -p $(APP_DIR)
@@ -43,9 +43,9 @@ debug: all
 release: CXXFLAGS += -O2
 release: all
 
-# test04_mass_spring: SRC += test04_mass_spring.cpp
-# test04_mass_spring: TARGET += test04_mass_spring
-# test04_mass_spring: release
+# test03_integrator: SRC += test03_integrator.cpp
+# test03_integrator: TARGET += test03_integrator
+# test03_integrator: release
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

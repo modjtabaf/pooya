@@ -24,17 +24,27 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Submodel
+class MyModel : public Model
 {
 public:
-    MyModel(Submodel* parent, const Signal& x, const Signal& y) : Submodel(parent, "MyModel", x, y)
+    MyModel() : Model("pendulum")
     {
-        auto time_delay = signal("time_delay");
-        auto initial = signal("initial");
+        auto   phi = signal(  "phi");
+        auto  dphi = signal( "dphi");
+        auto d2phi = signal("d2phi");
 
-        new Const(this, "TimeDelay", 2.7435, time_delay);
-        new Const(this, "Initial", 0.0, initial);
-        new Delay(this, "Delay", {x, time_delay, initial}, y);
+        auto g = parameter("g");
+        auto l = parameter("l");
+
+        new Integrator(*this, "dphi", d2phi, dphi);
+        new Integrator(*this, "phi", dphi, phi, M_PI_4);
+        // new Function(this, "sin(phi)",
+        //     [](double /*t*/, const Value& x) -> Value
+        //     {
+        //         return x.sin();
+        //     }, phi, 1);
+        new Sin(*this, "sin(phi)", phi, signal(10));
+        new MulDiv(*this, "-g\\l", "**/", {signal(10), g, l}, d2phi, -1);
     }
 };
 
@@ -43,22 +53,24 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test02");
-    auto x = model.signal("x");
-    auto y = model.signal("y");
-    new MyModel(&model, x, y);
+    auto model = MyModel();
 
     History history(model);
 
+    auto l = model.signal("l");
+    auto g = model.signal("g");
+
     Simulator sim(model,
-        [&](double t, Values& values) -> void
+        [&](double /*t*/, Values& values) -> void
         {
-            values.set(x, std::sin(M_PI * t / 5));
-        });
+            values.set(l, 0.1);
+            values.set(g, 9.81);
+        },
+        rk4);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 10, 0.1))
+    while (arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -70,11 +82,12 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
+    auto phi = model.find_signal("/pendulum.phi", true);
+
     Gnuplot gp;
-	gp << "set xrange [0:100]\n";
-    gp << "set yrange [-1:1]\n";
-	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[y]) << "with lines title 'xd'\n";
+	gp << "set xrange [0:500]\n";
+    gp << "set yrange [-0.8:0.8]\n";
+	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'x'\n";
 
     return 0;
 }

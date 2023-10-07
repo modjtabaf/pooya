@@ -146,8 +146,12 @@ public:
     {
         assert(id != Signal::NoId);
         auto& bv = _values[id];
-        bv._value = value;
-        bv._valid = true;
+        assert(!bv._valid); // rewriting a valid value is not allowed
+        if (!bv._valid)
+        {
+            bv._value = value;
+            bv._valid = true;
+        }
     }
 
     void set(const Signal& signal, const Value& value) {set(signal.id(), value);}

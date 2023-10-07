@@ -209,6 +209,7 @@ protected:
 
 public:
     Base(Submodel* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()/*, bool register_oports=true*/);
+    virtual ~Base() = default;
 
     virtual void get_states(StatesInfo& /*states*/) {}
     virtual void step(double /*t*/, const Values& /*states*/) {}

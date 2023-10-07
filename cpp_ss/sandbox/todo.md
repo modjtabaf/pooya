@@ -3,4 +3,6 @@
 - parallel processing
 - record processing order and reuse it
 - folder structure
-- use clang instead of gcc
+* use clang instead of gcc
+- logging
+- use gtest

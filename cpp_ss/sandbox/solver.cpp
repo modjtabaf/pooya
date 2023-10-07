@@ -3,10 +3,10 @@
 #include <ostream>
 #include <type_traits>
 
-#include "blocks.hpp"
+#include "pooya.hpp"
 #include "solver.hpp"
 
-namespace blocks
+namespace pooya
 {
 
 #define STEP(K, t, X) \

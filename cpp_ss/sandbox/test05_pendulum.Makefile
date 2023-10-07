@@ -8,7 +8,7 @@ TARGET   := test05_pendulum
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test05_pendulum.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

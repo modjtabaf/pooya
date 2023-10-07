@@ -2,12 +2,12 @@
 #ifndef __GP_IOS_HPP__
 #define __GP_IOS_HPP__
 
-#include "blocks.hpp"
+#include "pooya.hpp"
 
 #include "../3rdparty/eigen/Eigen/Core"
 #include "gnuplot-iostream.h"
 
-using namespace blocks;
+using namespace pooya;
 using namespace Eigen;
 
 namespace gnuplotio

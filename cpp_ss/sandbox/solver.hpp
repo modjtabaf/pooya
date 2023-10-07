@@ -2,11 +2,11 @@
 #ifndef __SOLVER_HPP__
 #define __SOLVER_HPP__
 
-#include "blocks.hpp"
+#include "pooya.hpp"
 
 using namespace Eigen;
 
-namespace blocks
+namespace pooya
 {
 
 using SolverCallback = std::function<void(double, Values&)>;

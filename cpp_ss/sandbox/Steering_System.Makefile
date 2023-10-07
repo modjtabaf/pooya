@@ -8,7 +8,7 @@ TARGET   := Steering_System
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	Steering_System.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp     \
 	front_wheel_angle_Rq.cpp

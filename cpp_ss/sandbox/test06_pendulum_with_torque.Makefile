@@ -8,7 +8,7 @@ TARGET   := test06_pendulum_with_torque
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test06_pendulum_with_torque.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

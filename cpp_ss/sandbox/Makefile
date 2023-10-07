@@ -7,7 +7,7 @@ APP_DIR  := $(BUILD)/apps
 # TARGET   := pendulum
 INCLUDE  := # -Iinclude/
 SRC      :=        \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

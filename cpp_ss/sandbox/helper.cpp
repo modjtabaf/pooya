@@ -15,10 +15,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <iostream>
 #include <fstream>
 
-#include "blocks.hpp"
+#include "pooya.hpp"
 #include "helper.hpp"
 
-namespace blocks
+namespace pooya
 {
 
 void History::update(uint k, double t, const Values& values)

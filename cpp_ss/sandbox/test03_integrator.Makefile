@@ -8,7 +8,7 @@ TARGET   := test03_integrator
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test03_integrator.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

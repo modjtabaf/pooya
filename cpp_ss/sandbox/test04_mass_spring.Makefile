@@ -8,7 +8,7 @@ TARGET   := test04_mass_spring
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test04_mass_spring.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

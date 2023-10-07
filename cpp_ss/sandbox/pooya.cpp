@@ -16,9 +16,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <algorithm>
 #include <experimental/random>
 
-#include "blocks.hpp"
+#include "pooya.hpp"
 
-namespace blocks
+namespace pooya
 {
 
 std::string Signal::_make_valid_given_name(const std::string& given_name) const

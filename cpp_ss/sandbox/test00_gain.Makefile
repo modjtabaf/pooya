@@ -8,7 +8,7 @@ TARGET   := test00_gain
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test00_gain.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

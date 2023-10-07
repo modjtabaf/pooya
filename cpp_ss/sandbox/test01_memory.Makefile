@@ -8,7 +8,7 @@ TARGET   := test01_memory
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test01_memory.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

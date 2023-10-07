@@ -8,7 +8,7 @@ TARGET   := test02_delay
 INCLUDE  := # -Iinclude/
 SRC      :=        \
 	test02_delay.cpp \
-	blocks.cpp     \
+	pooya.cpp     \
 	helper.cpp     \
 	solver.cpp
 #    $(wildcard src/module1/*.cpp) \

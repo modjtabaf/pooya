@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <cassert>
 #include <memory>
 
-#include "../3rdparty/eigen/Eigen/Core"
+#include "3rdparty/eigen/Eigen/Core"
 
 using namespace Eigen;
 

@@ -5,7 +5,7 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test03_integrator
-INCLUDE  := -I../src -I../src/core -I../3rdparty
+INCLUDE  := -I.. -I../3rdparty
 SRC      :=        \
 	test03_integrator.cpp \
 	../src/core/pooya.cpp     \

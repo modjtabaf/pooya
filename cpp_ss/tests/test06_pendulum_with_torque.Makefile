@@ -5,7 +5,7 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test06_pendulum_with_torque
-INCLUDE  := -I../src -I../src/core -I../3rdparty
+INCLUDE  := -I.. -I../3rdparty
 SRC      :=        \
 	test06_pendulum_with_torque.cpp \
 	../src/core/pooya.cpp     \

@@ -19,12 +19,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <vector>
 #include <chrono>
 
-#include "pooya.hpp"
-#include "helper.hpp"
-#include "solver.hpp"
-#include "gp-ios.hpp"
+#include "src/core/pooya.hpp"
+#include "src/core/helper.hpp"
+#include "src/core/solver.hpp"
+#include "src/misc/gp-ios.hpp"
 
-#include "data/front_wheel_angle_Rq.hpp"
+#include "tests/data/front_wheel_angle_Rq.hpp"
 
 using namespace pooya;
 

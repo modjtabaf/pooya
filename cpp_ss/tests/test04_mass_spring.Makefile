@@ -5,7 +5,7 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test04_mass_spring
-INCLUDE  := -I../src -I../src/core -I../3rdparty
+INCLUDE  := -I.. -I../3rdparty
 SRC      :=        \
 	test04_mass_spring.cpp \
 	../src/core/pooya.cpp     \

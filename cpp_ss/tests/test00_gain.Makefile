@@ -5,7 +5,7 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test00_gain
-INCLUDE  := -I../src -I../src/core -I../3rdparty
+INCLUDE  := -I.. -I../3rdparty
 SRC      :=        \
 	test00_gain.cpp \
 	../src/core/pooya.cpp     \

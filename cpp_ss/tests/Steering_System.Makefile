@@ -5,16 +5,13 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := Steering_System
-INCLUDE  := -I../src -I../3rdparty
+INCLUDE  := -I../src -I../src/core -I../3rdparty
 SRC      :=        \
 	Steering_System.cpp \
-	../src/pooya.cpp     \
-	../src/helper.cpp     \
-	../src/solver.cpp     \
-	../src/front_wheel_angle_Rq.cpp
-#    $(wildcard src/module1/*.cpp) \
-#    $(wildcard src/module2/*.cpp) \
-#    $(wildcard src/*.cpp)         \
+	../src/core/pooya.cpp     \
+	../src/core/helper.cpp     \
+	../src/core/solver.cpp     \
+	data/front_wheel_angle_Rq.cpp
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES \

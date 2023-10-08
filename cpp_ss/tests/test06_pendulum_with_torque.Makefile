@@ -5,12 +5,12 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test06_pendulum_with_torque
-INCLUDE  := -I../src -I../3rdparty
+INCLUDE  := -I../src -I../src/core -I../3rdparty
 SRC      :=        \
 	test06_pendulum_with_torque.cpp \
-	../src/pooya.cpp     \
-	../src/helper.cpp     \
-	../src/solver.cpp
+	../src/core/pooya.cpp     \
+	../src/core/helper.cpp     \
+	../src/core/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \

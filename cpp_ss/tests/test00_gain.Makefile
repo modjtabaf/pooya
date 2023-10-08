@@ -1,19 +1,16 @@
 CXX      := -clang-15
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -std=c++17
-LDFLAGS  := -L/usr/lib -lstdc++ -lm  -lboost_iostreams -lboost_system -lboost_filesystem
+LDFLAGS  := -L/usr/lib -lstdc++ -lm -lboost_iostreams -lboost_system -lboost_filesystem
 BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := test00_gain
-INCLUDE  := -I../src -I../3rdparty
+INCLUDE  := -I../src -I../src/core -I../3rdparty
 SRC      :=        \
 	test00_gain.cpp \
-	../src/pooya.cpp     \
-	../src/helper.cpp     \
-	../src/solver.cpp
-#    $(wildcard src/module1/*.cpp) \
-#    $(wildcard src/module2/*.cpp) \
-#    $(wildcard src/*.cpp)         \
+	../src/core/pooya.cpp     \
+	../src/core/helper.cpp     \
+	../src/core/solver.cpp
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES \

@@ -5,11 +5,11 @@ BUILD    := ../build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 # TARGET   := pendulum
-INCLUDE  := -I../src -I../3rdparty
+INCLUDE  := -I../src -I../src/core -I../3rdparty
 SRC      :=        \
-	../src/pooya.cpp     \
-	../src/helper.cpp     \
-	../src/solver.cpp
+	../src/core/pooya.cpp     \
+	../src/core/helper.cpp     \
+	../src/core/solver.cpp
 #    $(wildcard src/module1/*.cpp) \
 #    $(wildcard src/module2/*.cpp) \
 #    $(wildcard src/*.cpp)         \

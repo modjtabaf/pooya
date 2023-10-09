@@ -39,7 +39,7 @@ public:
     void export_csv(std::string filename);
 };
 
-using InputCallback  = std::function<void(double, Values&)>;
+using InputCallback = std::function<void(double, Values&)>;
 
 class Simulator
 {
@@ -52,11 +52,17 @@ protected:
     Solver _stepper;
     bool _first_iter{true};
 
+    const bool _reuse_order;
+    using ProcessingOrder = std::vector<Base*>;
+    ProcessingOrder _processing_order1;
+    ProcessingOrder _processing_order2;
+    ProcessingOrder* _current_po{nullptr};
+    ProcessingOrder* _new_po{nullptr};
+
     uint _process(double t, Values& values);
-    void _update_values(double t);
 
 public:
-    Simulator(Model& model, InputCallback inputs_cb = nullptr, Solver stepper = nullptr);
+    Simulator(Model& model, InputCallback inputs_cb = nullptr, Solver stepper = nullptr, bool reuse_order = false);
 
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
 

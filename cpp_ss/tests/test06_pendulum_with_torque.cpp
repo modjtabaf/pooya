@@ -74,7 +74,7 @@ int main()
             values.set(g, 9.81);
             values.set(tau, 0.13);
         },
-        rk4);
+        rk4, true);
 
     uint k = 0;
     double t;

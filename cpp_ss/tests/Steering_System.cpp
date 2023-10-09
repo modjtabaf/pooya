@@ -169,7 +169,7 @@ int main()
             values.set(front_wheel_ang_gain, 1.0);
             values.set(front_wheel_ang_init_value, 0.0);
         },
-        rkf45);
+        rkf45, true);
 
     uint k = 0;
     double t;

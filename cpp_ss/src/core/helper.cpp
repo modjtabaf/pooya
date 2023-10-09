@@ -78,21 +78,60 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
     return t <= t_end;
 }
 
-Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper) :
-    _model(model), _inputs_cb(inputs_cb), _values(model.num_signals()), _stepper(stepper)
+Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
+    _model(model), _inputs_cb(inputs_cb), _values(model.num_signals()), _stepper(stepper), _reuse_order(reuse_order)
 {
     model.get_states(_states);
 }
 
 uint Simulator::_process(double t, Values& values)
 {
-    uint n_processed = _model._process(t, values, true);
-    uint n;
-    do
+    _model._mark_unprocessed();
+
+    uint n_processed = 0;
+
+    if (_reuse_order)
     {
-        n = _model._process(t, values, false);
-        n_processed += n;
-    } while(n);
+        _new_po->clear();
+
+        bool any_processed;
+        do
+        {
+            any_processed = false;
+            for (auto* base: *_current_po)
+            {
+                if (base->processed())
+                    continue;
+                n_processed += base->_process(t, values, false);
+                if (base->processed())
+                {
+                    _new_po->push_back(base);
+                    any_processed = true;
+                }
+            }
+        } while(any_processed);
+
+        for (auto* base: *_current_po)
+        {
+            if (!base->processed())
+                _new_po->push_back(base);
+        }
+
+        assert(_current_po->size() == _new_po->size());
+        assert(_current_po->size() == _current_po->capacity());
+        assert(_new_po->size() == _new_po->capacity());
+
+        std::swap(_current_po, _new_po);
+    }
+    else
+    {
+        uint n;
+        do
+        {
+            n = _model._process(t, values);
+            n_processed += n;
+        } while(n);
+    }
 
     std::vector<const Base*> unprocessed;
 
@@ -137,7 +176,36 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
         StatesInfo states_orig(_states);
 
-        if (!_first_iter)
+        if (_first_iter)
+        {
+            if (_reuse_order)
+            {
+                assert(_processing_order1.empty());
+                assert(_processing_order2.empty());
+
+                uint num_blocks = 0;
+                auto enum_blocks_cb = [&] (Base& c, uint32_t /*level*/) -> bool
+                {
+                    num_blocks++;
+                    return true;
+                };
+                _model.traverse(enum_blocks_cb, 0);
+
+                _processing_order1.reserve(num_blocks);
+                _processing_order2.reserve(num_blocks);
+
+                auto add_blocks_cb = [&] (Base& c, uint32_t /*level*/) -> bool
+                {
+                    _processing_order1.push_back(&c);
+                    return true;
+                };
+                _model.traverse(add_blocks_cb, 0);
+
+                _current_po = &_processing_order1;
+                _new_po = &_processing_order2;
+            }
+        }
+        else
         {
             double new_h;
             double t1 = _t_prev;

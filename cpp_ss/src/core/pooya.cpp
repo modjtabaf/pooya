@@ -129,11 +129,13 @@ void Base::_assign_valid_given_name(std::string given_name)
     _given_name = given_name;
 }
 
-uint Base::_process(double t, Values& values, bool reset)
+void Base::_mark_unprocessed()
 {
-    if (reset)
-        _processed = false;
+    _processed = false;
+}
 
+uint Base::_process(double t, Values& values, bool /*go_deep*/)
+{
     if (_processed)
         return 0;
 
@@ -186,11 +188,8 @@ std::string Base::generate_random_name(int len)
 //     return ret;
 // }
 
-uint Integrator::_process(double /*t*/, Values& values, bool reset)
+uint Integrator::_process(double /*t*/, Values& values, bool /*go_deep*/)
 {
-    if (reset)
-        _processed = false;
-
     if (_processed)
         return 0;
 
@@ -198,11 +197,8 @@ uint Integrator::_process(double /*t*/, Values& values, bool reset)
     return _processed ? 1 : 0; // is it safe to simply return _processed?
 }
 
-uint Memory::_process(double /*t*/, Values& values, bool reset)
+uint Memory::_process(double /*t*/, Values& values, bool /*go_deep*/)
 {
-    if (reset)
-        _processed = false;
-
     if (_processed)
         return 0;
 
@@ -230,21 +226,27 @@ Signal Parent::parameter(const std::string& given_name)
     return signal;
 }
 
-uint Parent::_process(double t, Values& values, bool reset)
+void Parent::_mark_unprocessed()
 {
-    if (reset)
-        _processed = false;
+    Base::_mark_unprocessed();
 
+    for (auto& component: _components)
+        component->_mark_unprocessed();
+}
+
+uint Parent::_process(double t, Values& values, bool go_deep)
+{
     uint n_processed = 0;
     if (!_processed)
     {
         _processed = true;
-        for (auto& component: _components)
-        {
-            n_processed += component->_process(t, values, reset);
-            if (not component->processed())
-                _processed = false;
-        }
+        if (go_deep)
+            for (auto& component: _components)
+            {
+                n_processed += component->_process(t, values);
+                if (not component->processed())
+                    _processed = false;
+            }
     }
 
     return n_processed;

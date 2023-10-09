@@ -111,7 +111,7 @@ inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
 }
 
 using Scalars          = std::vector<double>;
-using TraverseCallback = std::function<bool(const Base&, uint32_t level)>;
+using TraverseCallback = std::function<bool(Base&, uint32_t level)>;
 
 class Values
 {
@@ -224,7 +224,8 @@ public:
     const Signals& iports() const {return _iports;}
     const Signals& oports() const {return _oports;}
 
-    virtual uint _process(double t, Values& values, bool reset);
+    virtual void _mark_unprocessed();
+    virtual uint _process(double t, Values& values, bool go_deep = true);
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
     {
@@ -460,7 +461,7 @@ public:
         _value = (*values.get(_oports.front()))[0];
     }
 
-    uint _process(double t, Values& values, bool reset) override;
+    uint _process(double t, Values& values, bool go_deep = true) override;
 };
 
 // # it is still unclear how to deal with states when using this numerical integrator
@@ -576,7 +577,7 @@ public:
     // # def activation_function(self, t, x):
     // #     return [self._value]
 
-    uint _process(double t, Values& values, bool reset) override;
+    uint _process(double t, Values& values, bool go_deep = true) override;
 };
 
 class Derivative : public Base
@@ -647,7 +648,8 @@ public:
     std::string make_signal_name(const std::string& given_name);
     Signal signal(const std::string& given_name);
     Signal parameter(const std::string& given_name);
-    uint _process(double t, Values& values, bool reset) override;
+    void _mark_unprocessed() override;
+    uint _process(double t, Values& values, bool go_deep = true) override;
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
 
     Signal signal(int n) {return signal(std::to_string(n));}

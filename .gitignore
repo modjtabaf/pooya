@@ -131,3 +131,6 @@ dmypy.json
 
 # other stuff
 .vscode
+
+# bazel output folders
+bazel-*

@@ -85,7 +85,7 @@ int main()
     auto phi = model.find_signal("/pendulum.phi", true);
 
     Gnuplot gp;
-	gp << "set xrange [0:500]\n";
+	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
     gp << "set yrange [-0.8:0.8]\n";
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'x'\n";
 

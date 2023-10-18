@@ -229,12 +229,16 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     if (t1 < t)
                     {
                         _values.invalidate();
-                        for (auto& state: _states)
+                        auto it = states_orig.begin();
+                        for (const auto& state: _states)
+                        {
                             _values.set(state.first, state.second.first);
+                            (it++)->second.first = state.second.first;
+                        }
                         if (_inputs_cb)
-                            _inputs_cb(t2, _values);
-                        _process(t2, _values);
-                        _model.step(t2, _values);
+                            _inputs_cb(t1, _values);
+                        _process(t1, _values);
+                        _model.step(t1, _values);
                     }
                 }
                 else
@@ -256,7 +260,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _first_iter = false;
 
     _values.invalidate();
-    for (auto& state: _states)
+    for (const auto& state: _states)
         _values.set(state.first, state.second.first);
     if (_inputs_cb)
         _inputs_cb(t, _values);

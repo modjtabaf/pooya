@@ -166,9 +166,8 @@ public:
         int k = 0;
         for (const auto& v: _values)
         {
-            if (v._valid)
-                os << "- [" << k << "]: " << v._value << "\n";
-            k++;
+            os << "- [" << k++ << "]: ";
+            (v._valid ? os << v._value : os << "*") << "\n";
         }
         os << "\n";
     }

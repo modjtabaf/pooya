@@ -112,7 +112,7 @@ int main()
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.001))
+    while (arange(k, t, 0, 5, 0.02))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -129,7 +129,7 @@ int main()
     auto  tau = model.find_signal("tau"); // find using the partial name
 
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() << "]\n";
+	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
     gp << "set yrange [-80:80]\n";
 	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
 	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"

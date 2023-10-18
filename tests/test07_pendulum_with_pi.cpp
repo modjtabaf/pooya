@@ -106,11 +106,11 @@ int main()
             values.set(g, 9.81);
             values.set(des_phi, M_PI_4);
         },
-        rkf45);
+        rkf45); // try rk4 with h = 0.01 to see the difference
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.001))
+    while (arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -125,7 +125,7 @@ int main()
     auto  phi = model.find_signal(".phi");
 
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() << "]\n";
+	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
     gp << "set yrange [-2:4]\n";
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi'"
         ","

@@ -58,7 +58,7 @@ int main()
               << " milliseconds\n";
 
     Gnuplot gp;
-	gp << "set xrange [0:100]\n";
+	gp << "set xrange [0:" << history[x].size() - 1 << "]\n";
 	gp << "set yrange [-1:7]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
 		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";

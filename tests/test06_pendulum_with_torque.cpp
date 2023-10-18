@@ -74,11 +74,11 @@ int main()
             values.set(g, 9.81);
             values.set(tau, 0.13);
         },
-        rk4, true);
+        rkf45, true);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.01))
+    while (arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -94,7 +94,7 @@ int main()
     auto dphi = model.find_signal(".dphi");
 
     Gnuplot gp;
-	gp << "set xrange [0:500]\n";
+	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
     gp << "set yrange [-8:8]\n";
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi',"
 	    << gp.file1d(history[dphi]) << "with lines title 'dphi'\n";

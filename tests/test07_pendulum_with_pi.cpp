@@ -126,8 +126,8 @@ int main()
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
-    gp << "set yrange [-2:4]\n";
-	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi'"
+    gp << "set yrange [-50:150]\n";
+	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi'"
         ","
 	    // << gp.file1d(history[model.find_signal(".dphi")]) << "with lines title 'dphi',"
 	    // << gp.file1d(history[model.find_signal(".tau")]) << "with lines title 'tau'"

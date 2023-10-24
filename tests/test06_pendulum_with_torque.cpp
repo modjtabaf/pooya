@@ -33,6 +33,11 @@ public:
         auto  dphi = signal( "dphi");
         auto d2phi = signal("d2phi");
 
+        // choose random names for these internal signals
+        auto s10 = signal();
+        auto s20 = signal();
+        auto s30 = signal();
+
         auto tau = parameter("tau");
         auto m = parameter("m");
         auto g = parameter("g");
@@ -44,11 +49,11 @@ public:
             [](double /*t*/, const Value& x) -> Value
             {
                 return x.sin();
-            }, phi, signal(10));
-        // new Sin(*this, "sin(phi)", phi, signal(10));
-        new MulDiv(*this, "g\\l", "**/", {signal(10), g, l}, signal(20));
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, signal(30));
-        new AddSub(*this, "d2phi", "+-", {signal(30), signal(20)}, d2phi);
+            }, phi, s10);
+        // new Sin(*this, "sin(phi)", phi, s10);
+        new MulDiv(*this, "g\\l", "**/", {s10, g, l}, s20);
+        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s30);
+        new AddSub(*this, "d2phi", "+-", {s30, s20}, d2phi);
     }
 };
 

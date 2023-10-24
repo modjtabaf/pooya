@@ -32,22 +32,28 @@ public:
         // signals
         auto dphi = signal( "dphi");
 
+        // choose random names for these internal signals
+        auto s10 = signal();
+        auto s20 = signal();
+        auto s30 = signal();
+        auto s40 = signal();
+
         auto m = parameter("m");
         auto g = parameter("g");
         auto l = parameter("l");
 
         // blocks
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, signal(10));
-        new AddSub(*this, "err", "+-", {signal(10), signal(20)}, signal(30));
-        new Integrator(*this, "dphi", signal(30), dphi);
+        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
+        new AddSub(*this, "err", "+-", {s10, s20}, s30);
+        new Integrator(*this, "dphi", s30, dphi);
         new Integrator(*this, "phi", dphi, phi);
         // new Function(*this, "sin(phi)",
         //     [](double t, const Value& x) -> Value
         //     {
         //         return x.sin();
-        //     }, phi, signal(40));
-        new Sin(*this, "sin(phi)", phi, signal(40));
-        new MulDiv(*this, "g\\l", "**/", {signal(40), g, l}, signal(20));
+        //     }, phi, s40);
+        new Sin(*this, "sin(phi)", phi, s40);
+        new MulDiv(*this, "g\\l", "**/", {s40, g, l}, s20);
     }
 };
 
@@ -57,13 +63,20 @@ public:
     PID(Parent& parent, double Kp, double Ki, double Kd, Signal& x, Signal& y, double x0=0.0) :
         Submodel(parent, "PID", x, y)
     {
+        // choose random names for these internal signals
+        auto s10 = signal();
+        auto s20 = signal();
+        auto s30 = signal();
+        auto s40 = signal();
+        auto s50 = signal();
+
         // blocks
-        new Gain(*this, "Kp", Kp, x, signal(10));
-        new Integrator(*this, "ix", x, signal(20), x0);
-        new Gain(*this, "Ki", Ki, signal(20), signal(30));
-        new Derivative(*this, "dx", x, signal(40));
-        new Gain(*this, "Kd", Kd, signal(40), signal(50));
-        new AddSub(*this, "AddSub", "+++", {signal(10), signal(30), signal(50)}, y);
+        new Gain(*this, "Kp", Kp, x, s10);
+        new Integrator(*this, "ix", x, s20, x0);
+        new Gain(*this, "Ki", Ki, s20, s30);
+        new Derivative(*this, "dx", x, s40);
+        new Gain(*this, "Kd", Kd, s40, s50);
+        new AddSub(*this, "AddSub", "+++", {s10, s30, s50}, y);
     }
 };
 

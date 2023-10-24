@@ -32,22 +32,28 @@ public:
         // signals
         auto dphi = signal( "dphi");
 
+        // choose random names for these internal signals
+        auto s10 = signal();
+        auto s20 = signal();
+        auto s30 = signal();
+        auto s40 = signal();
+
         auto m = parameter("m");
         auto g = parameter("g");
         auto l = parameter("l");
 
         // blocks
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, signal(10));
-        new AddSub(*this, "err", "+-", {signal(10), signal(20)}, signal(30));
-        new Integrator(*this, "dphi", signal(30), dphi);
+        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
+        new AddSub(*this, "err", "+-", {s10, s20}, s30);
+        new Integrator(*this, "dphi", s30, dphi);
         new Integrator(*this, "phi", dphi, phi);
-        // new Function(this, "sin(phi)",
-        //     [](double t, const Value& x) -> Value
+        // new Function(*this, "sin(phi)",
+        //     [](double /*t*/, const Value& x) -> Value
         //     {
         //         return x.sin();
-        //     }, phi, 40);
-        new Sin(*this, "sin(phi)", phi, signal(40));
-        new MulDiv(*this, "g\\l", "**/", {signal(40), g, l}, signal(20));
+        //     }, phi, s40);
+        new Sin(*this, "sin(phi)", phi, s40);
+        new MulDiv(*this, "g\\l", "**/", {s40, g, l}, s20);
     }
 };
 
@@ -57,11 +63,16 @@ public:
     PI(Parent& parent, double Kp, double Ki, const Signal& x, const Signal& y, double x0=0.0) :
         Submodel(parent, "PI", x, y)
     {
+        // choose random names for these internal signals
+        auto s10 = signal();
+        auto s20 = signal();
+        auto s30 = signal();
+
         // blocks
-        new Gain(*this, "Kp", Kp, x, signal(10));
-        new Integrator(*this, "ix", x, signal(20), x0);
-        new Gain(*this, "Ki", Ki, signal(20), signal(30));
-        new AddSub(*this, "AddSub", "++", {signal(10), signal(30)}, y);
+        new Gain(*this, "Kp", Kp, x, s10);
+        new Integrator(*this, "ix", x, s20, x0);
+        new Gain(*this, "Ki", Ki, s20, s30);
+        new AddSub(*this, "AddSub", "++", {s10, s30}, y);
     }
 };
 
@@ -110,7 +121,7 @@ int main()
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.01))
+    while (arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());

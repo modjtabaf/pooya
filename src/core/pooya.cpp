@@ -26,9 +26,7 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
     std::string ret(given_name);
     if (given_name.empty())
     {
-        std::cout << "Warning: signal name cannot be empty.";
         ret = Base::generate_random_name();
-        std::cout << " Proceeding with the random name \"" << ret << "\".\n";
     }
     else if (given_name.find_first_of("/. ") != std::string::npos)
     {
@@ -39,20 +37,18 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
     return ret;
 }
 
-bool Signal::set_owner(Parent& owner)
+void Signal::_set_owner(Parent& owner)
 {
     assert(_full_name.empty() && (_id == NoId));
-    if (!_full_name.empty() || (_id != NoId)) return false;
+    if (!_full_name.empty() || (_id != NoId)) return;
 
     auto& model = owner.model();
 
     std::string reg_name = owner.make_signal_name(_given_name);
     _id = model.find_or_register_signal(reg_name);
-    if (_id == NoId)
-        return false;
+    if (_id == NoId) return;
 
     _full_name = reg_name;
-    return true;
 }
 
 Base::Base(Parent* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
@@ -69,14 +65,14 @@ Base::Base(Parent* parent, std::string given_name, const Signals& iports, const 
         for (const auto& p: iports)
         {
             _iports.push_back(p);
-            if (p.id() == Signal::NoId) _iports.back().set_owner(*parent);
+            // if (p.id() == Signal::NoId) _iports.back().set_owner(*parent);
         }
 
         _oports.reserve(oports.size());
         for (auto& p: oports)
         {
             _oports.push_back(p);
-            if (p.id() == Signal::NoId) _oports.back().set_owner(*parent);
+            // if (p.id() == Signal::NoId) _oports.back().set_owner(*parent);
         }
     }
     else
@@ -210,20 +206,6 @@ uint Memory::_process(double /*t*/, Values& values, bool /*go_deep*/)
 std::string Parent::make_signal_name(const std::string& given_name)
 {
     return _full_name + "." + given_name;
-}
-
-Signal Parent::signal(const std::string& given_name)
-{
-    Signal signal(given_name);
-    signal.set_owner(*this);
-    return signal;
-}
-
-Signal Parent::parameter(const std::string& given_name)
-{
-    Signal signal(given_name);
-    signal.set_owner(model());
-    return signal;
 }
 
 void Parent::_mark_unprocessed()

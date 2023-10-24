@@ -33,6 +33,9 @@ public:
         auto  dphi = signal( "dphi");
         auto d2phi = signal("d2phi");
 
+        // choose a random name for this internal signal
+        auto s10 = signal();
+
         auto g = parameter("g");
         auto l = parameter("l");
 
@@ -42,9 +45,9 @@ public:
         //     [](double /*t*/, const Value& x) -> Value
         //     {
         //         return x.sin();
-        //     }, phi, 1);
-        new Sin(*this, "sin(phi)", phi, signal(10));
-        new MulDiv(*this, "-g\\l", "**/", {signal(10), g, l}, d2phi, -1);
+        //     }, phi, s10);
+        new Sin(*this, "sin(phi)", phi, s10);
+        new MulDiv(*this, "-g\\l", "**/", {s10, g, l}, d2phi, -1);
     }
 };
 

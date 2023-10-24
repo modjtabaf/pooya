@@ -44,7 +44,7 @@ public:
 
         // blocks
         new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
-        new AddSub(*this, "err", "+-", {s10, s20}, s30);
+        new Subtract(*this, "err", {s10, s20}, s30);
         new Integrator(*this, "dphi", s30, dphi);
         new Integrator(*this, "phi", dphi, phi);
         // new Function(*this, "sin(phi)",
@@ -76,7 +76,7 @@ public:
         new Gain(*this, "Ki", Ki, s20, s30);
         new Derivative(*this, "dx", x, s40);
         new Gain(*this, "Kd", Kd, s40, s50);
-        new AddSub(*this, "AddSub", "+++", {s10, s30, s50}, y);
+        new Add(*this, "Add", {s10, s30, s50}, y);
     }
 };
 
@@ -93,7 +93,7 @@ public:
         auto des_phi = parameter("des_phi");
 
         // blocks
-        new AddSub(*this, "AddSub", "+-", {des_phi, phi}, err);
+        new Subtract(*this, "Sub", {des_phi, phi}, err);
         new PID(*this, 40.0, 20.0, 0.05, err, tau);
         new Pendulum(*this, tau, phi);
     }

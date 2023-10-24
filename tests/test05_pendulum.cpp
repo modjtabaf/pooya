@@ -47,7 +47,7 @@ public:
         //         return x.sin();
         //     }, phi, s10);
         new Sin(*this, "sin(phi)", phi, s10);
-        new MulDiv(*this, "-g\\l", "**/", {s10, g, l}, d2phi, -1);
+        new Divide(*this, "-g\\l", {s10, g, l}, d2phi, -1);
     }
 };
 

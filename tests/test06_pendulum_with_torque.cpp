@@ -53,7 +53,7 @@ public:
         // new Sin(*this, "sin(phi)", phi, s10);
         new MulDiv(*this, "g\\l", "**/", {s10, g, l}, s20);
         new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s30);
-        new AddSub(*this, "d2phi", "+-", {s30, s20}, d2phi);
+        new Subtract(*this, "d2phi", {s30, s20}, d2phi);
     }
 };
 

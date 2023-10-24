@@ -416,6 +416,20 @@ public:
     }
 };
 
+class Add : public AddSub
+{
+public:
+    Add(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=0.0) :
+        AddSub(parent, given_name, std::string(iports.size(), '+').c_str(), iports, oport, initial) {}
+};
+
+class Subtract : public AddSub
+{
+public:
+    Subtract(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=0.0) :
+        AddSub(parent, given_name, "+-", iports, oport, initial) {}
+};
+
 class MulDiv : public Base
 {
 protected:
@@ -446,6 +460,20 @@ public:
         }
         values.set(_oports[0], ret);
     }
+};
+
+class Multiply : public MulDiv
+{
+public:
+    Multiply(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=1.0) :
+        MulDiv(parent, given_name, std::string(iports.size(), '*').c_str(), iports, oport, initial) {}
+};
+
+class Divide : public MulDiv
+{
+public:
+    Divide(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=1.0) :
+        MulDiv(parent, given_name, "*/", iports, oport, initial) {}
 };
 
 class Integrator : public Base

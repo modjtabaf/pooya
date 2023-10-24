@@ -41,11 +41,11 @@ public:
         auto s40 = signal();
 
         // blocks
-        new AddSub(*this, "+-1", "+-", {y_in, y_out}, s10);
-        new MulDiv(*this, "*\\", "*/", {s10, tau}, s20);
+        new Subtract(*this, "+-1", {y_in, y_out}, s10);
+        new Divide(*this, "*\\", {s10, tau}, s20);
         new Integrator(*this, "Int", s20, s30);
         new InitialValue(*this, "IV", y0, s40);
-        new AddSub(*this, "+-2", "++", {s30, s40}, y_out);
+        new Add(*this, "+-2", {s30, s40}, y_out);
     }
 };
 
@@ -65,12 +65,12 @@ public:
         auto s40 = signal();
 
         // blocks
-        new MulDiv(*this, "*\\1", "*/", {tractor_wheelbase, front_wheel_angle}, s10);
-        new AddSub(*this, "+-1", "++", {s10, tractor_Width}, s20);
-        new MulDiv(*this, "*\\2", "*/", {tractor_wheelbase, s20}, front_wheel_angle_right);
+        new Divide(*this, "*\\1", {tractor_wheelbase, front_wheel_angle}, s10);
+        new Add(*this, "+1", {s10, tractor_Width}, s20);
+        new Divide(*this, "*\\2", {tractor_wheelbase, s20}, front_wheel_angle_right);
         new Gain(*this, "K", 0.5, tractor_Width, s30);
-        new AddSub(*this, "+-2", "+-", {s10, s30}, s40);
-        new MulDiv(*this, "*\\3", "*/", {tractor_wheelbase, s40}, front_wheel_angle_left);
+        new Subtract(*this, "+-2", {s10, s30}, s40);
+        new Divide(*this, "*\\3", {tractor_wheelbase, s40}, front_wheel_angle_left);
     }
 };
 
@@ -99,7 +99,7 @@ public:
         auto s30 = signal();
 
         // blocks
-        new MulDiv(*this, "*\\", "**", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, s10);
+        new Multiply(*this, "Mul", {ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, s10);
         new Delay(*this, "Delay", {s10, front_wheel_ang_delay, front_wheel_ang_init_value}, s20);
         new Function(*this, "Clamp",
             [](double /*t*/, const Value& x) -> Value

@@ -58,28 +58,35 @@ Base::Base(Parent* parent, std::string given_name, const Signals& iports, const 
     _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
     if (parent)
-    {
         parent->add_component(*this);
 
-        _iports.reserve(iports.size());
-        for (const auto& p: iports)
-        {
-            _iports.push_back(p);
-            // if (p.id() == Signal::NoId) _iports.back().set_owner(*parent);
-        }
-
-        _oports.reserve(oports.size());
-        for (auto& p: oports)
-        {
-            _oports.push_back(p);
-            // if (p.id() == Signal::NoId) _oports.back().set_owner(*parent);
-        }
-    }
-    else
+    _iports.reserve(iports.size());
+    _dependencies.reserve(iports.size());
+    for (const auto& p: iports)
     {
-        _iports = iports;
-        _oports = oports;
+        _iports.push_back(p);
+        _add_dependecny(p);
     }
+    _dependencies.shrink_to_fit();
+
+    _oports.reserve(oports.size());
+    for (auto& p: oports)
+        _oports.push_back(p);
+}
+
+bool Base::_add_dependecny(const Signal& signal)
+{
+    if (std::find_if(_dependencies.begin(), _dependencies.end(),
+        [&] (const Signal& s) -> bool
+        {
+            return s.full_name() == signal.full_name();
+        }) == _dependencies.end())
+    {
+        _dependencies.push_back(signal);
+        return true;
+    }
+
+    return false;
 }
 
 void Base::_assign_valid_given_name(std::string given_name)
@@ -135,9 +142,9 @@ uint Base::_process(double t, Values& values, bool /*go_deep*/)
     if (_processed)
         return 0;
 
-    for (auto& iport: _iports)
+    for (auto& signal: _dependencies)
     {
-        if (!values.get(iport))
+        if (!values.get(signal))
             return 0;
     }
 

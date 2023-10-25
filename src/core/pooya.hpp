@@ -207,12 +207,14 @@ class Base
 protected:
     Signals _iports;
     Signals _oports;
+    Signals _dependencies;
     Parent* const _parent;
     std::string _given_name;
     std::string _full_name;
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
+    bool _add_dependecny(const Signal& signal);
 
     Base(Parent* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()/*, bool register_oports=true*/);
 

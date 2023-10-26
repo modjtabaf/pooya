@@ -196,9 +196,12 @@ protected:
 public:
     using Parent::unordered_map;
 
-    void insert_or_assign(Signal::Id state, const Value& value, Signal::Id deriv)
+    void add(Signal::Id state, const Value& value, Signal::Id deriv)
     {
-        Parent::insert_or_assign(state, Pair(value, deriv));
+        if (Parent::find(state) == end())
+            Parent::insert({state, Pair(value, deriv)});
+        else
+            assert(false);
     }
 };
 
@@ -489,7 +492,7 @@ public:
 
     void get_states(StatesInfo& states) override
     {
-        states.insert_or_assign(_oports.front(), Value(_value), _iports.front());
+        states.add(_oports.front(), Value(_value), _iports.front());
     }
 
     void step(double /*t*/, const Values& values) override

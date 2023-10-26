@@ -42,14 +42,15 @@ public:
         double m, double k, double c, double x0, double xd0) :
         Base(&parent, given_name, tau), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0), _tau(tau), _x("x", parent), _xd("xd", parent), _xdd("xdd", parent)
     {
+        // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
         _add_dependecny(_x);
         _add_dependecny(_xd);
     }
 
     void get_states(StatesInfo& states) override
     {
-        states.insert_or_assign(_x, _x0, _xd);
-        states.insert_or_assign(_xd, _xd0, _xdd);
+        states.add(_x, _x0, _xd);
+        states.add(_xd, _xd0, _xdd);
     }
 
     void activation_function(double /*t*/, Values& values) override

@@ -484,10 +484,10 @@ public:
 class Integrator : public Base
 {
 protected:
-    double _value;
+    Value _value;
 
 public:
-    Integrator(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport, double ic=0.0) :
+    Integrator(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport, Value ic=Value(0.0)) :
         Base(&parent, given_name, Signals({iport}), Signals({oport})), _value(ic) {}
 
     void get_states(StatesInfo& states) override
@@ -498,7 +498,7 @@ public:
     void step(double /*t*/, const Values& values) override
     {
         assert(values.get(_oports.front()));
-        _value = (*values.get(_oports.front()))[0];
+        _value = *values.get(_oports.front());
     }
 
     uint _process(double t, Values& values, bool go_deep = true) override;

@@ -27,7 +27,7 @@ namespace pooya
 class History : public std::unordered_map<Signal::Id, MatrixXd>
 {
 public:
-    static constexpr Signal::Id time_id = Signal::NoId;
+    static constexpr Signal::Id time_id = Signal::NoId - 1;
 
 protected:
     const Model& _model;

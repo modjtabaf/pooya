@@ -28,7 +28,11 @@ void History::update(uint k, double t, const Values& values)
         reserve(values.size() + 1);
         insert_or_assign(time_id, Value()); // t
         for (Signal::Id id = 0; id < _model.num_signals(); id++)
-            insert_or_assign(id, Value());
+        {
+            const auto* v = values.get(id);
+            assert(v);
+            insert_or_assign(id, MatrixXd(0, v->size()));
+        }
     }
 
     auto& h = at(time_id); // t

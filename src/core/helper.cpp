@@ -85,6 +85,7 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _values(model.num_signals()), _stepper(stepper), _reuse_order(reuse_order)
 {
+    model.post_init_model();
     model.get_states(_states);
 }
 

@@ -32,7 +32,8 @@ int main()
     auto model = Model("test00");
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new Gain(model, "gain", 2.0, x, y);
+    auto gain = Gain("gain", 2.0, x, y);
+    model << gain;
 
     History history(model);
 

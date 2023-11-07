@@ -27,14 +27,19 @@ using namespace pooya;
 class MyModel : public Submodel
 {
 public:
-    MyModel(Parent& parent, const Signal& x, const Signal& y) : Submodel(parent, "MyModel", x, y)
+    MyModel(const Signal& x, const Signal& y) : Submodel("MyModel", x, y)
     {
+        std::cout << "32:\n" << std::flush;
         auto time_delay = signal("time_delay");
+        std::cout << "34:\n" << std::flush;
         auto initial = signal("initial");
+        std::cout << "35:\n" << std::flush;
 
-        new Const(*this, "TimeDelay", 2.7435, time_delay);
-        new Const(*this, "Initial", 0.0, initial);
-        new Delay(*this, "Delay", {x, time_delay, initial}, y);
+        *this
+            << new Const("TimeDelay", 2.7435, time_delay)
+            << new Const("Initial", 0.0, initial)
+            << new Delay("Delay", {x, time_delay, initial}, y);
+        std::cout << "41:\n" << std::flush;
     }
 };
 
@@ -43,10 +48,14 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
+    std::cout << "47:\n" << std::flush;
     auto model = Model("test02");
+    std::cout << "49:\n" << std::flush;
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new MyModel(model, x, y);
+    std::cout << "52:\n" << std::flush;
+    model << new MyModel(x, y);
+    std::cout << "54:\n" << std::flush;
 
     History history(model);
 

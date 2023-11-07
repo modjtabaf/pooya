@@ -27,7 +27,7 @@ using namespace pooya;
 class Pendulum : public Submodel
 {
 public:
-    Pendulum(Parent& parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
+    Pendulum(const Signal& tau, const Signal& phi) : Submodel("pendulum", {tau}, {phi})
     {
         // signals
         auto dphi = signal( "dphi");
@@ -43,25 +43,26 @@ public:
         auto l = parameter("l");
 
         // blocks
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
-        new Subtract(*this, "err", {s10, s20}, s30);
-        new Integrator(*this, "dphi", s30, dphi);
-        new Integrator(*this, "phi", dphi, phi);
-        // new Function(*this, "sin(phi)",
-        //     [](double t, const Value& x) -> Value
-        //     {
-        //         return x.sin();
-        //     }, phi, s40);
-        new Sin(*this, "sin(phi)", phi, s40);
-        new MulDiv(*this, "g\\l", "**/", {s40, g, l}, s20);
+        *this
+            << new MulDiv("tau\\ml2", "*///", {tau, m, l, l}, s10)
+            << new Subtract("err", {s10, s20}, s30)
+            << new Integrator("dphi", s30, dphi)
+            << new Integrator("phi", dphi, phi)
+            // << new Function("sin(phi)",
+            //     [](double t, const Value& x) -> Value
+            //     {
+            //         return x.sin();
+            //     }, phi, s40)
+            << new Sin("sin(phi)", phi, s40)
+            << new MulDiv("g\\l", "**/", {s40, g, l}, s20);
     }
 };
 
 class PID : public Submodel
 {
 public:
-    PID(Parent& parent, double Kp, double Ki, double Kd, Signal& x, Signal& y, double x0=0.0) :
-        Submodel(parent, "PID", x, y)
+    PID(double Kp, double Ki, double Kd, Signal& x, Signal& y, double x0=0.0) :
+        Submodel("PID", x, y)
     {
         // choose random names for these internal signals
         auto s10 = signal();
@@ -71,12 +72,13 @@ public:
         auto s50 = signal();
 
         // blocks
-        new Gain(*this, "Kp", Kp, x, s10);
-        new Integrator(*this, "ix", x, s20, x0);
-        new Gain(*this, "Ki", Ki, s20, s30);
-        new Derivative(*this, "dx", x, s40);
-        new Gain(*this, "Kd", Kd, s40, s50);
-        new Add(*this, "Add", {s10, s30, s50}, y);
+        *this
+            << new Gain("Kp", Kp, x, s10)
+            << new Integrator("ix", x, s20, x0)
+            << new Gain("Ki", Ki, s20, s30)
+            << new Derivative("dx", x, s40)
+            << new Gain("Kd", Kd, s40, s50)
+            << new Add("Add", {s10, s30, s50}, y);
     }
 };
 
@@ -93,9 +95,10 @@ public:
         auto des_phi = parameter("des_phi");
 
         // blocks
-        new Subtract(*this, "Sub", {des_phi, phi}, err);
-        new PID(*this, 40.0, 20.0, 0.05, err, tau);
-        new Pendulum(*this, tau, phi);
+        *this
+            << new Subtract("Sub", {des_phi, phi}, err)
+            << new PID(40.0, 20.0, 0.05, err, tau)
+            << new Pendulum(tau, phi);
     }
 };
 

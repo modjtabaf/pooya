@@ -32,7 +32,8 @@ int main()
     auto model = Model("test01");
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new Memory(model, "memory", x, y);
+    auto mem = Memory("memory", x, y);
+    model << mem;
 
     History history(model);
 

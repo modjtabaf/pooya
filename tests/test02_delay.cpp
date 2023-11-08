@@ -29,17 +29,13 @@ class MyModel : public Submodel
 public:
     MyModel(const Signal& x, const Signal& y) : Submodel("MyModel", x, y)
     {
-        std::cout << "32:\n" << std::flush;
         auto time_delay = signal("time_delay");
-        std::cout << "34:\n" << std::flush;
         auto initial = signal("initial");
-        std::cout << "35:\n" << std::flush;
 
         *this
             << new Const("TimeDelay", 2.7435, time_delay)
             << new Const("Initial", 0.0, initial)
             << new Delay("Delay", {x, time_delay, initial}, y);
-        std::cout << "41:\n" << std::flush;
     }
 };
 
@@ -48,14 +44,10 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::cout << "47:\n" << std::flush;
     auto model = Model("test02");
-    std::cout << "49:\n" << std::flush;
     auto x = model.signal("x");
     auto y = model.signal("y");
-    std::cout << "52:\n" << std::flush;
     model << new MyModel(x, y);
-    std::cout << "54:\n" << std::flush;
 
     History history(model);
 
@@ -69,8 +61,11 @@ int main()
     double t;
     while (arange(k, t, 0, 10, 0.1))
     {
+        std::cout << "68:" << "\n" << std::flush;
         sim.run(t);
+        std::cout << "70:" << "\n" << std::flush;
         history.update(k, t, sim.values());
+        std::cout << "72:" << "\n" << std::flush;
         k++;
     }
 

@@ -39,34 +39,23 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
 
 void Signal::post_init(Parent* owner)
 {
-    std::cout << "42 (post_init):\n" << std::flush;
     // don't proceed if it is initialized already
     if (!_full_name.empty() || (_id != NoId)) return;
 
-    std::cout << "46 (post_init):\n" << std::flush;
     // set the owner if it was not set before
     if (!_owner) _owner = owner;
 
-    std::cout << "50 (post_init): " << _owner << "\n" << std::flush;
-    if (_owner)
-    {
-        // std::cout << "53 (post_init): " << _owner->full_name() << "\n" << std::flush;
-        std::cout << "54 (post_init): " << _owner->model() << "\n" << std::flush;
-    }
     // don't proceed if either owner or model is not available
     if (!_owner || !_owner->model()) return;
 
     // owner and model are both defined
     // finalize the initialization
 
-    std::cout << "57 (post_init):\n" << std::flush;
     std::string reg_name = _owner->make_signal_name(_given_name);
     _id = _owner->model()->find_or_register_signal(reg_name);
     if (_id == NoId) return;
 
-    std::cout << "62 (post_init):\n" << std::flush;
     _full_name = reg_name;
-    std::cout << "64 (post_init):\n" << std::flush;
 }
 
 Base::Base(std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/)
@@ -132,7 +121,7 @@ void Base::_assign_valid_given_name(std::string given_name)
 {
     auto verify_unique_name_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
     {
-        return (&c == static_cast<Base*>(_parent)) || (c._given_name != given_name);
+        return (&c == static_cast<Base*>(_parent)) || (&c == this) || (c._given_name != given_name);
     };
 
     if (given_name.empty())
@@ -196,7 +185,6 @@ uint Base::_process(double t, Values& values, bool /*go_deep*/)
 Model* Base::model()
 {
     // assert(_parent);
-    std::cout << "193 (model): " << (_parent ? _parent->full_name() : "") << "\n" << std::flush;
     return _parent ? _parent->model() : nullptr;
 }
 

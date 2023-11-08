@@ -179,8 +179,6 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         assert(min_time_step > 0);
         assert(max_time_step > min_time_step);
 
-        StatesInfo states_orig(_states);
-
         if (_first_iter)
         {
             if (_reuse_order)
@@ -264,12 +262,16 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     if (_first_iter)
         _first_iter = false;
 
+    std::cout << "266:" << "\n" << std::flush;
     _values.invalidate();
     for (const auto& state: _states)
         _values.set(state.first, state.second.first);
+    std::cout << "270:" << _values << std::flush;
     if (_inputs_cb)
         _inputs_cb(t, _values);
+    std::cout << "273:" << _values << std::flush;
     _process(t, _values);
+    std::cout << "275:" << _values << std::flush;
     _model.step(t, _values);
 
     _t_prev = t;

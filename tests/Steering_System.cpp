@@ -173,7 +173,7 @@ int main()
     auto front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
     auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
 
-    History history(model);
+    History history(model, 1000);
 
     Simulator sim(model,
         [&](double t, Values& values) -> void
@@ -202,6 +202,8 @@ int main()
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
+
+    history.shrink_to_fit();
 
     Gnuplot gp;
 	gp << "set xrange [0:2000]\n";

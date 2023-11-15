@@ -47,7 +47,7 @@ public:
         //         return x.sin();
         //     }, phi, s10);
         new Sin(*this, "sin(phi)", phi, s10);
-        new Divide(*this, "-g\\l", {s10, g, l}, d2phi, -1);
+        new MulDiv(*this, "-g\\l", "**/", {s10, g, l}, d2phi, -1);
     }
 };
 
@@ -87,8 +87,10 @@ int main()
 
     auto phi = model.find_signal("/pendulum.phi", true);
 
+    history.shrink_to_fit();
+
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
+	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.8:0.8]\n";
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'x'\n";
 

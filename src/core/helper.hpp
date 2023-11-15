@@ -31,12 +31,17 @@ public:
 
 protected:
     const Model& _model;
+    uint _nrows_grow;
+    uint _bottom_row{static_cast<uint>(-1)};
 
 public:
-    History(const Model& model) : _model(model) {}
+    History(const Model& model, uint nrows_grow = 1000) :
+        _model(model), _nrows_grow(nrows_grow) {}
 
     void update(uint k, double t, const Values& values);
     void export_csv(std::string filename);
+    void shrink_to_fit();
+    uint nrows() const {return _bottom_row + 1;}
 };
 
 using InputCallback = std::function<void(double, Values&)>;

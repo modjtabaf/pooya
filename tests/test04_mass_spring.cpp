@@ -64,13 +64,14 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
+    history.shrink_to_fit();
     history.export_csv("mass_spring.csv");
 
     auto x  = model.find_signal("x");
     auto xd = model.find_signal("xd");
 
     Gnuplot gp;
-	gp << "set xrange [0:" << history[x].size() - 1 << "]\n";
+	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.15:0.15]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
 		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";

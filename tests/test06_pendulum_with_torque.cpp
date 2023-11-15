@@ -98,8 +98,10 @@ int main()
     auto  phi = model.find_signal("/pendulum.phi");
     auto dphi = model.find_signal(".dphi");
 
+    history.shrink_to_fit();
+
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
+	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-8:8]\n";
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi',"
 	    << gp.file1d(history[dphi]) << "with lines title 'dphi'\n";

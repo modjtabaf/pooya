@@ -141,8 +141,10 @@ int main()
     auto dphi = model.find_signal(".dphi"); // find using the partial name
     auto  tau = model.find_signal("tau"); // find using the partial name
 
+    history.shrink_to_fit();
+
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
+	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-80:80]\n";
 	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
 	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"

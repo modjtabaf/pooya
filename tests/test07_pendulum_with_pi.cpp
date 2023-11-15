@@ -135,8 +135,10 @@ int main()
 
     auto  phi = model.find_signal(".phi");
 
+    history.shrink_to_fit();
+
     Gnuplot gp;
-	gp << "set xrange [0:" << history[phi].size() - 1 << "]\n";
+	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-50:150]\n";
 	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi'"
         ","

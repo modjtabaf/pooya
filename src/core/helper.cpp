@@ -49,7 +49,7 @@ void History::update(uint k, double t, const Values& values)
         h.row(k) = *v;
     }
 
-    if ((_bottom_row == -1) || (k > _bottom_row))
+    if ((_bottom_row == uint(-1)) || (k > _bottom_row))
         _bottom_row = k;
 }
 

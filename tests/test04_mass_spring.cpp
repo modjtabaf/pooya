@@ -24,27 +24,46 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Model
+class MyModel : public Submodel
 {
+protected:
+    Integrator _integ1{   "xd",      0.1};
+    Integrator _integ2{    "x"          };
+    Gain         _gain{"-k\\m", -1.0/1.0};
+
 public:
-    MyModel() : Model("MyModel")
+    MyModel() : Submodel("MyModel") {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
+        if (!Submodel::init(parent, iports, oports))
+            return false;
+
+        // create signals
         auto   x = signal(  "x");
         auto  xd = signal( "xd");
         auto xdd = signal("xdd");
 
-        new Integrator(*this, "xd", xdd, xd, 0.1);
-        new Integrator(*this, "x", xd, x);
-        new Gain(*this, "-k\\m", -1.0/1.0, x, xdd);
+        // setup the submodel
+        add_block(_integ1, xdd,  xd);
+        add_block(_integ2,  xd,   x);
+        add_block(  _gain,   x, xdd);
+
+        return true;
     }
 };
 
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto  start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    // create raw blocks
+    Model   model("test04");
+    MyModel mymodel;
+
+    // setup the model
+    model.add_block(mymodel);
 
     History history(model);
 
@@ -67,7 +86,7 @@ int main()
     history.shrink_to_fit();
     history.export_csv("mass_spring.csv");
 
-    auto x  = model.find_signal("x");
+    auto  x = model.find_signal( "x");
     auto xd = model.find_signal("xd");
 
     Gnuplot gp;

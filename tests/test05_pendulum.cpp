@@ -24,30 +24,45 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Model
+class Pendulum : public Submodel
 {
+protected:
+    Integrator _integ1{"dphi"};
+    Integrator _integ2{ "phi", M_PI_4};
+    // Function     _func{"sin(phi)",
+    //     [](double /*t*/, const Value& x) -> Value
+    //     {
+    //         return x.sin();
+    //     }},
+    Sin           _sin{"sin(phi)"};
+    MulDiv     _muldiv{   "-g\\l", "**/", -1};
+
 public:
-    MyModel() : Model("pendulum")
+    Pendulum() : Submodel("pendulum") {}
+
+    bool init(Parent& parent, const Signals&, const Signals&) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
+        // create signals
         auto   phi = signal(  "phi");
         auto  dphi = signal( "dphi");
         auto d2phi = signal("d2phi");
 
-        // choose a random name for this internal signal
-        auto s10 = signal();
+        auto s10 = signal(); // choose a random name for this internal signal
 
         auto g = parameter("g");
         auto l = parameter("l");
 
-        new Integrator(*this, "dphi", d2phi, dphi);
-        new Integrator(*this, "phi", dphi, phi, M_PI_4);
-        // new Function(this, "sin(phi)",
-        //     [](double /*t*/, const Value& x) -> Value
-        //     {
-        //         return x.sin();
-        //     }, phi, s10);
-        new Sin(*this, "sin(phi)", phi, s10);
-        new MulDiv(*this, "-g\\l", "**/", {s10, g, l}, d2phi, -1);
+        // setup the submodel
+        add_block(_integ1,       d2phi,  dphi);
+        add_block(_integ2,        dphi,   phi);
+        // add_block(  _func,         phi,   s10);
+        add_block(   _sin,         phi,   s10);
+        add_block(_muldiv, {s10, g, l}, d2phi);
+
+        return true;
     }
 };
 
@@ -56,7 +71,12 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    // create raw blocks
+    Model    model("test05");
+    Pendulum pendulum;
+
+    // setup the model
+    model.add_block(pendulum);
 
     History history(model);
 
@@ -85,7 +105,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.find_signal("/pendulum.phi", true);
+    auto phi = model.find_signal("/pendulum.phi");
 
     history.shrink_to_fit();
 

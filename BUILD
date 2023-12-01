@@ -221,3 +221,24 @@ cc_binary(
         "//tests/data:data",
     ],
 )
+
+cc_binary(
+    name = "stm",
+    srcs = ["tests/simple_truck_model.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+        "//tests/data:data",
+    ],
+)

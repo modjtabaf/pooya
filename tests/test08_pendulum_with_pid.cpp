@@ -26,10 +26,23 @@ using namespace pooya;
 
 class Pendulum : public Submodel
 {
+protected:
+    MulDiv    _muldiv1{ "tau_ml2", "*///"};
+    Subtract      _sub{     "err"};
+    Integrator _integ1{    "dphi"};
+    Integrator _integ2{     "phi"};
+    Sin           _sin{"sin(phi)"};
+    MulDiv    _muldiv2{     "g_l", "**/"};
+
 public:
-    Pendulum(Parent& parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
+    Pendulum() : Submodel("pendulum") {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        // signals
+        if (!Submodel::init(parent))
+            return false;
+
+        // create signals
         auto dphi = signal( "dphi");
 
         // choose random names for these internal signals
@@ -42,27 +55,44 @@ public:
         auto g = parameter("g");
         auto l = parameter("l");
 
-        // blocks
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
-        new Subtract(*this, "err", {s10, s20}, s30);
-        new Integrator(*this, "dphi", s30, dphi);
-        new Integrator(*this, "phi", dphi, phi);
-        // new Function(*this, "sin(phi)",
-        //     [](double t, const Value& x) -> Value
-        //     {
-        //         return x.sin();
-        //     }, phi, s40);
-        new Sin(*this, "sin(phi)", phi, s40);
-        new MulDiv(*this, "g\\l", "**/", {s40, g, l}, s20);
+        auto& tau = iports[0];
+        auto& phi = oports[0];
+
+        // setup the submodel
+        add_block(_muldiv1, {tau, m, l, l}, s10);
+        add_block(    _sub,  {s10, s20},  s30);
+        add_block( _integ1,         s30, dphi);
+        add_block( _integ2,        dphi,  phi);
+        add_block(    _sin,         phi,  s40);
+        add_block(_muldiv2, {s40, g, l},  s20);
+
+        return true;
     }
 };
 
 class PID : public Submodel
 {
+protected:
+    Gain      _gain_p;
+    Integrator _integ;
+    Gain      _gain_i;
+    Add          _add{"Add"};
+    Derivative _deriv{ "dx"};
+    Gain      _gain_d;
+
 public:
-    PID(Parent& parent, double Kp, double Ki, double Kd, Signal& x, Signal& y, double x0=0.0) :
-        Submodel(parent, "PID", x, y)
+    PID(double Kp, double Ki, double Kd, double x0=0.0) :
+        Submodel("PI"),
+        _gain_p("Kp", Kp),
+        _integ ("ix", x0),
+        _gain_i("Ki", Ki),
+        _gain_d("Kd", Kd) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
         // choose random names for these internal signals
         auto s10 = signal();
         auto s20 = signal();
@@ -70,21 +100,38 @@ public:
         auto s40 = signal();
         auto s50 = signal();
 
+        auto& x = iports[0];
+        auto& y = oports[0];
+
         // blocks
-        new Gain(*this, "Kp", Kp, x, s10);
-        new Integrator(*this, "ix", x, s20, x0);
-        new Gain(*this, "Ki", Ki, s20, s30);
-        new Derivative(*this, "dx", x, s40);
-        new Gain(*this, "Kd", Kd, s40, s50);
-        new Add(*this, "Add", {s10, s30, s50}, y);
+        add_block(_gain_p,    x , s10);
+        add_block( _integ,    x , s20);
+        add_block(_gain_i,  s20 , s30);
+        add_block( _deriv,    x , s40);
+        add_block(_gain_d,  s40 , s50);
+        add_block(   _add, {s10 ,
+                        s30 ,
+                        s50},   y);
+
+        return true;
     }
 };
 
-class MyModel : public Model
+class PendulumWithPID : public Submodel
 {
+protected:
+    Subtract  _sub{"Sub"};
+    PID       _pid{40.0, 20.0, 0.05};
+    Pendulum _pend;
+
 public:
-    MyModel() : Model("pendulum_with_PID")
+    PendulumWithPID() : Submodel("pendulum_with_PID") {}
+
+    bool init(Parent& parent, const Signals&, const Signals&) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
         // signals
         auto phi = signal("phi");
         auto tau = signal("tau");
@@ -93,22 +140,30 @@ public:
         auto des_phi = parameter("des_phi");
 
         // blocks
-        new Subtract(*this, "Sub", {des_phi, phi}, err);
-        new PID(*this, 40.0, 20.0, 0.05, err, tau);
-        new Pendulum(*this, tau, phi);
+        add_block( _sub, {des_phi ,
+                          phi}, err);
+        add_block (_pid,      err , tau);
+        add_block(_pend,      tau , phi);
+
+        return true;
     }
 };
 
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto  start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    // create raw blocks
+    Model           model("test08");
+    PendulumWithPID pendulum_with_pid;
 
-    auto m = model.signal("m");
-    auto l = model.signal("l");
-    auto g = model.signal("g");
+    // setup the model
+    model.add_block(pendulum_with_pid);
+
+    auto       m = model.signal(      "m");
+    auto       l = model.signal(      "l");
+    auto       g = model.signal(      "g");
     auto des_phi = model.signal("des_phi");
 
     History history(model);
@@ -116,9 +171,9 @@ int main()
     Simulator sim(model,
         [&](double /*t*/, Values& values) -> void
         {
-            values.set(m, 0.2);
-            values.set(l, 0.1);
-            values.set(g, 9.81);
+            values.set(      m,    0.2);
+            values.set(      l,    0.1);
+            values.set(      g,   9.81);
             values.set(des_phi, M_PI_4);
         },
         rkf45);
@@ -137,9 +192,9 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/pendulum_with_PID.phi", true); // find using the exact name
+    auto  phi = model.find_signal("/test08/pendulum_with_PID.phi", true); // find using the exact name
     auto dphi = model.find_signal(".dphi"); // find using the partial name
-    auto  tau = model.find_signal("tau"); // find using the partial name
+    auto  tau = model.find_signal("tau");   // find using the partial name
 
     history.shrink_to_fit();
 

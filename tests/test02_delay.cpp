@@ -26,27 +26,49 @@ using namespace pooya;
 
 class MyModel : public Submodel
 {
-public:
-    MyModel(Parent& parent, const Signal& x, const Signal& y) : Submodel(parent, "MyModel", x, y)
-    {
-        auto time_delay = signal("time_delay");
-        auto initial = signal("initial");
+protected:
+    Const _const1{"TimeDelay", 2.7435};
+    Const _const2{  "Initial",    0.0};
+    Delay  _delay{    "Delay"        };
 
-        new Const(*this, "TimeDelay", 2.7435, time_delay);
-        new Const(*this, "Initial", 0.0, initial);
-        new Delay(*this, "Delay", {x, time_delay, initial}, y);
+public:
+    MyModel() : Submodel("MyModel") {}
+
+    bool init(Parent& parent, const Signals& x, const Signals& y) override
+    {
+        if (!Submodel::init(parent, x, y))
+            return false;
+
+        // create signals
+        auto time_delay = signal("time_delay");
+        auto    initial = signal(   "initial");
+
+        // setup the submodel
+        add_block(_const1,          {}, time_delay);
+        add_block(_const2,          {},    initial);
+        add_block( _delay, {x[0]      ,
+                            time_delay,
+                            initial  },          y);
+
+        return true;
     }
 };
 
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start  = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test02");
+    // create raw blocks
+    Model   model("test02");
+    MyModel mymodel;
+
+    // create signals
     auto x = model.signal("x");
     auto y = model.signal("y");
-    new MyModel(model, x, y);
+
+    // setup the model
+    model.add_block(mymodel, x, y);
 
     History history(model);
 

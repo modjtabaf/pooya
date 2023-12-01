@@ -42,23 +42,25 @@ void Signal::_set_owner(Parent& owner)
     assert(_full_name.empty() && (_id == NoId));
     if (!_full_name.empty() || (_id != NoId)) return;
 
-    auto& model = owner.model();
+    auto* model = owner.model();
+    if (!model) return;
 
     std::string reg_name = owner.make_signal_name(_given_name);
-    _id = model.find_or_register_signal(reg_name);
+    _id = model->find_or_register_signal(reg_name);
     if (_id == NoId) return;
 
     _full_name = reg_name;
 }
 
-Base::Base(Parent* parent, std::string given_name, const Signals& iports, const Signals& oports/*, bool register_oports*/) :
-    _parent(parent)
+bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
-    _assign_valid_given_name(given_name);
-    _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+    assert(_parent == nullptr);
+    if (_parent) return false;
 
-    if (parent)
-        parent->add_component(*this);
+    _parent = &parent;
+
+    _assign_valid_given_name(_given_name);
+    _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
     _iports.reserve(iports.size());
     _dependencies.reserve(iports.size());
@@ -72,6 +74,8 @@ Base::Base(Parent* parent, std::string given_name, const Signals& iports, const 
     _oports.reserve(oports.size());
     for (auto& p: oports)
         _oports.push_back(p);
+    
+    return true;
 }
 
 bool Base::_add_dependecny(const Signal& signal)
@@ -154,10 +158,9 @@ uint Base::_process(double t, Values& values, bool /*go_deep*/)
     return 1;
 }
 
-Model& Base::model()
+Model* Base::model()
 {
-    assert(_parent);
-    return _parent->model();
+    return _parent ? _parent->model() : nullptr;
 }
 
 std::string Base::generate_random_name(int len)
@@ -219,7 +222,7 @@ void Parent::_mark_unprocessed()
 {
     Base::_mark_unprocessed();
 
-    for (auto& component: _components)
+    for (auto* component: _components)
         component->_mark_unprocessed();
 }
 
@@ -230,7 +233,7 @@ uint Parent::_process(double t, Values& values, bool go_deep)
     {
         _processed = true;
         if (go_deep)
-            for (auto& component: _components)
+            for (auto* component: _components)
             {
                 n_processed += component->_process(t, values);
                 if (not component->processed())
@@ -257,8 +260,20 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-Model::Model(std::string name) : Parent(nullptr, name)
+Model::Model(std::string given_name) : Parent(given_name)
 {
+    init(*this);
+}
+
+bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
+{
+    assert(_parent == nullptr);
+    assert(&parent == this);
+
+    _assign_valid_given_name(_given_name);
+    _full_name = "/" + _given_name;
+    
+    return true;
 }
 
 Signal::Id Model::find_or_register_signal(const std::string& name)

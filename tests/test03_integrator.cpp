@@ -27,12 +27,18 @@ using namespace pooya;
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto  start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model("test03");
-    auto x  = model.signal("x");
+    // create raw blocks
+    Model      model("test03"     );
+    Integrator integ( "integ", 1.0);
+
+    // create signals
+    auto x  = model.signal( "x");
     auto xd = model.signal("xd");
-    new Integrator(model, "integ", xd, x, 1.0);
+
+    // setup the model
+    model.add_block(integ, xd, x);
 
     History history(model);
 

@@ -259,61 +259,6 @@ public:
     static std::string generate_random_name(int len = 10);
 }; // class Base
 
-// class Bus : public Base
-// {
-// protected:
-//     bool _update_signal_ids{true};
-//     std::vector<Signal> _raw_names;
-
-// public:
-//     // class BusValues : public Values
-//     // {
-//     // protected:
-//     //     Signals _names;
-
-//     // public:
-//     //     BusValues(const Signals& names, const Values& values) :
-//     //         Values(values), _names(names) {}
-    
-//     //     // def __repr__(self):
-//     //     //     return 'BusValues(' + super().__repr__() + ')'
-//     // };
-
-//     Bus(Parent* parent, std::string given_name, const Signals& iports, const Signal& oport) :
-//         Base(parent, given_name, iports, oport)
-//     {
-//         _raw_names.reserve(iports.size());
-//         for (const auto& p: iports)
-//             _raw_names.push_back(p);
-//     }
-
-//     void activation_function(double /*t*/, Values& /*x*/) override;
-// };
-
-// class BusSelector(Base):
-//     def __init__(self, name, iport='-', signals=[], oports=[]):
-//         if not isinstance(oports, (list, tuple)):
-//             oports = [oports]
-//         if not isinstance(signals, (list, tuple)):
-//             signals = [signals]
-            
-//         if not signals:
-//             signals = oports
-//         elif not oports:
-//             oports = signals
-//         assert len(signals) == len(oports)
-
-//         super().__init__(name, iport, oports)
-//         self._signals = signals
-//         self._indices = None
-
-//     def activation_function(self, t, x):
-//         bus_values = x[0]
-//         if self._indices is None:
-//             self._indices = [bus_values._names.index(s)
-//                              for s in self._signals]
-//         return [bus_values[k] for k in self._indices]
-
 class InitialValue : public Base
 {
 protected:

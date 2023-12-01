@@ -172,28 +172,6 @@ std::string Base::generate_random_name(int len)
     return name;
 }
 
-// NodeIdValues Bus::activation_function(double /*t*/, const NodeIdValues& x)
-// {
-//     if (_update_signal_ids)
-//     {
-//         auto* model = get_model();
-//         if (model)
-//             for (auto& signal: _raw_names)
-//                 model->register_signal(signal);
-//         _update_signal_ids = false;
-//     }
-//     // assert(x.first.size() == _raw_names.size());
-//     NodeIdValues ret;
-//     // ret.first.reserve(_raw_names.size());
-//     // ret.second.reserve(_raw_names.size());
-//     // auto p = x.second.begin();
-//     for (const auto& signal: _raw_names)
-//     {
-//         ret.insert_or_assign(signal, x.at(signal));
-//     }
-//     return ret;
-// }
-
 uint Integrator::_process(double /*t*/, Values& values, bool /*go_deep*/)
 {
     if (_processed)

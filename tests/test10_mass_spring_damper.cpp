@@ -27,38 +27,57 @@ using namespace pooya;
 class MassSpringDamper : public Base
 {
 protected:
-    double _m;
-    double _k;
-    double _c;
-    double _x0;
+    double   _m;
+    double   _k;
+    double   _c;
+    double  _x0;
     double _xd0;
-    Signal _tau;
-    Signal _x;
-    Signal _xd;
-    Signal _xdd;
+
+    Signal _s_tau;
+    Signal   _s_x;
+    Signal  _s_xd;
+    Signal _s_xdd;
 
 public:
-    MassSpringDamper(Parent& parent, std::string given_name, const Signal& tau,
-        double m, double k, double c, double x0, double xd0) :
-        Base(&parent, given_name, tau), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0), _tau(tau), _x("x", parent), _xd("xd", parent), _xdd("xdd", parent)
+    MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
+        Base(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals&) override
     {
+        if (!Base::init(parent, iports))
+            return false;
+
+        _s_tau = iports[0];
+
+        _s_x   = parent.signal(  "x");
+        _s_xd  = parent.signal( "xd");
+        _s_xdd = parent.signal("xdd");
+
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
-        _add_dependecny(_x);
-        _add_dependecny(_xd);
+        _add_dependecny(_s_x);
+        _add_dependecny(_s_xd);
+
+        return true;
     }
 
     void get_states(StatesInfo& states) override
     {
-        states.add(_x, _x0, _xd);
-        states.add(_xd, _xd0, _xdd);
+        states.add( _s_x,  _x0,  _s_xd);
+        states.add(_s_xd, _xd0, _s_xdd);
     }
 
     void activation_function(double /*t*/, Values& values) override
     {
-        auto& x = *values.get(_x);
-        auto& xd = *values.get(_xd);
-        auto& tau = *values.get(_tau);
-        values.set(_xdd, tau/_m - _c/_m * xd - _k/_m * x);
+        // get states and input
+        double   x = values[  _s_x][0];
+        double  xd = values[ _s_xd][0];
+        double tau = values[_s_tau][0];
+
+        // calculate acceleration
+        double xdd = tau/_m - _c/_m * xd - _k/_m * x;
+
+        // assign acceleration
+        values.set(_s_xdd, xdd);
     }
 };
 
@@ -67,9 +86,15 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    auto model = Model();
+    // create raw blocks
+    Model          model("test10");
+    MassSpringDamper msd(   "msd", 1, 1, 0.1, 0.1, -0.2);
+
+    // create signals
     auto tau = model.signal("tau");
-    new MassSpringDamper(model, "msd", tau, 1, 1, 0.1, 0.1, -0.2);
+
+    // setup the model
+    model.add_block(msd, tau);
 
     History history(model);
 

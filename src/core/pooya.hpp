@@ -73,6 +73,7 @@ public:
     {
         _set_owner(owner);
     }
+    Signal() = default;
     Signal(const Signal& signal) = default;
 
     Signal& operator=(const Signal& rhs) = default;
@@ -150,6 +151,13 @@ public:
 
     const Value* get(const Signal& signal) const {return get(signal.id());}
 
+    const Value& operator[](Signal::Id id) const
+    {
+        const Value* ret = get(id);
+        assert(ret); // TODO: throw an exception if null
+        return *ret;
+    }
+
     void set(Signal::Id id, const Value& value)
     {
         assert(id != Signal::NoId);
@@ -207,11 +215,13 @@ public:
 
 class Base
 {
+    friend class Parent;
+
 protected:
     Signals _iports;
     Signals _oports;
     Signals _dependencies;
-    Parent* const _parent;
+    Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
 
@@ -219,7 +229,9 @@ protected:
     void _assign_valid_given_name(std::string given_name);
     bool _add_dependecny(const Signal& signal);
 
-    Base(Parent* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()/*, bool register_oports=true*/);
+    Base(std::string given_name) : _given_name(given_name) {}
+
+    virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
 
 public:
     virtual ~Base() = default;
@@ -227,7 +239,7 @@ public:
     virtual void get_states(StatesInfo& /*states*/) {}
     virtual void step(double /*t*/, const Values& /*states*/) {}
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
-    virtual Model& model();
+    virtual Model* model();
 
     Parent* parent() {return _parent;}
     bool processed() const {return _processed;}
@@ -308,8 +320,7 @@ protected:
     Value _value;
 
 public:
-    InitialValue(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport) :
-        Base(&parent, given_name, iport, oport) {}
+    InitialValue(std::string given_name) : Base(given_name) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -328,11 +339,9 @@ protected:
     Value _value;
 
 public:
-    Const(Parent& parent, std::string given_name, const Value& value, const Signal& oport) :
-        Base(&parent, given_name, Signals(), oport), _value(value) {}
+    Const(std::string given_name, const Value& value) : Base(given_name), _value(value) {}
 
-    Const(Parent& parent, std::string given_name, double value, const Signal& oport) :
-        Base(&parent, given_name, Signals(), oport), _value(1)
+    Const(std::string given_name, double value) : Base(given_name), _value(1)
     {
          _value << value;
     }
@@ -349,8 +358,7 @@ protected:
     double _k;
 
 public:
-    Gain(Parent& parent, std::string given_name, double k, const Signal& iport, const Signal& oport) :
-        Base(&parent, given_name, iport, oport), _k(k) {}
+    Gain(std::string given_name, double k) : Base(given_name), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -362,8 +370,7 @@ public:
 class Sin : public Base
 {
 public:
-    Sin(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport) :
-        Base(&parent, given_name, iport, oport) {}
+    Sin(std::string given_name) : Base(given_name) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -380,8 +387,8 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(Parent& parent, std::string given_name, ActFunction act_func, const Signal& iport, const Signal& oport) :
-        Base(&parent, given_name, {iport}, {oport}), _act_func(act_func) {}
+    Function(std::string given_name, ActFunction act_func) :
+        Base(given_name), _act_func(act_func) {}
 
     void activation_function(double t, Values& values) override
     {
@@ -396,10 +403,15 @@ protected:
     double      _initial;
 
 public:
-    AddSub(Parent& parent, std::string given_name, const char* operators, const Signals& iports, const Signal& oport, double initial=0.0) :
-        Base(&parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
+    AddSub(std::string given_name, const char* operators, double initial=0.0) :
+        Base(given_name), _operators(operators), _initial(initial)
+    {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        assert(std::strlen(operators) == iports.size());
+        assert(_operators.size() == iports.size());
+        return (_operators.size() == iports.size()) &&
+            Base::init(parent, iports, oports);
     }
 
     void activation_function(double /*t*/, Values& values) override
@@ -424,15 +436,21 @@ public:
 class Add : public AddSub
 {
 public:
-    Add(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=0.0) :
-        AddSub(parent, given_name, std::string(iports.size(), '+').c_str(), iports, oport, initial) {}
+    Add(std::string given_name, double initial=0.0) :
+        AddSub(given_name, "", initial) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    {
+        _operators = std::string(iports.size(), '+');
+        return AddSub::init(parent, iports, oports);
+    }
 };
 
 class Subtract : public AddSub
 {
 public:
-    Subtract(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=0.0) :
-        AddSub(parent, given_name, "+-", iports, oport, initial) {}
+    Subtract(std::string given_name, double initial=0.0) :
+        AddSub(given_name, "+-", initial) {}
 };
 
 class MulDiv : public Base
@@ -442,10 +460,14 @@ protected:
     double      _initial;
 
 public:
-    MulDiv(Parent& parent, std::string given_name, const char* operators, const Signals& iports, const Signal& oport, double initial=1.0) :
-        Base(&parent, given_name, iports, {oport}), _operators(operators), _initial(initial)
+    MulDiv(std::string given_name, const char* operators, double initial=1.0) :
+        Base(given_name), _operators(operators), _initial(initial) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        assert(std::strlen(operators) == iports.size());
+        assert(_operators.size() == iports.size());
+        return (_operators.size() == iports.size()) &&
+            Base::init(parent, iports, oports);
     }
 
     void activation_function(double /*t*/, Values& values) override
@@ -470,15 +492,21 @@ public:
 class Multiply : public MulDiv
 {
 public:
-    Multiply(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=1.0) :
-        MulDiv(parent, given_name, std::string(iports.size(), '*').c_str(), iports, oport, initial) {}
+    Multiply(std::string given_name, double initial=1.0) :
+        MulDiv(given_name, "", initial) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    {
+        _operators = std::string(iports.size(), '*');
+        return MulDiv::init(parent, iports, oports);
+    }
 };
 
 class Divide : public MulDiv
 {
 public:
-    Divide(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double initial=1.0) :
-        MulDiv(parent, given_name, "*/", iports, oport, initial) {}
+    Divide(std::string given_name, double initial=1.0) :
+        MulDiv(given_name, "*/", initial) {}
 };
 
 class Integrator : public Base
@@ -487,8 +515,7 @@ protected:
     Value _value;
 
 public:
-    Integrator(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport, Value ic=Value(0.0)) :
-        Base(&parent, given_name, Signals({iport}), Signals({oport})), _value(ic) {}
+    Integrator(std::string given_name, Value ic=Value(0.0)) : Base(given_name), _value(ic) {}
 
     void get_states(StatesInfo& states) override
     {
@@ -533,8 +560,7 @@ protected:
     std::vector<Value> _x;
 
 public:
-    Delay(Parent& parent, std::string given_name, const Signals& iports, const Signal& oport, double lifespan=10.0) :
-        Base(&parent, given_name, iports, oport), _lifespan(lifespan) {}
+    Delay(std::string given_name, double lifespan=10.0) : Base(given_name), _lifespan(lifespan) {}
 
     void step(double t, const Values& values) override
     {
@@ -600,8 +626,8 @@ protected:
     Value _value;
 
 public:
-    Memory(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport, const Value& ic=Value::Zero(1)) :
-        Base(&parent, given_name, Signals({iport}), Signals({oport})), _value(ic) {}
+    Memory(std::string given_name, const Value& ic=Value::Zero(1)) :
+        Base(given_name), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
     {
@@ -629,8 +655,8 @@ protected:
     Value  _y;
 
 public:
-    Derivative(Parent& parent, std::string given_name, const Signal& iport, const Signal& oport, const Value& y0=Value::Zero(1)) :
-        Base(&parent, given_name, iport, oport), _y(y0) {}
+    Derivative(std::string given_name, const Value& y0=Value::Zero(1)) :
+        Base(given_name), _y(y0) {}
 
     void step(double t, const Values& states) override
     {
@@ -658,17 +684,16 @@ public:
 class Parent : public Base
 {
 protected:
-    std::vector<std::unique_ptr<Base>> _components;
+    std::vector<Base*> _components;
 
-    Parent(Parent* parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()) :
-        Base(parent, given_name, iports, oports/*, false*/) {}
+    Parent(std::string given_name) : Base(given_name) {}
 
 public:
-    bool add_component(Base& component)
+    bool add_block(Base& component, const Signals& iports={}, const Signals& oports={})
     {
-        if (component.parent() != this) return false;
-        for (auto it = _components.begin(); it != _components.end(); it++)
-            if (it->get() == &component) return false;
+        if (!component.init(*this, iports, oports))
+            return false;
+
         _components.emplace_back(&component);
         return true;
     }
@@ -681,7 +706,7 @@ public:
 
     void step(double t, const Values& values) override
     {
-        for (auto& component: _components)
+        for (auto* component: _components)
             component->step(t, values);
     }
 
@@ -700,20 +725,21 @@ public:
 class Submodel : public Parent
 {
 public:
-    Submodel(Parent& parent, std::string given_name, const Signals& iports=Signals(), const Signals& oports=Signals()) :
-        Parent(&parent, given_name, iports, oports/*, false*/) {}
+    Submodel(std::string given_name) : Parent(given_name) {}
 
 }; // class Submodel
 
-class Model : public Parent
+class Model final : public Parent
 {
 protected:
     std::vector<std::string> _registered_signals;
 
-public:
-    Model(std::string name="model");
+    bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
 
-    Model& model() override {return *this;}
+public:
+    Model(std::string given_name="model");
+
+    Model* model() override {return this;}
     std::size_t num_signals() const {return _registered_signals.size();}
 
     const std::string& get_signal_by_id(Signal::Id id) const
@@ -727,7 +753,8 @@ public:
 
 inline Signal Parent::parameter(const std::string& given_name)
 {
-    return Signal(given_name, model());
+    auto* model_ = model();
+    return model_ ? Signal(given_name, *model_) : Signal();
 }
 
 }

@@ -24,11 +24,30 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Model
+class Pendulum : public Submodel
 {
+protected:
+    Integrator _integ1{   "dphi", M_PI_4};
+    Integrator _integ2{    "phi"};
+    Function     _func{"sin_phi",
+        [](double /*t*/, const Value& x) -> Value
+        {
+            return x.sin();
+        }};
+    // Sin _sin{"sin(phi)"};
+    MulDiv   _muldiv1{    "g_l",  "**/"};
+    MulDiv   _muldiv2{"tau_ml2", "*///"};
+    Subtract     _sub{  "d2phi"};
+
 public:
-    MyModel() : Model("pendulum")
+    Pendulum() : Submodel("pendulum") {}
+
+    bool init(Parent& parent, const Signals&, const Signals&) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
+        // create signals
         auto   phi = signal(  "phi");
         auto  dphi = signal( "dphi");
         auto d2phi = signal("d2phi");
@@ -39,44 +58,48 @@ public:
         auto s30 = signal();
 
         auto tau = parameter("tau");
-        auto m = parameter("m");
-        auto g = parameter("g");
-        auto l = parameter("l");
+        auto   m = parameter(  "m");
+        auto   g = parameter(  "g");
+        auto   l = parameter(  "l");
 
-        new Integrator(*this, "dphi", d2phi, dphi, M_PI_4);
-        new Integrator(*this, "phi", dphi, phi);
-        new Function(*this, "sin(phi)",
-            [](double /*t*/, const Value& x) -> Value
-            {
-                return x.sin();
-            }, phi, s10);
-        // new Sin(*this, "sin(phi)", phi, s10);
-        new MulDiv(*this, "g\\l", "**/", {s10, g, l}, s20);
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s30);
-        new Subtract(*this, "d2phi", {s30, s20}, d2phi);
+        // setup the submodel
+        add_block( _integ1,          d2phi,  dphi);
+        add_block( _integ2,           dphi,   phi);
+        add_block(   _func,            phi,   s10);
+        // add_block(    _sin,            phi,   s10);
+        add_block(_muldiv1,    {s10, g, l},   s20);
+        add_block(_muldiv2, {tau, m, l, l},   s30);
+        add_block(    _sub,     {s30, s20}, d2phi);
+
+        return true;
     }
 };
 
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto  start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    // create raw blocks
+    Model    model("test06");
+    Pendulum pendulum;
 
-    auto m = model.signal("m");
-    auto l = model.signal("l");
-    auto g = model.signal("g");
-    auto tau = model.signal("tau");
+    // setup the model
+    model.add_block(pendulum);
 
     History history(model);
+
+    auto   m = model.signal(  "m");
+    auto   l = model.signal(  "l");
+    auto   g = model.signal(  "g");
+    auto tau = model.signal("tau");
 
     Simulator sim(model,
         [&](double /*t*/, Values& values) -> void
         {
-            values.set(m, 0.2);
-            values.set(l, 0.1);
-            values.set(g, 9.81);
+            values.set(  m,  0.2);
+            values.set(  l,  0.1);
+            values.set(  g, 9.81);
             values.set(tau, 0.13);
         },
         rkf45, true);
@@ -96,7 +119,7 @@ int main()
               << " milliseconds\n";
 
     auto  phi = model.find_signal("/pendulum.phi");
-    auto dphi = model.find_signal(".dphi");
+    auto dphi = model.find_signal(        ".dphi");
 
     history.shrink_to_fit();
 

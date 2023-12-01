@@ -26,11 +26,24 @@ using namespace pooya;
 
 class Pendulum : public Submodel
 {
+protected:
+    MulDiv     _muldiv1{"tau_ml2", "*///"};
+    Subtract       _sub{    "err"};
+    Integrator  _integ1{   "dphi"};
+    Integrator  _integ2{    "phi"};
+    Sin            _sin{"sin_phi"};
+    MulDiv     _muldiv2{    "g_l", "**/"};
+
 public:
-    Pendulum(Parent& parent, const Signal& tau, const Signal& phi) : Submodel(parent, "pendulum", {tau}, {phi})
+    Pendulum() : Submodel("pendulum") {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        // signals
-        auto dphi = signal( "dphi");
+        if (!Submodel::init(parent))
+            return false;
+
+        // create signals
+        auto dphi = signal("dphi");
 
         // choose random names for these internal signals
         auto s10 = signal();
@@ -42,45 +55,75 @@ public:
         auto g = parameter("g");
         auto l = parameter("l");
 
-        // blocks
-        new MulDiv(*this, "tau\\ml2", "*///", {tau, m, l, l}, s10);
-        new Subtract(*this, "err", {s10, s20}, s30);
-        new Integrator(*this, "dphi", s30, dphi);
-        new Integrator(*this, "phi", dphi, phi);
-        // new Function(*this, "sin(phi)",
-        //     [](double /*t*/, const Value& x) -> Value
-        //     {
-        //         return x.sin();
-        //     }, phi, s40);
-        new Sin(*this, "sin(phi)", phi, s40);
-        new MulDiv(*this, "g\\l", "**/", {s40, g, l}, s20);
+        auto& tau = iports[0];
+        auto& phi = oports[0];
+
+        // setup the submodel
+        add_block(_muldiv1, {tau, m, l, l},  s10);
+        add_block(    _sub,     {s10, s20},  s30);
+        add_block( _integ1,            s30, dphi);
+        add_block( _integ2,           dphi,  phi);
+        add_block(    _sin,            phi,  s40);
+        add_block(_muldiv2,    {s40, g, l},  s20);
+
+        return true;
     }
 };
 
 class PI : public Submodel
 {
+protected:
+    Gain      _gain_p;
+    Integrator _integ;
+    Gain      _gain_i;
+    Add          _add{"Add"};
+
 public:
-    PI(Parent& parent, double Kp, double Ki, const Signal& x, const Signal& y, double x0=0.0) :
-        Submodel(parent, "PI", x, y)
+    PI(double Kp, double Ki, double x0=0.0) :
+        Submodel("PI"),
+        _gain_p("Kp", Kp),
+        _integ ("ix", x0),
+        _gain_i("Ki", Ki)
+    {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
         // choose random names for these internal signals
         auto s10 = signal();
         auto s20 = signal();
         auto s30 = signal();
 
+        auto& x = iports[0];
+        auto& y = oports[0];
+
         // blocks
-        new Gain(*this, "Kp", Kp, x, s10);
-        new Integrator(*this, "ix", x, s20, x0);
-        new Gain(*this, "Ki", Ki, s20, s30);
-        new Add(*this, "Add", {s10, s30}, y);
+        add_block(_gain_p,          x, s10);
+        add_block( _integ,          x, s20);
+        add_block(_gain_i,        s20, s30);
+        add_block(   _add, {s10, s30},   y);
+
+        return true;
     }
 };
 
-class MyModel : public Model
+class PendulumWithPI : public Submodel
 {
+protected:
+    Subtract  _sub{"Sub"};
+    PI         _pi{40.0, 20.0};
+    Pendulum _pend;
+
 public:
-    MyModel() : Model("pendulum_with_PI")
+    PendulumWithPI() : Submodel("pendulum_with_PI") {}
+
+    bool init(Parent& parent, const Signals&, const Signals&) override
     {
+        if (!Submodel::init(parent))
+            return false;
+
         // signals
         auto phi = signal("phi");
         auto tau = signal("tau");
@@ -89,32 +132,39 @@ public:
         auto des_phi = parameter("des_phi");
 
         // blocks
-        new Subtract(*this, "Sub", {des_phi, phi}, err);
-        new PI(*this, 40.0, 20.0, err, tau);
-        new Pendulum(*this, tau, phi);
+        add_block(_sub, {des_phi, phi}, err);
+        add_block( _pi,            err, tau);
+        add_block(_pend,           tau, phi);
+
+        return true;
     }
 };
 
 int main()
 {
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto  start = std::chrono::high_resolution_clock::now();
 
-    auto model = MyModel();
+    // create raw blocks
+    Model          model("test07");
+    PendulumWithPI pendulum_with_pi;
 
-    auto m = model.signal("m");
-    auto l = model.signal("l");
-    auto g = model.signal("g");
-    auto des_phi = model.signal("des_phi");
+    // setup the model
+    model.add_block(pendulum_with_pi);
 
     History history(model);
+
+    auto       m = model.signal(      "m");
+    auto       l = model.signal(      "l");
+    auto       g = model.signal(      "g");
+    auto des_phi = model.signal("des_phi");
 
     Simulator sim(model,
         [&](double /*t*/, Values& values) -> void
         {
-            values.set(m, 0.2);
-            values.set(l, 0.1);
-            values.set(g, 9.81);
+            values.set(      m,    0.2);
+            values.set(      l,    0.1);
+            values.set(      g,   9.81);
             values.set(des_phi, M_PI_4);
         },
         rkf45); // try rk4 with h = 0.01 to see the difference
@@ -133,7 +183,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal(".phi");
+    auto phi = model.find_signal(".phi");
 
     history.shrink_to_fit();
 

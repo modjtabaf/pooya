@@ -10,3 +10,6 @@
 * retire make files
 - selective history
 - yaml model definition
+- scalar and array signals
+- replace init virtual method with a template
+- solver.cpp cleanup

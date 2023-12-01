@@ -21,6 +21,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "pooya.hpp"
 #include "solver.hpp"
 
+// helper macros
+
+#define  array_input(index) values[_iports[index]]
+#define scalar_input(index) array_input(index)[0]
+#define array_output(index, value) values.set(_oports[index], value)
+
 namespace pooya
 {
 

@@ -240,17 +240,12 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
 
 Model::Model(std::string given_name) : Parent(given_name)
 {
-    init(*this);
+    _assign_valid_given_name(_given_name);
+    _full_name = "/" + _given_name;
 }
 
 bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
-    assert(_parent == nullptr);
-    assert(&parent == this);
-
-    _assign_valid_given_name(_given_name);
-    _full_name = "/" + _given_name;
-    
     return true;
 }
 

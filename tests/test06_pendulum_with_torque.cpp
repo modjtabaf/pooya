@@ -95,7 +95,7 @@ int main()
     auto tau = model.signal("tau");
 
     Simulator sim(model,
-        [&](double /*t*/, Values& values) -> void
+        [&](Model&, double /*t*/, Values& values) -> void
         {
             values.set(  m,  0.2);
             values.set(  l,  0.1);

@@ -84,7 +84,7 @@ int main()
     auto g = model.signal("g");
 
     Simulator sim(model,
-        [&](double /*t*/, Values& values) -> void
+        [&](Model&, double /*t*/, Values& values) -> void
         {
             values.set(l, 0.1);
             values.set(g, 9.81);

@@ -43,7 +43,7 @@ int main()
     History history(model);
 
     Simulator sim(model,
-        [&](double t, Values& values) -> void
+        [&](Model&, double t, Values& values) -> void
         {
             values.set(xd, t < 3 or t > 7 ? 1 : 0);
         },

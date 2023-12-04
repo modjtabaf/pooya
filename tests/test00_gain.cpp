@@ -43,7 +43,7 @@ int main()
     History history(model);
 
     Simulator sim(model,
-        [&](double t, Values& values) -> void
+        [&](Model&, double t, Values& values) -> void
         {
             values.set(x, std::sin(M_PI * t / 5));
         });

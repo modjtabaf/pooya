@@ -674,7 +674,7 @@ public:
 
 }; // class Submodel
 
-class Model final : public Parent
+class Model : public Parent
 {
 protected:
     std::vector<std::string> _registered_signals;

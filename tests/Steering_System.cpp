@@ -30,10 +30,21 @@ using namespace pooya;
 
 class PT : public Submodel
 {
+protected:
+    Subtract     _sub{"sub"};
+    Divide       _div{"div"};
+    Integrator _integ{"int"};
+    InitialValue  _iv{"iv"};
+    Add          _add{"add"};
+
 public:
-    PT(Parent& parent, const Signal& y_in, const Signal& tau, const Signal& y0, const Signal& y_out) :
-        Submodel(parent, "PT", {y_in, tau, y0}, y_out)
+    PT() : Submodel("PT") {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
+        if (!Submodel::init(parent, iports, oports))
+            return false;
+
         // choose random names for these internal signals
         auto s10 = signal();
         auto s20 = signal();
@@ -41,11 +52,13 @@ public:
         auto s40 = signal();
 
         // blocks
-        new Subtract(*this, "+-1", {y_in, y_out}, s10);
-        new Divide(*this, "*\\", {s10, tau}, s20);
-        new Integrator(*this, "Int", s20, s30);
-        new InitialValue(*this, "IV", y0, s40);
-        new Add(*this, "+-2", {s30, s40}, y_out);
+        add_block(  _sub, {y_in, y_out},   s10);
+        add_block(  _div, {s10, tau}   ,   s20);
+        add_block(_integ,  s20         ,   s30);
+        add_block(   _iv,  y0          ,   s40);
+        add_block(  _add, {s30, s40}   , y_out);
+
+        return true;
     }
 };
 

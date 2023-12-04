@@ -290,44 +290,60 @@ public:
     }
 };
 
+class SimpleTruckModel : public Model
+{
+protected:
+    // parameters
+    Parameters _params;
+    ChassisDynamics _chdyn;
+
+    // input signals
+    Signal _s_delta_Rq;
+    Signal _s_engine_torque;
+
+public:
+    SimpleTruckModel() : Model("SimpleTruck"), _chdyn(_params)
+    {
+        // input signals
+        _s_delta_Rq      = signal("front_wheel_angle_Rq");
+        _s_engine_torque = signal("engine_torque");
+
+        // setup the model
+        add_block(_chdyn, {_s_delta_Rq, _s_engine_torque});
+    }
+
+    void input_callback(double t, Values& values)
+    {
+        double delta_Rq;
+        if (t < 2)
+            delta_Rq = 0;
+        else if (t < 3)
+            delta_Rq = 0.1;
+        else if (t < 5)
+            delta_Rq = 0;
+        else if (t < 6)
+            delta_Rq = -0.1;
+        else
+            delta_Rq = 0;
+
+        values.set(     _s_delta_Rq, delta_Rq);
+        values.set(_s_engine_torque,     5000);
+    }
+};
+
 int main()
 {
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
-    // parameters
-    Parameters params;
-
-    // create raw blocks
-    Model           model("SimpleTruck");
-    ChassisDynamics chdyn(params);
-
-    // inputs
-    auto      s_delta_Rq = model.signal("front_wheel_angle_Rq");
-    auto s_engine_torque = model.signal("engine_torque");
-
-    // setup the model
-    model.add_block(chdyn, {s_delta_Rq, s_engine_torque});
+    SimpleTruckModel model;
 
     History history(model);
 
     Simulator sim(model,
-        [&](double t, Values& values) -> void
+        [](Model& model, double t, Values& values) -> void
         {
-            double delta_Rq;
-            if (t < 2)
-                delta_Rq = 0;
-            else if (t < 3)
-                delta_Rq = 0.1;
-            else if (t < 5)
-                delta_Rq = 0;
-            else if (t < 6)
-                delta_Rq = -0.1;
-            else
-                delta_Rq = 0;
-
-            values.set(     s_delta_Rq, delta_Rq);
-            values.set(s_engine_torque,     5000);
+            static_cast<SimpleTruckModel&>(model).input_callback(t, values);
         }, rk4);
 
     uint k = 0;

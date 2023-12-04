@@ -50,7 +50,7 @@ public:
     uint nrows() const {return _bottom_row + 1;}
 };
 
-using InputCallback = std::function<void(double, Values&)>;
+using InputCallback = std::function<void(Model&, double, Values&)>;
 
 class Simulator
 {

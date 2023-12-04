@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MyModel : public Submodel
+class MyModel : public Model
 {
 protected:
     Const _const1{"TimeDelay", 2.7435};
@@ -32,25 +32,30 @@ protected:
     Delay  _delay{    "Delay"        };
 
 public:
-    MyModel() : Submodel("MyModel") {}
+    Signal _s_x;
+    Signal _s_y;
 
-    bool init(Parent& parent, const Signals& x, const Signals& y) override
+public:
+    MyModel() : Model("test02")
     {
-        if (!Submodel::init(parent, x, y))
-            return false;
-
         // create signals
         auto time_delay = signal("time_delay");
         auto    initial = signal(   "initial");
 
+        _s_x = signal("x");
+        _s_y = signal("y");
+
         // setup the submodel
         add_block(_const1,          {}, time_delay);
         add_block(_const2,          {},    initial);
-        add_block( _delay, {x[0]      ,
+        add_block( _delay, {_s_x      ,
                             time_delay,
-                            initial  },          y);
+                            initial  },       _s_y);
+    }
 
-        return true;
+    void input_cb(double t, Values& values)
+    {
+        values.set(_s_x, std::sin(M_PI * t / 5));
     }
 };
 
@@ -59,23 +64,15 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start  = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
-    Model   model("test02");
-    MyModel mymodel;
-
-    // create signals
-    auto x = model.signal("x");
-    auto y = model.signal("y");
-
-    // setup the model
-    model.add_block(mymodel, x, y);
+    // create the model
+    MyModel model;
 
     History history(model);
 
     Simulator sim(model,
-        [&](double t, Values& values) -> void
+        [](Model& model, double t, Values& values) -> void
         {
-            values.set(x, std::sin(M_PI * t / 5));
+            static_cast<MyModel&>(model).input_cb(t, values);
         });
 
     uint k = 0;
@@ -97,8 +94,8 @@ int main()
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
-	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[y]) << "with lines title 'xd'\n";
+	gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x',"
+		<< gp.file1d(history[model._s_y]) << "with lines title 'xd'\n";
 
     return 0;
 }

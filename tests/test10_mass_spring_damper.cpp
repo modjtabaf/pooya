@@ -99,7 +99,7 @@ int main()
     History history(model);
 
     Simulator sim(model,
-    [&](double t, Values& values) -> void
+    [&](Model&, double t, Values& values) -> void
     {
         values.set(tau, 0.01 * std::sin(t));
     }, rkf45);

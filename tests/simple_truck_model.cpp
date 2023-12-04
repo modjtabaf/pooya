@@ -312,7 +312,7 @@ public:
         add_block(_chdyn, {_s_delta_Rq, _s_engine_torque});
     }
 
-    void input_callback(double t, Values& values)
+    void input_cb(double t, Values& values) override
     {
         double delta_Rq;
         if (t < 2)
@@ -340,11 +340,7 @@ int main()
 
     History history(model);
 
-    Simulator sim(model,
-        [](Model& model, double t, Values& values) -> void
-        {
-            static_cast<SimpleTruckModel&>(model).input_callback(t, values);
-        }, rk4);
+    Simulator sim(model, nullptr, rk4);
 
     uint k = 0;
     double t;

@@ -694,6 +694,8 @@ public:
 
     Signal::Id find_signal(const std::string& name, bool exact_match = false) const;
     Signal::Id find_or_register_signal(const std::string& name);
+
+    virtual void input_cb(double /*t*/, Values& /*values*/) {}
 };
 
 inline Signal Parent::parameter(const std::string& given_name)

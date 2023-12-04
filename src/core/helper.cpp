@@ -182,8 +182,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 {
     auto stepper_callback = [&](double t, Values& values) -> void
     {
-        if (_inputs_cb)
-            _inputs_cb(_model, t, values);
+        _inputs_cb ? _inputs_cb(_model, t, values) : _model.input_cb(t, values);
         _process(t, values);
     };
 
@@ -255,8 +254,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                             _values.set(state.first, state.second.first);
                             (it++)->second.first = state.second.first;
                         }
-                        if (_inputs_cb)
-                            _inputs_cb(_model, t1, _values);
+                        _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
                         _process(t1, _values);
                         _model.step(t1, _values);
                     }
@@ -282,8 +280,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     _values.invalidate();
     for (const auto& state: _states)
         _values.set(state.first, state.second.first);
-    if (_inputs_cb)
-        _inputs_cb(_model, t, _values);
+    _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.step(t, _values);
 

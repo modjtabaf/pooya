@@ -53,7 +53,7 @@ public:
                             initial  },       _s_y);
     }
 
-    void input_cb(double t, Values& values)
+    void input_cb(double t, Values& values) override
     {
         values.set(_s_x, std::sin(M_PI * t / 5));
     }
@@ -69,11 +69,7 @@ int main()
 
     History history(model);
 
-    Simulator sim(model,
-        [](Model& model, double t, Values& values) -> void
-        {
-            static_cast<MyModel&>(model).input_cb(t, values);
-        });
+    Simulator sim(model);
 
     uint k = 0;
     double t;

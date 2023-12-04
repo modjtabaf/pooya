@@ -35,16 +35,17 @@ class Base;
 class Parent;
 class Model;
 
-class Value : public ArrayXd
-{
-public:
-    using ArrayXd::ArrayXd;
+// class Value : public ArrayXd
+// {
+// public:
+//     using ArrayXd::ArrayXd;
 
-    Value(double v=0) : ArrayXd(1)
-    {
-        (*this)[0] = v;
-    }
-};
+//     Value(double v=0) : ArrayXd(1)
+//     {
+//         (*this)[0] = v;
+//     }
+// };
+using Value = double;
 
 class Signal
 {
@@ -263,16 +264,19 @@ class InitialValue : public Base
 {
 protected:
     Value _value;
+    bool _init{true};
 
 public:
     InitialValue(std::string given_name) : Base(given_name) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
-        if (_value.size() == 0)
+        // if (_value.size() == 0)
+        if (_init)
         {
             _value = *values.get(_iports[0]);
             _iports.clear();
+            _init = false;
         }
         values.set(_oports[0], _value);
     }
@@ -286,10 +290,10 @@ protected:
 public:
     Const(std::string given_name, const Value& value) : Base(given_name), _value(value) {}
 
-    Const(std::string given_name, double value) : Base(given_name), _value(1)
-    {
-         _value << value;
-    }
+    // Const(std::string given_name, double value) : Base(given_name), _value(1)
+    // {
+    //      _value << value;
+    // }
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -319,7 +323,8 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        values.set(_oports[0], values.get(_iports[0])->sin());
+        // values.set(_oports[0], values.get(_iports[0])->sin());
+        values.set(_oports[0], std::sin(*values.get(_iports[0])));
     }
 };
 
@@ -361,7 +366,8 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        // Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        Value ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
@@ -417,7 +423,8 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        // Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        Value ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
@@ -534,12 +541,14 @@ public:
         if (_t.empty())
         {
             assert(values.get(_iports[2]));
-            values.set(_oports.front(), {(*values.get(_iports[2]))[0]});
+            // values.set(_oports.front(), {(*values.get(_iports[2]))[0]});
+            values.set(_oports.front(), {(*values.get(_iports[2]))});
             return;
         }
     
         assert(values.get(_iports[1]));
-        const double delay = (*values.get(_iports[1]))[0];
+        // const double delay = (*values.get(_iports[1]))[0];
+        const double delay = (*values.get(_iports[1]));
         t -= delay;
         if (t <= _t.front())
         {
@@ -560,7 +569,7 @@ public:
                 k++;
             }
 
-            values.set(_oports.front(), (_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]);
+            values.set(_oports.front(), (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
@@ -571,7 +580,8 @@ protected:
     Value _value;
 
 public:
-    Memory(std::string given_name, const Value& ic=Value::Zero(1)) :
+    // Memory(std::string given_name, const Value& ic=Value::Zero(1)) :
+    Memory(std::string given_name, const Value& ic=0) :
         Base(given_name), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
@@ -600,7 +610,8 @@ protected:
     Value  _y;
 
 public:
-    Derivative(std::string given_name, const Value& y0=Value::Zero(1)) :
+    // Derivative(std::string given_name, const Value& y0=Value::Zero(1)) :
+    Derivative(std::string given_name, const Value& y0=0) :
         Base(given_name), _y(y0) {}
 
     void step(double t, const Values& states) override

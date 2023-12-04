@@ -206,7 +206,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     double max_abs = 0;
     for (k = 0; k < states.size(); k++)
-        max_abs = ((*YT.get(k)) - (*ZT.get(k))).array().abs().max(max_abs)(0, 0);
+        // max_abs = ((*YT.get(k)) - (*ZT.get(k))).array().abs().max(max_abs)(0, 0);
+        max_abs = std::max(max_abs, std::abs((*YT.get(k)) - (*ZT.get(k))));
 
     //     if s < 0.75 then
     //         h := max( h/2, 0.025 );

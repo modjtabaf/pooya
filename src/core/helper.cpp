@@ -26,12 +26,14 @@ void History::update(uint k, double t, const Values& values)
     if (empty()) // todo: consider reserving space for values
     {
         reserve(values.size() + 1);
-        insert_or_assign(time_id, Value(_nrows_grow)); // t
+        // insert_or_assign(time_id, Value(_nrows_grow)); // t
+        insert_or_assign(time_id, VectorXd(_nrows_grow)); // t
         for (Signal::Id id = 0; id < _model.num_signals(); id++)
         {
             const auto* v = values.get(id);
             assert(v);
-            insert_or_assign(id, MatrixXd(_nrows_grow, v->size()));
+            // insert_or_assign(id, MatrixXd(_nrows_grow, v->size()));
+            insert_or_assign(id, VectorXd(_nrows_grow));
         }
     }
 
@@ -46,7 +48,8 @@ void History::update(uint k, double t, const Values& values)
             h.conservativeResize(k + _nrows_grow, NoChange);
         const auto* v = values.get(id);
         assert(v);
-        h.row(k) = *v;
+        // h.row(k) = *v;
+        h(k, 0) = *v;
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))

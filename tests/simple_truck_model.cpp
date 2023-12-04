@@ -85,16 +85,22 @@ public:
     {
         double         delta = scalar_input(0);
         double engine_torque = scalar_input(1);
-        const Value&      dq =  array_input(2);
+        // const Value&      dq =  array_input(2);
+        double           dq0 = scalar_input(2);
+        double           dq1 = scalar_input(3);
 
         double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
-        double F_lon = F * cos(delta) - 500 * dq(0);
+        // double F_lon = F * cos(delta) - 500 * dq(0);
+        double F_lon = F * cos(delta) - 500 * dq0;
 
-        Value F_lat(3);
-        F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
+        // Value F_lat(3);
+        // F_lat << F * sin(delta) - 500 * dq1, 0, 0;
+        double F_lat = F * sin(delta) - 500 * dq1;
 
         array_output(0, F_lon);
         array_output(1, F_lat);
+        array_output(2, 0);
+        array_output(3, 0);
     }
 };
 
@@ -106,12 +112,27 @@ protected:
     // input signals
     Signal _s_delta;
     Signal _s_F_lon;
-    Signal _s_F_lat;
-    Signal     _s_q;
-    Signal    _s_dq;
+    // Signal _s_F_lat;
+    Signal _s_F_lat0;
+    Signal _s_F_lat1;
+    Signal _s_F_lat2;
+    // Signal     _s_q;
+    Signal     _s_q0;
+    Signal     _s_q1;
+    Signal     _s_q2;
+    Signal     _s_q3;
+    // Signal    _s_dq;
+    Signal    _s_dq0;
+    Signal    _s_dq1;
+    Signal    _s_dq2;
+    Signal    _s_dq3;
 
     // output signal
-    Signal _s_d2q;
+    // Signal _s_d2q;
+    Signal _s_d2q0;
+    Signal _s_d2q1;
+    Signal _s_d2q2;
+    Signal _s_d2q3;
 
 public:
     EquationsOfMotion(Parameters& params) : Base("EquationsOfMotion"), _p(params) {}
@@ -123,11 +144,26 @@ public:
 
         _s_delta = iports[0];
         _s_F_lon = iports[1];
-        _s_F_lat = iports[2];
-        _s_q     = iports[3];
-        _s_dq    = iports[4];
+        // _s_F_lat = iports[2];
+        _s_F_lat0 = iports[2];
+        _s_F_lat1 = iports[3];
+        _s_F_lat2 = iports[4];
+        // _s_q     = iports[3];
+        _s_q0    = iports[5];
+        _s_q1    = iports[6];
+        _s_q2    = iports[7];
+        _s_q3    = iports[8];
+        // _s_dq    = iports[4];
+        _s_dq0   = iports[9];
+        _s_dq1   = iports[10];
+        _s_dq2   = iports[11];
+        _s_dq3   = iports[12];
 
-        _s_d2q   = oports[0];
+        // _s_d2q   = oports[0];
+        _s_d2q0  = oports[0];
+        _s_d2q1  = oports[1];
+        _s_d2q2  = oports[2];
+        _s_d2q3  = oports[3];
 
         return true;
     }
@@ -135,29 +171,43 @@ public:
     void activation_function(double /*t*/, Values& values) override
     {
         // inputs
-        double       delta = values[_s_delta][0];
-        double       F_lon = values[_s_F_lon][0];
-        const Value& F_lat = values[_s_F_lat];
-        const Value&     q = values[    _s_q];
-        const Value&    dq = values[   _s_dq];
+        // double       delta = values[_s_delta][0];
+        // double       F_lon = values[_s_F_lon][0];
+        double       delta = values[_s_delta];
+        double       F_lon = values[_s_F_lon];
+        // const Value& F_lat = values[_s_F_lat];
+        double Fyf = values[_s_F_lat0];
+        double Fyr = values[_s_F_lat1];
+        double Fyt = values[_s_F_lat2];
+        // const Value&     q = values[    _s_q];
+        // double     q0 = values[    _s_q0];
+        // double     q1 = values[    _s_q1];
+        double     psi1 = values[    _s_q2];
+        double     psi2 = values[    _s_q3];
+        // const Value&    dq = values[   _s_dq];
+        // double    dq0 = values[   _s_dq0];
+        // double    dq1 = values[   _s_dq1];
+        double    Dpsi1 = values[   _s_dq2];
+        double    Dpsi2 = values[   _s_dq3];
 
         // lateral force components of axles
-        double Fyf = F_lat[0];
-        double Fyr = F_lat[1];
-        double Fyt = F_lat[2];
+        // double Fyf = F_lat[0];
+        // double Fyr = F_lat[1];
+        // double Fyt = F_lat[2];
 
         // yaw angles and rates
-        double  psi1 =  q[2];
-        double  psi2 =  q[3];
-        double Dpsi1 = dq[2];
-        double Dpsi2 = dq[3];
+        // double  psi1 =  q[2];
+        // double  psi2 =  q[3];
+        // double Dpsi1 = dq[2];
+        // double Dpsi2 = dq[3];
 
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         // % Solve Equations of Motion
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // second derivatives
-        Value d2q(4);
+        // Value d2q(4);
+        double d2q0, d2q1, d2q2, d2q3;
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);
@@ -195,31 +245,60 @@ public:
             
             // % comput new states
             // % -----------------
-            d2q = M.colPivHouseholderQr().solve(qe - k);
+            // if (0)
+            //     d2q = M.colPivHouseholderQr().solve(qe - k);
+            // else
+            {
+                Eigen::Matrix<double, 4, 5> A;
+                A.block<4, 4>(0, 0) = M;
+                A.block<4, 1>(0, 4) = qe - k;
+                A.row(0) /= A(0, 0);
+                A.row(1) /= A(1, 1);
+                A.row(2) -= A.row(0) * A(2, 0);
+                A.row(3) -= A.row(0) * A(3, 0);
+                A.row(2) -= A.row(1) * A(2, 1);
+                A.row(3) -= A.row(1) * A(3, 1);
+                auto B = A.block<2, 2>(2, 2);
+                Eigen::Matrix<double, 2, 2> B_inv;
+                B_inv << B(1, 1), -B(0, 1), -B(1, 0), B(0, 0);
+                B_inv /= B(0, 0) * B(1, 1) - B(0, 1) * B(1, 0);
+                auto foo = B_inv * A.block<2, 1>(2, 4);
+                // d2q.tail(2) = foo;
+                d2q2 = foo(0);
+                d2q3 = foo(1);
+                // d2q.head(2) = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
+                auto foo2 = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
+                d2q0 = foo2(0);
+                d2q1 = foo2(1);
+            }
         }
         else // % Truck without trailer (bobtail)
         {
             // % comput new states
             // % -----------------
-            d2q << -(Fyf*sin(delta + psi1) - F_lon*c1 + Fyr*s1)/_p.m1
-                 ,  (Fyf*cos(delta + psi1) + Fyr*c1 + F_lon*s1)/_p.m1
-                 ,          -(Fyr*_p.lr - Fyf*_p.lf*cos(delta))/_p.I1
-                 ,                                                  0;
+            // d2q << -(Fyf*sin(delta + psi1) - F_lon*c1 + Fyr*s1)/_p.m1
+            //      ,  (Fyf*cos(delta + psi1) + Fyr*c1 + F_lon*s1)/_p.m1
+            //      ,          -(Fyr*_p.lr - Fyf*_p.lf*cos(delta))/_p.I1
+            //      ,                                                  0;
         }
 
-        values.set(_s_d2q, d2q);
+        // values.set(_s_d2q, d2q);
+        values.set(_s_d2q0, d2q0);
+        values.set(_s_d2q1, d2q1);
+        values.set(_s_d2q2, d2q2);
+        values.set(_s_d2q3, d2q3);
     }
 };
 
 class PT : public Submodel
 {
 protected:
-    Subtract     _sub{"+-"};
+    Subtract     _sub{"sub"};
     Const      _const;
-    Divide       _div{"*\\"};
+    Divide       _div{"div"};
     Integrator _integ{"Int"};
     InitialValue  _iv{"IV"};
-    Add          _add{"++"};
+    Add          _add{"add"};
 
 public:
     PT(double tau) : Submodel("PT"), _const("tau", tau) {}
@@ -258,8 +337,16 @@ protected:
     PT                 _pt{0.1};
     Forces         _forces;
     EquationsOfMotion _eom;
-    Integrator     _integ1{"d2q->dq", Value::Zero(4)};
-    Integrator     _integ2{  "dq->q", Value::Zero(4)};
+    // Integrator     _integ1{"d2q->dq", Value::Zero(4)};
+    Integrator     _integ10{"d2q0->dq0"};
+    Integrator     _integ11{"d2q1->dq1"};
+    Integrator     _integ12{"d2q2->dq2"};
+    Integrator     _integ13{"d2q3->dq3"};
+    // Integrator     _integ2{  "dq->q", Value::Zero(4)};
+    Integrator     _integ20{  "dq0->q0"};
+    Integrator     _integ21{  "dq1->q1"};
+    Integrator     _integ22{  "dq2->q2"};
+    Integrator     _integ23{  "dq3->q3"};
 
 public:
     ChassisDynamics(Parameters& params) : Submodel("ChassisDynamics"), _eom(params) {}
@@ -271,20 +358,45 @@ public:
 
         // signals
         auto s_delta = signal("front_wheel_angle");
-        auto     s_q = signal(  "q");
-        auto    s_dq = signal( "dq");
-        auto   s_d2q = signal("d2q");
+        // auto     s_q = signal(  "q");
+        auto     s_q0 = signal(  "q0");
+        auto     s_q1 = signal(  "q1");
+        auto     s_q2 = signal(  "q2");
+        auto     s_q3 = signal(  "q3");
+        // auto    s_dq = signal( "dq");
+        auto    s_dq0 = signal( "dq0");
+        auto    s_dq1 = signal( "dq1");
+        auto    s_dq2 = signal( "dq2");
+        auto    s_dq3 = signal( "dq3");
+        // auto   s_d2q = signal("d2q");
+        auto   s_d2q0 = signal("d2q0");
+        auto   s_d2q1 = signal("d2q1");
+        auto   s_d2q2 = signal("d2q2");
+        auto   s_d2q3 = signal("d2q3");
         auto s_F_lon = signal("F_lon");
-        auto s_F_lat = signal("F_lat");
+        // auto s_F_lat = signal("F_lat");
+        auto s_F_lat0 = signal("F_lat0");
+        auto s_F_lat1 = signal("F_lat1");
+        auto s_F_lat2 = signal("F_lat2");
 
         auto&      s_delta_Rq = iports[0];
         auto& s_engine_torque = iports[1];
 
         add_block(    _pt,               {s_delta_Rq, s_delta_Rq},           s_delta );
-        add_block(_forces,       {s_delta, s_engine_torque, s_dq}, {s_F_lon, s_F_lat});
-        add_block(   _eom, {s_delta, s_F_lon, s_F_lat, s_q, s_dq},             s_d2q );
-        add_block(_integ1,                                 s_d2q ,              s_dq );
-        add_block(_integ2,                                  s_dq ,               s_q );
+        // add_block(_forces,       {s_delta, s_engine_torque, s_dq}, {s_F_lon, s_F_lat});
+        add_block(_forces,       {s_delta, s_engine_torque, s_dq0, s_dq1}, {s_F_lon, s_F_lat0, s_F_lat1, s_F_lat2});
+        // add_block(   _eom, {s_delta, s_F_lon, s_F_lat, s_q, s_dq},             s_d2q );
+        add_block(   _eom, {s_delta, s_F_lon, s_F_lat0, s_F_lat1, s_F_lat2, s_q0, s_q1, s_q2, s_q3, s_dq0, s_dq1, s_dq2, s_dq3}, {s_d2q0, s_d2q1, s_d2q2, s_d2q3} );
+        // add_block(_integ1,                                 s_d2q ,              s_dq );
+        add_block(_integ10,                                 s_d2q0 ,              s_dq0 );
+        add_block(_integ11,                                 s_d2q1 ,              s_dq1 );
+        add_block(_integ12,                                 s_d2q2 ,              s_dq2 );
+        add_block(_integ13,                                 s_d2q3 ,              s_dq3 );
+        // add_block(_integ2,                                  s_dq ,               s_q );
+        add_block(_integ20,                                  s_dq0 ,               s_q0 );
+        add_block(_integ21,                                  s_dq1 ,               s_q1 );
+        add_block(_integ22,                                  s_dq2 ,               s_q2 );
+        add_block(_integ23,                                  s_dq3 ,               s_q3 );
 
         return true;
     }
@@ -360,11 +472,13 @@ int main()
 
     auto T = history.at(History::time_id);
     // auto q = history.at(model.find_signal(".q"));
-    auto dq = history.at(model.find_signal(".dq"));
+    // auto dq = history.at(model.find_signal(".dq"));
     auto a = history.at(model.find_signal("_angle"));
 
-    const auto& vx = dq.col(0);
-    const auto& vy = dq.col(1);
+    // const auto& vx = dq.col(0);
+    const auto& vx = history.at(model.find_signal(".dq0"));
+    // const auto& vy = dq.col(1);
+    const auto& vy = history.at(model.find_signal(".dq1"));
     // const auto& psi1 = q.col(2);
     // const auto& psi2 = q.col(3);
 

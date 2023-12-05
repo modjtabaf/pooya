@@ -4,7 +4,7 @@
 #include <vector>
 #include <chrono>
 
-#include "3rdparty/eigen/Eigen/Dense"
+// #include "3rdparty/eigen/Eigen/Dense"
 
 #include "src/core/pooya.hpp"
 #include "src/core/helper.hpp"
@@ -221,27 +221,49 @@ public:
 
             // % Generalized Mass Matrix
             // % -----------------------
-            Eigen::Matrix4d M;
-            M  <<   _p.m1 + _p.m2 ,                0 ,            _p.lk*_p.m2*s1 ,             _p.ltf*_p.m2*s2
-                ,               0 ,    _p.m1 + _p.m2 ,           -_p.lk*_p.m2*c1 ,            -_p.ltf*_p.m2*c2
-                ,  _p.lk*_p.m2*s1 ,  -_p.lk*_p.m2*c1 , _p.m2*_p.lk*_p.lk + _p.I1 ,     _p.lk*_p.ltf*_p.m2*c1_2
-                , _p.ltf*_p.m2*s2 , -_p.ltf*_p.m2*c2 ,   _p.lk*_p.ltf*_p.m2*c1_2 , _p.m2*_p.ltf*_p.ltf + _p.I2;
+            // Eigen::Matrix4d M;
+            // M  <<   _p.m1 + _p.m2 ,                0 ,            _p.lk*_p.m2*s1 ,             _p.ltf*_p.m2*s2
+            //     ,               0 ,    _p.m1 + _p.m2 ,           -_p.lk*_p.m2*c1 ,            -_p.ltf*_p.m2*c2
+            //     ,  _p.lk*_p.m2*s1 ,  -_p.lk*_p.m2*c1 , _p.m2*_p.lk*_p.lk + _p.I1 ,     _p.lk*_p.ltf*_p.m2*c1_2
+            //     , _p.ltf*_p.m2*s2 , -_p.ltf*_p.m2*c2 ,   _p.lk*_p.ltf*_p.m2*c1_2 , _p.m2*_p.ltf*_p.ltf + _p.I2;
+            double m00 = _p.m1 + _p.m2;
+            double m02 = _p.lk*_p.m2*s1;
+            double m03 = _p.ltf*_p.m2*s2;
+            double m11 = _p.m1 + _p.m2;
+            double m12 = -_p.lk*_p.m2*c1;
+            double m13 = -_p.ltf*_p.m2*c2;
+            double m20 = _p.lk*_p.m2*s1;
+            double m21 = -_p.lk*_p.m2*c1;
+            double m22 = _p.m2*_p.lk*_p.lk + _p.I1;
+            double m23 = _p.lk*_p.ltf*_p.m2*c1_2;
+            double m30 = _p.ltf*_p.m2*s2;
+            double m31 = -_p.ltf*_p.m2*c2;
+            double m32 = _p.lk*_p.ltf*_p.m2*c1_2;
+            double m33 = _p.m2*_p.ltf*_p.ltf + _p.I2;
 
             // % Vector of Generalized Forces (gyroscopic, Coriolis, centrifugal)
             // % ----------------------------------------------------------------
-            Eigen::Vector4d k;
-            k << _p.m2*(_p.lk*c1*Dpsi1*Dpsi1 + _p.ltf*c2*Dpsi2*Dpsi2)
-               , _p.m2*(_p.lk*s1*Dpsi1*Dpsi1 + _p.ltf*s2*Dpsi2*Dpsi2)
-               ,                  Dpsi2*Dpsi2*_p.lk*_p.ltf*_p.m2*s1_2
-               ,                 -Dpsi1*Dpsi1*_p.lk*_p.ltf*_p.m2*s1_2;
+            // Eigen::Vector4d k;
+            // k << _p.m2*(_p.lk*c1*Dpsi1*Dpsi1 + _p.ltf*c2*Dpsi2*Dpsi2)
+            //    , _p.m2*(_p.lk*s1*Dpsi1*Dpsi1 + _p.ltf*s2*Dpsi2*Dpsi2)
+            //    ,                  Dpsi2*Dpsi2*_p.lk*_p.ltf*_p.m2*s1_2
+            //    ,                 -Dpsi1*Dpsi1*_p.lk*_p.ltf*_p.m2*s1_2;
+            double k0 = _p.m2*(_p.lk*c1*Dpsi1*Dpsi1 + _p.ltf*c2*Dpsi2*Dpsi2);
+            double k1 = _p.m2*(_p.lk*s1*Dpsi1*Dpsi1 + _p.ltf*s2*Dpsi2*Dpsi2);
+            double k2 =  Dpsi2*Dpsi2*_p.lk*_p.ltf*_p.m2*s1_2;
+            double k3 = -Dpsi1*Dpsi1*_p.lk*_p.ltf*_p.m2*s1_2;
 
             // % Vector of Generalized Applied Forces
             // % ------------------------------------
-            Eigen::Vector4d qe;
-            qe << F_lon*c1 - Fyf*sin(delta + psi1) - Fyr*s1 - Fyt*s2
-                , Fyf*cos(delta + psi1) + Fyr*c1 + Fyt*c2 + F_lon*s1
-                ,  Fyf*_p.lf*cos(delta) - Fyt*_p.lk*c1_2 - Fyr*_p.lr
-                ,                             -Fyt*(_p.ltf + _p.ltr);
+            // Eigen::Vector4d qe;
+            // qe << F_lon*c1 - Fyf*sin(delta + psi1) - Fyr*s1 - Fyt*s2
+            //     , Fyf*cos(delta + psi1) + Fyr*c1 + Fyt*c2 + F_lon*s1
+            //     ,  Fyf*_p.lf*cos(delta) - Fyt*_p.lk*c1_2 - Fyr*_p.lr
+            //     ,                             -Fyt*(_p.ltf + _p.ltr);
+            double qe0 = F_lon*c1 - Fyf*sin(delta + psi1) - Fyr*s1 - Fyt*s2;
+            double qe1 = Fyf*cos(delta + psi1) + Fyr*c1 + Fyt*c2 + F_lon*s1;
+            double qe2 = Fyf*_p.lf*cos(delta) - Fyt*_p.lk*c1_2 - Fyr*_p.lr;
+            double qe3 = -Fyt*(_p.ltf + _p.ltr);;
             
             // % comput new states
             // % -----------------
@@ -249,27 +271,74 @@ public:
             //     d2q = M.colPivHouseholderQr().solve(qe - k);
             // else
             {
-                Eigen::Matrix<double, 4, 5> A;
-                A.block<4, 4>(0, 0) = M;
-                A.block<4, 1>(0, 4) = qe - k;
-                A.row(0) /= A(0, 0);
-                A.row(1) /= A(1, 1);
-                A.row(2) -= A.row(0) * A(2, 0);
-                A.row(3) -= A.row(0) * A(3, 0);
-                A.row(2) -= A.row(1) * A(2, 1);
-                A.row(3) -= A.row(1) * A(3, 1);
-                auto B = A.block<2, 2>(2, 2);
-                Eigen::Matrix<double, 2, 2> B_inv;
-                B_inv << B(1, 1), -B(0, 1), -B(1, 0), B(0, 0);
-                B_inv /= B(0, 0) * B(1, 1) - B(0, 1) * B(1, 0);
-                auto foo = B_inv * A.block<2, 1>(2, 4);
+                // Eigen::Matrix<double, 4, 5> A;
+                // A.block<4, 4>(0, 0) = M;
+                // A.block<4, 1>(0, 4) = qe - k;
+
+                // A.row(0) /= A(0, 0);
+                m02 /= m00;
+                m03 /= m00;
+                double qe_k0 = (qe0 - k0)/m00;
+                m00 = 1;
+
+                // A.row(1) /= A(1, 1);
+                m12 /= m11;
+                m13 /= m11;
+                double qe_k1 = (qe1 - k1)/m11;
+                m11 = 1;
+
+                // A.row(2) -= A.row(0) * A(2, 0);
+                m22 -= m02*m20;
+                m23 -= m03*m20;
+                double qe_k2 = (qe2 - k2) - qe_k0 * m20;
+                m20 = 0;
+
+                // A.row(3) -= A.row(0) * A(3, 0);
+                m32 -= m02*m30;
+                m33 -= m03*m30;
+                double qe_k3 = (qe3 - k3) - qe_k0 * m30;
+                m30 = 0;
+
+                // A.row(2) -= A.row(1) * A(2, 1);
+                m22 -= m12*m21;
+                m23 -= m13*m21;
+                qe_k2 -= qe_k1*m21;
+                m21 = 0;
+
+                // A.row(3) -= A.row(1) * A(3, 1);
+                m32 -= m12*m31;
+                m33 -= m13*m31;
+                qe_k3 -= qe_k1*m31;
+                m31 = 0;
+
+                // auto B = A.block<2, 2>(2, 2);
+                double b00 = m22;
+                double b01 = m23;
+                double b10 = m32;
+                double b11 = m33;
+
+                // Eigen::Matrix<double, 2, 2> B_inv;
+                // B_inv << B(1, 1), -B(0, 1), -B(1, 0), B(0, 0);
+                // B_inv /= B(0, 0) * B(1, 1) - B(0, 1) * B(1, 0);
+                double det = b00 * b11 - b01 * b10;
+                double bi00 =  b11 / det;
+                double bi01 = -b01 / det;
+                double bi10 = -b10 / det;
+                double bi11 =  b00 / det;
+
+                // auto foo = B_inv * A.block<2, 1>(2, 4);
                 // d2q.tail(2) = foo;
-                d2q2 = foo(0);
-                d2q3 = foo(1);
+                // d2q2 = foo(0);
+                // d2q3 = foo(1);
+                d2q2 = bi00 * qe_k2 + bi01 * qe_k3;
+                d2q3 = bi10 * qe_k2 + bi11 * qe_k3;
+
                 // d2q.head(2) = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
-                auto foo2 = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
-                d2q0 = foo2(0);
-                d2q1 = foo2(1);
+                // auto foo2 = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
+                // d2q0 = foo2(0);
+                // d2q1 = foo2(1);
+                d2q0 = qe_k0 - m02 * d2q2 - m03 * d2q3;
+                d2q1 = qe_k1 - m12 * d2q2 - m13 * d2q3;
             }
         }
         else // % Truck without trailer (bobtail)

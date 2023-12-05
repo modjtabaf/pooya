@@ -93,7 +93,7 @@ public:
         Value F_lat(3);
         F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
 
-        array_output(0, F_lon);
+        scalar_output(0, F_lon);
         array_output(1, F_lat);
     }
 };
@@ -214,12 +214,12 @@ public:
 class PT : public Submodel
 {
 protected:
-    Subtract     _sub{"+-"};
+    Subtract     _sub{"sub"};
     Const      _const;
-    Divide       _div{"*\\"};
-    Integrator _integ{"Int"};
-    InitialValue  _iv{"IV"};
-    Add          _add{"++"};
+    Divide       _div{"div"};
+    Integrator _integ{"int"};
+    InitialValue  _iv{"iv"};
+    Add          _add{"add"};
 
 public:
     PT(double tau) : Submodel("PT"), _const("tau", tau) {}
@@ -258,8 +258,8 @@ protected:
     PT                 _pt{0.1};
     Forces         _forces;
     EquationsOfMotion _eom;
-    IntegratorV    _integ1{"d2q->dq", Value::Zero(4)};
-    IntegratorV    _integ2{  "dq->q", Value::Zero(4)};
+    IntegratorV    _integ1{"dq", Value::Zero(4)};
+    IntegratorV    _integ2{ "q", Value::Zero(4)};
 
 public:
     ChassisDynamics(Parameters& params) : Submodel("ChassisDynamics"), _eom(params) {}

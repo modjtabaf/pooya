@@ -25,7 +25,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define  array_input(index) values[_iports[index]]
 #define scalar_input(index) array_input(index)[0]
-#define array_output(index, value) values.set(_oports[index], value)
+#define scalar_output(index, value) values.set<double>(_oports[index], value)
+#define  array_output(index, value) values.set(_oports[index], value)
 
 namespace pooya
 {

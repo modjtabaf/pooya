@@ -258,8 +258,8 @@ protected:
     PT                 _pt{0.1};
     Forces         _forces;
     EquationsOfMotion _eom;
-    Integrator     _integ1{"d2q->dq", Value::Zero(4)};
-    Integrator     _integ2{  "dq->q", Value::Zero(4)};
+    IntegratorV    _integ1{"d2q->dq", Value::Zero(4)};
+    IntegratorV    _integ2{  "dq->q", Value::Zero(4)};
 
 public:
     ChassisDynamics(Parameters& params) : Submodel("ChassisDynamics"), _eom(params) {}

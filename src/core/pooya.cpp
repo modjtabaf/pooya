@@ -172,23 +172,11 @@ std::string Base::generate_random_name(int len)
     return name;
 }
 
-uint Integrator::_process(double /*t*/, Values& values, bool /*go_deep*/)
+template<>
+void SinT<double>::activation_function(double /*t*/, Values& values)
 {
-    if (_processed)
-        return 0;
-
-    _processed = values.get(_iports.front());
-    return _processed ? 1 : 0; // is it safe to simply return _processed?
-}
-
-uint Memory::_process(double /*t*/, Values& values, bool /*go_deep*/)
-{
-    if (_processed)
-        return 0;
-
-    values.set(_oports.front().id(), _value);
-    _processed = true;
-    return 1;
+    double x = get_value<double>(values.get(_iports[0]));
+    values.set<double>(_oports[0], std::sin(x));
 }
 
 std::string Parent::make_signal_name(const std::string& given_name)

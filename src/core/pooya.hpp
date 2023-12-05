@@ -158,7 +158,8 @@ public:
         return *ret;
     }
 
-    void set(Signal::Id id, const Value& value)
+    template<typename T=double>
+    void set(Signal::Id id, const T& value)
     {
         assert(id != Signal::NoId);
         auto& bv = _values[id];
@@ -170,7 +171,8 @@ public:
         }
     }
 
-    void set(const Signal& signal, const Value& value) {set(signal.id(), value);}
+    template<typename T=double>
+    void set(const Signal& signal, const T& value) {set(signal.id(), value);}
 
     void invalidate()
     {
@@ -212,6 +214,20 @@ public:
             assert(false);
     }
 };
+
+template<typename T>
+inline const T& get_value(const Value* value)
+{
+    assert(value);
+    return *value;
+}
+
+template<>
+inline const double& get_value<double>(const Value* value)
+{
+    assert(value);
+    return (*value)[0];
+}
 
 class Base
 {
@@ -259,96 +275,119 @@ public:
     static std::string generate_random_name(int len = 10);
 }; // class Base
 
-class InitialValue : public Base
+template<typename T>
+class InitialValueT : public Base
 {
 protected:
-    Value _value;
+    T _value;
+    bool _init{true};
 
 public:
-    InitialValue(std::string given_name) : Base(given_name) {}
+    InitialValueT(std::string given_name) : Base(given_name) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
-        if (_value.size() == 0)
+        if (_init)
         {
-            _value = *values.get(_iports[0]);
+            _value = get_value<T>(values.get(_iports[0]));
             _iports.clear();
+            _init = false;
         }
-        values.set(_oports[0], _value);
+        values.set<T>(_oports[0], _value);
     }
 };
 
-class Const : public Base
+using  InitialValue = InitialValueT<double>;
+using InitialValueV = InitialValueT<Value>;
+
+template<typename T>
+class ConstT : public Base
 {
 protected:
-    Value _value;
+    T _value;
 
 public:
-    Const(std::string given_name, const Value& value) : Base(given_name), _value(value) {}
-
-    Const(std::string given_name, double value) : Base(given_name), _value(1)
-    {
-         _value << value;
-    }
+    ConstT(std::string given_name, const T& value) : Base(given_name), _value(value) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
-        values.set(_oports[0], _value);
+        values.set<T>(_oports[0], _value);
     }
 };
 
-class Gain : public Base
+using  Const = ConstT<double>;
+using ConstV = ConstT<Value>;
+
+template<typename T>
+class GainT : public Base
 {
 protected:
     double _k;
 
 public:
-    Gain(std::string given_name, double k) : Base(given_name), _k(k) {}
+    GainT(std::string given_name, double k) : Base(given_name), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
-        const auto& x = *values.get(_iports[0]);
-        values.set(_oports[0], _k * x);
+        const T& x = get_value<T>(values.get(_iports[0]));
+        values.set<T>(_oports[0], _k * x);
     }
 };
 
-class Sin : public Base
+using Gain =  GainT<double>;
+using GainV = GainT<Value>;
+
+template<typename T>
+class SinT : public Base
 {
 public:
-    Sin(std::string given_name) : Base(given_name) {}
+    SinT(std::string given_name) : Base(given_name) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
-        values.set(_oports[0], values.get(_iports[0])->sin());
+        const T& x = get_value<T>(values.get(_iports[0]));
+        values.set<T>(_oports[0], x.sin());
     }
 };
 
-class Function : public Base
+template<>
+void SinT<double>::activation_function(double, Values&);
+
+using Sin  = SinT<double>;
+using SinV = SinT<Value>;
+
+template<typename T>
+class FunctionT : public Base
 {
 public:
-    using ActFunction = std::function<Value(double, const Value&)>;
+    using ActFunction = std::function<Value(double, const T&)>;
 
 protected:
     ActFunction _act_func;
 
 public:
-    Function(std::string given_name, ActFunction act_func) :
+    FunctionT(std::string given_name, ActFunction act_func) :
         Base(given_name), _act_func(act_func) {}
 
     void activation_function(double t, Values& values) override
     {
-        values.set(_oports[0], _act_func(t, *values.get(_iports[0])));
+        const T& x = get_value<T>(values.get(_iports[0]));
+        values.set(_oports[0], _act_func(t, x));
     }
 };
 
-class AddSub : public Base
+using Function  = FunctionT<double>;
+using FunctionV = FunctionT<Value>;
+
+template<typename T>
+class AddSubT : public Base
 {
 protected:
     std::string _operators;
-    double      _initial;
+    T             _initial;
 
 public:
-    AddSub(std::string given_name, const char* operators, double initial=0.0) :
+    AddSubT(std::string given_name, const char* operators, const T& initial=0.0) :
         Base(given_name), _operators(operators), _initial(initial)
     {}
 
@@ -361,11 +400,11 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        T ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
-            const auto &v = *values.get(signal);
+            const auto &v = get_value<T>(values.get(signal));
             if (*p == '+')
                 ret += v;
             else if (*p == '-')
@@ -374,38 +413,50 @@ public:
                  assert(false);
             p++;
         }
-        values.set(_oports[0], ret);
+        values.set<T>(_oports[0], ret);
     }
 };
 
-class Add : public AddSub
+using AddSub  = AddSubT<double>;
+using AddSubV = AddSubT<Value>;
+
+template<typename T>
+class AddT : public AddSubT<T>
 {
 public:
-    Add(std::string given_name, double initial=0.0) :
-        AddSub(given_name, "", initial) {}
+    AddT(std::string given_name, const T& initial=0.0) :
+        AddSubT<T>(given_name, "", initial) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        _operators = std::string(iports.size(), '+');
-        return AddSub::init(parent, iports, oports);
+        AddSubT<T>::_operators = std::string(iports.size(), '+');
+        return AddSubT<T>::init(parent, iports, oports);
     }
 };
 
-class Subtract : public AddSub
+using Add  = AddT<double>;
+using AddV = AddT<Value>;
+
+template<typename T>
+class SubtractT : public AddSubT<T>
 {
 public:
-    Subtract(std::string given_name, double initial=0.0) :
-        AddSub(given_name, "+-", initial) {}
+    SubtractT(std::string given_name, const T& initial=0.0) :
+        AddSubT<T>(given_name, "+-", initial) {}
 };
 
-class MulDiv : public Base
+using Subtract  = SubtractT<double>;
+using SubtractV = SubtractT<Value>;
+
+template<typename T>
+class MulDivT : public Base
 {
 protected:
     std::string _operators;
-    double      _initial;
+    T             _initial;
 
 public:
-    MulDiv(std::string given_name, const char* operators, double initial=1.0) :
+    MulDivT(std::string given_name, const char* operators, const T& initial=1.0) :
         Base(given_name), _operators(operators), _initial(initial) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
@@ -417,11 +468,11 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        Value ret = Value::Constant(values.get(_iports[0])->size(), _initial);
+        T ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
-            const auto &v = *values.get(signal);
+            const auto &v = get_value<T>(values.get(signal));
             if (*p == '*')
                 ret *= v;
             else if (*p == '/')
@@ -430,51 +481,73 @@ public:
                  assert(false);
             p++;
         }
-        values.set(_oports[0], ret);
+        values.set<T>(_oports[0], ret);
     }
 };
 
-class Multiply : public MulDiv
+using MulDiv  = MulDivT<double>;
+using MulDivV = MulDivT<Value>;
+
+template<typename T>
+class MultiplyT : public MulDivT<T>
 {
 public:
-    Multiply(std::string given_name, double initial=1.0) :
-        MulDiv(given_name, "", initial) {}
+    MultiplyT(std::string given_name, const T& initial=1.0) :
+        MulDivT<T>(given_name, "", initial) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        _operators = std::string(iports.size(), '*');
-        return MulDiv::init(parent, iports, oports);
+        MulDivT<T>::_operators = std::string(iports.size(), '*');
+        return MulDivT<T>::init(parent, iports, oports);
     }
 };
 
-class Divide : public MulDiv
+using Multiply  = MultiplyT<double>;
+using MultiplyV = MultiplyT<Value>;
+
+template<typename T>
+class DivideT : public MulDivT<T>
 {
 public:
-    Divide(std::string given_name, double initial=1.0) :
-        MulDiv(given_name, "*/", initial) {}
+    DivideT(std::string given_name, const T& initial=1.0) :
+        MulDivT<T>(given_name, "*/", initial) {}
 };
 
-class Integrator : public Base
+using Divide  = DivideT<double>;
+using DivideV = DivideT<Value>;
+
+template<typename T>
+class IntegratorT : public Base
 {
 protected:
-    Value _value;
+    T _value;
 
 public:
-    Integrator(std::string given_name, Value ic=Value(0.0)) : Base(given_name), _value(ic) {}
+    IntegratorT(std::string given_name, T ic=T(0.0)) : Base(given_name), _value(ic) {}
 
     void get_states(StatesInfo& states) override
     {
-        states.add(_oports.front(), Value(_value), _iports.front());
+        states.add(_oports[0], Value(_value), _iports[0]);
     }
 
     void step(double /*t*/, const Values& values) override
     {
-        assert(values.get(_oports.front()));
-        _value = *values.get(_oports.front());
+        assert(values.get(_oports[0]));
+        _value = get_value<T>(values.get(_oports[0]));
     }
 
-    uint _process(double t, Values& values, bool go_deep = true) override;
+    uint _process(double /*t*/, Values& values, bool /*go_deep*/ = true) override
+    {
+        if (_processed)
+            return 0;
+
+        _processed = values.get(_iports[0]);
+        return _processed ? 1 : 0; // is it safe to simply return _processed?
+    }
 };
+
+using Integrator  = IntegratorT<double>;
+using IntegratorV = IntegratorT<Value>;
 
 // # it is still unclear how to deal with states when using this numerical integrator
 // # class NumericalIntegrator(Base):
@@ -497,15 +570,16 @@ public:
 // #         else:
 // #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
-class Delay : public Base
+template<typename T>
+class DelayT : public Base
 {
 protected:
     double  _lifespan;
     Scalars _t;
-    std::vector<Value> _x;
+    std::vector<T> _x;
 
 public:
-    Delay(std::string given_name, double lifespan=10.0) : Base(given_name), _lifespan(lifespan) {}
+    DelayT(std::string given_name, double lifespan=10.0) : Base(given_name), _lifespan(lifespan) {}
 
     void step(double t, const Values& values) override
     {
@@ -525,30 +599,26 @@ public:
 
         assert(_t.empty() or (t > _t.back()));
         _t.push_back(t);
-        assert(values.get(_iports.front()));
-        _x.push_back(*values.get(_iports.front()));
+        _x.push_back(get_value<T>(values.get(_iports[0])));
     }
 
     void activation_function(double t, Values& values) override
     {
         if (_t.empty())
         {
-            assert(values.get(_iports[2]));
-            values.set(_oports.front(), {(*values.get(_iports[2]))[0]});
+            values.set<T>(_oports[0], {get_value<T>(values.get(_iports[2]))});
             return;
         }
     
-        assert(values.get(_iports[1]));
-        const double delay = (*values.get(_iports[1]))[0];
+        const double delay = get_value<double>(values.get(_iports[1]));
         t -= delay;
-        if (t <= _t.front())
+        if (t <= _t[0])
         {
-            assert(values.get(_iports[2]));
-            values.set(_oports.front(), *values.get(_iports[2]));
+            values.set<T>(_oports[0], get_value<T>(values.get(_iports[2])));
         }
         else if (t >= _t.back())
         {
-            values.set(_oports.front(), _x.back());
+            values.set<T>(_oports[0], _x.back());
         }
         else
         {
@@ -560,24 +630,27 @@ public:
                 k++;
             }
 
-            values.set(_oports.front(), (_x[k][0] - _x[k - 1][0])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1][0]);
+            values.set<T>(_oports[0], (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
 
-class Memory : public Base
+using Delay  = DelayT<double>;
+using DelayV = DelayT<Value>;
+
+template<typename T>
+class MemoryT : public Base
 {
 protected:
-    Value _value;
+    T _value;
 
 public:
-    Memory(std::string given_name, const Value& ic=Value::Zero(1)) :
+    MemoryT(std::string given_name, const T& ic=0) :
         Base(given_name), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
     {
-        assert(values.get(_iports.front()));
-        _value = *values.get(_iports.front());
+        _value = get_value<T>(values.get(_iports[0]));
     }
 
     // # Memory can be implemented either by defining the following activation function
@@ -588,26 +661,38 @@ public:
     // # def activation_function(self, t, x):
     // #     return [self._value]
 
-    uint _process(double t, Values& values, bool go_deep = true) override;
+    uint _process(double /*t*/, Values& values, bool /*go_deep*/) override
+    {
+        if (_processed)
+            return 0;
+
+        values.set<T>(_oports[0], _value);
+        _processed = true;
+        return 1;
+    }
 };
 
-class Derivative : public Base
+using Memory  = MemoryT<double>;
+using MemoryV = MemoryT<Value>;
+
+template<typename T>
+class DerivativeT : public Base
 {
 protected:
     bool _first_step{true};
     double _t;
-    Value  _x;
-    Value  _y;
+    T  _x;
+    T  _y;
 
 public:
-    Derivative(std::string given_name, const Value& y0=Value::Zero(1)) :
+    DerivativeT(std::string given_name, const T& y0=0) :
         Base(given_name), _y(y0) {}
 
     void step(double t, const Values& states) override
     {
         _t = t;
-        _x = *states.get(_iports[0]);
-        _y = *states.get(_oports[0]);
+        _x = get_value<T>(states.get(_iports[0]));
+        _y = get_value<T>(states.get(_oports[0]));
         _first_step = false;
     }
 
@@ -616,15 +701,18 @@ public:
         if (_first_step)
         {
             _t = t;
-            _x = *values.get(_iports[0]);
-            values.set(_oports[0], _y);
+            _x = get_value<T>(values.get(_iports[0]));
+            values.set<T>(_oports[0], _y);
         }
         else if (_t == t)
-            values.set(_oports[0], _y);
+            values.set<T>(_oports[0], _y);
         else
-            values.set(_oports[0], ((*values.get(_iports[0]) - _x)/(t - _t)));
+            values.set<T>(_oports[0], ((get_value<T>(values.get(_iports[0])) - _x)/(t - _t)));
     }
 };
+
+using Derivative  = DerivativeT<double>;
+using DerivativeV = DerivativeT<Value>;
 
 class Parent : public Base
 {

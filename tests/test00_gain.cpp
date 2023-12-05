@@ -31,7 +31,7 @@ int main()
 
     // create raw blocks
     Model model("test00"     );
-    Gain  gain (  "gain", 2.0);
+    Gain   gain(  "gain", 2.0);
 
     // create signals
     auto x = model.signal("x");

@@ -11,7 +11,8 @@ namespace pooya
 
 #define STEP(K, t, X) \
     callback(t, X); \
-    Values K(states.size()); \
+    static Values K(states.size()); \
+    K.invalidate(); \
     k = 0; \
     for (auto& state: states) \
     { \
@@ -31,7 +32,8 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X0
 
-    Values X0(num_signals);
+    static Values X0(num_signals);
+    X0.invalidate();
     for (const auto& state: states)
         X0.set(state.first, state.second.first);
 
@@ -41,7 +43,8 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X1 = X0 + K1/2
 
-    Values X1(num_signals);
+    static Values X1(num_signals);
+    X1.invalidate();
     k = 0;
     for (const auto& state: states)
         X1.set(state.first, *X0.get(state.first) + (*K1.get(k++)) / 2);
@@ -52,7 +55,8 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X2 = X0 + K2/2
 
-    Values X2(num_signals);
+    static Values X2(num_signals);
+    X2.invalidate();
     k = 0;
     for (const auto& state: states)
         X2.set(state.first, *X0.get(state.first) + (*K2.get(k++)) / 2);
@@ -63,7 +67,8 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X3 = X0 + K3
 
-    Values X3(num_signals);
+    static Values X3(num_signals);
+    X3.invalidate();
     k = 0;
     for (const auto& state: states)
         X3.set(state.first, *X0.get(state.first) + (*K3.get(k++)));
@@ -103,7 +108,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X0
 
-    Values X0(num_signals);
+    static Values X0(num_signals);
+    X0.invalidate();
     for (const auto& state: states)
         X0.set(state.first, state.second.first);
 
@@ -114,7 +120,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X1 = X0 + K1/4
 
-    Values X1(num_signals);
+    static Values X1(num_signals);
+    X1.invalidate();
     k = 0;
     for (const auto& state: states)
         X1.set(state.first, *X0.get(state.first) + 1./4 * (*K1.get(k++)));
@@ -126,7 +133,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X2 = X0 + 3/8 * ( 1/4 * K1 + 3/4 * K2)
 
-    Values X2(num_signals);
+    static Values X2(num_signals);
+    X2.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -141,7 +149,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X3 = X0 + 12/13 * (161/169 * K1 - 600/169 * K2 + 608/169 * K3)
 
-    Values X3(num_signals);
+    static Values X3(num_signals);
+    X3.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -156,7 +165,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X4 = X0 + 8341/4104 * K1 - 32832/4104 * K2 + 29440/4104 * K3 - 845/4104 * K4
 
-    Values X4(num_signals);
+    static Values X4(num_signals);
+    X4.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -171,7 +181,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X5 = X0 + 1/2 * (-6080/10260 * K1 + 41040/10260 * K2 - 28352/10260 * K3 + 9295/10260 * K4 - 5643/10260 * K5)
 
-    Values X5(num_signals);
+    static Values X5(num_signals);
+    X5.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -184,7 +195,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     //     yt := y[i - 1] + h*(  2375*K[1] +  11264*K[3] +  10985*K[4] - 4104*K[5] )/20520;
 
-    Values YT(states.size());
+    static Values YT(states.size());
+    YT.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -194,7 +206,8 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     //     zt := y[i - 1] + h*( 33440*K[1] + 146432*K[3] + 142805*K[4] - 50787*K[5] + 10260*K[6] )/282150;
 
-    Values ZT(states.size());
+    static Values ZT(states.size());
+    ZT.invalidate();
     k = 0;
     for (const auto& state: states)
     {
@@ -248,7 +261,8 @@ void simple(SolverCallback callback, double t0, double t1, StatesInfo& states, s
 
     // ret = x0 + (t1 - t0)*callback(t0, x0)
 
-    Values values(num_signals);
+    static Values values(num_signals);
+    values.invalidate();
 
     for (const auto& state: states)
         values.set(state.first, state.second.first);

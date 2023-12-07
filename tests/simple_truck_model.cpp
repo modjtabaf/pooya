@@ -207,7 +207,7 @@ public:
 
         // second derivatives
         // Value d2q(4);
-        double d2q0, d2q1, d2q2, d2q3;
+        double d2q0(0), d2q1(0), d2q2(0), d2q3(0);
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);

@@ -230,6 +230,12 @@ cc_binary(
         "-Wall",
         "-Wextra",
         "-Werror",
+        "-O3",
+        "-fno-math-errno",
+        "-ffast-math",
+        ],
+    defines = [
+        "NDEBUG",
         ],
     linkopts = [
         "-lboost_iostreams",

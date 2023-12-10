@@ -30,9 +30,9 @@ protected:
     Integrator _integ1{   "dphi", M_PI_4};
     Integrator _integ2{    "phi"};
     Function     _func{"sin_phi",
-        [](double /*t*/, const Value& x) -> Value
+        [](double /*t*/, double x) -> double
         {
-            return x.sin();
+            return std::sin(x);
         }};
     // Sin _sin{"sin(phi)"};
     MulDiv   _muldiv1{    "g_l",  "**/"};
@@ -97,10 +97,10 @@ int main()
     Simulator sim(model,
         [&](Model&, double /*t*/, Values& values) -> void
         {
-            values.set(  m,  0.2);
-            values.set(  l,  0.1);
-            values.set(  g, 9.81);
-            values.set(tau, 0.13);
+            values.set_scalar(  m,  0.2);
+            values.set_scalar(  l,  0.1);
+            values.set_scalar(  g, 9.81);
+            values.set_scalar(tau, 0.13);
         },
         rkf45, true);
 

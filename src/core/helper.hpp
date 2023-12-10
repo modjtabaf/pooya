@@ -21,17 +21,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "pooya.hpp"
 #include "solver.hpp"
 
-// helper macros
-
-#define  array_input(index) values[_iports[index]]
-#define scalar_input(index) array_input(index)[0]
-#define scalar_output(index, value) values.set<double>(_oports[index], value)
-#define  array_output(index, value) values.set(_oports[index], value)
-
 namespace pooya
 {
 
-class History : public std::unordered_map<Signal::Id, MatrixXd>
+class History : public std::unordered_map<Signal::Id, Eigen::MatrixXd>
 {
 public:
     static constexpr Signal::Id time_id = Signal::NoId - 1;

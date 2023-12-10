@@ -135,11 +135,11 @@ public:
     void activation_function(double /*t*/, Values& values) override
     {
         // inputs
-        double       delta = values[_s_delta][0];
-        double       F_lon = values[_s_F_lon][0];
-        const Value& F_lat = values[_s_F_lat];
-        const Value&     q = values[    _s_q];
-        const Value&    dq = values[   _s_dq];
+        double       delta = values.get_scalar(_s_delta);
+        double       F_lon = values.get_scalar(_s_F_lon);
+        const Value& F_lat = values.get_array(_s_F_lat);
+        const Value&     q = values.get_array(_s_q);
+        const Value&    dq = values.get_array(_s_dq);
 
         // lateral force components of axles
         double Fyf = F_lat[0];
@@ -195,7 +195,27 @@ public:
             
             // % comput new states
             // % -----------------
-            d2q = M.colPivHouseholderQr().solve(qe - k);
+            if (1)
+                d2q = M.colPivHouseholderQr().solve(qe - k);
+            {
+                Eigen::Matrix<double, 4, 5> A;
+                A.block<4, 4>(0, 0) = M;
+                A.block<4, 1>(0, 4) = qe - k;
+
+                A.row(0) /= A(0, 0);
+                A.row(1) /= A(1, 1);
+                A.row(2) -= A.row(0) * A(2, 0);
+                A.row(3) -= A.row(0) * A(3, 0);
+                A.row(2) -= A.row(1) * A(2, 1);
+                A.row(3) -= A.row(1) * A(3, 1);
+                auto B = A.block<2, 2>(2, 2);
+                Eigen::Matrix<double, 2, 2> B_inv;
+                B_inv << B(1, 1), -B(0, 1), -B(1, 0), B(0, 0);
+                B_inv /= B(0, 0) * B(1, 1) - B(0, 1) * B(1, 0);
+                auto foo = B_inv * A.block<2, 1>(2, 4);
+                d2q.tail(2) = foo;
+                d2q.head(2) = A.block<2, 1>(0, 4) - A.block<2, 2>(0, 2) * foo;
+            }
         }
         else // % Truck without trailer (bobtail)
         {
@@ -207,7 +227,7 @@ public:
                  ,                                                  0;
         }
 
-        values.set(_s_d2q, d2q);
+        values.set_array(_s_d2q, d2q);
     }
 };
 
@@ -258,8 +278,8 @@ protected:
     PT                 _pt{0.1};
     Forces         _forces;
     EquationsOfMotion _eom;
-    IntegratorV    _integ1{"dq", Value::Zero(4)};
-    IntegratorV    _integ2{ "q", Value::Zero(4)};
+    IntegratorA    _integ1{"dq", ValueN<4>::Zero()};
+    IntegratorA    _integ2{ "q", ValueN<4>::Zero()};
 
 public:
     ChassisDynamics(Parameters& params) : Submodel("ChassisDynamics"), _eom(params) {}
@@ -271,11 +291,11 @@ public:
 
         // signals
         auto s_delta = signal("front_wheel_angle");
-        auto     s_q = signal(  "q");
-        auto    s_dq = signal( "dq");
-        auto   s_d2q = signal("d2q");
+        auto     s_q = signal(  "q", 4);
+        auto    s_dq = signal( "dq", 4);
+        auto   s_d2q = signal("d2q", 4);
         auto s_F_lon = signal("F_lon");
-        auto s_F_lat = signal("F_lat");
+        auto s_F_lat = signal("F_lat", 3);
 
         auto&      s_delta_Rq = iports[0];
         auto& s_engine_torque = iports[1];
@@ -326,8 +346,8 @@ public:
         else
             delta_Rq = 0;
 
-        values.set(     _s_delta_Rq, delta_Rq);
-        values.set(_s_engine_torque,     5000);
+        values.set_scalar(     _s_delta_Rq, delta_Rq);
+        values.set_scalar(_s_engine_torque,   5000.0);
     }
 };
 

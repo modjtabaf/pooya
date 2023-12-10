@@ -46,10 +46,36 @@ void Signal::_set_owner(Parent& owner)
     if (!model) return;
 
     std::string reg_name = owner.make_signal_name(_given_name);
-    _id = model->find_or_register_signal(reg_name);
+    _id = model->signal_registry().find_signal(reg_name, true);
+    if (_id == NoId)
+        _id = model->signal_registry().register_signal(reg_name, _size);
     if (_id == NoId) return;
 
     _full_name = reg_name;
+}
+
+Values::Values(const SignalRegistry& signal_registry)
+{
+    auto n = signal_registry.num_signals();
+    for (std::size_t id=0; id < n; id++)
+    {
+        auto size = signal_registry.get_signal_by_id(id).second;
+        _values.push_back({id, _total_size, size});
+        _total_size += size == 0 ? 1 : size;
+    }
+    _array.resize(_total_size);
+}
+
+Values::Values(const StatesInfo& states)
+{
+    Signal::Id id = 0;
+    for (const auto& state: states)
+    {
+        std::size_t size = state._scalar ? 0 : state._value.size();
+        _values.push_back({id++, _total_size, size});
+        _total_size += size == 0 ? 1 : size;
+    }
+    _array.resize(_total_size);
 }
 
 bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
@@ -148,7 +174,7 @@ uint Base::_process(double t, Values& values, bool /*go_deep*/)
 
     for (auto& signal: _dependencies)
     {
-        if (!values.get(signal))
+        if (!values.valid(signal))
             return 0;
     }
 
@@ -175,8 +201,7 @@ std::string Base::generate_random_name(int len)
 template<>
 void SinT<double>::activation_function(double /*t*/, Values& values)
 {
-    double x = get_value<double>(values.get(_iports[0]));
-    values.set<double>(_oports[0], std::sin(x));
+    scalar_output(0, std::sin(scalar_input(0)));
 }
 
 std::string Parent::make_signal_name(const std::string& given_name)
@@ -237,44 +262,44 @@ bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
     return true;
 }
 
-Signal::Id Model::find_or_register_signal(const std::string& name)
+std::vector<SignalRegistry::SignalInfo>::const_iterator SignalRegistry::_find_signal(const std::string& name, bool exact_match) const
 {
-    assert(!name.empty());
-    if (name.empty()) return Signal::NoId;
-
-    Signal::Id ret;
-
-    auto it = std::find(_registered_signals.begin(), _registered_signals.end(), name);
-    if (it == _registered_signals.end())
-    {
-        ret = _registered_signals.size();
-        _registered_signals.push_back(name);
-    }
-    else
-    {
-        ret = std::distance(_registered_signals.begin(), it);
-    }
-
-    return ret;
-}
-
-Signal::Id Model::find_signal(const std::string& name, bool exact_match) const
-{
-    assert(!name.empty());
-    if (name.empty()) return Signal::NoId;
+    if (name.empty()) return _signals.end();
 
     auto name_len = name.length();
 
-    auto it = exact_match ?
-        std::find(_registered_signals.begin(), _registered_signals.end(), name) :
-        std::find_if(_registered_signals.begin(), _registered_signals.end(),
-            [&] (const std::string& str) -> bool
-            {
-                auto str_len = str.length();
-                return ((str_len >= name_len) && (str.substr(str_len - name_len) == name));
-            });
+    auto it = std::find_if(_signals.begin(), _signals.end(),
+        [&] (const SignalRegistry::SignalInfo& sig_info) -> bool
+        {
+            if (exact_match)
+                return sig_info.first == name;
+                
+            auto str_len = sig_info.first.length();
+            return (str_len >= name_len) && (sig_info.first.substr(str_len - name_len) == name);
+        });
 
-    return it == _registered_signals.end() ? Signal::NoId : std::distance(_registered_signals.begin(), it);
+    return it;
+}
+
+Signal::Id SignalRegistry::find_signal(const std::string& name, bool exact_match) const
+{
+    auto sig_info = _find_signal(name, exact_match);
+    if (sig_info == _signals.end()) return Signal::NoId;
+
+    return std::distance(_signals.begin(), sig_info);
+}
+
+Signal::Id SignalRegistry::register_signal(const std::string& name, std::size_t size)
+{
+    if (name.empty()) return Signal::NoId;
+
+    Signal::Id ret = find_signal(name, true);
+    verify(ret == Signal::NoId, "Re-registering a signal is not allowed!");
+
+    ret = _signals.size();
+    _signals.push_back(std::make_pair(name, size));
+
+    return ret;
 }
 
 }

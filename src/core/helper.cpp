@@ -23,30 +23,33 @@ namespace pooya
 
 void History::update(uint k, double t, const Values& values)
 {
-    if (empty()) // todo: consider reserving space for values
+    auto n = _model.signal_registry().num_signals();
+    if (empty())
     {
-        reserve(values.size() + 1);
         insert_or_assign(time_id, Value(_nrows_grow)); // t
-        for (Signal::Id id = 0; id < _model.num_signals(); id++)
+        for (Signal::Id id = 0; id < n; id++)
         {
-            const auto* v = values.get(id);
-            assert(v);
-            insert_or_assign(id, MatrixXd(_nrows_grow, v->size()));
+            auto size = values.get_value_info(id)._size;
+            if (size == 0)
+                insert_or_assign(id, Value(_nrows_grow));
+            else
+                insert_or_assign(id, Eigen::MatrixXd(_nrows_grow, size));
         }
     }
 
     auto& h = at(time_id); // t
     if (k >= h.rows())
-        h.conservativeResize(k + _nrows_grow, NoChange);
+        h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
     h(k, 0) = t;
-    for (Signal::Id id = 0; id < _model.num_signals(); id++)
+    for (Signal::Id id = 0; id < n; id++)
     {
         auto& h = at(id);
         if (k >= h.rows())
-            h.conservativeResize(k + _nrows_grow, NoChange);
-        const auto* v = values.get(id);
-        assert(v);
-        h.row(k) = *v;
+            h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
+        if (values.get_value_info(id)._size == 0)
+            h(k, 0) = values.get_scalar(id);
+        else
+            h.row(k) = values.get_array(id);
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))
@@ -61,9 +64,10 @@ void History::shrink_to_fit()
     if (nrows >= h.rows()) // practically, nrows can't be the greater
         return;
 
-    h.conservativeResize(nrows, NoChange);
-    for (Signal::Id id = 0; id < _model.num_signals(); id++)
-        at(id).conservativeResize(nrows, NoChange);
+    h.conservativeResize(nrows, Eigen::NoChange);
+    auto n = _model.signal_registry().num_signals();
+    for (Signal::Id id = 0; id < n; id++)
+        at(id).conservativeResize(nrows, Eigen::NoChange);
 }
 
 void History::export_csv(std::string filename)
@@ -72,12 +76,13 @@ void History::export_csv(std::string filename)
         return;
 
     std::ofstream ofs(filename);
+    const auto& sig_reg = _model.signal_registry();
 
     // header
     ofs << "time";
     for (const auto& h: *this)
         if (h.first != time_id)
-            ofs << "," << _model.get_signal_by_id(h.first);
+            ofs << "," << sig_reg.get_signal_by_id(h.first).first;
     ofs << "\n";
 
     // values
@@ -99,7 +104,7 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 }
 
 Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
-    _model(model), _inputs_cb(inputs_cb), _values(model.num_signals()), _stepper(stepper), _reuse_order(reuse_order)
+    _model(model), _inputs_cb(inputs_cb), _values(model.signal_registry()), _stepper(stepper), _reuse_order(reuse_order)
 {
     model.get_states(_states);
 }
@@ -170,9 +175,9 @@ uint Simulator::_process(double t, Values& values)
         {
             std::cout << "- " << c->full_name() << "\n";
             for (const auto& p: c->iports())
-                std::cout << "  - i: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
+                std::cout << "  - i: " << (values.valid(p) ? " " : "*") <<  p.full_name() << "\n";
             for (const auto& p: c->oports())
-                std::cout << "  - o: " << (values.get(p) ? " " : "*") <<  p.full_name() << "\n";
+                std::cout << "  - o: " << (values.valid(p) ? " " : "*") <<  p.full_name() << "\n";
         }
     }
     return n_processed;
@@ -234,7 +239,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             bool force_accept = false;
             while (t1 < t)
             {
-                _stepper(stepper_callback, t1, t2, _states, _model.num_signals(), new_h);
+                _stepper(stepper_callback, _model.signal_registry(), t1, t2, _states, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))
@@ -251,8 +256,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                         auto it = states_orig.begin();
                         for (const auto& state: _states)
                         {
-                            _values.set(state.first, state.second.first);
-                            (it++)->second.first = state.second.first;
+                            if (state._scalar)
+                                _values.set_scalar(state._id, state._value[0]);
+                            else
+                                _values.set_array(state._id, state._value);
+                            (it++)->_value = state._value;
                         }
                         _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
                         _process(t1, _values);
@@ -266,7 +274,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     new_h = std::max(min_time_step, std::min(new_h, max_time_step));
                     auto it = states_orig.begin();
                     for (auto& state: _states)
-                        state.second.first = (it++)->second.first;
+                        state._value = (it++)->_value;
                     t2 = t1 + new_h;
                 }
             }
@@ -279,7 +287,12 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
     _values.invalidate();
     for (const auto& state: _states)
-        _values.set(state.first, state.second.first);
+    {
+        if (state._scalar)
+            _values.set_scalar(state._id, state._value[0]);
+        else
+            _values.set_array(state._id, state._value);
+    }
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.step(t, _values);

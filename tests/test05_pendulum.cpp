@@ -86,8 +86,8 @@ int main()
     Simulator sim(model,
         [&](Model&, double /*t*/, Values& values) -> void
         {
-            values.set(l, 0.1);
-            values.set(g, 9.81);
+            values.set_scalar(l, 0.1);
+            values.set_scalar(g, 9.81);
         },
         rk4);
 

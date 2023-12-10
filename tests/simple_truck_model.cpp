@@ -197,6 +197,7 @@ public:
             // % -----------------
             if (1)
                 d2q = M.colPivHouseholderQr().solve(qe - k);
+            else
             {
                 Eigen::Matrix<double, 4, 5> A;
                 A.block<4, 4>(0, 0) = M;

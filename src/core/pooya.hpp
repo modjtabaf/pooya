@@ -152,12 +152,12 @@ public:
     {
         bool _assigned{false};
         std::size_t _id;
-        std::size_t _index;
+        std::size_t _start;
         std::size_t _size;
         ValueInfo(Signal::Id id, std::size_t index, std::size_t size) :
-            _id(id), _index(index), _size(size) {}
+            _id(id), _start(index), _size(size) {}
         ValueInfo(Signal::Id id, std::size_t index) :
-            _id(id), _index(index), _size(0) {}
+            _id(id), _start(index), _size(0) {}
     };
 
 protected:
@@ -180,7 +180,7 @@ protected:
         verify(vi._size == std::size_t(value.rows()),
             std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._size) +
             " vs " + std::to_string(value.rows()) + ")!");
-        _array.segment(vi._index, vi._size) = value;
+        _array.segment(vi._start, vi._size) = value;
     }
 
 public:
@@ -217,7 +217,7 @@ public:
         {
             verify(vi._size > 0, "attempting to retrieve a scalar as an array!");
         }
-        // return _array.segment(vi._index, vi._size);
+        // return _array.segment(vi._start, vi._size);
         return _get<T>(vi);
     }
 
@@ -248,7 +248,7 @@ public:
         for (const auto& v: _values)
         {
             os << "- [" << k++ << "]: ";
-            (v._assigned ? os << _array.segment(v._index, v._size) : os << "*") << "\n";
+            (v._assigned ? os << _array.segment(v._start, v._size) : os << "*") << "\n";
         }
         os << "\n";
     }
@@ -257,13 +257,13 @@ public:
 template<>
 inline auto Values::_get<Value>(const Values::ValueInfo& vi) const -> const auto
 {
-    return _array.segment(vi._index, vi._size);
+    return _array.segment(vi._start, vi._size);
 }
 
 template<>
 inline auto Values::_get<double>(const Values::ValueInfo& vi) const -> const auto
 {
-    return _array[vi._index];
+    return _array[vi._start];
 }
 
 inline double Values::get_scalar(Signal::Id id) const {return get<double>(id);}
@@ -273,7 +273,7 @@ template<>
 inline void Values::_set<double>(const ValueInfo& vi, const double& value)
 {
     verify(vi._size == 0, "cannot assign scalar to array!");
-    _array(vi._index) = value;
+    _array(vi._start) = value;
 }
 
 inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}

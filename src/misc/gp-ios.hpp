@@ -8,7 +8,6 @@
 #include "3rdparty/misc/gnuplot-iostream.h"
 
 using namespace pooya;
-using namespace Eigen;
 
 namespace gnuplotio
 {
@@ -27,7 +26,7 @@ public:
 	}
 };
 
-template<> std::string Gnuplot::file1d(const MatrixXd &arg, const std::string &filename)
+template<> std::string Gnuplot::file1d(const Eigen::MatrixXd &arg, const std::string &filename)
 {
     return file1d(Value{arg.reshaped()}, filename);
 }

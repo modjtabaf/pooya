@@ -191,14 +191,14 @@ int main()
     Simulator sim(model,
         [&](double t, Values& values) -> void
         {
-            values.set(front_wheel_angle_Rq,
+            values.set_scalar(front_wheel_angle_Rq,
                 interp1d(t, FRONT_WHEEL_ANGLE_RQ_X, FRONT_WHEEL_ANGLE_RQ_Y));
-            values.set(tractor_wheelbase, 5.8325);
-            values.set(tractor_Width, 2.5);
-            values.set(front_wheel_ang_t_const, 0.1);
-            values.set(front_wheel_ang_delay, 0.02);
-            values.set(front_wheel_ang_gain, 1.0);
-            values.set(front_wheel_ang_init_value, 0.0);
+            values.set_scalar(tractor_wheelbase, 5.8325);
+            values.set_scalar(tractor_Width, 2.5);
+            values.set_scalar(front_wheel_ang_t_const, 0.1);
+            values.set_scalar(front_wheel_ang_delay, 0.02);
+            values.set_scalar(front_wheel_ang_gain, 1.0);
+            values.set_scalar(front_wheel_ang_init_value, 0.0);
         },
         rkf45, true);
 

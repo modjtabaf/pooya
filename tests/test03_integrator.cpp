@@ -45,7 +45,7 @@ int main()
     Simulator sim(model,
         [&](Model&, double t, Values& values) -> void
         {
-            values.set(xd, t < 3 or t > 7 ? 1 : 0);
+            values.set_scalar(xd, t < 3 or t > 7 ? 1.0 : 0.0);
         },
         rk4);
 

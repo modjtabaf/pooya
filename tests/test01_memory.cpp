@@ -45,7 +45,7 @@ int main()
     Simulator sim(model,
         [&](Model&, double t, Values& values) -> void
         {
-            values.set(x, std::sin(M_PI * t / 5));
+            values.set_scalar(x, std::sin(M_PI * t / 5));
         });
 
     uint k = 0;

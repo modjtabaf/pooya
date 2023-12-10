@@ -162,10 +162,10 @@ int main()
     Simulator sim(model,
         [&](Model&, double /*t*/, Values& values) -> void
         {
-            values.set(      m,    0.2);
-            values.set(      l,    0.1);
-            values.set(      g,   9.81);
-            values.set(des_phi, M_PI_4);
+            values.set_scalar(      m,    0.2);
+            values.set_scalar(      l,    0.1);
+            values.set_scalar(      g,   9.81);
+            values.set_scalar(des_phi, M_PI_4);
         },
         rkf45); // try rk4 with h = 0.01 to see the difference
 

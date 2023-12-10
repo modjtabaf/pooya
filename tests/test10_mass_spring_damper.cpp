@@ -69,15 +69,15 @@ public:
     void activation_function(double /*t*/, Values& values) override
     {
         // get states and input
-        double   x = values[  _s_x][0];
-        double  xd = values[ _s_xd][0];
-        double tau = values[_s_tau][0];
+        double   x = values.get_scalar(  _s_x);
+        double  xd = values.get_scalar( _s_xd);
+        double tau = values.get_scalar(_s_tau);
 
         // calculate acceleration
         double xdd = tau/_m - _c/_m * xd - _k/_m * x;
 
         // assign acceleration
-        values.set(_s_xdd, xdd);
+        values.set_scalar(_s_xdd, xdd);
     }
 };
 
@@ -101,7 +101,7 @@ int main()
     Simulator sim(model,
     [&](Model&, double t, Values& values) -> void
     {
-        values.set(tau, 0.01 * std::sin(t));
+        values.set_scalar(tau, 0.01 * std::sin(t));
     }, rkf45);
 
     uint k = 0;

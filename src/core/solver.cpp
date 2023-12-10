@@ -11,29 +11,31 @@ namespace pooya
 
 #define STEP(K, t, X) \
     callback(t, X); \
-    Values K(states.size()); \
+    static Values K(states); \
+    K.invalidate(); \
     k = 0; \
     for (auto& state: states) \
     { \
-        const auto* dx = X.get(state.second.second); \
-        if (!dx) \
-        { \
-            std::cout << "Error: not all state derivatives are present. Aborting...\n"; \
-            return; \
-        } \
-        K.set(k++, h * (*dx)); \
+        if (state._scalar) \
+            K.set_scalar(k++, h * X.get_scalar(state._deriv_id)); \
+        else \
+            K.set_array(k++, h * X.get_array(state._deriv_id)); \
     }
 
-void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_signals, double& new_h)
+void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
 {
     double h = new_h = t1 - t0;
     int k;
 
     // X0
 
-    Values X0(num_signals);
+    static Values X0(signal_registry);
+    X0.invalidate();
     for (const auto& state: states)
-        X0.set(state.first, state.second.first);
+        if (state._scalar)
+            X0.set_scalar(state._id, state._value[0]);
+        else
+            X0.set_array(state._id, state._value);
 
     // K1 = h * f(t0, X0)
 
@@ -41,10 +43,14 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X1 = X0 + K1/2
 
-    Values X1(num_signals);
+    static Values X1(signal_registry);
+    X1.invalidate();
     k = 0;
     for (const auto& state: states)
-        X1.set(state.first, *X0.get(state.first) + (*K1.get(k++)) / 2);
+        if (state._scalar)
+            X1.set_scalar(state._id, X0.get_scalar(state._id) + K1.get_scalar(k++) / 2);
+        else
+            X1.set_array(state._id, X0.get_array(state._id) + K1.get_array(k++) / 2);
 
     // K2 = h * f(t0 + h/2, X1)
 
@@ -52,10 +58,14 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X2 = X0 + K2/2
 
-    Values X2(num_signals);
+    static Values X2(signal_registry);
+    X2.invalidate();
     k = 0;
     for (const auto& state: states)
-        X2.set(state.first, *X0.get(state.first) + (*K2.get(k++)) / 2);
+        if (state._scalar)
+            X2.set_scalar(state._id, X0.get_scalar(state._id) + K2.get_scalar(k++) / 2);
+        else
+            X2.set_array(state._id, X0.get_array(state._id) + K2.get_array(k++) / 2);
 
     // K3 = h * f(t0 + h/2, X2)
 
@@ -63,10 +73,14 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
 
     // X3 = X0 + K3
 
-    Values X3(num_signals);
+    static Values X3(signal_registry);
+    X3.invalidate();
     k = 0;
     for (const auto& state: states)
-        X3.set(state.first, *X0.get(state.first) + (*K3.get(k++)));
+        if (state._scalar)
+            X3.set_scalar(state._id, X0.get_scalar(state._id) + K3.get_scalar(k++));
+        else
+            X3.set_array(state._id, X0.get_array(state._id) + K3.get_array(k++));
 
     // K4 = h * f(t0 + h, X3)
 
@@ -77,13 +91,16 @@ void rk4(SolverCallback callback, double t0, double t1, StatesInfo& states, std:
     k = 0;
     for (auto& state: states)
     {
-        state.second.first = *X0.get(state.first) + (*K1.get(k)) / 6 + (*K2.get(k)) / 3 + (*K3.get(k)) / 3 + (*K4.get(k)) / 6;
+        if (state._scalar)
+            state._value = X0.get_scalar(state._id) + K1.get_scalar(k) / 6 + K2.get_scalar(k) / 3 + K3.get_scalar(k) / 3 + K4.get_scalar(k) / 6;
+        else
+            state._value = X0.get_array(state._id) + K1.get_array(k) / 6 + K2.get_array(k) / 3 + K3.get_array(k) / 3 + K4.get_array(k) / 6;
         k++;
     }
 }
 
 // source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
-void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_signals, double& new_h)
+void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
 {
     double h = t1 - t0;
     uint k;
@@ -103,9 +120,13 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X0
 
-    Values X0(num_signals);
+    static Values X0(signal_registry);
+    X0.invalidate();
     for (const auto& state: states)
-        X0.set(state.first, state.second.first);
+        if (state._scalar)
+            X0.set_scalar(state._id, state._value[0]);
+        else
+            X0.set_array(state._id, state._value);
 
     // K1 = h * f(t0, X0)
     STEP(K1, t0, X0)
@@ -114,10 +135,14 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X1 = X0 + K1/4
 
-    Values X1(num_signals);
+    static Values X1(signal_registry);
+    X1.invalidate();
     k = 0;
     for (const auto& state: states)
-        X1.set(state.first, *X0.get(state.first) + 1./4 * (*K1.get(k++)));
+        if (state._scalar)
+            X1.set_scalar(state._id, X0.get_scalar(state._id) + 1./4 * K1.get_scalar(k++));
+        else
+            X1.set_array(state._id, X0.get_array(state._id) + 1./4 * K1.get_array(k++));
 
     // K2 = h * f(t0 + h/4, X1)
     STEP(K2, t0 + h/4, X1)
@@ -126,11 +151,15 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X2 = X0 + 3/8 * ( 1/4 * K1 + 3/4 * K2)
 
-    Values X2(num_signals);
+    static Values X2(signal_registry);
+    X2.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        X2.set(state.first, *X0.get(state.first) + (3./8 * 1./4) * (*K1.get(k)) + (3./8 * 3./4) * (*K2.get(k)));
+        if (state._scalar)
+            X2.set_scalar(state._id, X0.get_scalar(state._id) + (3./8 * 1./4) * K1.get_scalar(k) + (3./8 * 3./4) * K2.get_scalar(k));
+        else
+            X2.set_array(state._id, X0.get_array(state._id) + (3./8 * 1./4) * K1.get_array(k) + (3./8 * 3./4) * K2.get_array(k));
         k++;
     }
 
@@ -141,11 +170,15 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X3 = X0 + 12/13 * (161/169 * K1 - 600/169 * K2 + 608/169 * K3)
 
-    Values X3(num_signals);
+    static Values X3(signal_registry);
+    X3.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        X3.set(state.first, *X0.get(state.first) + (12./13 * 161./169) * (*K1.get(k)) - (12./13 * 600./169) * (*K2.get(k)) + (12./13 * 608./169) * (*K3.get(k)));
+        if (state._scalar)
+            X3.set_scalar(state._id, X0.get_scalar(state._id) + (12./13 * 161./169) * K1.get_scalar(k) - (12./13 * 600./169) * K2.get_scalar(k) + (12./13 * 608./169) * K3.get_scalar(k));
+        else
+            X3.set_array(state._id, X0.get_array(state._id) + (12./13 * 161./169) * K1.get_array(k) - (12./13 * 600./169) * K2.get_array(k) + (12./13 * 608./169) * K3.get_array(k));
         k++;
     }
 
@@ -156,11 +189,15 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X4 = X0 + 8341/4104 * K1 - 32832/4104 * K2 + 29440/4104 * K3 - 845/4104 * K4
 
-    Values X4(num_signals);
+    static Values X4(signal_registry);
+    X4.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        X4.set(state.first, *X0.get(state.first) + (8341./4104) * (*K1.get(k)) - (32832./4104) * (*K2.get(k)) + (29440./4104) * (*K3.get(k)) - (845./4104) * (*K4.get(k)));
+        if (state._scalar)
+            X4.set_scalar(state._id, X0.get_scalar(state._id) + (8341./4104) * K1.get_scalar(k) - (32832./4104) * K2.get_scalar(k) + (29440./4104) * K3.get_scalar(k) - (845./4104) * K4.get_scalar(k));
+        else
+            X4.set_array(state._id, X0.get_array(state._id) + (8341./4104) * K1.get_array(k) - (32832./4104) * K2.get_array(k) + (29440./4104) * K3.get_array(k) - (845./4104) * K4.get_array(k));
         k++;
     }
 
@@ -171,11 +208,15 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     // X5 = X0 + 1/2 * (-6080/10260 * K1 + 41040/10260 * K2 - 28352/10260 * K3 + 9295/10260 * K4 - 5643/10260 * K5)
 
-    Values X5(num_signals);
+    static Values X5(signal_registry);
+    X5.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        X5.set(state.first, *X0.get(state.first) - (1./2 * 6080./10260) * (*K1.get(k)) + (1./2 * 41040./10260) * (*K2.get(k)) - (1./2 * 28352./10260) * (*K3.get(k)) + (1./2 * 9295./10260) * (*K4.get(k)) - (1./2 * 5643./10260) * (*K5.get(k)));
+        if (state._scalar)
+            X5.set_scalar(state._id, X0.get_scalar(state._id) - (1./2 * 6080./10260) * K1.get_scalar(k) + (1./2 * 41040./10260) * K2.get_scalar(k) - (1./2 * 28352./10260) * K3.get_scalar(k) + (1./2 * 9295./10260) * K4.get_scalar(k) - (1./2 * 5643./10260) * K5.get_scalar(k));
+        else
+            X5.set_array(state._id, X0.get_array(state._id) - (1./2 * 6080./10260) * K1.get_array(k) + (1./2 * 41040./10260) * K2.get_array(k) - (1./2 * 28352./10260) * K3.get_array(k) + (1./2 * 9295./10260) * K4.get_array(k) - (1./2 * 5643./10260) * K5.get_array(k));
         k++;
     }
 
@@ -184,29 +225,45 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     //     yt := y[i - 1] + h*(  2375*K[1] +  11264*K[3] +  10985*K[4] - 4104*K[5] )/20520;
 
-    Values YT(states.size());
+    static Values YT(signal_registry);
+    YT.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        YT.set(k, *X0.get(state.first) + (2375./20520) * (*K1.get(k)) + (11264./20520) * (*K3.get(k)) + (10985./20520) * (*K4.get(k)) - (4104./20520) * (*K5.get(k)));
+        if (state._scalar)
+            YT.set_scalar(k, X0.get_scalar(state._id) + (2375./20520) * K1.get_scalar(k) + (11264./20520) * K3.get_scalar(k) + (10985./20520) * K4.get_scalar(k) - (4104./20520) * K5.get_scalar(k));
+        else
+            YT.set_array(k, X0.get_array(state._id) + (2375./20520) * K1.get_array(k) + (11264./20520) * K3.get_array(k) + (10985./20520) * K4.get_array(k) - (4104./20520) * K5.get_array(k));
         k++;
     }
 
     //     zt := y[i - 1] + h*( 33440*K[1] + 146432*K[3] + 142805*K[4] - 50787*K[5] + 10260*K[6] )/282150;
 
-    Values ZT(states.size());
+    static Values ZT(signal_registry);
+    ZT.invalidate();
     k = 0;
     for (const auto& state: states)
     {
-        ZT.set(k, *X0.get(state.first) + (33440./282150) * (*K1.get(k)) + (146432./282150) * (*K3.get(k)) + (142805./282150) * (*K4.get(k)) - (50787./282150) * (*K5.get(k)) + (10260./282150) * (*K6.get(k)));
+        if (state._scalar)
+            ZT.set_scalar(k, X0.get_scalar(state._id) + (33440./282150) * K1.get_scalar(k) + (146432./282150) * K3.get_scalar(k) + (142805./282150) * K4.get_scalar(k) - (50787./282150) * K5.get_scalar(k) + (10260./282150) * K6.get_scalar(k));
+        else
+            ZT.set_array(k, X0.get_array(state._id) + (33440./282150) * K1.get_array(k) + (146432./282150) * K3.get_array(k) + (142805./282150) * K4.get_array(k) - (50787./282150) * K5.get_array(k) + (10260./282150) * K6.get_array(k));
         k++;
     }
 
     //     s := root[4]( (eps[abs]*h)/(2*abs(yt - zt)) );
 
     double max_abs = 0;
-    for (k = 0; k < states.size(); k++)
-        max_abs = ((*YT.get(k)) - (*ZT.get(k))).array().abs().max(max_abs)(0, 0);
+    k = 0;
+    for (const auto& state: states)
+    {
+        // max_abs = ((*YT.get_scalar(k)) - (*ZT.get_scalar(k))).array().abs().max(max_abs)(0, 0);
+        if (state._scalar)
+            max_abs = std::max(max_abs, std::abs(YT.get_scalar(k) - ZT.get_scalar(k)));
+        else
+            max_abs = (YT.get_array(k) - ZT.get_array(k)).abs().max(max_abs)(0, 0);
+        k++;
+    }
 
     //     if s < 0.75 then
     //         h := max( h/2, 0.025 );
@@ -236,35 +293,36 @@ void rkf45(SolverCallback callback, double t0, double t1, StatesInfo& states, st
 
     k = 0;
     for (auto& state: states)
-        state.second.first = *YT.get(k++);
+        if (state._scalar)
+            state._value[0] = YT.get_scalar(k++);
+        else
+            state._value = YT.get_array(k++);
 
     // plots[pointplot]( [seq( [t[k], y[k]], k = 1..i )] );
 }
 
-void simple(SolverCallback callback, double t0, double t1, StatesInfo& states, std::size_t num_signals, double& new_h)
+void simple(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
 {
     double h = new_h = t1 - t0;
 
     // ret = x0 + (t1 - t0)*callback(t0, x0)
 
-    Values values(num_signals);
+    static Values values(signal_registry);
+    values.invalidate();
 
     for (const auto& state: states)
-        values.set(state.first, state.second.first);
+        if (state._scalar)
+            values.set_scalar(state._id, state._value[0]);
+        else
+            values.set_array(state._id, state._value);
 
     callback(t0, values);
 
     for (auto& state: states)
-    {
-        const auto* x = values.get(state.first);
-        const auto* dx = values.get(state.second.second);
-        if (!dx)
-        {
-            std::cout << "Error: not all state derivatives are present. Aborting...\n";
-            return;
-        }
-        state.second.first = *x + h*(*dx);
-    }
+        if (state._scalar)
+            state._value[0] = values.get_scalar(state._id) + h * values.get_scalar(state._deriv_id);
+        else
+            state._value = values.get_array(state._id) + h * values.get_array(state._deriv_id);
 }
 
 }

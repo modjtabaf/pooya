@@ -26,25 +26,56 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "3rdparty/eigen/Eigen/Core"
 
-using namespace Eigen;
+// helper macros
+
+#define POOYA_HERE(s) std::cout << "Pooya:" << __FILE__ << ":" << __LINE__ << s << "\n" << std::flush;
+// #undef POOYA_HERE
+// #define POOYA_HERE
+
+#define POOYA_HERE0 POOYA_HERE("")
+// #undef POOYA_HERE0
+// #define POOYA_HERE0
+
+#define  get_input(T, index) values.get<T>(_iports[index])
+#define  scalar_input(index) get_input(double, index)
+#define   array_input(index) get_input( Value, index)
+
+#define set_output(T, index, value) values.set<T>(_oports[index], value)
+#define scalar_output(index, value) set_output(double, index, value)
+#define  array_output(index, value) set_output( Value, index, value)
 
 namespace pooya
 {
 
+#define verify(cond,msg) \
+    if (!(cond)) \
+        throw std::runtime_error( \
+            std::string("\n" __FILE__ ":") + std::to_string(__LINE__) + "\n" + \
+            "Pooya Exception: " + (msg) + "\n")
+
 class Base;
 class Parent;
+class SignalRegistry;
+class StatesInfo;
 class Model;
 
-class Value : public ArrayXd
+template <int N=Eigen::Dynamic>
+class ValueN : public Eigen::Array<double, N, 1>
 {
 public:
-    using ArrayXd::ArrayXd;
+    using Parent = Eigen::Array<double, N, 1>;
+    using Parent::Array;
 
-    Value(double v=0) : ArrayXd(1)
+    ValueN(double v=0) : Parent()
     {
+        verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
+        if constexpr (N == Eigen::Dynamic)
+            Parent::resize(1);
         (*this)[0] = v;
     }
 };
+
+using Value = ValueN<>;
 
 class Signal
 {
@@ -56,20 +87,21 @@ protected:
     std::string _given_name;
     std::string _full_name;
     std::size_t _id{NoId};
+    std::size_t _size{0};
 
     std::string _make_valid_given_name(const std::string& given_name) const;
     void _set_owner(Parent& owner);
 
 public:
-    Signal(const std::string& given_name, Parent& owner) : _given_name(_make_valid_given_name(given_name))
+    Signal(const std::string& given_name, Parent& owner, std::size_t size=0) : _given_name(_make_valid_given_name(given_name)), _size(size)
     {
         _set_owner(owner);
     }
-    Signal(const char* given_name, Parent& owner) : _given_name(_make_valid_given_name(given_name))
+    Signal(const char* given_name, Parent& owner, std::size_t size=0) : _given_name(_make_valid_given_name(given_name)), _size(size)
     {
         _set_owner(owner);
     }
-    Signal(Parent& owner) : _given_name(_make_valid_given_name(""))
+    Signal(Parent& owner, std::size_t size=0) : _given_name(_make_valid_given_name("")), _size(size)
     {
         _set_owner(owner);
     }
@@ -80,6 +112,7 @@ public:
 
     operator Id() const {return _id;}
     Id id() const {return _id;}
+    std::size_t size() const {return _size;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;} // todo: create a shared parent with Base named NamedObject
 };
@@ -88,16 +121,6 @@ inline std::ostream& operator<<(std::ostream& os, const Signal& signal)
 {
     return os << "signal [" << signal.given_name() << "] = " << signal.id() << "\n";
 }
-
-struct SignalHash
-{
-    std::size_t operator()(const Signal& signal) const noexcept
-    {
-        assert(!signal.full_name().empty());
-        std::size_t h = std::hash<std::string>{}(signal.full_name());
-        return h ^ (signal.id() << 1);
-    }
-};
 
 class Signals : public std::vector<Signal>
 {
@@ -124,59 +147,99 @@ using TraverseCallback = std::function<bool(Base&, uint32_t level)>;
 
 class Values
 {
-protected:
-    struct BoolValue
+public:
+    struct ValueInfo
     {
-        bool _valid{false};
-        Value _value;
+        bool _assigned{false};
+        std::size_t _id;
+        std::size_t _index;
+        std::size_t _size;
+        ValueInfo(Signal::Id id, std::size_t index, std::size_t size) :
+            _id(id), _index(index), _size(size) {}
+        ValueInfo(Signal::Id id, std::size_t index) :
+            _id(id), _index(index), _size(0) {}
     };
-    std::vector<BoolValue> _values;
+
+protected:
+    std::vector<ValueInfo> _values;
+    std::size_t _total_size{0};
+    Eigen::ArrayXd _array;
+
+    inline ValueInfo& get_value_info(Signal::Id id)
+    {
+        verify(id != Signal::NoId, "invalid id!");
+        return _values[id];
+    }
+
+    template<typename T>
+    auto _get(const ValueInfo& vi) const -> const auto;
+
+    template<typename T>
+    void _set(const ValueInfo& vi, const T& value)
+    {
+        verify(vi._size == std::size_t(value.rows()),
+            std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._size) +
+            " vs " + std::to_string(value.rows()) + ")!");
+        _array.segment(vi._index, vi._size) = value;
+    }
 
 public:
-    Values(std::size_t n)
+    Values(const SignalRegistry& signal_registry);
+    Values(const StatesInfo& states);
+
+    inline const ValueInfo& get_value_info(Signal::Id id) const
     {
-        _values.reserve(n);
-        for (std::size_t k=0; k < n; k++)
-            _values.emplace_back(BoolValue());
+        verify(id != Signal::NoId, "invalid id!");
+        return _values[id];
     }
 
-    std::size_t size() const {return _values.size();}
-
-    const Value* get(Signal::Id id) const
+    bool valid(Signal::Id id) const
     {
-        assert(id != Signal::NoId);
-        const auto& bv = _values[id];
-        return bv._valid ? &bv._value : nullptr;
+        return get_value_info(id)._assigned;
     }
 
-    const Value* get(const Signal& signal) const {return get(signal.id());}
-
-    const Value& operator[](Signal::Id id) const
+    bool is_array(Signal::Id id) const
     {
-        const Value* ret = get(id);
-        assert(ret); // TODO: throw an exception if null
-        return *ret;
+        return get_value_info(id)._size > 0;
     }
 
-    template<typename T=double>
+    // Return type is VectorBlock<const Array<double, Eigen::Dynamic, 1>, Eigen::Dynamic>
+    template<typename T>
+    auto get(Signal::Id id) const -> const auto
+    {
+        const auto& vi = get_value_info(id);
+        verify(vi._assigned, "attempting to access an unassigned value!");
+        if constexpr (std::is_same_v<T, double>)
+        {
+            verify(vi._size == 0, "attempting to retrieve an array as a scalar!");
+        }
+        else
+        {
+            verify(vi._size > 0, "attempting to retrieve a scalar as an array!");
+        }
+        // return _array.segment(vi._index, vi._size);
+        return _get<T>(vi);
+    }
+
+    double get_scalar(Signal::Id id) const;
+    auto   get_array(Signal::Id id) const;
+
+    template<typename T>
     void set(Signal::Id id, const T& value)
     {
-        assert(id != Signal::NoId);
-        auto& bv = _values[id];
-        assert(!bv._valid); // rewriting a valid value is not allowed
-        if (!bv._valid)
-        {
-            bv._value = value;
-            bv._valid = true;
-        }
+        verify(id != Signal::NoId, "invalid id!");
+        auto& vi = _values[id];
+        verify(!vi._assigned, "re-assignment is prohibited!");
+        _set<T>(vi, value);
+        vi._assigned = true;
     }
 
-    template<typename T=double>
-    void set(const Signal& signal, const T& value) {set(signal.id(), value);}
+    void set_scalar(Signal::Id id, double value);
+    void set_array(Signal::Id id, const Value& value);
 
     void invalidate()
     {
-        for (auto& v: _values) v._valid = false;
+        for (auto& v: _values) v._assigned = false;
     }
 
     void stream(std::ostream& os) const
@@ -185,11 +248,36 @@ public:
         for (const auto& v: _values)
         {
             os << "- [" << k++ << "]: ";
-            (v._valid ? os << v._value : os << "*") << "\n";
+            (v._assigned ? os << _array.segment(v._index, v._size) : os << "*") << "\n";
         }
         os << "\n";
     }
 };
+
+template<>
+inline auto Values::_get<Value>(const Values::ValueInfo& vi) const -> const auto
+{
+    return _array.segment(vi._index, vi._size);
+}
+
+template<>
+inline auto Values::_get<double>(const Values::ValueInfo& vi) const -> const auto
+{
+    return _array[vi._index];
+}
+
+inline double Values::get_scalar(Signal::Id id) const {return get<double>(id);}
+inline auto   Values::get_array (Signal::Id id) const {return get<Value> (id);}
+
+template<>
+inline void Values::_set<double>(const ValueInfo& vi, const double& value)
+{
+    verify(vi._size == 0, "cannot assign scalar to array!");
+    _array(vi._index) = value;
+}
+
+inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}
+inline void Values::set_array (Signal::Id id, const Value& value) {set<Value>(id, value);}
 
 inline std::ostream& operator<<(std::ostream& os, const Values& values)
 {
@@ -197,37 +285,41 @@ inline std::ostream& operator<<(std::ostream& os, const Values& values)
     return os;
 }
 
-class StatesInfo : public std::unordered_map<Signal::Id, std::pair<Value, Signal::Id>> // state, value, derivative
+struct StateInfo
 {
-protected:
-    using Pair = std::pair<Value, Signal::Id>;
-    using Parent = std::unordered_map<Signal::Id, Pair>;
-
-public:
-    using Parent::unordered_map;
-
-    void add(Signal::Id state, const Value& value, Signal::Id deriv)
-    {
-        if (Parent::find(state) == end())
-            Parent::insert({state, Pair(value, deriv)});
-        else
-            assert(false);
-    }
+    Signal::Id _id;
+    Signal::Id _deriv_id;
+    bool _scalar;
+    Value _value;
+    StateInfo(Signal::Id id, Signal::Id deriv_id, const Value& iv) :
+        _id(id), _deriv_id(deriv_id), _scalar(false), _value(iv)
+        {
+        }
+    StateInfo(Signal::Id id, Signal::Id deriv_id, double iv) :
+        _id(id), _deriv_id(deriv_id), _scalar(true), _value(iv)
+        {
+        }
 };
 
-template<typename T>
-inline const T& get_value(const Value* value)
+class StatesInfo : public std::vector<StateInfo>
 {
-    assert(value);
-    return *value;
-}
+protected:
+    using Parent = std::vector<StateInfo>;
 
-template<>
-inline const double& get_value<double>(const Value* value)
-{
-    assert(value);
-    return (*value)[0];
-}
+public:
+    using Parent::vector;
+
+    template<typename T=double>
+    void add(Signal::Id state, const T& value, Signal::Id deriv)
+    {
+        verify(std::find_if(begin(), end(),
+            [&] (const StateInfo& info) -> bool
+            {
+                return info._id == state;
+            }) == end(), std::string("a state with id ") + std::to_string(state) + " is added already!");
+        emplace_back(StateInfo(state, deriv, value));
+    }
+};
 
 class Base
 {
@@ -289,16 +381,16 @@ public:
     {
         if (_init)
         {
-            _value = get_value<T>(values.get(_iports[0]));
+            _value = get_input(T, 0);
             _iports.clear();
             _init = false;
         }
-        values.set<T>(_oports[0], _value);
+        set_output(T, 0, _value);
     }
 };
 
-using  InitialValue = InitialValueT<double>;
-using InitialValueV = InitialValueT<Value>;
+using InitialValue  = InitialValueT<double>;
+using InitialValueA = InitialValueT<Value>;
 
 template<typename T>
 class ConstT : public Base
@@ -311,12 +403,12 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        values.set<T>(_oports[0], _value);
+        set_output(T, 0, _value);
     }
 };
 
-using  Const = ConstT<double>;
-using ConstV = ConstT<Value>;
+using Const  = ConstT<double>;
+using ConstA = ConstT<Value>;
 
 template<typename T>
 class GainT : public Base
@@ -329,13 +421,12 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        const T& x = get_value<T>(values.get(_iports[0]));
-        values.set<T>(_oports[0], _k * x);
+        set_output(T, 0, _k * get_input(T, 0));
     }
 };
 
-using Gain =  GainT<double>;
-using GainV = GainT<Value>;
+using Gain  = GainT<double>;
+using GainA = GainT<Value>;
 
 template<typename T>
 class SinT : public Base
@@ -345,22 +436,27 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        const T& x = get_value<T>(values.get(_iports[0]));
-        values.set<T>(_oports[0], x.sin());
+        if constexpr (std::is_same_v<T, double>)
+        {
+            double x = scalar_input(0);
+            scalar_output(0, std::sin(x));
+        }
+        else
+        {
+            const T& x = array_input(0);
+            array_output(0, x.sin());
+        }
     }
 };
 
-template<>
-void SinT<double>::activation_function(double, Values&);
-
 using Sin  = SinT<double>;
-using SinV = SinT<Value>;
+using SinA = SinT<Value>;
 
 template<typename T>
 class FunctionT : public Base
 {
 public:
-    using ActFunction = std::function<Value(double, const T&)>;
+    using ActFunction = std::function<T(double, const T&)>;
 
 protected:
     ActFunction _act_func;
@@ -371,13 +467,12 @@ public:
 
     void activation_function(double t, Values& values) override
     {
-        const T& x = get_value<T>(values.get(_iports[0]));
-        values.set(_oports[0], _act_func(t, x));
+        set_output(T, 0, _act_func(t, get_input(T, 0)));
     }
 };
 
 using Function  = FunctionT<double>;
-using FunctionV = FunctionT<Value>;
+using FunctionA = FunctionT<Value>;
 
 template<typename T>
 class AddSubT : public Base
@@ -404,7 +499,7 @@ public:
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
-            const auto &v = get_value<T>(values.get(signal));
+            const auto &v = values.get<T>(signal);
             if (*p == '+')
                 ret += v;
             else if (*p == '-')
@@ -413,12 +508,12 @@ public:
                  assert(false);
             p++;
         }
-        values.set<T>(_oports[0], ret);
+        set_output(T, 0, ret);
     }
 };
 
 using AddSub  = AddSubT<double>;
-using AddSubV = AddSubT<Value>;
+using AddSubA = AddSubT<Value>;
 
 template<typename T>
 class AddT : public AddSubT<T>
@@ -435,7 +530,7 @@ public:
 };
 
 using Add  = AddT<double>;
-using AddV = AddT<Value>;
+using AddA = AddT<Value>;
 
 template<typename T>
 class SubtractT : public AddSubT<T>
@@ -446,7 +541,7 @@ public:
 };
 
 using Subtract  = SubtractT<double>;
-using SubtractV = SubtractT<Value>;
+using SubtractA = SubtractT<Value>;
 
 template<typename T>
 class MulDivT : public Base
@@ -472,7 +567,7 @@ public:
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
-            const auto &v = get_value<T>(values.get(signal));
+            const auto &v = values.get<T>(signal);
             if (*p == '*')
                 ret *= v;
             else if (*p == '/')
@@ -481,12 +576,12 @@ public:
                  assert(false);
             p++;
         }
-        values.set<T>(_oports[0], ret);
+        set_output(T, 0, ret);
     }
 };
 
 using MulDiv  = MulDivT<double>;
-using MulDivV = MulDivT<Value>;
+using MulDivA = MulDivT<Value>;
 
 template<typename T>
 class MultiplyT : public MulDivT<T>
@@ -503,7 +598,7 @@ public:
 };
 
 using Multiply  = MultiplyT<double>;
-using MultiplyV = MultiplyT<Value>;
+using MultiplyA = MultiplyT<Value>;
 
 template<typename T>
 class DivideT : public MulDivT<T>
@@ -514,7 +609,7 @@ public:
 };
 
 using Divide  = DivideT<double>;
-using DivideV = DivideT<Value>;
+using DivideA = DivideT<Value>;
 
 template<typename T>
 class IntegratorT : public Base
@@ -527,13 +622,13 @@ public:
 
     void get_states(StatesInfo& states) override
     {
-        states.add(_oports[0], Value(_value), _iports[0]);
+        states.add(_oports[0], _value, _iports[0]);
     }
 
     void step(double /*t*/, const Values& values) override
     {
-        assert(values.get(_oports[0]));
-        _value = get_value<T>(values.get(_oports[0]));
+        assert(values.valid(_oports[0]));
+        _value = get_input(T, 0);
     }
 
     uint _process(double /*t*/, Values& values, bool /*go_deep*/ = true) override
@@ -541,13 +636,13 @@ public:
         if (_processed)
             return 0;
 
-        _processed = values.get(_iports[0]);
+        _processed = values.valid(_iports[0]);
         return _processed ? 1 : 0; // is it safe to simply return _processed?
     }
 };
 
 using Integrator  = IntegratorT<double>;
-using IntegratorV = IntegratorT<Value>;
+using IntegratorA = IntegratorT<Value>;
 
 // # it is still unclear how to deal with states when using this numerical integrator
 // # class NumericalIntegrator(Base):
@@ -599,26 +694,26 @@ public:
 
         assert(_t.empty() or (t > _t.back()));
         _t.push_back(t);
-        _x.push_back(get_value<T>(values.get(_iports[0])));
+        _x.push_back(get_input(T, 0));
     }
 
     void activation_function(double t, Values& values) override
     {
         if (_t.empty())
         {
-            values.set<T>(_oports[0], {get_value<T>(values.get(_iports[2]))});
+            set_output(T, 0, get_input(T, 2));
             return;
         }
     
-        const double delay = get_value<double>(values.get(_iports[1]));
+        double delay = scalar_input(1);
         t -= delay;
         if (t <= _t[0])
         {
-            values.set<T>(_oports[0], get_value<T>(values.get(_iports[2])));
+            set_output(T, 0, get_input(T, 2));
         }
         else if (t >= _t.back())
         {
-            values.set<T>(_oports[0], _x.back());
+            set_output(T, 0, _x.back());
         }
         else
         {
@@ -630,13 +725,13 @@ public:
                 k++;
             }
 
-            values.set<T>(_oports[0], (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
+            set_output(T, 0, (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
 
 using Delay  = DelayT<double>;
-using DelayV = DelayT<Value>;
+using DelayA = DelayT<Value>;
 
 template<typename T>
 class MemoryT : public Base
@@ -650,7 +745,7 @@ public:
 
     void step(double /*t*/, const Values& values) override
     {
-        _value = get_value<T>(values.get(_iports[0]));
+        _value = get_input(T, 0);
     }
 
     // # Memory can be implemented either by defining the following activation function
@@ -666,14 +761,14 @@ public:
         if (_processed)
             return 0;
 
-        values.set<T>(_oports[0], _value);
+        set_output(T, 0, _value);
         _processed = true;
         return 1;
     }
 };
 
 using Memory  = MemoryT<double>;
-using MemoryV = MemoryT<Value>;
+using MemoryA = MemoryT<Value>;
 
 template<typename T>
 class DerivativeT : public Base
@@ -681,18 +776,18 @@ class DerivativeT : public Base
 protected:
     bool _first_step{true};
     double _t;
-    T  _x;
-    T  _y;
+    T _x;
+    T _y;
 
 public:
     DerivativeT(std::string given_name, const T& y0=0) :
         Base(given_name), _y(y0) {}
 
-    void step(double t, const Values& states) override
+    void step(double t, const Values& values) override
     {
         _t = t;
-        _x = get_value<T>(states.get(_iports[0]));
-        _y = get_value<T>(states.get(_oports[0]));
+        _x = get_input(T, 0);
+        _y = _x;
         _first_step = false;
     }
 
@@ -701,18 +796,22 @@ public:
         if (_first_step)
         {
             _t = t;
-            _x = get_value<T>(values.get(_iports[0]));
-            values.set<T>(_oports[0], _y);
+            _x = get_input(T, 0);
+            set_output(T, 0, _y);
         }
         else if (_t == t)
-            values.set<T>(_oports[0], _y);
+        {
+            set_output(T, 0, _y);
+        }
         else
-            values.set<T>(_oports[0], ((get_value<T>(values.get(_iports[0])) - _x)/(t - _t)));
+        {
+            set_output(T, 0, (get_input(T, 0) - _x)/(t - _t));
+        }
     }
 };
 
 using Derivative  = DerivativeT<double>;
-using DerivativeV = DerivativeT<Value>;
+using DerivativeA = DerivativeT<Value>;
 
 class Parent : public Base
 {
@@ -743,9 +842,9 @@ public:
             component->step(t, values);
     }
 
-    Signal signal(const std::string& given_name="")
+    Signal signal(const std::string& given_name="", std::size_t size=0)
     {
-        return Signal(given_name, *this);
+        return Signal(given_name, *this, size);
     }
 
     std::string make_signal_name(const std::string& given_name);
@@ -762,10 +861,34 @@ public:
 
 }; // class Submodel
 
+class SignalRegistry
+{
+public:
+    using SignalInfo = std::pair<std::string, std::size_t>;
+    using Signals = std::vector<SignalInfo>;
+
+protected:
+    Signals _signals;
+
+    Signals::const_iterator _find_signal(const std::string& name, bool exact_match = false) const;
+
+public:
+    const Signals& signals() const {return _signals;}
+    std::size_t num_signals() const {return _signals.size();}
+
+    const SignalInfo& get_signal_by_id(Signal::Id id) const
+    {
+        return _signals[id];
+    }
+
+    Signal::Id find_signal(const std::string& name, bool exact_match = false) const;
+    Signal::Id register_signal(const std::string& name, std::size_t size);
+};
+
 class Model : public Parent
 {
 protected:
-    std::vector<std::string> _registered_signals;
+    SignalRegistry _signal_registry;
 
     bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
 
@@ -773,15 +896,18 @@ public:
     Model(std::string given_name="model");
 
     Model* model() override {return this;}
-    std::size_t num_signals() const {return _registered_signals.size();}
 
-    const std::string& get_signal_by_id(Signal::Id id) const
+    const SignalRegistry& signal_registry() const {return _signal_registry;}
+    SignalRegistry& signal_registry() {return _signal_registry;}
+
+    Signal::Id find_signal(const std::string& name, bool exact_match = false) const
     {
-        return _registered_signals[id];
+        return _signal_registry.find_signal(name, exact_match);
     }
-
-    Signal::Id find_signal(const std::string& name, bool exact_match = false) const;
-    Signal::Id find_or_register_signal(const std::string& name);
+    Signal::Id register_signal(const std::string& name, std::size_t size)
+    {
+        return _signal_registry.register_signal(name, size);
+    }
 
     virtual void input_cb(double /*t*/, Values& /*values*/) {}
 };

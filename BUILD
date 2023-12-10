@@ -230,6 +230,10 @@ cc_binary(
         "-Wall",
         "-Wextra",
         "-Werror",
+        "-ffast-math",
+        "-fno-math-errno",
+        "-DNDEBUG",
+        "-O3",
         ],
     linkopts = [
         "-lboost_iostreams",

@@ -102,7 +102,7 @@ int main()
     [&](Model&, double t, Values& values) -> void
     {
         values.set_scalar(tau, 0.01 * std::sin(t));
-    }, rkf45);
+    }, rk4);
 
     uint k = 0;
     double t;

@@ -54,28 +54,82 @@ void Signal::_set_owner(Parent& owner)
     _full_name = reg_name;
 }
 
-Values::Values(const SignalRegistry& signal_registry)
-{
-    auto n = signal_registry.num_signals();
-    for (std::size_t id=0; id < n; id++)
-    {
-        auto size = signal_registry.get_signal_by_id(id).second;
-        _values.push_back({id, _total_size, size});
-        _total_size += size == 0 ? 1 : size;
-    }
-    _array.resize(_total_size);
-}
+// Values::Values(const SignalRegistry& signal_registry)
+// {
+//     auto n = signal_registry.num_signals();
+//     for (std::size_t id=0; id < n; id++)
+//     {
+//         auto size = signal_registry.get_signal_by_id(id).second;
+//         _values.push_back({id, _total_size, size, false});
+//         _total_size += size == 0 ? 1 : size;
+//     }
+//     _array.resize(_total_size);
+// }
 
-Values::Values(const StatesInfo& states)
+// Values::Values(const StatesInfo& states)
+// {
+//     Signal::Id id = 0;
+//     for (const auto& state: states)
+//     {
+//         std::size_t size = state._scalar ? 0 : state._value.size();
+//         _values.push_back({id++, _total_size, size, true});
+//         _total_size += size == 0 ? 1 : size;
+//     }
+//     _array.resize(_total_size);
+//     new (&_states) decltype(_states)(_array.data, _states_size)
+// }
+
+Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states)
 {
-    Signal::Id id = 0;
+    const auto& signals = signal_registry.signals();
+
+    std::vector<bool> is_state(signals.size());
+    std::fill(is_state.begin(), is_state.end(), false);
+
+    // find the total size of states and mark them
     for (const auto& state: states)
     {
-        std::size_t size = state._scalar ? 0 : state._value.size();
-        _values.push_back({id++, _total_size, size});
-        _total_size += size == 0 ? 1 : size;
+        assert(!is_state[state._id]); // detect duplicate entries in states
+        is_state[state._id] = true;
+
+        _states_size += state._scalar ? 1 : state._value.size();
     }
+
+    _total_size = _states_size;
+    std::size_t state_start = 0;
+
+    Signal::Id id = 0;
+    for (const auto& signal: signals)
+    {
+        _values.push_back({id,
+            is_state[id] ? state_start : _total_size,
+            signal.second, is_state[id]});
+
+        _total_size += signal.second == 0 ? 1 : signal.second;
+
+        if (is_state[id])
+            state_start += signal.second == 0 ? 1 : signal.second;
+
+        id++;
+    }
+
+    assert(state_start == _states_size);
+
     _array.resize(_total_size);
+    new (&_states) decltype(_states)(_array.data(), _states_size);
+}
+
+void Values::set_states(const Eigen::ArrayXd& states)
+{
+    _states = states;
+    for (ValueInfo& vi: _values)
+    {
+        if (!vi._is_state)
+            continue;
+
+        assert(!vi._assigned);
+        vi._assigned = true;
+    }
 }
 
 bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)

@@ -152,13 +152,17 @@ public:
     {
         bool _assigned{false};
         std::size_t _id;
-        std::size_t _start;
-        std::size_t _size;
+        // std::size_t _start;
+        // std::size_t _size;
+        double* _scalar{nullptr};
+        Eigen::Map<Eigen::ArrayXd> _array;
         bool _is_state;
-        ValueInfo(Signal::Id id, std::size_t start, std::size_t size, bool is_state) :
-            _id(id), _start(start), _size(size), _is_state(is_state) {}
-        ValueInfo(Signal::Id id, std::size_t start, bool is_state) :
-            _id(id), _start(start), _size(0), _is_state(is_state) {}
+        // ValueInfo(Signal::Id id, std::size_t start, std::size_t size, bool is_state) :
+        //     _id(id), _start(start), _size(size), _is_state(is_state) {}
+        ValueInfo(Signal::Id id, double* data, std::size_t size, bool is_state) :
+            _id(id), _scalar(size == 0 ? data : nullptr), _array(data, size), _is_state(is_state) {}
+        // ValueInfo(Signal::Id id, double* data, bool is_state) :
+        //     _id(id), _scalar(data), _array(data, 0), _is_state(is_state) {}
     };
 
 protected:
@@ -178,12 +182,12 @@ protected:
     auto _get(const ValueInfo& vi) const -> const auto;
 
     template<typename T>
-    void _set(const ValueInfo& vi, const T& value)
+    void _set(ValueInfo& vi, const T& value)
     {
-        verify(vi._size == std::size_t(value.rows()),
-            std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._size) +
+        verify(vi._array.rows() == value.rows(),
+            std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._array.rows()) +
             " vs " + std::to_string(value.rows()) + ")!");
-        _array.segment(vi._start, vi._size) = value;
+        vi._array = value;
     }
 
 public:
@@ -205,25 +209,16 @@ public:
 
     bool is_array(Signal::Id id) const
     {
-        return get_value_info(id)._size > 0;
+        return get_value_info(id)._scalar == nullptr;
     }
 
     const decltype(_states)& states() const {return _states;}
 
-    // Return type is VectorBlock<const Array<double, Eigen::Dynamic, 1>, Eigen::Dynamic>
     template<typename T>
     auto get(Signal::Id id) const -> const auto
     {
         const auto& vi = get_value_info(id);
         verify(vi._assigned, "attempting to access an unassigned value!");
-        if constexpr (std::is_same_v<T, double>)
-        {
-            verify(vi._size == 0, "attempting to retrieve an array as a scalar!");
-        }
-        else
-        {
-            verify(vi._size > 0, "attempting to retrieve a scalar as an array!");
-        }
         return _get<T>(vi);
     }
 
@@ -256,7 +251,7 @@ public:
         for (const auto& v: _values)
         {
             os << "- [" << k++ << "]: ";
-            (v._assigned ? os << _array.segment(v._start, v._size) : os << "*") << "\n";
+            (v._assigned ? os << v._array : os << "*") << "\n";
         }
         os << "\n";
     }
@@ -265,23 +260,25 @@ public:
 template<>
 inline auto Values::_get<Value>(const Values::ValueInfo& vi) const -> const auto
 {
-    return _array.segment(vi._start, vi._size);
+    verify(!vi._scalar, "attempting to retrieve a scalar as an array!");
+    return vi._array;
 }
 
 template<>
 inline auto Values::_get<double>(const Values::ValueInfo& vi) const -> const auto
 {
-    return _array[vi._start];
+    verify(vi._scalar, "attempting to retrieve an array as a scalar!");
+    return *vi._scalar;
 }
 
 inline double Values::get_scalar(Signal::Id id) const {return get<double>(id);}
 inline auto   Values::get_array (Signal::Id id) const {return get<Value> (id);}
 
 template<>
-inline void Values::_set<double>(const ValueInfo& vi, const double& value)
+inline void Values::_set<double>(ValueInfo& vi, const double& value)
 {
-    verify(vi._size == 0, "cannot assign scalar to array!");
-    _array(vi._start) = value;
+    verify(vi._scalar, "cannot assign scalar to array!");
+    *vi._scalar = value;
 }
 
 inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}

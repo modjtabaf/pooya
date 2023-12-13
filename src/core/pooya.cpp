@@ -83,6 +83,12 @@ Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states)
 {
     const auto& signals = signal_registry.signals();
 
+    // find the total size of signals
+    for (const auto& signal: signals)
+        _total_size += signal.second == 0 ? 1 : signal.second;
+
+    _array.resize(_total_size);
+
     std::vector<bool> is_state(signals.size());
     std::fill(is_state.begin(), is_state.end(), false);
 
@@ -95,27 +101,21 @@ Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states)
         _states_size += state._scalar ? 1 : state._value.size();
     }
 
-    _total_size = _states_size;
-    std::size_t state_start = 0;
+    double* state_start = _array.data();
+    double* other_start = state_start + _states_size;
 
     Signal::Id id = 0;
     for (const auto& signal: signals)
     {
-        _values.push_back({id,
-            is_state[id] ? state_start : _total_size,
-            signal.second, is_state[id]});
-
-        _total_size += signal.second == 0 ? 1 : signal.second;
-
-        if (is_state[id])
-            state_start += signal.second == 0 ? 1 : signal.second;
-
+        auto& start = is_state[id] ? state_start : other_start;
+        _values.push_back({id, start, signal.second, is_state[id]});
+        start += signal.second == 0 ? 1 : signal.second;
         id++;
     }
 
-    assert(state_start == _states_size);
+    assert(state_start == _array.data() + _states_size);
+    assert(other_start == _array.data() + _total_size);
 
-    _array.resize(_total_size);
     new (&_states) decltype(_states)(_array.data(), _states_size);
 }
 

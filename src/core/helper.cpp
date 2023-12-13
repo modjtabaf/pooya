@@ -29,11 +29,11 @@ void History::update(uint k, double t, const Values& values)
         insert_or_assign(time_id, Value(_nrows_grow)); // t
         for (Signal::Id id = 0; id < n; id++)
         {
-            auto size = values.get_value_info(id)._size;
-            if (size == 0)
+            const auto& vi = values.get_value_info(id);
+            if (vi._scalar)
                 insert_or_assign(id, Value(_nrows_grow));
             else
-                insert_or_assign(id, Eigen::MatrixXd(_nrows_grow, size));
+                insert_or_assign(id, Eigen::MatrixXd(_nrows_grow, vi._array.size()));
         }
     }
 
@@ -43,10 +43,11 @@ void History::update(uint k, double t, const Values& values)
     h(k, 0) = t;
     for (Signal::Id id = 0; id < n; id++)
     {
+        const auto& vi = values.get_value_info(id);
         auto& h = at(id);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-        if (values.get_value_info(id)._size == 0)
+        if (vi._scalar)
             h(k, 0) = values.get_scalar(id);
         else
             h.row(k) = values.get_array(id);

@@ -11,31 +11,30 @@ namespace pooya
 
 #define STEP(K, t, X) \
     callback(t, X); \
-    static Values K(states); \
+    static Values K(signal_registry, states_info); \
     K.invalidate(); \
-    k = 0; \
-    for (auto& state: states) \
+    for (const auto& state_info: states_info) \
     { \
-        if (state._scalar) \
-            K.set_scalar(k++, h * X.get_scalar(state._deriv_id)); \
+        if (state_info._scalar) \
+            K.set_scalar(state_info._id, h * X.get_scalar(state_info._deriv_id)); \
         else \
-            K.set_array(k++, h * X.get_array(state._deriv_id)); \
+            K.set_array(state_info._id, h * X.get_array(state_info._deriv_id)); \
     }
 
-void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
+void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states_info, double& new_h)
 {
     double h = new_h = t1 - t0;
-    int k;
+    // int k;
 
     // X0
 
-    static Values X0(signal_registry);
+    static Values X0(signal_registry, states_info);
     X0.invalidate();
-    for (const auto& state: states)
-        if (state._scalar)
-            X0.set_scalar(state._id, state._value[0]);
+    for (const auto& state_info: states_info)
+        if (state_info._scalar)
+            X0.set_scalar(state_info._id, state_info._value[0]);
         else
-            X0.set_array(state._id, state._value);
+            X0.set_array(state_info._id, state_info._value);
 
     // K1 = h * f(t0, X0)
 
@@ -43,14 +42,15 @@ void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double 
 
     // X1 = X0 + K1/2
 
-    static Values X1(signal_registry);
+    static Values X1(signal_registry, states_info);
     X1.invalidate();
-    k = 0;
-    for (const auto& state: states)
-        if (state._scalar)
-            X1.set_scalar(state._id, X0.get_scalar(state._id) + K1.get_scalar(k++) / 2);
-        else
-            X1.set_array(state._id, X0.get_array(state._id) + K1.get_array(k++) / 2);
+    // k = 0;
+    // for (const auto& state: states)
+    //     if (state._scalar)
+    //         X1.set_scalar(state._id, X0.get_scalar(state._id) + K1.get_scalar(k++) / 2);
+    //     else
+    //         X1.set_array(state._id, X0.get_array(state._id) + K1.get_array(k++) / 2);
+    X1.set_states(X0.states() + K1.states() / 2);
 
     // K2 = h * f(t0 + h/2, X1)
 
@@ -58,14 +58,15 @@ void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double 
 
     // X2 = X0 + K2/2
 
-    static Values X2(signal_registry);
+    static Values X2(signal_registry, states_info);
     X2.invalidate();
-    k = 0;
-    for (const auto& state: states)
-        if (state._scalar)
-            X2.set_scalar(state._id, X0.get_scalar(state._id) + K2.get_scalar(k++) / 2);
-        else
-            X2.set_array(state._id, X0.get_array(state._id) + K2.get_array(k++) / 2);
+    // k = 0;
+    // for (const auto& state: states)
+    //     if (state._scalar)
+    //         X2.set_scalar(state._id, X0.get_scalar(state._id) + K2.get_scalar(k++) / 2);
+    //     else
+    //         X2.set_array(state._id, X0.get_array(state._id) + K2.get_array(k++) / 2);
+    X2.set_states(X0.states() + K2.states() / 2);
 
     // K3 = h * f(t0 + h/2, X2)
 
@@ -73,14 +74,15 @@ void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double 
 
     // X3 = X0 + K3
 
-    static Values X3(signal_registry);
+    static Values X3(signal_registry, states_info);
     X3.invalidate();
-    k = 0;
-    for (const auto& state: states)
-        if (state._scalar)
-            X3.set_scalar(state._id, X0.get_scalar(state._id) + K3.get_scalar(k++));
-        else
-            X3.set_array(state._id, X0.get_array(state._id) + K3.get_array(k++));
+    // k = 0;
+    // for (const auto& state: states)
+    //     if (state._scalar)
+    //         X3.set_scalar(state._id, X0.get_scalar(state._id) + K3.get_scalar(k++));
+    //     else
+    //         X3.set_array(state._id, X0.get_array(state._id) + K3.get_array(k++));
+    X3.set_states(X0.states() + K3.states());
 
     // K4 = h * f(t0 + h, X3)
 
@@ -88,17 +90,31 @@ void rk4(SolverCallback callback, const SignalRegistry& signal_registry, double 
 
     // ret = X0 + K1/6 + K2/3 + K3/3 + K4/6
 
-    k = 0;
-    for (auto& state: states)
+    static Values new_values(signal_registry, states_info);
+    new_values.invalidate();
+
+    new_values.set_states(X0.states() + K1.states() / 6 + K2.states() / 3 + K3.states() / 3 + K4.states() / 6);
+
+    // k = 0;
+    // for (auto& state: states)
+    // {
+    //     if (state._scalar)
+    //         state._value = X0.get_scalar(state._id) + K1.get_scalar(k) / 6 + K2.get_scalar(k) / 3 + K3.get_scalar(k) / 3 + K4.get_scalar(k) / 6;
+    //     else
+    //         state._value = X0.get_array(state._id) + K1.get_array(k) / 6 + K2.get_array(k) / 3 + K3.get_array(k) / 3 + K4.get_array(k) / 6;
+    //     k++;
+    // }
+
+    for (auto& state_info: states_info)
     {
-        if (state._scalar)
-            state._value = X0.get_scalar(state._id) + K1.get_scalar(k) / 6 + K2.get_scalar(k) / 3 + K3.get_scalar(k) / 3 + K4.get_scalar(k) / 6;
+        if (state_info._scalar)
+            state_info._value[0] = new_values.get_scalar(state_info._id);
         else
-            state._value = X0.get_array(state._id) + K1.get_array(k) / 6 + K2.get_array(k) / 3 + K3.get_array(k) / 3 + K4.get_array(k) / 6;
-        k++;
+            state_info._value = new_values.get_array(state_info._id);
     }
 }
 
+#if 0
 // source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
 void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
 {
@@ -120,7 +136,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X0
 
-    static Values X0(signal_registry);
+    static Values X0(signal_registry, states);
     X0.invalidate();
     for (const auto& state: states)
         if (state._scalar)
@@ -135,7 +151,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X1 = X0 + K1/4
 
-    static Values X1(signal_registry);
+    static Values X1(signal_registry, states);
     X1.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -151,7 +167,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X2 = X0 + 3/8 * ( 1/4 * K1 + 3/4 * K2)
 
-    static Values X2(signal_registry);
+    static Values X2(signal_registry, states);
     X2.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -170,7 +186,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X3 = X0 + 12/13 * (161/169 * K1 - 600/169 * K2 + 608/169 * K3)
 
-    static Values X3(signal_registry);
+    static Values X3(signal_registry, states);
     X3.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -189,7 +205,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X4 = X0 + 8341/4104 * K1 - 32832/4104 * K2 + 29440/4104 * K3 - 845/4104 * K4
 
-    static Values X4(signal_registry);
+    static Values X4(signal_registry, states);
     X4.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -208,7 +224,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // X5 = X0 + 1/2 * (-6080/10260 * K1 + 41040/10260 * K2 - 28352/10260 * K3 + 9295/10260 * K4 - 5643/10260 * K5)
 
-    static Values X5(signal_registry);
+    static Values X5(signal_registry, states);
     X5.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -225,7 +241,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     //     yt := y[i - 1] + h*(  2375*K[1] +  11264*K[3] +  10985*K[4] - 4104*K[5] )/20520;
 
-    static Values YT(signal_registry);
+    static Values YT(signal_registry, states);
     YT.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -239,7 +255,7 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     //     zt := y[i - 1] + h*( 33440*K[1] + 146432*K[3] + 142805*K[4] - 50787*K[5] + 10260*K[6] )/282150;
 
-    static Values ZT(signal_registry);
+    static Values ZT(signal_registry, states);
     ZT.invalidate();
     k = 0;
     for (const auto& state: states)
@@ -300,29 +316,43 @@ void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, doubl
 
     // plots[pointplot]( [seq( [t[k], y[k]], k = 1..i )] );
 }
+#endif
 
-void simple(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h)
+void simple(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states_info, double& new_h)
 {
     double h = new_h = t1 - t0;
 
     // ret = x0 + (t1 - t0)*callback(t0, x0)
 
-    static Values values(signal_registry);
+    static Values values(signal_registry, states_info);
     values.invalidate();
 
-    for (const auto& state: states)
-        if (state._scalar)
-            values.set_scalar(state._id, state._value[0]);
+    for (const auto& state_info: states_info)
+        if (state_info._scalar)
+            values.set_scalar(state_info._id, state_info._value[0]);
         else
-            values.set_array(state._id, state._value);
+            values.set_array(state_info._id, state_info._value);
 
-    callback(t0, values);
+    // callback(t0, values);
+    STEP(K, t0, values)
 
-    for (auto& state: states)
-        if (state._scalar)
-            state._value[0] = values.get_scalar(state._id) + h * values.get_scalar(state._deriv_id);
+    // for (auto& state: states)
+    //     if (state._scalar)
+    //         state._value[0] = values.get_scalar(state._id) + h * values.get_scalar(state._deriv_id);
+    //     else
+    //         state._value = values.get_array(state._id) + h * values.get_array(state._deriv_id);
+    static Values new_values(signal_registry, states_info);
+    new_values.invalidate();
+
+    new_values.set_states(values.states() + K.states());
+
+    for (auto& state_info: states_info)
+    {
+        if (state_info._scalar)
+            state_info._value[0] = new_values.get_scalar(state_info._id);
         else
-            state._value = values.get_array(state._id) + h * values.get_array(state._deriv_id);
+            state_info._value = new_values.get_array(state_info._id);
+    }
 }
 
 }

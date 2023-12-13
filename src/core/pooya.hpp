@@ -154,16 +154,19 @@ public:
         std::size_t _id;
         std::size_t _start;
         std::size_t _size;
-        ValueInfo(Signal::Id id, std::size_t index, std::size_t size) :
-            _id(id), _start(index), _size(size) {}
-        ValueInfo(Signal::Id id, std::size_t index) :
-            _id(id), _start(index), _size(0) {}
+        bool _is_state;
+        ValueInfo(Signal::Id id, std::size_t start, std::size_t size, bool is_state) :
+            _id(id), _start(start), _size(size), _is_state(is_state) {}
+        ValueInfo(Signal::Id id, std::size_t start, bool is_state) :
+            _id(id), _start(start), _size(0), _is_state(is_state) {}
     };
 
 protected:
     std::vector<ValueInfo> _values;
     std::size_t _total_size{0};
     Eigen::ArrayXd _array;
+    Eigen::Map<Eigen::ArrayXd> _states{nullptr, Eigen::Dynamic};
+    std::size_t _states_size{0};
 
     inline ValueInfo& get_value_info(Signal::Id id)
     {
@@ -184,8 +187,10 @@ protected:
     }
 
 public:
-    Values(const SignalRegistry& signal_registry);
-    Values(const StatesInfo& states);
+    // Values(const SignalRegistry& signal_registry);
+    // Values(const StatesInfo& states);
+    Values() {}
+    Values(const SignalRegistry& signal_registry, const StatesInfo& states);
 
     inline const ValueInfo& get_value_info(Signal::Id id) const
     {
@@ -203,6 +208,8 @@ public:
         return get_value_info(id)._size > 0;
     }
 
+    const decltype(_states)& states() const {return _states;}
+
     // Return type is VectorBlock<const Array<double, Eigen::Dynamic, 1>, Eigen::Dynamic>
     template<typename T>
     auto get(Signal::Id id) const -> const auto
@@ -217,7 +224,6 @@ public:
         {
             verify(vi._size > 0, "attempting to retrieve a scalar as an array!");
         }
-        // return _array.segment(vi._start, vi._size);
         return _get<T>(vi);
     }
 
@@ -236,6 +242,8 @@ public:
 
     void set_scalar(Signal::Id id, double value);
     void set_array(Signal::Id id, const Value& value);
+
+    void set_states(const Eigen::ArrayXd& states);
 
     void invalidate()
     {

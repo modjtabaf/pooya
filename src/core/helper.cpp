@@ -107,8 +107,9 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _stepper(stepper), _reuse_order(reuse_order)
 {
-    model.get_states(_states);
-    new (&_values) Values(model.signal_registry(), _states);
+    model.get_states(_states_info);
+    _states_info.lock();
+    new (&_values) Values(model.signal_registry(), _states_info);
 }
 
 uint Simulator::_process(double t, Values& values)
@@ -193,14 +194,14 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _process(t, values);
     };
 
-    if (_states.size() > 0)
+    if (_states_info.size() > 0)
     {
         assert(_stepper);
         assert(t >= _t_prev);
         assert(min_time_step > 0);
         assert(max_time_step > min_time_step);
 
-        StatesInfo states_orig(_states);
+        StatesInfo states_info_orig(_states_info);
 
         if (_first_iter)
         {
@@ -237,11 +238,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             double t1 = _t_prev;
             double t2 = t;
 
-            StatesInfo states_orig(_states);
+            StatesInfo states_info_orig(_states_info);
             bool force_accept = false;
             while (t1 < t)
             {
-                _stepper(stepper_callback, _model.signal_registry(), t1, t2, _states, new_h);
+                _stepper(stepper_callback, _model.signal_registry(), t1, t2, _states_info, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))
@@ -255,15 +256,8 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     if (t1 < t)
                     {
                         _values.invalidate();
-                        auto it = states_orig.begin();
-                        for (const auto& state: _states)
-                        {
-                            if (state._scalar)
-                                _values.set_scalar(state._id, state._value[0]);
-                            else
-                                _values.set_array(state._id, state._value);
-                            (it++)->_value = state._value;
-                        }
+                        _values.set_states(_states_info.value());
+                        states_info_orig.set_value(_states_info.value());
                         _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
                         _process(t1, _values);
                         _model.step(t1, _values);
@@ -274,9 +268,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     // redo this step
                     force_accept = new_h <= min_time_step;
                     new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                    auto it = states_orig.begin();
-                    for (auto& state: _states)
-                        state._value = (it++)->_value;
+                    _states_info.set_value(states_info_orig.value());
                     t2 = t1 + new_h;
                 }
             }
@@ -288,13 +280,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _first_iter = false;
 
     _values.invalidate();
-    for (const auto& state: _states)
-    {
-        if (state._scalar)
-            _values.set_scalar(state._id, state._value[0]);
-        else
-            _values.set_array(state._id, state._value);
-    }
+    _values.set_states(_states_info.value());
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.step(t, _values);

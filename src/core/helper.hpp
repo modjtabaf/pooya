@@ -53,7 +53,7 @@ protected:
     double _t_prev{0};
     InputCallback _inputs_cb;
     Values _values;
-    StatesInfo _states;
+    StatesInfo _states_info;
     Solver _stepper;
     bool _first_iter{true};
 

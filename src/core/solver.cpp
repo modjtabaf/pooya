@@ -2,8 +2,6 @@
 #include <iostream>
 #include <ostream>
 #include <type_traits>
-
-#include "pooya.hpp"
 #include "solver.hpp"
 
 namespace pooya

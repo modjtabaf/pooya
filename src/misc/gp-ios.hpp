@@ -2,10 +2,9 @@
 #ifndef __GP_IOS_HPP__
 #define __GP_IOS_HPP__
 
-#include "src/core/pooya.hpp"
-
-#include "3rdparty/eigen/Eigen/Core"
-#include "3rdparty/misc/gnuplot-iostream.h"
+#include "src/core/signal.hpp"
+#include "Eigen/Core"
+#include "misc/gnuplot-iostream.h"
 
 using namespace pooya;
 

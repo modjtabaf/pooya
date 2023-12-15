@@ -2,7 +2,7 @@
 #ifndef __SOLVER_HPP__
 #define __SOLVER_HPP__
 
-#include "pooya.hpp"
+#include "signal.hpp"
 
 namespace pooya
 {

@@ -47,7 +47,7 @@ int main()
         {
             values.set_scalar(xd, t < 3 or t > 7 ? 1.0 : 0.0);
         },
-        rk4);
+        euler);
 
     uint k = 0;
     double t;

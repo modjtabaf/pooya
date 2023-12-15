@@ -150,32 +150,35 @@ class Values
 public:
     struct ValueInfo
     {
-        bool _assigned{false};
         std::size_t _id;
-        // std::size_t _start;
-        // std::size_t _size;
+        bool _assigned{false};
+
         double* _scalar{nullptr};
         Eigen::Map<Eigen::ArrayXd> _array;
+
         bool _is_state;
-        // ValueInfo(Signal::Id id, std::size_t start, std::size_t size, bool is_state) :
-        //     _id(id), _start(start), _size(size), _is_state(is_state) {}
+
+        bool _is_deriv{false};
+        double* _deriv_scalar{nullptr};
+        Eigen::Map<Eigen::ArrayXd> _deriv_array;
+    
         ValueInfo(Signal::Id id, double* data, std::size_t size, bool is_state) :
-            _id(id), _scalar(size == 0 ? data : nullptr), _array(data, size), _is_state(is_state) {}
-        // ValueInfo(Signal::Id id, double* data, bool is_state) :
-        //     _id(id), _scalar(data), _array(data, 0), _is_state(is_state) {}
+            _id(id), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
+            _is_state(is_state), _deriv_array(nullptr, 0) {}
     };
 
 protected:
-    std::vector<ValueInfo> _values;
+    std::vector<ValueInfo> _value_infos;
     std::size_t _total_size{0};
-    Eigen::ArrayXd _array;
+    Eigen::ArrayXd _values;
     Eigen::Map<Eigen::ArrayXd> _states{nullptr, Eigen::Dynamic};
+    Eigen::ArrayXd _derivs;
     std::size_t _states_size{0};
 
     inline ValueInfo& get_value_info(Signal::Id id)
     {
         verify(id != Signal::NoId, "invalid id!");
-        return _values[id];
+        return _value_infos[id];
     }
 
     template<typename T>
@@ -188,6 +191,8 @@ protected:
             std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._array.rows()) +
             " vs " + std::to_string(value.rows()) + ")!");
         vi._array = value;
+        if (vi._is_deriv)
+            vi._deriv_array = value;
     }
 
 public:
@@ -199,7 +204,7 @@ public:
     inline const ValueInfo& get_value_info(Signal::Id id) const
     {
         verify(id != Signal::NoId, "invalid id!");
-        return _values[id];
+        return _value_infos[id];
     }
 
     bool valid(Signal::Id id) const
@@ -212,7 +217,9 @@ public:
         return get_value_info(id)._scalar == nullptr;
     }
 
+    const decltype(_values)& values() const {return _values;}
     const decltype(_states)& states() const {return _states;}
+    const decltype(_derivs)& derivs() const {return _derivs;}
 
     template<typename T>
     auto get(Signal::Id id) const -> const auto
@@ -229,7 +236,7 @@ public:
     void set(Signal::Id id, const T& value)
     {
         verify(id != Signal::NoId, "invalid id!");
-        auto& vi = _values[id];
+        auto& vi = get_value_info(id);
         verify(!vi._assigned, "re-assignment is prohibited!");
         _set<T>(vi, value);
         vi._assigned = true;
@@ -242,16 +249,16 @@ public:
 
     void invalidate()
     {
-        for (auto& v: _values) v._assigned = false;
+        for (auto& vi: _value_infos) vi._assigned = false;
     }
 
     void stream(std::ostream& os) const
     {
         int k = 0;
-        for (const auto& v: _values)
+        for (const auto& vi: _value_infos)
         {
             os << "- [" << k++ << "]: ";
-            (v._assigned ? os << v._array : os << "*") << "\n";
+            (vi._assigned ? os << vi._array : os << "*") << "\n";
         }
         os << "\n";
     }
@@ -279,6 +286,8 @@ inline void Values::_set<double>(ValueInfo& vi, const double& value)
 {
     verify(vi._scalar, "cannot assign scalar to array!");
     *vi._scalar = value;
+    if (vi._is_deriv)
+        *vi._deriv_scalar = value;
 }
 
 inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}
@@ -306,10 +315,13 @@ struct StateInfo
         }
 };
 
-class StatesInfo : public std::vector<StateInfo>
+class StatesInfo : protected std::vector<StateInfo>
 {
 protected:
     using Parent = std::vector<StateInfo>;
+
+    bool _locked{false};
+    Value _value;
 
 public:
     using Parent::vector;
@@ -317,12 +329,30 @@ public:
     template<typename T=double>
     void add(Signal::Id state, const T& value, Signal::Id deriv)
     {
+        verify(!_locked, "adding to a locked StatesInfo object is prohibited!");
         verify(std::find_if(begin(), end(),
             [&] (const StateInfo& info) -> bool
             {
                 return info._id == state;
             }) == end(), std::string("a state with id ") + std::to_string(state) + " is added already!");
         emplace_back(StateInfo(state, deriv, value));
+    }
+
+    void lock();
+
+    auto begin() const -> const auto {return Parent::begin();}
+    auto end() const -> const auto {return Parent::end();}
+    auto size() const -> const auto {return Parent::size();}
+    const Value& value() const
+    {
+        verify(_locked, "getting the value of an unlocked StatesInfo object is prohibited!");
+        return _value;
+    }
+
+    void set_value(const Value& value)
+    {
+        verify(_locked, "setting the value of an unlocked StatesInfo object is prohibited!");
+        _value = value;
     }
 };
 

@@ -54,32 +54,7 @@ void Signal::_set_owner(Parent& owner)
     _full_name = reg_name;
 }
 
-// Values::Values(const SignalRegistry& signal_registry)
-// {
-//     auto n = signal_registry.num_signals();
-//     for (std::size_t id=0; id < n; id++)
-//     {
-//         auto size = signal_registry.get_signal_by_id(id).second;
-//         _values.push_back({id, _total_size, size, false});
-//         _total_size += size == 0 ? 1 : size;
-//     }
-//     _array.resize(_total_size);
-// }
-
-// Values::Values(const StatesInfo& states)
-// {
-//     Signal::Id id = 0;
-//     for (const auto& state: states)
-//     {
-//         std::size_t size = state._scalar ? 0 : state._value.size();
-//         _values.push_back({id++, _total_size, size, true});
-//         _total_size += size == 0 ? 1 : size;
-//     }
-//     _array.resize(_total_size);
-//     new (&_states) decltype(_states)(_array.data, _states_size)
-// }
-
-Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states)
+Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states_info)
 {
     const auto& signals = signal_registry.signals();
 
@@ -87,49 +62,97 @@ Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states)
     for (const auto& signal: signals)
         _total_size += signal.second == 0 ? 1 : signal.second;
 
-    _array.resize(_total_size);
+    _values.resize(_total_size);
 
     std::vector<bool> is_state(signals.size());
     std::fill(is_state.begin(), is_state.end(), false);
 
-    // find the total size of states and mark them
-    for (const auto& state: states)
-    {
-        assert(!is_state[state._id]); // detect duplicate entries in states
-        is_state[state._id] = true;
+    _states_size = states_info.value().size();
 
-        _states_size += state._scalar ? 1 : state._value.size();
+    // mark the states
+    for (const auto& si: states_info)
+    {
+        assert(!is_state[si._id]); // detect duplicate entries in states
+        is_state[si._id] = true;
     }
 
-    double* state_start = _array.data();
+    double* state_start = _values.data();
     double* other_start = state_start + _states_size;
 
     Signal::Id id = 0;
     for (const auto& signal: signals)
     {
         auto& start = is_state[id] ? state_start : other_start;
-        _values.push_back({id, start, signal.second, is_state[id]});
+        _value_infos.push_back({id, start, signal.second, is_state[id]});
         start += signal.second == 0 ? 1 : signal.second;
         id++;
     }
 
-    assert(state_start == _array.data() + _states_size);
-    assert(other_start == _array.data() + _total_size);
+    assert(state_start == _values.data() + _states_size);
+    assert(other_start == _values.data() + _total_size);
 
-    new (&_states) decltype(_states)(_array.data(), _states_size);
+    new (&_states) decltype(_states)(_values.data(), _states_size);
+
+    _derivs.resize(_states_size);
+    double* deriv_start = _derivs.data();
+    for (const auto& si: states_info)
+    {
+        auto& vi = get_value_info(si._deriv_id);
+        assert(!vi._is_deriv);
+        vi._is_deriv = true;
+        if (vi._scalar)
+            vi._deriv_scalar = deriv_start;
+        else
+            new (&vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, vi._array.size());
+        deriv_start += vi._scalar ? 1 : vi._array.size();
+    }
 }
 
 void Values::set_states(const Eigen::ArrayXd& states)
 {
     _states = states;
-    for (ValueInfo& vi: _values)
+    for (ValueInfo& vi: _value_infos)
     {
         if (!vi._is_state)
             continue;
 
         assert(!vi._assigned);
         vi._assigned = true;
+
+        if (vi._is_deriv)
+        {
+            if (vi._deriv_scalar)
+                *vi._deriv_scalar = *vi._scalar;
+            else
+                vi._deriv_array = vi._array;
+        }
     }
+}
+
+void StatesInfo::lock()
+{
+    verify(!_locked, "attempting to lock an already-lokced StatesInfo object!");
+    _locked = true;
+
+    std::size_t total_size = 0;
+    for (auto& si: *this)
+        total_size += si._scalar ? 1 : si._value.size();
+
+    std::sort(Parent::begin(), Parent::end(),
+        [] (const StateInfo& si1, const StateInfo& si2) -> bool
+        {
+            return si1._id < si2._id;
+        });
+   
+    _value.resize(total_size);
+    std::size_t start = 0;
+    for (const auto& si: *this)
+    {
+        auto size = si._value.size();
+        _value.segment(start, size) = si._value;
+        start += size;
+    }
+    assert(start == total_size);
 }
 
 bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)

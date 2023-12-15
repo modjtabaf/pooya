@@ -19,11 +19,17 @@ cc_library(
         "EIGEN_MPL_ONLY",
         "EIGEN_NO_DEBUG",
     ],
+    includes = [
+        "eigen",
+        ],
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "misc",
     hdrs = glob(["misc/**"]),
+    includes = [
+        ".",
+        ],
     visibility = ["//visibility:public"],
 )

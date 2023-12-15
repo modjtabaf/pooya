@@ -12,11 +12,19 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_HPP__
-#define __POOYA_HPP__
-
+#include <experimental/random>
 #include "util.hpp"
-#include "signal.hpp"
-#include "block.hpp"
 
-#endif // __POOYA_HPP__
+namespace pooya
+{
+
+std::string generate_random_name(int len)
+{
+    std::string name;
+    name.reserve(len);
+    for (auto i = 0; i < len; i++)
+        name += char(std::experimental::randint(int('a'), int('z')));
+    return name;
+}
+
+}

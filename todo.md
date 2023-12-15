@@ -12,8 +12,7 @@
 - yaml model definition
 * scalar and array signals
 - replace init virtual method with a template
-- solver.cpp cleanup
+* solver.cpp cleanup
 - Doxygen
 - A (virtual ?) method for verifying the number and types of input and output signals of a block
-- save the values of states and regular signals in separate arrays to speed up ode solvers
 - internal arrays of ode solvers are defined as static. convert them to class members.

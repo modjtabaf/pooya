@@ -35,11 +35,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define scalar_output(index, value) set_output(double, index, value)
 #define  array_output(index, value) set_output( Value, index, value)
 
-#define verify(cond,msg) \
+#define verify(cond, msg) \
     if (!(cond)) \
         throw std::runtime_error( \
-            std::string("\n" __FILE__ ":") + std::to_string(__LINE__) + "\n" + \
-            "Pooya Exception: " + (msg) + "\n")
+            "\nPooya Exception:\n" + \
+            std::string("  @" __FILE__ ":") + std::to_string(__LINE__) + "\n" \
+            "  " + (msg) + "\n")
 
 // utility functions
 

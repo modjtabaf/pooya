@@ -26,7 +26,8 @@ bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
     _parent = &parent;
 
     _assign_valid_given_name(_given_name);
-    _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+    if (_full_name.empty())
+        _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
     _iports.reserve(iports.size());
     _dependencies.reserve(iports.size());
@@ -182,7 +183,7 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-Model::Model(std::string given_name) : Parent(given_name)
+Model::Model(std::string given_name) : IOCheckT(given_name)
 {
     _assign_valid_given_name(_given_name);
     _full_name = "/" + _given_name;

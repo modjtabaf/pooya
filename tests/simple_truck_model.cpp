@@ -76,10 +76,10 @@ struct Parameters
     }
 };
 
-class Forces : public IOCheckT<Base, 3, 2>
+class Forces : public Base
 {
 public:
-    Forces() : IOCheckT("Forces") {}
+    Forces() : Base("Forces", 3, 2) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -98,7 +98,7 @@ public:
     }
 };
 
-class EquationsOfMotion : public IOCheckT<Base, 5, 1>
+class EquationsOfMotion : public Base
 {
 protected:
     Parameters& _p;
@@ -114,11 +114,11 @@ protected:
     Signal _s_d2q;
 
 public:
-    EquationsOfMotion(Parameters& params) : IOCheckT("EquationsOfMotion"), _p(params) {}
+    EquationsOfMotion(Parameters& params) : Base("EquationsOfMotion", 5, 1), _p(params) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!IOCheckT::init(parent, iports, oports))
+        if (!Base::init(parent, iports, oports))
             return false;
 
         _s_delta = iports[0];

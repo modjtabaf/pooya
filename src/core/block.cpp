@@ -29,6 +29,16 @@ bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
     if (_full_name.empty())
         _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
+    verify((_num_iports == NoIOLimit) || (iports.size() == _num_iports),
+        _num_iports == 0 ?
+            _full_name + " cannot take any input." :
+            _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+
+    verify((_num_oports == NoIOLimit) || (oports.size() == _num_oports),
+        _num_oports == 0 ?
+            _full_name + " cannot generate any output." :
+            _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+    
     _iports.reserve(iports.size());
     _dependencies.reserve(iports.size());
     for (const auto& p: iports)
@@ -183,7 +193,7 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-Model::Model(std::string given_name) : IOCheckT(given_name)
+Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 {
     _assign_valid_given_name(_given_name);
     _full_name = "/" + _given_name;

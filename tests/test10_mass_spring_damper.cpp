@@ -22,9 +22,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class MassSpringDamper : public Block
+class MassSpringDamper : public pooya::Block
 {
 protected:
     double   _m;
@@ -33,18 +31,18 @@ protected:
     double  _x0;
     double _xd0;
 
-    Signal _s_tau;
-    Signal   _s_x;
-    Signal  _s_xd;
-    Signal _s_xdd;
+    pooya::Signal _s_tau;
+    pooya::Signal   _s_x;
+    pooya::Signal  _s_xd;
+    pooya::Signal _s_xdd;
 
 public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
-        Block(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
+        pooya::Block(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals&) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals&) override
     {
-        if (!Block::init(parent, iports))
+        if (!pooya::Block::init(parent, iports))
             return false;
 
         _s_tau = iports[0];
@@ -60,13 +58,13 @@ public:
         return true;
     }
 
-    void get_states(StatesInfo& states) override
+    void get_states(pooya::StatesInfo& states) override
     {
         states.add( _s_x,  _x0,  _s_xd);
         states.add(_s_xd, _xd0, _s_xdd);
     }
 
-    void activation_function(double /*t*/, Values& values) override
+    void activation_function(double /*t*/, pooya::Values& values) override
     {
         // get states and input
         double   x = values.get_scalar(  _s_x);
@@ -87,8 +85,8 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model          model("test10");
-    MassSpringDamper msd(   "msd", 1, 1, 0.1, 0.1, -0.2);
+    pooya::Model model("test10");
+    MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create signals
     auto tau = model.signal("tau");
@@ -96,17 +94,17 @@ int main()
     // setup the model
     model.add_block(msd, tau);
 
-    History history(model);
+    pooya::History history(model);
 
-    Simulator sim(model,
-    [&](Model&, double t, Values& values) -> void
+    pooya::Simulator sim(model,
+    [&](pooya::Model&, double t, pooya::Values& values) -> void
     {
         values.set_scalar(tau, 0.01 * std::sin(t));
-    }, rk4);
+    }, pooya::rk4);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 50, 0.01))
+    while (pooya::arange(k, t, 0, 50, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());

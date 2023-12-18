@@ -22,21 +22,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class MyModel : public Submodel
+class MyModel : public pooya::Submodel
 {
 protected:
-    Integrator _integ1{   "xd",      0.1};
-    Integrator _integ2{    "x"          };
-    Gain         _gain{"-k\\m", -1.0/1.0};
+    pooya::Integrator _integ1{   "xd",      0.1};
+    pooya::Integrator _integ2{    "x"          };
+    pooya::Gain         _gain{"-k\\m", -1.0/1.0};
 
 public:
-    MyModel() : Submodel("MyModel") {}
+    MyModel() : pooya::Submodel("MyModel") {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Submodel::init(parent, iports, oports))
+        if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
         // create signals
@@ -59,19 +57,19 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model   model("test04");
+    pooya::Model model("test04");
     MyModel mymodel;
 
     // setup the model
     model.add_block(mymodel);
 
-    History history(model);
+    pooya::History history(model);
 
-    Simulator sim(model, nullptr, rk4);
+    pooya::Simulator sim(model, nullptr, pooya::rk4);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.01))
+    while (pooya::arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());

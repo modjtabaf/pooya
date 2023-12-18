@@ -104,11 +104,11 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 }
 
 Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
-    _model(model), _inputs_cb(inputs_cb), _stepper(stepper), _reuse_order(reuse_order)
+    _model(model), _inputs_cb(inputs_cb), _values(model), _stepper(stepper), _reuse_order(reuse_order)
 {
     model.get_states(_states_info);
     _states_info.lock();
-    new (&_values) Values(model.signal_registry(), _states_info);
+    new (&_values) Values(model, _states_info);
 }
 
 uint Simulator::_process(double t, Values& values)
@@ -241,7 +241,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             bool force_accept = false;
             while (t1 < t)
             {
-                _stepper(stepper_callback, _model.signal_registry(), t1, t2, _states_info, new_h);
+                _stepper(_model, stepper_callback, t1, t2, _states_info, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))

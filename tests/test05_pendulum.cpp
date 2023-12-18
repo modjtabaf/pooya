@@ -28,7 +28,7 @@ protected:
     pooya::Integrator _integ1{"dphi"};
     pooya::Integrator _integ2{ "phi", M_PI_4};
     // pooya::Function     _func{"sin(phi)",
-    //     [](double /*t*/, const pooya::Value& x) -> Value
+    //     [](double /*t*/, const pooya::Array& x) -> Array
     //     {
     //         return x.sin();
     //     }},

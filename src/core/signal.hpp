@@ -26,13 +26,13 @@ class Parent;
 class StatesInfo;
 
 template <int N=Eigen::Dynamic>
-class ValueN : public Eigen::Array<double, N, 1>
+class ArrayN : public Eigen::Array<double, N, 1>
 {
 public:
     using _Parent = Eigen::Array<double, N, 1>;
     using _Parent::Array;
 
-    ValueN(double v=0) : _Parent()
+    ArrayN(double v=0) : _Parent()
     {
         verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
         if constexpr (N == Eigen::Dynamic)
@@ -41,7 +41,7 @@ public:
     }
 };
 
-using Value = ValueN<>;
+using Array = ArrayN<>;
 
 class Signal
 {
@@ -229,7 +229,7 @@ public:
     }
 
     void set_scalar(Signal::Id id, double value);
-    void set_array(Signal::Id id, const Value& value);
+    void set_array(Signal::Id id, const Array& value);
 
     void set_states(const Eigen::ArrayXd& states);
 
@@ -251,7 +251,7 @@ public:
 };
 
 template<>
-inline auto Values::_get<Value>(const Values::ValueInfo& vi) const -> const auto
+inline auto Values::_get<Array>(const Values::ValueInfo& vi) const -> const auto
 {
     verify(!vi._scalar, _sig_reg.get_signal_by_id(vi._id).first + ": attempting to retrieve a scalar as an array!");
     return vi._array;
@@ -265,7 +265,7 @@ inline auto Values::_get<double>(const Values::ValueInfo& vi) const -> const aut
 }
 
 inline double Values::get_scalar(Signal::Id id) const {return get<double>(id);}
-inline auto   Values::get_array (Signal::Id id) const {return get<Value> (id);}
+inline auto   Values::get_array (Signal::Id id) const {return get<Array> (id);}
 
 template<>
 inline void Values::_set<double>(ValueInfo& vi, const double& value)
@@ -277,7 +277,7 @@ inline void Values::_set<double>(ValueInfo& vi, const double& value)
 }
 
 inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}
-inline void Values::set_array (Signal::Id id, const Value& value) {set<Value>(id, value);}
+inline void Values::set_array (Signal::Id id, const Array& value) {set<Array>(id, value);}
 
 inline std::ostream& operator<<(std::ostream& os, const Values& values)
 {
@@ -290,8 +290,8 @@ struct StateInfo
     Signal::Id _id;
     Signal::Id _deriv_id;
     bool _scalar;
-    Value _value;
-    StateInfo(Signal::Id id, Signal::Id deriv_id, const Value& iv) :
+    Array _value;
+    StateInfo(Signal::Id id, Signal::Id deriv_id, const Array& iv) :
         _id(id), _deriv_id(deriv_id), _scalar(false), _value(iv)
         {
         }
@@ -307,7 +307,7 @@ protected:
     using _Parent = std::vector<StateInfo>;
 
     bool _locked{false};
-    Value _value;
+    Array _value;
 
 public:
     using _Parent::vector;
@@ -329,13 +329,13 @@ public:
     auto begin() const -> const auto {return _Parent::begin();}
     auto end() const -> const auto {return _Parent::end();}
     auto size() const -> const auto {return _Parent::size();}
-    const Value& value() const
+    const Array& value() const
     {
         verify(_locked, "getting the value of an unlocked StatesInfo object is prohibited!");
         return _value;
     }
 
-    void set_value(const Value& value)
+    void set_value(const Array& value)
     {
         verify(_locked, "setting the value of an unlocked StatesInfo object is prohibited!");
         _value = value;

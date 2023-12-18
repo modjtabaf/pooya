@@ -32,6 +32,9 @@ class Base
 {
     friend class Parent;
 
+public:
+    static constexpr uint16_t NoIOLimit = uint16_t(-1);
+
 protected:
     Signals _iports;
     Signals _oports;
@@ -39,12 +42,15 @@ protected:
     Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
+    uint16_t _num_iports{NoIOLimit};
+    uint16_t _num_oports{NoIOLimit};
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
     bool _add_dependecny(const Signal& signal);
 
-    Base(std::string given_name) : _given_name(given_name) {}
+    Base(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
 
@@ -72,50 +78,15 @@ public:
     }
 }; // class Base
 
-constexpr uint8_t NoLimit = 255;
-
-template<typename B=Base, uint8_t NInputs=NoLimit, uint8_t NOutputs=NoLimit>
-class IOCheckT : public B
-{
-protected:
-    IOCheckT(std::string given_name) : B(given_name) {}
-
-    bool init(Parent& parent, const Signals& iports={}, const Signals& oports={}) override
-    {
-        if (!B::init(parent, iports, oports))
-            return false;
-
-        if constexpr (NInputs == 0)
-        {
-            verify(iports.size() == 0, B::_full_name + " cannot take any input.");
-        }
-        else if constexpr (NInputs != NoLimit)
-        {
-            verify(iports.size() == NInputs, B::_full_name + " requires " + std::to_string(NInputs) + std::string(" input signal") + (NInputs == 1 ? "." : "s."));
-        }
-
-        if constexpr (NOutputs == 0)
-        {
-            verify(oports.size() == 0, B::_full_name + " cannot generate any output.");
-        }
-        else if constexpr (NOutputs != NoLimit)
-        {
-            verify(oports.size() == NOutputs, B::_full_name + " requires " + std::to_string(NOutputs) + std::string(" input signal") + (NOutputs == 1 ? "." : "s."));
-        }
-        
-        return true;
-    }
-}; // class IOCheckT
-
 template<typename T>
-class InitialValueT : public IOCheckT<Base, 1, 1>
+class InitialValueT : public Base
 {
 protected:
     T _value;
     bool _init{true};
 
 public:
-    InitialValueT(std::string given_name) : IOCheckT(given_name) {}
+    InitialValueT(std::string given_name) : Base(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -133,13 +104,13 @@ using InitialValue  = InitialValueT<double>;
 using InitialValueA = InitialValueT<Value>;
 
 template<typename T>
-class ConstT : public IOCheckT<Base, 0, 1>
+class ConstT : public Base
 {
 protected:
     T _value;
 
 public:
-    ConstT(std::string given_name, const T& value) : IOCheckT(given_name), _value(value) {}
+    ConstT(std::string given_name, const T& value) : Base(given_name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -151,13 +122,13 @@ using Const  = ConstT<double>;
 using ConstA = ConstT<Value>;
 
 template<typename T>
-class GainT : public IOCheckT<Base, 1, 1>
+class GainT : public Base
 {
 protected:
     double _k;
 
 public:
-    GainT(std::string given_name, double k) : IOCheckT(given_name), _k(k) {}
+    GainT(std::string given_name, double k) : Base(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -169,10 +140,10 @@ using Gain  = GainT<double>;
 using GainA = GainT<Value>;
 
 template<typename T>
-class SinT : public IOCheckT<Base, 1, 1>
+class SinT : public Base
 {
 public:
-    SinT(std::string given_name) : IOCheckT(given_name) {}
+    SinT(std::string given_name) : Base(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -193,7 +164,7 @@ using Sin  = SinT<double>;
 using SinA = SinT<Value>;
 
 template<typename T>
-class FunctionT : public IOCheckT<Base, 1, 1>
+class FunctionT : public Base
 {
 public:
     using ActFunction = std::function<T(double, const T&)>;
@@ -203,7 +174,7 @@ protected:
 
 public:
     FunctionT(std::string given_name, ActFunction act_func) :
-        IOCheckT(given_name), _act_func(act_func) {}
+        Base(given_name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values& values) override
     {
@@ -215,7 +186,7 @@ using Function  = FunctionT<double>;
 using FunctionA = FunctionT<Value>;
 
 template<typename T>
-class AddSubT : public IOCheckT<Base, NoLimit, 1>
+class AddSubT : public Base
 {
 protected:
     std::string _operators;
@@ -223,7 +194,7 @@ protected:
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!IOCheckT::init(parent, iports, oports))
+        if (!Base::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1, _full_name + " requires 1 or more input signals.");
@@ -234,7 +205,7 @@ protected:
 
 public:
     AddSubT(std::string given_name, const char* operators, const T& initial=0.0) :
-        IOCheckT(given_name), _operators(operators), _initial(initial)
+        Base(given_name, NoIOLimit, 1), _operators(operators), _initial(initial)
     {}
 
     void activation_function(double /*t*/, Values& values) override
@@ -289,7 +260,7 @@ using Subtract  = SubtractT<double>;
 using SubtractA = SubtractT<Value>;
 
 template<typename T>
-class MulDivT : public IOCheckT<Base, NoLimit, 1>
+class MulDivT : public Base
 {
 protected:
     std::string _operators;
@@ -297,7 +268,7 @@ protected:
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!IOCheckT::init(parent, iports, oports))
+        if (!Base::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1, "MulDivT requires 1 or more input signals.");
@@ -308,7 +279,7 @@ protected:
 
 public:
     MulDivT(std::string given_name, const char* operators, const T& initial=1.0) :
-        IOCheckT(given_name), _operators(operators), _initial(initial) {}
+        Base(given_name, NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -362,13 +333,13 @@ using Divide  = DivideT<double>;
 using DivideA = DivideT<Value>;
 
 template<typename T>
-class IntegratorT : public IOCheckT<Base, 1, 1>
+class IntegratorT : public Base
 {
 protected:
     T _value;
 
 public:
-    IntegratorT(std::string given_name, T ic=T(0.0)) : IOCheckT(given_name), _value(ic) {}
+    IntegratorT(std::string given_name, T ic=T(0.0)) : Base(given_name, 1, 1), _value(ic) {}
 
     void get_states(StatesInfo& states) override
     {
@@ -416,7 +387,7 @@ using IntegratorA = IntegratorT<Value>;
 // #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 template<typename T>
-class DelayT : public IOCheckT<Base, 1, 1>
+class DelayT : public Base
 {
 protected:
     double  _lifespan;
@@ -424,7 +395,7 @@ protected:
     std::vector<T> _x;
 
 public:
-    DelayT(std::string given_name, double lifespan=10.0) : IOCheckT(given_name), _lifespan(lifespan) {}
+    DelayT(std::string given_name, double lifespan=10.0) : Base(given_name, 3, 1), _lifespan(lifespan) {}
 
     void step(double t, const Values& values) override
     {
@@ -484,14 +455,14 @@ using Delay  = DelayT<double>;
 using DelayA = DelayT<Value>;
 
 template<typename T>
-class MemoryT : public IOCheckT<Base, 1, 1>
+class MemoryT : public Base
 {
 protected:
     T _value;
 
 public:
     MemoryT(std::string given_name, const T& ic=0) :
-        IOCheckT(given_name), _value(ic) {}
+        Base(given_name, 1, 1), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
     {
@@ -521,7 +492,7 @@ using Memory  = MemoryT<double>;
 using MemoryA = MemoryT<Value>;
 
 template<typename T>
-class DerivativeT : public IOCheckT<Base, 1, 1>
+class DerivativeT : public Base
 {
 protected:
     bool _first_step{true};
@@ -531,7 +502,7 @@ protected:
 
 public:
     DerivativeT(std::string given_name, const T& y0=0) :
-        IOCheckT(given_name), _y(y0) {}
+        Base(given_name, 1, 1), _y(y0) {}
 
     void step(double t, const Values& values) override
     {
@@ -568,7 +539,8 @@ class Parent : public Base
 protected:
     std::vector<Base*> _components;
 
-    Parent(std::string given_name) : Base(given_name) {}
+    Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        Base(given_name, num_iports, num_oports) {}
 
 public:
     bool add_block(Base& component, const Signals& iports={}, const Signals& oports={})
@@ -604,14 +576,14 @@ public:
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
 }; // class Parent
 
-class Submodel : public IOCheckT<Parent>
+class Submodel : public Parent
 {
 public:
-    Submodel(std::string given_name) : IOCheckT(given_name) {}
+    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
 
 }; // class Submodel
 
-class Model : public IOCheckT<Parent, 0, 0>
+class Model : public Parent
 {
 protected:
     SignalRegistry _signal_registry;

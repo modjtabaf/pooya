@@ -22,13 +22,13 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class Base;
+class Block;
 class Parent;
 class Model;
 
-using TraverseCallback = std::function<bool(Base&, uint32_t level)>;
+using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 
-class Base
+class Block
 {
     friend class Parent;
 
@@ -49,13 +49,13 @@ protected:
     void _assign_valid_given_name(std::string given_name);
     bool _add_dependecny(const Signal& signal);
 
-    Base(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+    Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
 
 public:
-    virtual ~Base() = default;
+    virtual ~Block() = default;
 
     virtual void get_states(StatesInfo& /*states*/) {}
     virtual void step(double /*t*/, const Values& /*states*/) {}
@@ -76,17 +76,17 @@ public:
     {
         return (level > max_level) || cb(*this, level);
     }
-}; // class Base
+}; // class Block
 
 template<typename T>
-class InitialValueT : public Base
+class InitialValueT : public Block
 {
 protected:
     T _value;
     bool _init{true};
 
 public:
-    InitialValueT(std::string given_name) : Base(given_name, 1, 1) {}
+    InitialValueT(std::string given_name) : Block(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -104,13 +104,13 @@ using InitialValue  = InitialValueT<double>;
 using InitialValueA = InitialValueT<Value>;
 
 template<typename T>
-class ConstT : public Base
+class ConstT : public Block
 {
 protected:
     T _value;
 
 public:
-    ConstT(std::string given_name, const T& value) : Base(given_name, 0, 1), _value(value) {}
+    ConstT(std::string given_name, const T& value) : Block(given_name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -122,13 +122,13 @@ using Const  = ConstT<double>;
 using ConstA = ConstT<Value>;
 
 template<typename T>
-class GainT : public Base
+class GainT : public Block
 {
 protected:
     double _k;
 
 public:
-    GainT(std::string given_name, double k) : Base(given_name, 1, 1), _k(k) {}
+    GainT(std::string given_name, double k) : Block(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -140,10 +140,10 @@ using Gain  = GainT<double>;
 using GainA = GainT<Value>;
 
 template<typename T>
-class SinT : public Base
+class SinT : public Block
 {
 public:
-    SinT(std::string given_name) : Base(given_name, 1, 1) {}
+    SinT(std::string given_name) : Block(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -164,7 +164,7 @@ using Sin  = SinT<double>;
 using SinA = SinT<Value>;
 
 template<typename T>
-class FunctionT : public Base
+class FunctionT : public Block
 {
 public:
     using ActFunction = std::function<T(double, const T&)>;
@@ -174,7 +174,7 @@ protected:
 
 public:
     FunctionT(std::string given_name, ActFunction act_func) :
-        Base(given_name, 1, 1), _act_func(act_func) {}
+        Block(given_name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values& values) override
     {
@@ -186,7 +186,7 @@ using Function  = FunctionT<double>;
 using FunctionA = FunctionT<Value>;
 
 template<typename T>
-class AddSubT : public Base
+class AddSubT : public Block
 {
 protected:
     std::string _operators;
@@ -194,7 +194,7 @@ protected:
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!Base::init(parent, iports, oports))
+        if (!Block::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1, _full_name + " requires 1 or more input signals.");
@@ -205,7 +205,7 @@ protected:
 
 public:
     AddSubT(std::string given_name, const char* operators, const T& initial=0.0) :
-        Base(given_name, NoIOLimit, 1), _operators(operators), _initial(initial)
+        Block(given_name, NoIOLimit, 1), _operators(operators), _initial(initial)
     {}
 
     void activation_function(double /*t*/, Values& values) override
@@ -260,7 +260,7 @@ using Subtract  = SubtractT<double>;
 using SubtractA = SubtractT<Value>;
 
 template<typename T>
-class MulDivT : public Base
+class MulDivT : public Block
 {
 protected:
     std::string _operators;
@@ -268,7 +268,7 @@ protected:
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!Base::init(parent, iports, oports))
+        if (!Block::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1, "MulDivT requires 1 or more input signals.");
@@ -279,7 +279,7 @@ protected:
 
 public:
     MulDivT(std::string given_name, const char* operators, const T& initial=1.0) :
-        Base(given_name, NoIOLimit, 1), _operators(operators), _initial(initial) {}
+        Block(given_name, NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -333,13 +333,13 @@ using Divide  = DivideT<double>;
 using DivideA = DivideT<Value>;
 
 template<typename T>
-class IntegratorT : public Base
+class IntegratorT : public Block
 {
 protected:
     T _value;
 
 public:
-    IntegratorT(std::string given_name, T ic=T(0.0)) : Base(given_name, 1, 1), _value(ic) {}
+    IntegratorT(std::string given_name, T ic=T(0.0)) : Block(given_name, 1, 1), _value(ic) {}
 
     void get_states(StatesInfo& states) override
     {
@@ -387,7 +387,7 @@ using IntegratorA = IntegratorT<Value>;
 // #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
 
 template<typename T>
-class DelayT : public Base
+class DelayT : public Block
 {
 protected:
     double  _lifespan;
@@ -395,7 +395,7 @@ protected:
     std::vector<T> _x;
 
 public:
-    DelayT(std::string given_name, double lifespan=10.0) : Base(given_name, 3, 1), _lifespan(lifespan) {}
+    DelayT(std::string given_name, double lifespan=10.0) : Block(given_name, 3, 1), _lifespan(lifespan) {}
 
     void step(double t, const Values& values) override
     {
@@ -455,14 +455,14 @@ using Delay  = DelayT<double>;
 using DelayA = DelayT<Value>;
 
 template<typename T>
-class MemoryT : public Base
+class MemoryT : public Block
 {
 protected:
     T _value;
 
 public:
     MemoryT(std::string given_name, const T& ic=0) :
-        Base(given_name, 1, 1), _value(ic) {}
+        Block(given_name, 1, 1), _value(ic) {}
 
     void step(double /*t*/, const Values& values) override
     {
@@ -492,7 +492,7 @@ using Memory  = MemoryT<double>;
 using MemoryA = MemoryT<Value>;
 
 template<typename T>
-class DerivativeT : public Base
+class DerivativeT : public Block
 {
 protected:
     bool _first_step{true};
@@ -502,7 +502,7 @@ protected:
 
 public:
     DerivativeT(std::string given_name, const T& y0=0) :
-        Base(given_name, 1, 1), _y(y0) {}
+        Block(given_name, 1, 1), _y(y0) {}
 
     void step(double t, const Values& values) override
     {
@@ -534,16 +534,16 @@ public:
 using Derivative  = DerivativeT<double>;
 using DerivativeA = DerivativeT<Value>;
 
-class Parent : public Base
+class Parent : public Block
 {
 protected:
-    std::vector<Base*> _components;
+    std::vector<Block*> _components;
 
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        Base(given_name, num_iports, num_oports) {}
+        Block(given_name, num_iports, num_oports) {}
 
 public:
-    bool add_block(Base& component, const Signals& iports={}, const Signals& oports={})
+    bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
     {
         if (!component.init(*this, iports, oports))
             return false;

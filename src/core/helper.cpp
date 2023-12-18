@@ -160,9 +160,9 @@ uint Simulator::_process(double t, Values& values)
         } while(n);
     }
 
-    std::vector<const Base*> unprocessed;
+    std::vector<const Block*> unprocessed;
 
-    auto find_unprocessed_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
+    auto find_unprocessed_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
     {
         if (!c.processed())
             unprocessed.push_back(&c);
@@ -210,7 +210,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 assert(_processing_order2.empty());
 
                 uint num_blocks = 0;
-                auto enum_blocks_cb = [&] (Base& c, uint32_t /*level*/) -> bool
+                auto enum_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
                 {
                     num_blocks++;
                     return true;
@@ -220,7 +220,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 _processing_order1.reserve(num_blocks);
                 _processing_order2.reserve(num_blocks);
 
-                auto add_blocks_cb = [&] (Base& c, uint32_t /*level*/) -> bool
+                auto add_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
                 {
                     _processing_order1.push_back(&c);
                     return true;

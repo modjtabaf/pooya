@@ -83,12 +83,12 @@ public:
     {
         double           delta = scalar_input(0);
         double   engine_torque = scalar_input(1);
-        const pooya::Value& dq =  array_input(2);
+        const pooya::Array& dq =  array_input(2);
 
         double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
         double F_lon = F * cos(delta) - 500 * dq(0);
 
-        pooya::Value F_lat(3);
+        pooya::Array F_lat(3);
         F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
 
         scalar_output(0, F_lon);
@@ -135,9 +135,9 @@ public:
         // inputs
         double              delta = values.get_scalar(_s_delta);
         double              F_lon = values.get_scalar(_s_F_lon);
-        const pooya::Value& F_lat = values.get_array(_s_F_lat);
-        const pooya::Value&     q = values.get_array(_s_q);
-        const pooya::Value&    dq = values.get_array(_s_dq);
+        const pooya::Array& F_lat = values.get_array(_s_F_lat);
+        const pooya::Array&     q = values.get_array(_s_q);
+        const pooya::Array&    dq = values.get_array(_s_dq);
 
         // lateral force components of axles
         double Fyf = F_lat[0];
@@ -155,7 +155,7 @@ public:
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // second derivatives
-        pooya::Value d2q(4);
+        pooya::Array d2q(4);
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);
@@ -277,8 +277,8 @@ protected:
     PT                     _pt{0.1};
     Forces             _forces;
     EquationsOfMotion     _eom;
-    pooya::IntegratorA _integ1{"dq", pooya::ValueN<4>::Zero()};
-    pooya::IntegratorA _integ2{ "q", pooya::ValueN<4>::Zero()};
+    pooya::IntegratorA _integ1{"dq", pooya::ArrayN<4>::Zero()};
+    pooya::IntegratorA _integ2{ "q", pooya::ArrayN<4>::Zero()};
 
 public:
     ChassisDynamics(Parameters& params) : pooya::Submodel("ChassisDynamics"), _eom(params) {}

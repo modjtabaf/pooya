@@ -101,7 +101,7 @@ public:
 };
 
 using InitialValue  = InitialValueT<double>;
-using InitialValueA = InitialValueT<Value>;
+using InitialValueA = InitialValueT<Array>;
 
 template<typename T>
 class ConstT : public Block
@@ -119,7 +119,7 @@ public:
 };
 
 using Const  = ConstT<double>;
-using ConstA = ConstT<Value>;
+using ConstA = ConstT<Array>;
 
 template<typename T>
 class GainT : public Block
@@ -137,7 +137,7 @@ public:
 };
 
 using Gain  = GainT<double>;
-using GainA = GainT<Value>;
+using GainA = GainT<Array>;
 
 template<typename T>
 class SinT : public Block
@@ -161,7 +161,7 @@ public:
 };
 
 using Sin  = SinT<double>;
-using SinA = SinT<Value>;
+using SinA = SinT<Array>;
 
 template<typename T>
 class FunctionT : public Block
@@ -183,7 +183,7 @@ public:
 };
 
 using Function  = FunctionT<double>;
-using FunctionA = FunctionT<Value>;
+using FunctionA = FunctionT<Array>;
 
 template<typename T>
 class AddSubT : public Block
@@ -228,7 +228,7 @@ public:
 };
 
 using AddSub  = AddSubT<double>;
-using AddSubA = AddSubT<Value>;
+using AddSubA = AddSubT<Array>;
 
 template<typename T>
 class AddT : public AddSubT<T>
@@ -246,7 +246,7 @@ public:
 };
 
 using Add  = AddT<double>;
-using AddA = AddT<Value>;
+using AddA = AddT<Array>;
 
 template<typename T>
 class SubtractT : public AddSubT<T>
@@ -257,7 +257,7 @@ public:
 };
 
 using Subtract  = SubtractT<double>;
-using SubtractA = SubtractT<Value>;
+using SubtractA = SubtractT<Array>;
 
 template<typename T>
 class MulDivT : public Block
@@ -301,7 +301,7 @@ public:
 };
 
 using MulDiv  = MulDivT<double>;
-using MulDivA = MulDivT<Value>;
+using MulDivA = MulDivT<Array>;
 
 template<typename T>
 class MultiplyT : public MulDivT<T>
@@ -319,7 +319,7 @@ public:
 };
 
 using Multiply  = MultiplyT<double>;
-using MultiplyA = MultiplyT<Value>;
+using MultiplyA = MultiplyT<Array>;
 
 template<typename T>
 class DivideT : public MulDivT<T>
@@ -330,7 +330,7 @@ public:
 };
 
 using Divide  = DivideT<double>;
-using DivideA = DivideT<Value>;
+using DivideA = DivideT<Array>;
 
 template<typename T>
 class IntegratorT : public Block
@@ -363,7 +363,7 @@ public:
 };
 
 using Integrator  = IntegratorT<double>;
-using IntegratorA = IntegratorT<Value>;
+using IntegratorA = IntegratorT<Array>;
 
 // # it is still unclear how to deal with states when using this numerical integrator
 // # class NumericalIntegrator(Base):
@@ -452,7 +452,7 @@ public:
 };
 
 using Delay  = DelayT<double>;
-using DelayA = DelayT<Value>;
+using DelayA = DelayT<Array>;
 
 template<typename T>
 class MemoryT : public Block
@@ -489,7 +489,7 @@ public:
 };
 
 using Memory  = MemoryT<double>;
-using MemoryA = MemoryT<Value>;
+using MemoryA = MemoryT<Array>;
 
 template<typename T>
 class DerivativeT : public Block
@@ -532,7 +532,7 @@ public:
 };
 
 using Derivative  = DerivativeT<double>;
-using DerivativeA = DerivativeT<Value>;
+using DerivativeA = DerivativeT<Array>;
 
 class Parent : public Block
 {

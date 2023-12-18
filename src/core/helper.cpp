@@ -25,12 +25,12 @@ void History::update(uint k, double t, const Values& values)
     auto n = _model.signal_registry().num_signals();
     if (empty())
     {
-        insert_or_assign(time_id, Value(_nrows_grow)); // t
+        insert_or_assign(time_id, Array(_nrows_grow)); // t
         for (Signal::Id id = 0; id < n; id++)
         {
             const auto& vi = values.get_value_info(id);
             if (vi._scalar)
-                insert_or_assign(id, Value(_nrows_grow));
+                insert_or_assign(id, Array(_nrows_grow));
             else
                 insert_or_assign(id, Eigen::MatrixXd(_nrows_grow, vi._array.size()));
         }

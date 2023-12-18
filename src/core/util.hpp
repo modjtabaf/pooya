@@ -29,11 +29,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define  get_input(T, index) values.get<T>(_iports[index])
 #define  scalar_input(index) get_input(double, index)
-#define   array_input(index) get_input( Value, index)
+#define   array_input(index) get_input(pooya::Value, index)
 
 #define set_output(T, index, value) values.set<T>(_oports[index], value)
 #define scalar_output(index, value) set_output(double, index, value)
-#define  array_output(index, value) set_output( Value, index, value)
+#define  array_output(index, value) set_output(pooya::Value, index, value)
 
 #define verify(cond, msg) \
     if (!(cond)) \

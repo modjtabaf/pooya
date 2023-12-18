@@ -22,21 +22,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class MyModel : public Model
+class MyModel : public pooya::Model
 {
 protected:
-    Const _const1{"TimeDelay", 2.7435};
-    Const _const2{  "Initial",    0.0};
-    Delay  _delay{    "Delay"        };
+    pooya::Const _const1{"TimeDelay", 2.7435};
+    pooya::Const _const2{  "Initial",    0.0};
+    pooya::Delay  _delay{    "Delay"        };
 
 public:
-    Signal _s_x;
-    Signal _s_y;
+    pooya::Signal _s_x;
+    pooya::Signal _s_y;
 
 public:
-    MyModel() : Model("test02")
+    MyModel() : pooya::Model("test02")
     {
         // create signals
         auto time_delay = signal("time_delay");
@@ -53,7 +51,7 @@ public:
                             initial  },       _s_y);
     }
 
-    void input_cb(double t, Values& values) override
+    void input_cb(double t, pooya::Values& values) override
     {
         values.set_scalar(_s_x, std::sin(M_PI * t / 5));
     }
@@ -67,13 +65,13 @@ int main()
     // create the model
     MyModel model;
 
-    History history(model);
+    pooya::History history(model);
 
-    Simulator sim(model);
+    pooya::Simulator sim(model);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 10, 0.1))
+    while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());

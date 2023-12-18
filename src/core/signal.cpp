@@ -53,9 +53,13 @@ void Signal::_set_owner(Parent& owner)
     _full_name = reg_name;
 }
 
-Values::Values(const SignalRegistry& signal_registry, const StatesInfo& states_info)
+Values::Values(const pooya::Model& model) : _sig_reg(model.signal_registry())
 {
-    const auto& signals = signal_registry.signals();
+}
+
+Values::Values(const pooya::Model& model, const StatesInfo& states_info) : _sig_reg(model.signal_registry())
+{
+    const auto& signals = model.signal_registry().signals();
 
     // find the total size of signals
     for (const auto& signal: signals)

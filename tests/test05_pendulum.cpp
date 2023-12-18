@@ -22,27 +22,25 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class Pendulum : public Submodel
+class Pendulum : public pooya::Submodel
 {
 protected:
-    Integrator _integ1{"dphi"};
-    Integrator _integ2{ "phi", M_PI_4};
-    // Function     _func{"sin(phi)",
-    //     [](double /*t*/, const Value& x) -> Value
+    pooya::Integrator _integ1{"dphi"};
+    pooya::Integrator _integ2{ "phi", M_PI_4};
+    // pooya::Function     _func{"sin(phi)",
+    //     [](double /*t*/, const pooya::Value& x) -> Value
     //     {
     //         return x.sin();
     //     }},
-    Sin           _sin{"sin(phi)"};
-    MulDiv     _muldiv{   "-g\\l", "**/", -1};
+    pooya::Sin           _sin{"sin(phi)"};
+    pooya::MulDiv     _muldiv{   "-g\\l", "**/", -1};
 
 public:
-    Pendulum() : Submodel("pendulum") {}
+    Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(Parent& parent, const Signals&, const Signals&) override
+    bool init(pooya::Parent& parent, const pooya::Signals&, const pooya::Signals&) override
     {
-        if (!Submodel::init(parent))
+        if (!pooya::Submodel::init(parent))
             return false;
 
         // create signals
@@ -72,28 +70,28 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model    model("test05");
+    pooya::Model model("test05");
     Pendulum pendulum;
 
     // setup the model
     model.add_block(pendulum);
 
-    History history(model);
+    pooya::History history(model);
 
     auto l = model.signal("l");
     auto g = model.signal("g");
 
-    Simulator sim(model,
-        [&](Model&, double /*t*/, Values& values) -> void
+    pooya::Simulator sim(model,
+        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             values.set_scalar(l, 0.1);
             values.set_scalar(g, 9.81);
         },
-        rk4);
+        pooya::rk4);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.01))
+    while (pooya::arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());

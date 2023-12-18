@@ -22,29 +22,27 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class Pendulum : public Submodel
+class Pendulum : public pooya::Submodel
 {
 protected:
-    Integrator _integ1{   "dphi", M_PI_4};
-    Integrator _integ2{    "phi"};
-    Function     _func{"sin_phi",
+    pooya::Integrator _integ1{   "dphi", M_PI_4};
+    pooya::Integrator _integ2{    "phi"};
+    pooya::Function     _func{"sin_phi",
         [](double /*t*/, double x) -> double
         {
             return std::sin(x);
         }};
     // Sin _sin{"sin(phi)"};
-    MulDiv   _muldiv1{    "g_l",  "**/"};
-    MulDiv   _muldiv2{"tau_ml2", "*///"};
-    Subtract     _sub{  "d2phi"};
+    pooya::MulDiv   _muldiv1{    "g_l",  "**/"};
+    pooya::MulDiv   _muldiv2{"tau_ml2", "*///"};
+    pooya::Subtract     _sub{  "d2phi"};
 
 public:
-    Pendulum() : Submodel("pendulum") {}
+    Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(Parent& parent, const Signals&, const Signals&) override
+    bool init(pooya::Parent& parent, const pooya::Signals&, const pooya::Signals&) override
     {
-        if (!Submodel::init(parent))
+        if (!pooya::Submodel::init(parent))
             return false;
 
         // create signals
@@ -81,32 +79,32 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model    model("test06");
+    pooya::Model model("test06");
     Pendulum pendulum;
 
     // setup the model
     model.add_block(pendulum);
 
-    History history(model);
+    pooya::History history(model);
 
     auto   m = model.signal(  "m");
     auto   l = model.signal(  "l");
     auto   g = model.signal(  "g");
     auto tau = model.signal("tau");
 
-    Simulator sim(model,
-        [&](Model&, double /*t*/, Values& values) -> void
+    pooya::Simulator sim(model,
+        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             values.set_scalar(  m,  0.2);
             values.set_scalar(  l,  0.1);
             values.set_scalar(  g, 9.81);
             values.set_scalar(tau, 0.13);
         },
-        rkf45, true);
+        pooya::rkf45, true);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.1))
+    while (pooya::arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());

@@ -8,11 +8,11 @@ namespace pooya
 {
 
 using SolverCallback = std::function<void(double, Values&)>;
-using Solver         = std::function<void(SolverCallback, const SignalRegistry&, double, double, StatesInfo&, double&)>;
+using Solver         = std::function<void(const Model&, SolverCallback, double, double, StatesInfo&, double&)>;
 
-void euler(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h);
-void   rk4(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h);
-void rkf45(SolverCallback callback, const SignalRegistry& signal_registry, double t0, double t1, StatesInfo& states, double& new_h);
+void euler(const Model& model, SolverCallback callback, double t0, double t1, StatesInfo& states, double& new_h);
+void   rk4(const Model& model, SolverCallback callback, double t0, double t1, StatesInfo& states, double& new_h);
+void rkf45(const Model& model, SolverCallback callback, double t0, double t1, StatesInfo& states, double& new_h);
 
 }
 

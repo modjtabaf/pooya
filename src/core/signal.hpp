@@ -21,6 +21,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
+class Model;
 class Parent;
 class StatesInfo;
 
@@ -154,6 +155,7 @@ public:
     };
 
 protected:
+    const SignalRegistry& _sig_reg;
     std::vector<ValueInfo> _value_infos;
     std::size_t _total_size{0};
     Eigen::ArrayXd _values;
@@ -182,8 +184,8 @@ protected:
     }
 
 public:
-    Values() {}
-    Values(const SignalRegistry& signal_registry, const StatesInfo& states);
+    Values(const pooya::Model& model);
+    Values(const pooya::Model& model, const StatesInfo& states);
 
     inline const ValueInfo& get_value_info(Signal::Id id) const
     {
@@ -251,7 +253,7 @@ public:
 template<>
 inline auto Values::_get<Value>(const Values::ValueInfo& vi) const -> const auto
 {
-    verify(!vi._scalar, "attempting to retrieve a scalar as an array!");
+    verify(!vi._scalar, _sig_reg.get_signal_by_id(vi._id).first + ": attempting to retrieve a scalar as an array!");
     return vi._array;
 }
 

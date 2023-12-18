@@ -22,24 +22,22 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
-class Pendulum : public Submodel
+class Pendulum : public pooya::Submodel
 {
 protected:
-    MulDiv     _muldiv1{"tau_ml2", "*///"};
-    Subtract       _sub{    "err"};
-    Integrator  _integ1{   "dphi"};
-    Integrator  _integ2{    "phi"};
-    Sin            _sin{"sin_phi"};
-    MulDiv     _muldiv2{    "g_l", "**/"};
+    pooya::MulDiv     _muldiv1{"tau_ml2", "*///"};
+    pooya::Subtract       _sub{    "err"};
+    pooya::Integrator  _integ1{   "dphi"};
+    pooya::Integrator  _integ2{    "phi"};
+    pooya::Sin            _sin{"sin_phi"};
+    pooya::MulDiv     _muldiv2{    "g_l", "**/"};
 
 public:
-    Pendulum() : Submodel("pendulum") {}
+    Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Submodel::init(parent))
+        if (!pooya::Submodel::init(parent))
             return false;
 
         // create signals
@@ -70,25 +68,25 @@ public:
     }
 };
 
-class PI : public Submodel
+class PI : public pooya::Submodel
 {
 protected:
-    Gain      _gain_p;
-    Integrator _integ;
-    Gain      _gain_i;
-    Add          _add{"Add"};
+    pooya::Gain      _gain_p;
+    pooya::Integrator _integ;
+    pooya::Gain      _gain_i;
+    pooya::Add          _add{"Add"};
 
 public:
     PI(double Kp, double Ki, double x0=0.0) :
-        Submodel("PI"),
+        pooya::Submodel("PI"),
         _gain_p("Kp", Kp),
         _integ ("ix", x0),
         _gain_i("Ki", Ki)
     {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Submodel::init(parent))
+        if (!pooya::Submodel::init(parent))
             return false;
 
         // choose random names for these internal signals
@@ -109,19 +107,19 @@ public:
     }
 };
 
-class PendulumWithPI : public Submodel
+class PendulumWithPI : public pooya::Submodel
 {
 protected:
-    Subtract  _sub{"Sub"};
-    PI         _pi{40.0, 20.0};
-    Pendulum _pend;
+    pooya::Subtract _sub{"Sub"};
+    PI               _pi{40.0, 20.0};
+    Pendulum       _pend;
 
 public:
-    PendulumWithPI() : Submodel("pendulum_with_PI") {}
+    PendulumWithPI() : pooya::Submodel("pendulum_with_PI") {}
 
-    bool init(Parent& parent, const Signals&, const Signals&) override
+    bool init(pooya::Parent& parent, const pooya::Signals&, const pooya::Signals&) override
     {
-        if (!Submodel::init(parent))
+        if (!pooya::Submodel::init(parent))
             return false;
 
         // signals
@@ -146,32 +144,32 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model          model("test07");
+    pooya::Model model("test07");
     PendulumWithPI pendulum_with_pi;
 
     // setup the model
     model.add_block(pendulum_with_pi);
 
-    History history(model);
+    pooya::History history(model);
 
     auto       m = model.signal(      "m");
     auto       l = model.signal(      "l");
     auto       g = model.signal(      "g");
     auto des_phi = model.signal("des_phi");
 
-    Simulator sim(model,
-        [&](Model&, double /*t*/, Values& values) -> void
+    pooya::Simulator sim(model,
+        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             values.set_scalar(      m,    0.2);
             values.set_scalar(      l,    0.1);
             values.set_scalar(      g,   9.81);
             values.set_scalar(des_phi, M_PI_4);
         },
-        rkf45); // try rk4 with h = 0.01 to see the difference
+        pooya::rkf45); // try rk4 with h = 0.01 to see the difference
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 5, 0.1))
+    while (pooya::arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());

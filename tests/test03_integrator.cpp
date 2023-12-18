@@ -22,16 +22,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
 int main()
 {
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    Model      model("test03"     );
-    Integrator integ( "integ", 1.0);
+    pooya::Model      model("test03"     );
+    pooya::Integrator integ( "integ", 1.0);
 
     // create signals
     auto x  = model.signal( "x");
@@ -40,18 +38,18 @@ int main()
     // setup the model
     model.add_block(integ, xd, x);
 
-    History history(model);
+    pooya::History history(model);
 
-    Simulator sim(model,
-        [&](Model&, double t, Values& values) -> void
+    pooya::Simulator sim(model,
+        [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
             values.set_scalar(xd, t < 3 or t > 7 ? 1.0 : 0.0);
         },
-        euler);
+        pooya::euler);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 10, 0.1))
+    while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
         history.update(k, t, sim.values());

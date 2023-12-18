@@ -11,8 +11,6 @@
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-using namespace pooya;
-
 struct Parameters
 {
     // primary parameters
@@ -76,21 +74,21 @@ struct Parameters
     }
 };
 
-class Forces : public Block
+class Forces : public pooya::Block
 {
 public:
-    Forces() : Block("Forces", 3, 2) {}
+    Forces() : pooya::Block("Forces", 3, 2) {}
 
-    void activation_function(double /*t*/, Values& values) override
+    void activation_function(double /*t*/, pooya::Values& values) override
     {
-        double         delta = scalar_input(0);
-        double engine_torque = scalar_input(1);
-        const Value&      dq =  array_input(2);
+        double           delta = scalar_input(0);
+        double   engine_torque = scalar_input(1);
+        const pooya::Value& dq =  array_input(2);
 
         double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
         double F_lon = F * cos(delta) - 500 * dq(0);
 
-        Value F_lat(3);
+        pooya::Value F_lat(3);
         F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
 
         scalar_output(0, F_lon);
@@ -98,27 +96,27 @@ public:
     }
 };
 
-class EquationsOfMotion : public Block
+class EquationsOfMotion : public pooya::Block
 {
 protected:
     Parameters& _p;
 
     // input signals
-    Signal _s_delta;
-    Signal _s_F_lon;
-    Signal _s_F_lat;
-    Signal     _s_q;
-    Signal    _s_dq;
+    pooya::Signal _s_delta;
+    pooya::Signal _s_F_lon;
+    pooya::Signal _s_F_lat;
+    pooya::Signal     _s_q;
+    pooya::Signal    _s_dq;
 
     // output signal
-    Signal _s_d2q;
+    pooya::Signal _s_d2q;
 
 public:
-    EquationsOfMotion(Parameters& params) : Block("EquationsOfMotion", 5, 1), _p(params) {}
+    EquationsOfMotion(Parameters& params) : pooya::Block("EquationsOfMotion", 5, 1), _p(params) {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Block::init(parent, iports, oports))
+        if (!pooya::Block::init(parent, iports, oports))
             return false;
 
         _s_delta = iports[0];
@@ -132,14 +130,14 @@ public:
         return true;
     }
 
-    void activation_function(double /*t*/, Values& values) override
+    void activation_function(double /*t*/, pooya::Values& values) override
     {
         // inputs
-        double       delta = values.get_scalar(_s_delta);
-        double       F_lon = values.get_scalar(_s_F_lon);
-        const Value& F_lat = values.get_array(_s_F_lat);
-        const Value&     q = values.get_array(_s_q);
-        const Value&    dq = values.get_array(_s_dq);
+        double              delta = values.get_scalar(_s_delta);
+        double              F_lon = values.get_scalar(_s_F_lon);
+        const pooya::Value& F_lat = values.get_array(_s_F_lat);
+        const pooya::Value&     q = values.get_array(_s_q);
+        const pooya::Value&    dq = values.get_array(_s_dq);
 
         // lateral force components of axles
         double Fyf = F_lat[0];
@@ -157,7 +155,7 @@ public:
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // second derivatives
-        Value d2q(4);
+        pooya::Value d2q(4);
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);
@@ -232,22 +230,22 @@ public:
     }
 };
 
-class PT : public Submodel
+class PT : public pooya::Submodel
 {
 protected:
-    Subtract     _sub{"sub"};
-    Const      _const;
-    Divide       _div{"div"};
-    Integrator _integ{"int"};
-    InitialValue  _iv{"iv"};
-    Add          _add{"add"};
+    pooya::Subtract     _sub{"sub"};
+    pooya::Const      _const;
+    pooya::Divide       _div{"div"};
+    pooya::Integrator _integ{"int"};
+    pooya::InitialValue  _iv{"iv"};
+    pooya::Add          _add{"add"};
 
 public:
-    PT(double tau) : Submodel("PT"), _const("tau", tau) {}
+    PT(double tau) : pooya::Submodel("PT", 2, 1), _const("tau", tau) {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Submodel::init(parent, iports, oports))
+        if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
         // choose random names for these internal signals
@@ -273,21 +271,21 @@ public:
     }
 };
 
-class ChassisDynamics : public Submodel
+class ChassisDynamics : public pooya::Submodel
 {
 protected:
-    PT                 _pt{0.1};
-    Forces         _forces;
-    EquationsOfMotion _eom;
-    IntegratorA    _integ1{"dq", ValueN<4>::Zero()};
-    IntegratorA    _integ2{ "q", ValueN<4>::Zero()};
+    PT                     _pt{0.1};
+    Forces             _forces;
+    EquationsOfMotion     _eom;
+    pooya::IntegratorA _integ1{"dq", pooya::ValueN<4>::Zero()};
+    pooya::IntegratorA _integ2{ "q", pooya::ValueN<4>::Zero()};
 
 public:
-    ChassisDynamics(Parameters& params) : Submodel("ChassisDynamics"), _eom(params) {}
+    ChassisDynamics(Parameters& params) : pooya::Submodel("ChassisDynamics"), _eom(params) {}
 
-    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
-        if (!Submodel::init(parent, iports, oports))
+        if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
         // signals
@@ -311,7 +309,7 @@ public:
     }
 };
 
-class SimpleTruckModel : public Model
+class SimpleTruckModel : public pooya::Model
 {
 protected:
     // parameters
@@ -319,11 +317,11 @@ protected:
     ChassisDynamics _chdyn;
 
     // input signals
-    Signal _s_delta_Rq;
-    Signal _s_engine_torque;
+    pooya::Signal _s_delta_Rq;
+    pooya::Signal _s_engine_torque;
 
 public:
-    SimpleTruckModel() : Model("SimpleTruck"), _chdyn(_params)
+    SimpleTruckModel() : pooya::Model("SimpleTruck"), _chdyn(_params)
     {
         // input signals
         _s_delta_Rq      = signal("front_wheel_angle_Rq");
@@ -333,7 +331,7 @@ public:
         add_block(_chdyn, {_s_delta_Rq, _s_engine_torque});
     }
 
-    void input_cb(double t, Values& values) override
+    void input_cb(double t, pooya::Values& values) override
     {
         double delta_Rq;
         if (t < 2)
@@ -359,13 +357,13 @@ int main()
 
     SimpleTruckModel model;
 
-    History history(model);
+    pooya::History history(model);
 
-    Simulator sim(model, nullptr, rk4);
+    pooya::Simulator sim(model, nullptr, pooya::rk4);
 
     uint k = 0;
     double t;
-    while (arange(k, t, 0, 100, 0.01))
+    while (pooya::arange(k, t, 0, 100, 0.01))
     {
         sim.run(t);
         history.update(k, t, sim.values());
@@ -379,7 +377,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto T = history.at(History::time_id);
+    auto T = history.at(pooya::History::time_id);
     // auto q = history.at(model.find_signal(".q"));
     auto dq = history.at(model.find_signal(".dq"));
     auto a = history.at(model.find_signal("_angle"));

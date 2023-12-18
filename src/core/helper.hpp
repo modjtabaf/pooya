@@ -57,7 +57,7 @@ protected:
     bool _first_iter{true};
 
     const bool _reuse_order;
-    using ProcessingOrder = std::vector<Base*>;
+    using ProcessingOrder = std::vector<Block*>;
     ProcessingOrder _processing_order1;
     ProcessingOrder _processing_order2;
     ProcessingOrder* _current_po{nullptr};

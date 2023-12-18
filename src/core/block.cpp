@@ -18,7 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
+bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
     assert(_parent == nullptr);
     if (_parent) return false;
@@ -55,7 +55,7 @@ bool Base::init(Parent& parent, const Signals& iports, const Signals& oports)
     return true;
 }
 
-bool Base::_add_dependecny(const Signal& signal)
+bool Block::_add_dependecny(const Signal& signal)
 {
     if (std::find_if(_dependencies.begin(), _dependencies.end(),
         [&] (const Signal& s) -> bool
@@ -70,11 +70,11 @@ bool Base::_add_dependecny(const Signal& signal)
     return false;
 }
 
-void Base::_assign_valid_given_name(std::string given_name)
+void Block::_assign_valid_given_name(std::string given_name)
 {
-    auto verify_unique_name_cb = [&] (const Base& c, uint32_t /*level*/) -> bool
+    auto verify_unique_name_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
     {
-        return (&c == static_cast<Base*>(_parent)) || (c._given_name != given_name);
+        return (&c == static_cast<Block*>(_parent)) || (c._given_name != given_name);
     };
 
     if (given_name.empty())
@@ -113,12 +113,12 @@ void Base::_assign_valid_given_name(std::string given_name)
     _given_name = given_name;
 }
 
-void Base::_mark_unprocessed()
+void Block::_mark_unprocessed()
 {
     _processed = false;
 }
 
-uint Base::_process(double t, Values& values, bool /*go_deep*/)
+uint Block::_process(double t, Values& values, bool /*go_deep*/)
 {
     if (_processed)
         return 0;
@@ -135,7 +135,7 @@ uint Base::_process(double t, Values& values, bool /*go_deep*/)
     return 1;
 }
 
-Model* Base::model()
+Model* Block::model()
 {
     return _parent ? _parent->model() : nullptr;
 }
@@ -153,7 +153,7 @@ std::string Parent::make_signal_name(const std::string& given_name)
 
 void Parent::_mark_unprocessed()
 {
-    Base::_mark_unprocessed();
+    Block::_mark_unprocessed();
 
     for (auto* component: _components)
         component->_mark_unprocessed();
@@ -182,7 +182,7 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     if (level > max_level)
         return true;
 
-    if (!Base::traverse(cb, level, max_level))
+    if (!Block::traverse(cb, level, max_level))
         return false;
 
     if (level < max_level)

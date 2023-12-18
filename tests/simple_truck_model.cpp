@@ -76,10 +76,10 @@ struct Parameters
     }
 };
 
-class Forces : public Base
+class Forces : public Block
 {
 public:
-    Forces() : Base("Forces", 3, 2) {}
+    Forces() : Block("Forces", 3, 2) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -98,7 +98,7 @@ public:
     }
 };
 
-class EquationsOfMotion : public Base
+class EquationsOfMotion : public Block
 {
 protected:
     Parameters& _p;
@@ -114,11 +114,11 @@ protected:
     Signal _s_d2q;
 
 public:
-    EquationsOfMotion(Parameters& params) : Base("EquationsOfMotion", 5, 1), _p(params) {}
+    EquationsOfMotion(Parameters& params) : Block("EquationsOfMotion", 5, 1), _p(params) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        if (!Base::init(parent, iports, oports))
+        if (!Block::init(parent, iports, oports))
             return false;
 
         _s_delta = iports[0];

@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using namespace pooya;
 
-class MassSpringDamper : public Base
+class MassSpringDamper : public Block
 {
 protected:
     double   _m;
@@ -40,11 +40,11 @@ protected:
 
 public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
-        Base(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
+        Block(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
 
     bool init(Parent& parent, const Signals& iports, const Signals&) override
     {
-        if (!Base::init(parent, iports))
+        if (!Block::init(parent, iports))
             return false;
 
         _s_tau = iports[0];

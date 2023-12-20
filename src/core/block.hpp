@@ -57,10 +57,16 @@ protected:
 public:
     virtual ~Block() = default;
 
-    virtual void get_states(StatesInfo& /*states*/) {}
     virtual void step(double /*t*/, const Values& /*states*/) {}
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
     virtual Model* model();
+
+    Model& model_ref()
+    {
+        auto* mdl = model();
+        verify(mdl, _full_name + ": a model is necessary but none is defined!");
+        return *mdl;
+    }
 
     Parent* parent() {return _parent;}
     bool processed() const {return _processed;}
@@ -77,6 +83,76 @@ public:
         return (level > max_level) || cb(*this, level);
     }
 }; // class Block
+
+class Parent : public Block
+{
+protected:
+    std::vector<Block*> _components;
+
+    Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        Block(given_name, num_iports, num_oports) {}
+
+public:
+    bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
+    {
+        if (!component.init(*this, iports, oports))
+            return false;
+
+        _components.emplace_back(&component);
+        return true;
+    }
+
+    void step(double t, const Values& values) override
+    {
+        for (auto* component: _components)
+            component->step(t, values);
+    }
+
+    Signal signal(const std::string& given_name="", std::size_t size=0)
+    {
+        return Signal(given_name, *this, size);
+    }
+
+    std::string make_signal_name(const std::string& given_name);
+    Signal parameter(const std::string& given_name);
+    void _mark_unprocessed() override;
+    uint _process(double t, Values& values, bool go_deep = true) override;
+    bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
+}; // class Parent
+
+class Submodel : public Parent
+{
+public:
+    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
+
+}; // class Submodel
+
+class Model : public Parent
+{
+protected:
+    SignalRegistry _signal_registry;
+
+    bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
+
+public:
+    Model(std::string given_name="model");
+
+    Model* model() override {return this;}
+
+    const SignalRegistry& signal_registry() const {return _signal_registry;}
+    SignalRegistry& signal_registry() {return _signal_registry;}
+
+    Signal::Id find_signal(const std::string& name, bool exact_match = false) const
+    {
+        return _signal_registry.find_signal(name, exact_match);
+    }
+    Signal::Id register_signal(const std::string& name, std::size_t size)
+    {
+        return _signal_registry.register_signal(name, size);
+    }
+
+    virtual void input_cb(double /*t*/, Values& /*values*/) {}
+};
 
 template<typename T>
 class InitialValueT : public Block
@@ -341,9 +417,14 @@ protected:
 public:
     IntegratorT(std::string given_name, T ic=T(0.0)) : Block(given_name, 1, 1), _value(ic) {}
 
-    void get_states(StatesInfo& states) override
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
-        states.add(_oports[0], _value, _iports[0]);
+        if (!Block::init(parent, iports, oports))
+            return false;
+
+        model_ref().signal_registry().register_state(_oports[0], _iports[0], _value);
+
+        return true;
     }
 
     void step(double /*t*/, const Values& values) override
@@ -533,82 +614,6 @@ public:
 
 using Derivative  = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
-
-class Parent : public Block
-{
-protected:
-    std::vector<Block*> _components;
-
-    Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, num_iports, num_oports) {}
-
-public:
-    bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
-    {
-        if (!component.init(*this, iports, oports))
-            return false;
-
-        _components.emplace_back(&component);
-        return true;
-    }
-
-    void get_states(StatesInfo& states) override
-    {
-        for (auto it = _components.begin(); it != _components.end(); it++)
-            (*it)->get_states(states);
-    }
-
-    void step(double t, const Values& values) override
-    {
-        for (auto* component: _components)
-            component->step(t, values);
-    }
-
-    Signal signal(const std::string& given_name="", std::size_t size=0)
-    {
-        return Signal(given_name, *this, size);
-    }
-
-    std::string make_signal_name(const std::string& given_name);
-    Signal parameter(const std::string& given_name);
-    void _mark_unprocessed() override;
-    uint _process(double t, Values& values, bool go_deep = true) override;
-    bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
-}; // class Parent
-
-class Submodel : public Parent
-{
-public:
-    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
-
-}; // class Submodel
-
-class Model : public Parent
-{
-protected:
-    SignalRegistry _signal_registry;
-
-    bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
-
-public:
-    Model(std::string given_name="model");
-
-    Model* model() override {return this;}
-
-    const SignalRegistry& signal_registry() const {return _signal_registry;}
-    SignalRegistry& signal_registry() {return _signal_registry;}
-
-    Signal::Id find_signal(const std::string& name, bool exact_match = false) const
-    {
-        return _signal_registry.find_signal(name, exact_match);
-    }
-    Signal::Id register_signal(const std::string& name, std::size_t size)
-    {
-        return _signal_registry.register_signal(name, size);
-    }
-
-    virtual void input_cb(double /*t*/, Values& /*values*/) {}
-};
 
 inline Signal Parent::parameter(const std::string& given_name)
 {

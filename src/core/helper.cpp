@@ -251,7 +251,6 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
                     if (t1 < t)
                     {
-                        _values.invalidate();
                         _values.set_states(_states);
                         _states_orig = _states;
                         _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
@@ -275,7 +274,6 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     if (_first_iter)
         _first_iter = false;
 
-    _values.invalidate();
     _values.set_states(_states);
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);

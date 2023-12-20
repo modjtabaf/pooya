@@ -120,13 +120,10 @@ Values::Values(const pooya::Model& model)
 void Values::set_states(const Eigen::ArrayXd& states)
 {
     _states = states;
-    for (ValueInfo& vi: _value_infos)
+    for (auto& vi: _value_infos)
     {
-        if (!vi._si.is_state())
+        if (!(vi._assigned = vi._si.is_state()))
             continue;
-
-        assert(!vi.is_assigned());
-        vi._assigned = true;
 
         if (vi._si._is_deriv)
         {

@@ -256,11 +256,6 @@ public:
 
     void set_states(const Eigen::ArrayXd& states);
 
-    void invalidate()
-    {
-        for (auto& vi: _value_infos) vi._assigned = false;
-    }
-
     void stream(std::ostream& os) const
     {
         int k = 0;

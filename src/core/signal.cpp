@@ -53,61 +53,67 @@ void Signal::_set_owner(Parent& owner)
     _full_name = reg_name;
 }
 
-Values::Values(const pooya::Model& model) : _sig_reg(model.signal_registry())
-{
-}
-
-Values::Values(const pooya::Model& model, const StatesInfo& states_info) : _sig_reg(model.signal_registry())
+Values::Values(const pooya::Model& model)
 {
     const auto& signals = model.signal_registry().signals();
 
-    // find the total size of signals
+    std::size_t states_size{0};
+
+    // find the total sizes of signals and states
     for (const auto& signal: signals)
-        _total_size += signal.second == 0 ? 1 : signal.second;
+    {
+        auto size = std::max<std::size_t>(signal._size, 1);
+        _total_size += size;
+        if (signal.is_state())
+            states_size += size;
+    }
 
     _values.resize(_total_size);
 
-    std::vector<bool> is_state(signals.size());
-    std::fill(is_state.begin(), is_state.end(), false);
-
-    _states_size = states_info.value().size();
-
-    // mark the states
-    for (const auto& si: states_info)
-    {
-        assert(!is_state[si._id]); // detect duplicate entries in states
-        is_state[si._id] = true;
-    }
-
     double* state_start = _values.data();
-    double* other_start = state_start + _states_size;
+    double* other_start = state_start + states_size;
 
-    Signal::Id id = 0;
     for (const auto& signal: signals)
     {
-        auto& start = is_state[id] ? state_start : other_start;
-        _value_infos.push_back({id, start, signal.second, is_state[id]});
-        start += signal.second == 0 ? 1 : signal.second;
-        id++;
+        auto& start = signal.is_state() ? state_start : other_start;
+        _value_infos.push_back({signal, start, signal._size});
+        start += std::max<std::size_t>(signal._size, 1);
     }
 
-    assert(state_start == _values.data() + _states_size);
+    assert(state_start == _values.data() + states_size);
     assert(other_start == _values.data() + _total_size);
 
-    new (&_states) decltype(_states)(_values.data(), _states_size);
+    new (&_states) decltype(_states)(_values.data(), states_size);
 
-    _derivs.resize(_states_size);
+    _derivs.resize(states_size);
     double* deriv_start = _derivs.data();
-    for (const auto& si: states_info)
+
+    // state-specific steps
+
+    for (const auto& signal: signals)
     {
-        auto& vi = get_value_info(si._deriv_id);
-        assert(!vi._is_deriv);
-        vi._is_deriv = true;
-        if (vi._scalar)
-            vi._deriv_scalar = deriv_start;
+        if (!signal.is_state())
+            continue;
+
+        auto& deriv_vi = get_value_info(signal._deriv_id);
+        if (signal.is_scalar())
+            deriv_vi._deriv_scalar = deriv_start;
         else
-            new (&vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, vi._array.size());
-        deriv_start += vi._scalar ? 1 : vi._array.size();
+            new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal._size);
+
+        deriv_start += std::max<std::size_t>(signal._size, 1);
+    }
+
+    for (const auto& signal: signals)
+    {
+        if (!signal.is_state())
+            continue;
+
+        auto& vi = get_value_info(signal._id);
+        if (signal.is_scalar())
+            _set(vi, signal._iv[0]);
+        else
+            _set(vi, signal._iv);
     }
 }
 
@@ -116,13 +122,13 @@ void Values::set_states(const Eigen::ArrayXd& states)
     _states = states;
     for (ValueInfo& vi: _value_infos)
     {
-        if (!vi._is_state)
+        if (!vi._si.is_state())
             continue;
 
-        assert(!vi._assigned);
+        assert(!vi.is_assigned());
         vi._assigned = true;
 
-        if (vi._is_deriv)
+        if (vi._si._is_deriv)
         {
             if (vi._deriv_scalar)
                 *vi._deriv_scalar = *vi._scalar;
@@ -132,46 +138,21 @@ void Values::set_states(const Eigen::ArrayXd& states)
     }
 }
 
-void StatesInfo::lock()
-{
-    verify(!_locked, "attempting to lock an already-lokced StatesInfo object!");
-    _locked = true;
-
-    std::size_t total_size = 0;
-    for (auto& si: *this)
-        total_size += si._scalar ? 1 : si._value.size();
-
-    std::sort(_Parent::begin(), _Parent::end(),
-        [] (const StateInfo& si1, const StateInfo& si2) -> bool
-        {
-            return si1._id < si2._id;
-        });
-   
-    _value.resize(total_size);
-    std::size_t start = 0;
-    for (const auto& si: *this)
-    {
-        auto size = si._value.size();
-        _value.segment(start, size) = si._value;
-        start += size;
-    }
-    assert(start == total_size);
-}
-
 std::vector<SignalRegistry::SignalInfo>::const_iterator SignalRegistry::_find_signal(const std::string& name, bool exact_match) const
 {
-    if (name.empty()) return _signals.end();
+    if (name.empty())
+        return _signal_infos.end();
 
     auto name_len = name.length();
 
-    auto it = std::find_if(_signals.begin(), _signals.end(),
+    auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
         [&] (const SignalRegistry::SignalInfo& sig_info) -> bool
         {
             if (exact_match)
-                return sig_info.first == name;
+                return sig_info._full_name == name;
                 
-            auto str_len = sig_info.first.length();
-            return (str_len >= name_len) && (sig_info.first.substr(str_len - name_len) == name);
+            auto str_len = sig_info._full_name.length();
+            return (str_len >= name_len) && (sig_info._full_name.substr(str_len - name_len) == name);
         });
 
     return it;
@@ -180,22 +161,39 @@ std::vector<SignalRegistry::SignalInfo>::const_iterator SignalRegistry::_find_si
 Signal::Id SignalRegistry::find_signal(const std::string& name, bool exact_match) const
 {
     auto sig_info = _find_signal(name, exact_match);
-    if (sig_info == _signals.end()) return Signal::NoId;
+    if (sig_info == _signal_infos.end()) return Signal::NoId;
 
-    return std::distance(_signals.begin(), sig_info);
+    return std::distance(_signal_infos.begin(), sig_info);
 }
 
 Signal::Id SignalRegistry::register_signal(const std::string& name, std::size_t size)
 {
     if (name.empty()) return Signal::NoId;
 
-    Signal::Id ret = find_signal(name, true);
-    verify(ret == Signal::NoId, "Re-registering a signal is not allowed!");
+    Signal::Id id = find_signal(name, true);
+    verify(id == Signal::NoId, "Re-registering a signal is not allowed!");
 
-    ret = _signals.size();
-    _signals.push_back(std::make_pair(name, size));
+    id = _signal_infos.size();
+    _signal_infos.push_back({name, id, size});
 
-    return ret;
+    return id;
+}
+
+SignalRegistry::SignalInfo& SignalRegistry::_register_state(Signal::Id id, Signal::Id deriv_id)
+{
+    verify(id != Signal::NoId, "invalid state id!");
+    verify(deriv_id != Signal::NoId, "invalid derivative id!");
+
+    auto& si = _signal_infos[id];
+
+    verify(!si.is_state(), si._full_name + ": signal is already registered as a state!");
+    si._deriv_id = deriv_id;
+
+    auto& deriv_si = _signal_infos[deriv_id];
+    verify(!deriv_si._is_deriv, si._full_name + ": signal is already registered as a state derivative!");
+    deriv_si._is_deriv = true;
+
+    return si;
 }
 
 }

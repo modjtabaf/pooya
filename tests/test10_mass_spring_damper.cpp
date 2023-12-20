@@ -51,17 +51,15 @@ public:
         _s_xd  = parent.signal( "xd");
         _s_xdd = parent.signal("xdd");
 
+        auto& sig_reg = model_ref().signal_registry();
+        sig_reg.register_state( _s_x,  _s_xd,  _x0);
+        sig_reg.register_state(_s_xd, _s_xdd, _xd0);
+
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
         _add_dependecny(_s_x);
         _add_dependecny(_s_xd);
 
         return true;
-    }
-
-    void get_states(pooya::StatesInfo& states) override
-    {
-        states.add( _s_x,  _x0,  _s_xd);
-        states.add(_s_xd, _xd0, _s_xdd);
     }
 
     void activation_function(double /*t*/, pooya::Values& values) override

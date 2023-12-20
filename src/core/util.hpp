@@ -19,7 +19,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 // helper macros
 
-#define POOYA_HERE(s) std::cout << "Pooya:" << __FILE__ << ":" << __LINE__ << s << "\n" << std::flush;
+#define POOYA_HERE(s) std::cout << "Pooya:" << __FILE__ << ":" << __LINE__ << ":" << s << "\n" << std::flush;
 // #undef POOYA_HERE
 // #define POOYA_HERE
 

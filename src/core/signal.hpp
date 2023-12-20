@@ -23,7 +23,6 @@ namespace pooya
 
 class Model;
 class Parent;
-class StatesInfo;
 
 template <int N=Eigen::Dynamic>
 class ArrayN : public Eigen::Array<double, N, 1>
@@ -51,9 +50,9 @@ public:
 
 protected:
     std::string _given_name;
-    std::string _full_name;
-    std::size_t _id{NoId};
-    std::size_t _size{0};
+    std::string  _full_name; // TODO: maybe replace this with a pointer to signal info
+    std::size_t         _id{NoId};
+    std::size_t       _size{0};
 
     std::string _make_valid_given_name(const std::string& given_name) const;
     void _set_owner(Parent& owner);
@@ -111,21 +110,49 @@ inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
 class SignalRegistry
 {
 public:
-    using SignalInfo = std::pair<std::string, std::size_t>;
-    using Signals = std::vector<SignalInfo>;
+    struct SignalInfo
+    {
+        std::string _full_name;               // full name of the signal
+        Signal::Id         _id{Signal::NoId}; // the signal ID (must be valid, i.e. != NoId)
+        Signal::Id   _deriv_id{Signal::NoId}; // the ID valid of the derivative signal if this is a state variable, NoId otherwise
+        bool         _is_deriv{false};        // is this the derivative of another signal?
+        std::size_t      _size{0};            // array size if > 0, indicates a scalar if == 0
+        Array              _iv;               // the initial value, only valid for states, i.e. if _deriv_id != Signal::NoId
+
+        SignalInfo(const std::string& full_name, Signal::Id id, std::size_t size) : _full_name(full_name), _id(id), _size(size)
+        {
+            verify(id != Signal::NoId, full_name + ": invalid signal id!");
+        }
+
+        bool is_state() const {return _deriv_id != Signal::NoId;}
+        bool is_scalar() const {return _size == 0;}
+    };
+
+    using SignalInfos = std::vector<SignalInfo>;
 
 protected:
-    Signals _signals;
+    SignalInfos _signal_infos;
 
-    Signals::const_iterator _find_signal(const std::string& name, bool exact_match = false) const;
+    SignalInfos::const_iterator _find_signal(const std::string& name, bool exact_match = false) const;
+    SignalInfo& _register_state(Signal::Id id, Signal::Id deriv_id);
 
 public:
-    const Signals& signals() const {return _signals;}
-    std::size_t num_signals() const {return _signals.size();}
+    const SignalInfos& signals() const {return _signal_infos;}
+    std::size_t num_signals() const {return _signal_infos.size();} // deprecate
 
     const SignalInfo& get_signal_by_id(Signal::Id id) const
     {
-        return _signals[id];
+        return _signal_infos[id];
+    }
+
+    void register_state(Signal::Id id, Signal::Id deriv_id, const Array& iv)
+    {
+        _register_state(id, deriv_id)._iv = iv;
+    }
+
+    void register_state(Signal::Id id, Signal::Id deriv_id, double iv)
+    {
+        _register_state(id, deriv_id)._iv << iv;
     }
 
     Signal::Id find_signal(const std::string& name, bool exact_match = false) const;
@@ -137,31 +164,28 @@ class Values
 public:
     struct ValueInfo
     {
-        std::size_t _id;
-        bool _assigned{false};
+        const SignalRegistry::SignalInfo& _si;   // corresponding signal info
+        bool _assigned{false};                   // has the value been assigned?
 
-        double* _scalar{nullptr};
-        Eigen::Map<Eigen::ArrayXd> _array;
+        double* _scalar{nullptr};                // valid if this is a scalar signal, nullptr otherwise
+        Eigen::Map<Eigen::ArrayXd> _array;       // used only if this is an array signal, empty otherwise
 
-        bool _is_state;
-
-        bool _is_deriv{false};
-        double* _deriv_scalar{nullptr};
-        Eigen::Map<Eigen::ArrayXd> _deriv_array;
+        double* _deriv_scalar{nullptr};          // only valid if _is_deriv member of the signal info is true and this is a scalar signal, nullptr otherwise
+        Eigen::Map<Eigen::ArrayXd> _deriv_array; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
     
-        ValueInfo(Signal::Id id, double* data, std::size_t size, bool is_state) :
-            _id(id), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
-            _is_state(is_state), _deriv_array(nullptr, 0) {}
+        ValueInfo(const SignalRegistry::SignalInfo& si, double* data, std::size_t size) :
+            _si(si), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
+            _deriv_array(nullptr, 0) {}
+
+        bool is_assigned() const {return _assigned;}
     };
 
 protected:
-    const SignalRegistry& _sig_reg;
     std::vector<ValueInfo> _value_infos;
-    std::size_t _total_size{0};
-    Eigen::ArrayXd _values;
-    Eigen::Map<Eigen::ArrayXd> _states{nullptr, Eigen::Dynamic};
-    Eigen::ArrayXd _derivs;
-    std::size_t _states_size{0};
+    std::size_t             _total_size{0};
+    Eigen::ArrayXd              _values;
+    Eigen::Map<Eigen::ArrayXd>  _states{nullptr, Eigen::Dynamic};
+    Eigen::ArrayXd              _derivs;
 
     inline ValueInfo& get_value_info(Signal::Id id)
     {
@@ -176,16 +200,16 @@ protected:
     void _set(ValueInfo& vi, const T& value)
     {
         verify(vi._array.rows() == value.rows(),
-            std::string("size mismatch (id=") + std::to_string(vi._id) + ")(" + std::to_string(vi._array.rows()) +
+            std::string("size mismatch (id=") + vi._si._full_name + ")(" + std::to_string(vi._array.rows()) +
             " vs " + std::to_string(value.rows()) + ")!");
         vi._array = value;
-        if (vi._is_deriv)
+        if (vi._si._is_deriv)
             vi._deriv_array = value;
+        vi._assigned = true;
     }
 
 public:
     Values(const pooya::Model& model);
-    Values(const pooya::Model& model, const StatesInfo& states);
 
     inline const ValueInfo& get_value_info(Signal::Id id) const
     {
@@ -195,7 +219,7 @@ public:
 
     bool valid(Signal::Id id) const
     {
-        return get_value_info(id)._assigned;
+        return get_value_info(id).is_assigned();
     }
 
     bool is_array(Signal::Id id) const
@@ -211,7 +235,7 @@ public:
     auto get(Signal::Id id) const -> const auto
     {
         const auto& vi = get_value_info(id);
-        verify(vi._assigned, "attempting to access an unassigned value!");
+        verify(vi.is_assigned(), "attempting to access an unassigned value!");
         return _get<T>(vi);
     }
 
@@ -223,9 +247,8 @@ public:
     {
         verify(id != Signal::NoId, "invalid id!");
         auto& vi = get_value_info(id);
-        verify(!vi._assigned, "re-assignment is prohibited!");
+        verify(!vi.is_assigned(), "re-assignment is prohibited!");
         _set<T>(vi, value);
-        vi._assigned = true;
     }
 
     void set_scalar(Signal::Id id, double value);
@@ -244,7 +267,7 @@ public:
         for (const auto& vi: _value_infos)
         {
             os << "- [" << k++ << "]: ";
-            (vi._assigned ? os << vi._array : os << "*") << "\n";
+            (vi.is_assigned() ? (vi._scalar ? os << *vi._scalar : os << vi._array) : os << "*") << "\n";
         }
         os << "\n";
     }
@@ -253,7 +276,7 @@ public:
 template<>
 inline auto Values::_get<Array>(const Values::ValueInfo& vi) const -> const auto
 {
-    verify(!vi._scalar, _sig_reg.get_signal_by_id(vi._id).first + ": attempting to retrieve a scalar as an array!");
+    verify(!vi._scalar, vi._si._full_name + ": attempting to retrieve a scalar as an array!");
     return vi._array;
 }
 
@@ -272,8 +295,9 @@ inline void Values::_set<double>(ValueInfo& vi, const double& value)
 {
     verify(vi._scalar, "cannot assign scalar to array!");
     *vi._scalar = value;
-    if (vi._is_deriv)
+    if (vi._si._is_deriv)
         *vi._deriv_scalar = value;
+    vi._assigned = true;
 }
 
 inline void Values::set_scalar(Signal::Id id, double value) {set<double>(id, value);}
@@ -284,63 +308,6 @@ inline std::ostream& operator<<(std::ostream& os, const Values& values)
     values.stream(os);
     return os;
 }
-
-struct StateInfo
-{
-    Signal::Id _id;
-    Signal::Id _deriv_id;
-    bool _scalar;
-    Array _value;
-    StateInfo(Signal::Id id, Signal::Id deriv_id, const Array& iv) :
-        _id(id), _deriv_id(deriv_id), _scalar(false), _value(iv)
-        {
-        }
-    StateInfo(Signal::Id id, Signal::Id deriv_id, double iv) :
-        _id(id), _deriv_id(deriv_id), _scalar(true), _value(iv)
-        {
-        }
-};
-
-class StatesInfo : protected std::vector<StateInfo>
-{
-protected:
-    using _Parent = std::vector<StateInfo>;
-
-    bool _locked{false};
-    Array _value;
-
-public:
-    using _Parent::vector;
-
-    template<typename T=double>
-    void add(Signal::Id state, const T& value, Signal::Id deriv)
-    {
-        verify(!_locked, "adding to a locked StatesInfo object is prohibited!");
-        verify(std::find_if(begin(), end(),
-            [&] (const StateInfo& info) -> bool
-            {
-                return info._id == state;
-            }) == end(), std::string("a state with id ") + std::to_string(state) + " is added already!");
-        emplace_back(StateInfo(state, deriv, value));
-    }
-
-    void lock();
-
-    auto begin() const -> const auto {return _Parent::begin();}
-    auto end() const -> const auto {return _Parent::end();}
-    auto size() const -> const auto {return _Parent::size();}
-    const Array& value() const
-    {
-        verify(_locked, "getting the value of an unlocked StatesInfo object is prohibited!");
-        return _value;
-    }
-
-    void set_value(const Array& value)
-    {
-        verify(_locked, "setting the value of an unlocked StatesInfo object is prohibited!");
-        _value = value;
-    }
-};
 
 }
 

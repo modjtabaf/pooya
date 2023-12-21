@@ -12,8 +12,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __HELPER_HPP__
-#define __HELPER_HPP__
+#ifndef __POOYA_HELPER_HPP__
+#define __POOYA_HELPER_HPP__
 
 #include <vector>
 #include <fstream>
@@ -78,4 +78,4 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt);
 
 }
 
-#endif // __HELPER_HPP__
+#endif // __POOYA_HELPER_HPP__

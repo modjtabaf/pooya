@@ -76,18 +76,19 @@ int main()
     // setup the model
     model.add_block(pendulum);
 
-    pooya::History history(model);
-
     auto l = model.signal("l");
     auto g = model.signal("g");
 
+    pooya::Rk4 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             values.set_scalar(l, 0.1);
             values.set_scalar(g, 9.81);
         },
-        pooya::rk4);
+        &stepper);
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

@@ -65,9 +65,9 @@ int main()
     // create the model
     MyModel model;
 
-    pooya::History history(model);
-
     pooya::Simulator sim(model);
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

@@ -20,12 +20,64 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-using SolverCallback = std::function<void(double, Values&)>;
-using Solver         = std::function<const Array&(const Model&, SolverCallback, double, const Array&, double, double&)>;
+class StepperBase
+{
+public:
+    using StepperCallback = std::function<void(double, Values&)>;
 
-const Array& euler(const Model& model, SolverCallback callback, double t0, const Array& v0, double t1, double& new_h);
-const Array&   rk4(const Model& model, SolverCallback callback, double t0, const Array& v0, double t1, double& new_h);
-const Array& rkf45(const Model& model, SolverCallback callback, double t0, const Array& v0, double t1, double& new_h);
+protected:
+    const Model& _model;
+
+public:
+    StepperBase(const Model& model) : _model(model) {}
+
+    virtual void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) = 0;
+};
+
+class Euler : public StepperBase
+{
+protected:
+    Values _X;
+    Array _K;
+
+public:
+    Euler(const Model& model);
+
+    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+};
+
+class Rk4 : public StepperBase
+{
+protected:
+    Values _X;
+    Array _K1;
+    Array _K2;
+    Array _K3;
+    Array _K4;
+
+public:
+    Rk4(const Model& model);
+
+    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+};
+
+class Rkf45 : public StepperBase
+{
+protected:
+    Values _X;
+    Array _K1;
+    Array _K2;
+    Array _K3;
+    Array _K4;
+    Array _K5;
+    Array _K6;
+    Array _ZT;
+
+public:
+    Rkf45(const Model& model);
+
+    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+};
 
 }
 

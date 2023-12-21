@@ -54,7 +54,7 @@ protected:
     Values _values;
     Array _states;
     Array _states_orig;
-    Solver _stepper;
+    StepperBase* _stepper{nullptr};
     bool _first_iter{true};
 
     const bool _reuse_order;
@@ -67,7 +67,7 @@ protected:
     uint _process(double t, Values& values);
 
 public:
-    Simulator(Model& model, InputCallback inputs_cb = nullptr, Solver stepper = nullptr, bool reuse_order = false);
+    Simulator(Model& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr, bool reuse_order = false);
 
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
 

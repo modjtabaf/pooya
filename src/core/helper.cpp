@@ -103,7 +103,7 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
     return t <= t_end;
 }
 
-Simulator::Simulator(Model& model, InputCallback inputs_cb, Solver stepper, bool reuse_order) :
+Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _values(model), _stepper(stepper), _reuse_order(reuse_order)
 {
     _states = _values.states();
@@ -233,12 +233,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             double t1 = _t_prev;
             double t2 = t;
 
-            // StatesInfo states_info_orig(_states_info);
             _states_orig = _values.states();
             bool force_accept = false;
             while (t1 < t)
             {
-                _states = _stepper(_model, stepper_callback, t1, _states_orig, t2, new_h);
+                _stepper->step(stepper_callback, t1, _states_orig, t2, _states, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))

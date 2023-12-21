@@ -238,8 +238,7 @@ int main()
     auto       front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
     auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
 
-    pooya::History history(model, 1000);
-
+    pooya::Rkf45 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model& /*model*/, double t, pooya::Values& values) -> void
         {
@@ -252,7 +251,9 @@ int main()
             values.set_scalar(front_wheel_ang_gain, 1.0);
             values.set_scalar(front_wheel_ang_init_value, 0.0);
         },
-        pooya::rkf45, true);
+        &stepper, true);
+
+    pooya::History history(model, 1000);
 
     uint k = 0;
     double t;

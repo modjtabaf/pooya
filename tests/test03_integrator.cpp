@@ -38,14 +38,15 @@ int main()
     // setup the model
     model.add_block(integ, xd, x);
 
-    pooya::History history(model);
-
+    pooya::Euler stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
             values.set_scalar(xd, t < 3 or t > 7 ? 1.0 : 0.0);
         },
-        pooya::euler);
+        &stepper);
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

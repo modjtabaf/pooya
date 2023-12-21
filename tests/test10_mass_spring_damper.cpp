@@ -92,13 +92,14 @@ int main()
     // setup the model
     model.add_block(msd, tau);
 
-    pooya::History history(model);
-
+    pooya::Rk4 stepper(model);
     pooya::Simulator sim(model,
     [&](pooya::Model&, double t, pooya::Values& values) -> void
     {
         values.set_scalar(tau, 0.01 * std::sin(t));
-    }, pooya::rk4);
+    }, &stepper);
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

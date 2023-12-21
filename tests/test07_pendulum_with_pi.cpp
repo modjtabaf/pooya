@@ -150,13 +150,12 @@ int main()
     // setup the model
     model.add_block(pendulum_with_pi);
 
-    pooya::History history(model);
-
     auto       m = model.signal(      "m");
     auto       l = model.signal(      "l");
     auto       g = model.signal(      "g");
     auto des_phi = model.signal("des_phi");
 
+    pooya::Rkf45 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
@@ -165,7 +164,9 @@ int main()
             values.set_scalar(      g,   9.81);
             values.set_scalar(des_phi, M_PI_4);
         },
-        pooya::rkf45); // try rk4 with h = 0.01 to see the difference
+        &stepper); // try Rk4 with h = 0.01 to see the difference
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

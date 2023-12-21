@@ -164,8 +164,7 @@ int main()
     auto       g = model.signal(      "g");
     auto des_phi = model.signal("des_phi");
 
-    pooya::History history(model);
-
+    pooya::Rkf45 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
@@ -174,7 +173,9 @@ int main()
             values.set_scalar(      g,   9.81);
             values.set_scalar(des_phi, M_PI_4);
         },
-        pooya::rkf45);
+        &stepper);
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

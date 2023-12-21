@@ -357,9 +357,10 @@ int main()
 
     SimpleTruckModel model;
 
-    pooya::History history(model);
+    pooya::Rk4 stepper(model);
+    pooya::Simulator sim(model, nullptr, &stepper);
 
-    pooya::Simulator sim(model, nullptr, pooya::rk4);
+    pooya::History history(model);
 
     uint k = 0;
     double t;

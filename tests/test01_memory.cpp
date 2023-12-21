@@ -38,13 +38,13 @@ int main()
     // setup the model
     model.add_block(memory, x, y);
 
-    pooya::History history(model);
-
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
             values.set_scalar(x, std::sin(M_PI * t / 5));
         });
+
+    pooya::History history(model);
 
     uint k = 0;
     double t;

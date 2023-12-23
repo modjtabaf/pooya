@@ -23,24 +23,23 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class History : public std::unordered_map<Signal::Id, Eigen::MatrixXd>
+class History : public std::unordered_map<const SignalInfo*, Eigen::MatrixXd>
 {
-public:
-    static constexpr Signal::Id time_id = Signal::NoId - 1;
-
 protected:
     const Model& _model;
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
+    Eigen::ArrayXd _time;
 
 public:
     History(const Model& model, uint nrows_grow = 1000) :
-        _model(model), _nrows_grow(nrows_grow) {}
+        _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
     void update(uint k, double t, const Values& values);
     void export_csv(std::string filename);
     void shrink_to_fit();
     uint nrows() const {return _bottom_row + 1;}
+    const Eigen::ArrayXd& time() const {return _time;}
 };
 
 using InputCallback = std::function<void(Model&, double, Values&)>;

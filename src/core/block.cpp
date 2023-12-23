@@ -60,7 +60,7 @@ bool Block::_add_dependecny(const Signal& signal)
     if (std::find_if(_dependencies.begin(), _dependencies.end(),
         [&] (const Signal& s) -> bool
         {
-            return s.full_name() == signal.full_name();
+            return s.info() == signal.info();
         }) == _dependencies.end())
     {
         _dependencies.push_back(signal);

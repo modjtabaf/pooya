@@ -378,7 +378,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto T = history.at(pooya::History::time_id);
+    const auto& T = history.time();
     // auto q = history.at(model.find_signal(".q"));
     auto dq = history.at(model.find_signal(".dq"));
     auto a = history.at(model.find_signal("_angle"));

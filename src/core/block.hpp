@@ -142,11 +142,11 @@ public:
     const SignalRegistry& signal_registry() const {return _signal_registry;}
     SignalRegistry& signal_registry() {return _signal_registry;}
 
-    Signal::Id find_signal(const std::string& name, bool exact_match = false) const
+    const SignalInfo* find_signal(const std::string& name, bool exact_match = false) const
     {
         return _signal_registry.find_signal(name, exact_match);
     }
-    Signal::Id register_signal(const std::string& name, std::size_t size)
+    SignalInfo* register_signal(const std::string& name, std::size_t size)
     {
         return _signal_registry.register_signal(name, size);
     }

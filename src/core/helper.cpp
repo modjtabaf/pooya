@@ -22,34 +22,29 @@ namespace pooya
 
 void History::update(uint k, double t, const Values& values)
 {
-    auto n = _model.signal_registry().num_signals();
     if (empty())
     {
-        insert_or_assign(time_id, Array(_nrows_grow)); // t
-        for (Signal::Id id = 0; id < n; id++)
+        for (const auto& vi: values.value_infos())
         {
-            const auto& vi = values.get_value_info(id);
             if (vi._scalar)
-                insert_or_assign(id, Array(_nrows_grow));
+                insert_or_assign(&vi._si, Array(_nrows_grow));
             else
-                insert_or_assign(id, Eigen::MatrixXd(_nrows_grow, vi._array.size()));
+                insert_or_assign(&vi._si, Eigen::MatrixXd(_nrows_grow, vi._array.size()));
         }
     }
 
-    auto& h = at(time_id); // t
-    if (k >= h.rows())
-        h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-    h(k, 0) = t;
-    for (Signal::Id id = 0; id < n; id++)
+    if (k >= _time.rows())
+        _time.conservativeResize(k + _nrows_grow, Eigen::NoChange);
+    _time(k, 0) = t;
+    for (const auto& vi: values.value_infos())
     {
-        const auto& vi = values.get_value_info(id);
-        auto& h = at(id);
+        auto& h = at(&vi._si);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         if (vi._scalar)
-            h(k, 0) = values.get_scalar(id);
+            h(k, 0) = values.get_scalar(&vi._si);
         else
-            h.row(k) = values.get_array(id);
+            h.row(k) = values.get_array(&vi._si);
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))
@@ -60,14 +55,12 @@ void History::shrink_to_fit()
 {
     const uint nrows = _bottom_row + 1;
 
-    auto& h = at(time_id); // t
-    if (nrows >= h.rows()) // practically, nrows can't be the greater
+    if (nrows >= _time.rows()) // practically, nrows can't be the greater
         return;
 
-    h.conservativeResize(nrows, Eigen::NoChange);
-    auto n = _model.signal_registry().num_signals();
-    for (Signal::Id id = 0; id < n; id++)
-        at(id).conservativeResize(nrows, Eigen::NoChange);
+    _time.conservativeResize(nrows, Eigen::NoChange);
+    for (auto& p: *this)
+        p.second.conservativeResize(nrows, Eigen::NoChange);
 }
 
 void History::export_csv(std::string filename)
@@ -76,22 +69,20 @@ void History::export_csv(std::string filename)
         return;
 
     std::ofstream ofs(filename);
-    const auto& sig_reg = _model.signal_registry();
 
     // header
     ofs << "time";
     for (const auto& h: *this)
-        if (h.first != time_id)
-            ofs << "," << sig_reg.get_signal_by_id(h.first)._full_name;
+        ofs << "," << h.first->_full_name;
     ofs << "\n";
 
     // values
-    auto n = at(time_id).size();
+    auto n = time().size();
     for (int k = 0; k < n; k++)
     {
-        ofs << at(time_id)(k);
+        ofs << time()(k);
         for (const auto& h: *this)
-            if (h.first != time_id)
+            if (h.first != 0)
                 ofs << "," << h.second(k);
         ofs << "\n";
     }
@@ -175,9 +166,9 @@ uint Simulator::_process(double t, Values& values)
         {
             std::cout << "- " << c->full_name() << "\n";
             for (const auto& p: c->iports())
-                std::cout << "  - i: " << (values.valid(p) ? " " : "*") <<  p.full_name() << "\n";
+                std::cout << "  - i: " << (values.valid(p) ? " " : "*") <<  p.info()->_full_name << "\n";
             for (const auto& p: c->oports())
-                std::cout << "  - o: " << (values.valid(p) ? " " : "*") <<  p.full_name() << "\n";
+                std::cout << "  - o: " << (values.valid(p) ? " " : "*") <<  p.info()->_full_name << "\n";
         }
     }
     return n_processed;

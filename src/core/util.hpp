@@ -44,11 +44,4 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 // utility functions
 
-namespace pooya
-{
-
-std::string generate_random_name(int len=10);
-
-}
-
 #endif // __POOYA_UTIL_HPP__

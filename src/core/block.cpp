@@ -79,38 +79,25 @@ void Block::_assign_valid_given_name(std::string given_name)
 
     if (given_name.empty())
     {
-        given_name = generate_random_name();
-        std::cout << "Warning: given_name cannot be empty. Proceeding with the random name \"" << given_name << "\" instead.\n";
-    }
-    else if (given_name.find_first_of("./ ") != std::string::npos)
-    {
-        std::cout << "Warning: the given name \"" << given_name << "\" contains invalid characters.";
-        given_name = generate_random_name();
-        std::cout << " Proceeding with the random name \"" << given_name << "\" instead.\n";
-    }
-    else if (_parent)
-    {
-        if (!_parent->traverse(verify_unique_name_cb, 0, 1))
-        {
-            std::cout << "Warning: the given name \"" << given_name << "\" is already in use.";
-            given_name = generate_random_name();
-            std::cout << " Proceeding with the random name \"" << given_name << "\" instead.\n";
-        }
+        given_name = "unnamed_block";
     }
     else
     {
-        _given_name = given_name;
-        return;
-    }
-
-    while (!_parent->traverse(verify_unique_name_cb, 0, false))
-    {
-        std::cout << "Warning: the given name \"" << given_name << "\" is already in use.";
-        given_name = generate_random_name();
-        std::cout << "Proceeding with the random name \"" << given_name << "\" instead.\n";
+        std::replace(given_name.begin(), given_name.end(), ' ', '_');
+        std::replace(given_name.begin(), given_name.end(), '.', '_');
+        std::replace(given_name.begin(), given_name.end(), '/', '_');
     }
 
     _given_name = given_name;
+
+    if (_parent)
+    {
+        uint n = 0;
+        while (!_parent->traverse(verify_unique_name_cb, 0, false))
+            given_name = _given_name + "_" + std::to_string(n++);
+
+        _given_name = given_name;
+    }
 }
 
 void Block::_mark_unprocessed()

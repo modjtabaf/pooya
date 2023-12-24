@@ -30,15 +30,10 @@ std::string Signal::_make_valid_given_name(const std::string& given_name) const
 {
     std::string ret(given_name);
     if (given_name.empty())
-    {
-        ret = generate_random_name();
-    }
-    else if (given_name.find_first_of("/. ") != std::string::npos)
-    {
-        std::cout << "Warning: the signal name \"" << given_name << "\" contains invalid characters.";
-        ret = generate_random_name();
-        std::cout << " Proceeding with the random name \"" << ret << "\" instead.\n";
-    }
+        ret = "unnamed_signal";
+    std::replace(ret.begin(), ret.end(), ' ', '_');
+    std::replace(ret.begin(), ret.end(), '.', '_');
+    std::replace(ret.begin(), ret.end(), '/', '_');
     return ret;
 }
 

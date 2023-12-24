@@ -44,6 +44,7 @@ protected:
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
     uint16_t _num_oports{NoIOLimit};
+    std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
@@ -110,7 +111,8 @@ public:
 
     Signal signal(const std::string& given_name="", std::size_t size=0)
     {
-        return Signal(given_name, *this, size);
+        return Signal(given_name.empty() ?"unnamed_signal_" + std::to_string(_unnamed_signal_counter++) : given_name,
+            *this, size);
     }
 
     std::string make_signal_name(const std::string& given_name);

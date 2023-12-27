@@ -182,7 +182,8 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.find_signal(".phi");
+    auto& sig_reg = model.signal_registry();
+    auto phi = sig_reg.find_signal(".phi");
 
     history.shrink_to_fit();
 
@@ -191,8 +192,8 @@ int main()
     gp << "set yrange [-50:150]\n";
 	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi'"
         ","
-	    // << gp.file1d(history[model.find_signal(".dphi")]) << "with lines title 'dphi',"
-	    // << gp.file1d(history[model.find_signal(".tau")]) << "with lines title 'tau'"
+	    // << gp.file1d(history[sig_reg.find_signal(".dphi")]) << "with lines title 'dphi',"
+	    // << gp.file1d(history[sig_reg.find_signal(".tau")]) << "with lines title 'tau'"
         "\n";
 
     return 0;

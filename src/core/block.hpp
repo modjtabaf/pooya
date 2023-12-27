@@ -48,7 +48,7 @@ protected:
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
-    bool _add_dependecny(const Signal& signal);
+    bool _add_dependecny(Signal signal);
 
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -109,14 +109,12 @@ public:
             component->step(t, values);
     }
 
-    Signal signal(const std::string& given_name="", std::size_t size=0)
-    {
-        return Signal(given_name.empty() ?"unnamed_signal_" + std::to_string(_unnamed_signal_counter++) : given_name,
-            *this, size);
-    }
+    ScalarSignal signal(const std::string& given_name="");
+    ArraySignal  signal(const std::string& given_name, std::size_t size);
 
     std::string make_signal_name(const std::string& given_name);
-    Signal parameter(const std::string& given_name);
+    ScalarSignal parameter(const std::string& given_name);
+    ArraySignal  parameter(const std::string& given_name, std::size_t size);
     void _mark_unprocessed() override;
     uint _process(double t, Values& values, bool go_deep = true) override;
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
@@ -143,15 +141,6 @@ public:
 
     const SignalRegistry& signal_registry() const {return _signal_registry;}
     SignalRegistry& signal_registry() {return _signal_registry;}
-
-    const SignalInfo* find_signal(const std::string& name, bool exact_match = false) const
-    {
-        return _signal_registry.find_signal(name, exact_match);
-    }
-    SignalInfo* register_signal(const std::string& name, std::size_t size)
-    {
-        return _signal_registry.register_signal(name, size);
-    }
 
     virtual void input_cb(double /*t*/, Values& /*values*/) {}
 };
@@ -617,10 +606,16 @@ public:
 using Derivative  = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
 
-inline Signal Parent::parameter(const std::string& given_name)
+inline ScalarSignal Parent::parameter(const std::string& given_name)
 {
     auto* model_ = model();
-    return model_ ? Signal(given_name, *model_) : Signal();
+    return model_ ? model_->signal(given_name) : nullptr;
+}
+
+inline ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
+{
+    auto* model_ = model();
+    return model_ ? model_->signal(given_name, size) : nullptr;
 }
 
 }

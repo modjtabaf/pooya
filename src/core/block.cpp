@@ -55,13 +55,9 @@ bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
     return true;
 }
 
-bool Block::_add_dependecny(const Signal& signal)
+bool Block::_add_dependecny(Signal signal)
 {
-    if (std::find_if(_dependencies.begin(), _dependencies.end(),
-        [&] (const Signal& s) -> bool
-        {
-            return s.info() == signal.info();
-        }) == _dependencies.end())
+    if (std::find(_dependencies.begin(), _dependencies.end(), signal) == _dependencies.end())
     {
         _dependencies.push_back(signal);
         return true;
@@ -135,7 +131,19 @@ void SinT<double>::activation_function(double /*t*/, Values& values)
 
 std::string Parent::make_signal_name(const std::string& given_name)
 {
-    return _full_name + "." + given_name;
+    std::string name(given_name);
+    if (name.empty())
+    {
+        name = "unnamed_signal_" + std::to_string(_unnamed_signal_counter++);
+    }
+    else
+    {
+        std::replace(name.begin(), name.end(), ' ', '_');
+        std::replace(name.begin(), name.end(), '.', '_');
+        std::replace(name.begin(), name.end(), '/', '_');
+    }
+
+    return _full_name + "." + name;
 }
 
 void Parent::_mark_unprocessed()
@@ -178,6 +186,34 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
                 return false;
 
     return true;
+}
+
+ScalarSignal Parent::signal(const std::string& given_name)
+{
+    auto* model_ = model();
+    if (!model_) return nullptr;
+
+    std::string reg_name = make_signal_name(given_name);
+    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    if (!sig)
+        sig = model_->signal_registry().register_signal(reg_name);
+
+    verify_scalar_signal(sig);
+    return sig->as_scalar();
+}
+
+ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
+{
+    auto* model_ = model();
+    if (!model_) return nullptr;
+
+    std::string reg_name = make_signal_name(given_name);
+    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    if (!sig)
+        sig = model_->signal_registry().register_signal(reg_name, size);
+
+    verify_array_signal(sig);
+    return sig->as_array();
 }
 
 Model::Model(std::string given_name) : Parent(given_name, 0, 0)

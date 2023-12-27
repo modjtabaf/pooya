@@ -35,12 +35,30 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define scalar_output(index, value) set_output(double, index, value)
 #define  array_output(index, value) set_output(pooya::Array, index, value)
 
+#if defined(NDEBUG)
+#define verify(cond, msg)
+#else
 #define verify(cond, msg) \
     if (!(cond)) \
         throw std::runtime_error( \
             "\nPooya Exception:\n" + \
             std::string("  " __FILE__ ":") + std::to_string(__LINE__) + "\n" \
             "  " + (msg) + "\n")
+#endif // defined(NDEBUG)
+
+#define  verify_valid_signal(sig) verify(sig, "invalid signal!")
+
+#define  verify_value_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_value(), (sig)->_full_name + ": value signal expected!");
+
+#define verify_scalar_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_scalar(), (sig)->_full_name + ": scalar signal expected!");
+
+#define verify_array_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
 // utility functions
 

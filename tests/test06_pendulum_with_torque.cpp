@@ -117,8 +117,9 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.find_signal("/pendulum.phi");
-    auto dphi = model.find_signal(        ".dphi");
+    auto& sig_reg = model.signal_registry();
+    auto  phi = sig_reg.find_signal("/pendulum.phi");
+    auto dphi = sig_reg.find_signal(        ".dphi");
 
     history.shrink_to_fit();
 

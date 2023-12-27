@@ -26,32 +26,6 @@ SignalRegistry::~SignalRegistry()
         delete si;
 }
 
-std::string Signal::_make_valid_given_name(const std::string& given_name) const
-{
-    std::string ret(given_name);
-    if (given_name.empty())
-        ret = "unnamed_signal";
-    std::replace(ret.begin(), ret.end(), ' ', '_');
-    std::replace(ret.begin(), ret.end(), '.', '_');
-    std::replace(ret.begin(), ret.end(), '/', '_');
-    return ret;
-}
-
-void Signal::_set_owner(Parent& owner, std::size_t size)
-{
-    assert(!_si);
-    if (_si) return;
-
-    auto* model = owner.model();
-    if (!model) return;
-
-    std::string reg_name = owner.make_signal_name(_given_name);
-    _si = model->signal_registry().find_signal(reg_name, true);
-    verify(!_si || _si->_size == size, _given_name + ": size mismatch");
-    if (!_si)
-        _si = model->signal_registry().register_signal(reg_name, size);
-}
-
 Values::Values(const pooya::Model& model)
 {
     const auto& signals = model.signal_registry().signals();
@@ -61,9 +35,10 @@ Values::Values(const pooya::Model& model)
     // find the total sizes of signals and states
     for (const auto* signal: signals)
     {
-        auto size = std::max<std::size_t>(signal->_size, 1);
+        if (!signal->as_value()) continue;
+        auto size = signal->as_scalar() ? 1 : signal->as_array()->_size;
         _total_size += size;
-        if (signal->is_state())
+        if (signal->as_value()->is_state())
             states_size += size;
     }
 
@@ -74,9 +49,11 @@ Values::Values(const pooya::Model& model)
 
     for (const auto* signal: signals)
     {
-        auto& start = signal->is_state() ? state_start : other_start;
-        _value_infos.push_back({*signal, start, signal->_size});
-        start += std::max<std::size_t>(signal->_size, 1);
+        if (!signal->as_value()) continue;
+        auto& start = signal->as_value()->is_state() ? state_start : other_start;
+        auto size = signal->as_scalar() ? 0 : signal->as_array()->_size;
+        _value_infos.push_back({*signal->as_value(), start, size});
+        start += std::max<std::size_t>(size, 1);
     }
 
     assert(state_start == _values.data() + states_size);
@@ -91,28 +68,30 @@ Values::Values(const pooya::Model& model)
 
     for (const auto* signal: signals)
     {
-        if (!signal->is_state())
+        if (!signal->as_value()) continue;
+        if (!signal->as_value()->is_state())
             continue;
 
-        auto& deriv_vi = get_value_info(signal->_deriv_si);
-        if (signal->is_scalar())
+        auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
+        if (signal->as_scalar())
             deriv_vi._deriv_scalar = deriv_start;
         else
-            new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->_size);
+            new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->as_array()->_size);
 
-        deriv_start += std::max<std::size_t>(signal->_size, 1);
+        deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }
 
     for (const auto* signal: signals)
     {
-        if (!signal->is_state())
+        if (!signal->as_value()) continue;
+        if (!signal->as_value()->is_state())
             continue;
 
-        auto& vi = get_value_info(signal);
-        if (signal->is_scalar())
-            _set(vi, signal->_iv[0]);
+        auto& vi = get_value_info(signal->as_value());
+        if (signal->as_scalar())
+            _set(vi, signal->as_scalar()->iv());
         else
-            _set(vi, signal->_iv);
+            _set(vi, signal->as_array()->iv());
     }
 }
 
@@ -124,7 +103,7 @@ void Values::set_states(const Eigen::ArrayXd& states)
         if (!(vi._assigned = vi._si.is_state()))
             continue;
 
-        if (vi._si._is_deriv)
+        if (vi._si.is_deriv())
         {
             if (vi._deriv_scalar)
                 *vi._deriv_scalar = *vi._scalar;
@@ -134,7 +113,7 @@ void Values::set_states(const Eigen::ArrayXd& states)
     }
 }
 
-const SignalInfo* SignalRegistry::find_signal(const std::string& name, bool exact_match) const
+Signal SignalRegistry::find_signal(const std::string& name, bool exact_match) const
 {
     if (name.empty())
         return nullptr;
@@ -142,47 +121,56 @@ const SignalInfo* SignalRegistry::find_signal(const std::string& name, bool exac
     auto name_len = name.length();
 
     auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
-        [&] (const SignalInfo* si) -> bool
+        [&] (Signal sig) -> bool
         {
             if (exact_match)
-                return si->_full_name == name;
+                return sig->_full_name == name;
                 
-            auto str_len = si->_full_name.length();
-            return (str_len >= name_len) && (si->_full_name.substr(str_len - name_len) == name);
+            auto str_len = sig->_full_name.length();
+            return (str_len >= name_len) && (sig->_full_name.substr(str_len - name_len) == name);
         });
 
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-SignalInfo* SignalRegistry::register_signal(const std::string& name, std::size_t size)
+ScalarSignal SignalRegistry::register_signal(const std::string& name)
 {
     if (name.empty()) return nullptr;
 
-    const SignalInfo* si = find_signal(name, true);
-    verify(!si, "Re-registering a signal is not allowed!");
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
-    auto* si_new = new SignalInfo(name, index, size);
-    _signal_infos.push_back(si_new);
+    auto* sig = new ScalarSignalInfo(name, index);
+    _signal_infos.push_back(sig);
 
-    return si_new;
+    return sig;
 }
 
-SignalInfo* SignalRegistry::_register_state(const SignalInfo* si, const SignalInfo* deriv_si)
+ArraySignal SignalRegistry::register_signal(const std::string& name, std::size_t size)
 {
-    verify(si, "invalid state info!");
-    verify(deriv_si, "invalid derivative info!");
+    if (name.empty()) return nullptr;
 
-    // auto& si = _signal_infos[id];
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
 
-    verify(!si->is_state(), si->_full_name + ": signal is already registered as a state!");
+    auto index = _signal_infos.size();
+    auto* sig = new ArraySignalInfo(name, index, size);
+    _signal_infos.push_back(sig);
 
-    // auto& deriv_si = _signal_infos[deriv_id];
-    verify(!deriv_si->_is_deriv, si->_full_name + ": signal is already registered as a state derivative!");
+    return sig;
+}
 
-    auto* ret = _signal_infos[si->_index];
-    ret->_deriv_si = deriv_si;
-    _signal_infos[deriv_si->_index]->_is_deriv = true;
+ValueSignalInfo* SignalRegistry::_register_state(Signal sig, Signal deriv_sig)
+{
+    verify_value_signal(sig);
+    verify_value_signal(deriv_sig);
+    verify(!sig->_value->is_state(), sig->_full_name + ": signal is already registered as a state!");
+    verify(!deriv_sig->_value->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state derivative!");
+    verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
+        sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
+
+    ValueSignalInfo* ret = _signal_infos[sig->_value->_index]->_value;
+    ret->_deriv_sig = deriv_sig->_value;
+    _signal_infos[deriv_sig->_value->_index]->_value->_is_deriv = true;
 
     return ret;
 }

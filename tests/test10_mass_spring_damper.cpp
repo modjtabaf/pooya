@@ -117,7 +117,8 @@ int main()
 
     history.shrink_to_fit();
 
-    auto x = model.find_signal(".x");
+    auto& sig_reg = model.signal_registry();
+    auto x = sig_reg.find_signal(".x");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

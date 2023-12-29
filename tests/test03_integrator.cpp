@@ -42,7 +42,7 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set_scalar(xd, t < 3 or t > 7 ? 1.0 : 0.0);
+            values.set(xd, t < 3 or t > 7 ? 1.0 : 0.0);
         },
         &stepper);
 

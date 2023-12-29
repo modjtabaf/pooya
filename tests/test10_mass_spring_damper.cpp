@@ -31,21 +31,21 @@ protected:
     double  _x0;
     double _xd0;
 
-    pooya::Signal _s_tau;
-    pooya::Signal   _s_x;
-    pooya::Signal  _s_xd;
-    pooya::Signal _s_xdd;
+    pooya::ScalarSignal _s_tau;
+    pooya::ScalarSignal   _s_x;
+    pooya::ScalarSignal  _s_xd;
+    pooya::ScalarSignal _s_xdd;
 
 public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
-        pooya::Block(given_name), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
+        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
 
     bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals&) override
     {
         if (!pooya::Block::init(parent, iports))
             return false;
 
-        _s_tau = iports[0];
+        iports.bind(0, _s_tau);
 
         _s_x   = parent.signal(  "x");
         _s_xd  = parent.signal( "xd");
@@ -65,15 +65,15 @@ public:
     void activation_function(double /*t*/, pooya::Values& values) override
     {
         // get states and input
-        double   x = values.get_scalar(  _s_x);
-        double  xd = values.get_scalar( _s_xd);
-        double tau = values.get_scalar(_s_tau);
+        double   x = values.get(  _s_x);
+        double  xd = values.get( _s_xd);
+        double tau = values.get(_s_tau);
 
         // calculate acceleration
         double xdd = tau/_m - _c/_m * xd - _k/_m * x;
 
         // assign acceleration
-        values.set_scalar(_s_xdd, xdd);
+        values.set(_s_xdd, xdd);
     }
 };
 
@@ -96,7 +96,7 @@ int main()
     pooya::Simulator sim(model,
     [&](pooya::Model&, double t, pooya::Values& values) -> void
     {
-        values.set_scalar(tau, 0.01 * std::sin(t));
+        values.set(tau, 0.01 * std::sin(t));
     }, &stepper);
 
     pooya::History history(model);

@@ -53,7 +53,7 @@ public:
 
     void input_cb(double t, pooya::Values& values) override
     {
-        values.set_scalar(_s_x, std::sin(M_PI * t / 5));
+        values.set(_s_x, std::sin(M_PI * t / 5));
     }
 };
 

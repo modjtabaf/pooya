@@ -27,14 +27,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 // #undef POOYA_HERE0
 // #define POOYA_HERE0
 
-#define  get_input(T, index) values.get<T>(_iports[index])
-#define  scalar_input(index) get_input(double, index)
-#define   array_input(index) get_input(pooya::Array, index)
-
-#define set_output(T, index, value) values.set<T>(_oports[index], value)
-#define scalar_output(index, value) set_output(double, index, value)
-#define  array_output(index, value) set_output(pooya::Array, index, value)
-
 #if defined(NDEBUG)
 #define verify(cond, msg)
 #else

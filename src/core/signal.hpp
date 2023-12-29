@@ -56,6 +56,18 @@ using ScalarSignal = const ScalarSignalInfo*;
 using  ArraySignal = const  ArraySignalInfo*;
 using    BusSignal = const    BusSignalInfo*;
 
+template<typename T>
+struct Types
+{
+    using Signal = ArraySignal;
+};
+
+template<>
+struct Types<double>
+{
+    using Signal = ScalarSignal;
+};
+
 class SignalInfo
 {
     friend class SignalRegistry;
@@ -188,6 +200,18 @@ public:
     {
         push_back(signal);
     }
+
+    void bind(std::size_t index, ScalarSignal& sig) const
+    {
+        verify_scalar_signal(at(index));
+        sig = at(index)->as_scalar();
+    }
+
+    void bind(std::size_t index, ArraySignal& sig) const
+    {
+        verify_array_signal(at(index));
+        sig = at(index)->as_array();
+    }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
@@ -198,27 +222,78 @@ inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
     return os;
 }
 
+struct ValueInfo
+{
+    friend class Values;
+
+public:
+    const ValueSignalInfo& _si;              // corresponding signal info
+
+protected:
+    bool _assigned{false};                   // has the value been assigned?
+
+    double* _scalar{nullptr};                // valid if this is a scalar signal, nullptr otherwise
+    Eigen::Map<Eigen::ArrayXd> _array;       // used only if this is an array signal, empty otherwise
+
+    double* _deriv_scalar{nullptr};          // only valid if _is_deriv member of the signal info is true and this is a scalar signal, nullptr otherwise
+    Eigen::Map<Eigen::ArrayXd> _deriv_array; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
+
+    ValueInfo(const ValueSignalInfo& si, double* data, std::size_t size) :
+        _si(si), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
+        _deriv_array(nullptr, 0) {}
+
+public:
+    template<typename T>
+    const auto& get() const
+    {
+        verify(_scalar == nullptr, _si._full_name + ": attempting to retrieve a scalar as an array!");
+        verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
+        return _array;
+    }
+
+    template<typename T>
+    void set(const T& value)
+    {
+        verify(_scalar == nullptr, _si._full_name + ": cannot assign non-scalar to scalar!");
+        verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
+        verify(_array.rows() == value.rows(),
+            std::string("size mismatch (id=") + _si._full_name + ")(" + std::to_string(_array.rows()) +
+            " vs " + std::to_string(value.rows()) + ")!");
+        _array = value;
+        if (_si.is_deriv())
+            _deriv_array = value;
+        _assigned = true;
+    }
+
+    bool is_assigned() const {return _assigned;}
+    bool is_scalar() const {return _scalar != nullptr;}
+    std::size_t size() const
+    {
+        return _scalar == nullptr ? _array.size() : 0;
+    }
+};
+
+template<>
+inline const auto& ValueInfo::get<double>() const
+{
+    verify(_scalar != nullptr, _si._full_name + ": attempting to retrieve an array as a scalar!");
+    verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
+    return *_scalar;
+}
+
+template<>
+inline void ValueInfo::set<double>(const double& value)
+{
+    verify(_scalar != nullptr, _si._full_name + ": cannot assign scalar to non-scalar!");
+    verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
+    *_scalar = value;
+    if (_si.is_deriv())
+        *_deriv_scalar = value;
+    _assigned = true;
+}
+
 class Values
 {
-public:
-    struct ValueInfo
-    {
-        const ValueSignalInfo& _si;              // corresponding signal info
-        bool _assigned{false};                   // has the value been assigned?
-
-        double* _scalar{nullptr};                // valid if this is a scalar signal, nullptr otherwise
-        Eigen::Map<Eigen::ArrayXd> _array;       // used only if this is an array signal, empty otherwise
-
-        double* _deriv_scalar{nullptr};          // only valid if _is_deriv member of the signal info is true and this is a scalar signal, nullptr otherwise
-        Eigen::Map<Eigen::ArrayXd> _deriv_array; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
-    
-        ValueInfo(const ValueSignalInfo& si, double* data, std::size_t size) :
-            _si(si), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
-            _deriv_array(nullptr, 0) {}
-
-        bool is_assigned() const {return _assigned;}
-    };
-
 protected:
     std::vector<ValueInfo> _value_infos;
     std::size_t             _total_size{0};
@@ -226,25 +301,10 @@ protected:
     Eigen::Map<Eigen::ArrayXd>  _states{nullptr, Eigen::Dynamic};
     Eigen::ArrayXd              _derivs;
 
-    inline ValueInfo& get_value_info(ValueSignal si)
+    inline ValueInfo& get_value_info(Signal si)
     {
-        verify(si, "invalid signal info!");
-        return _value_infos[si->_index];
-    }
-
-    template<typename T>
-    auto _get(const ValueInfo& vi) const -> const auto;
-
-    template<typename T>
-    void _set(ValueInfo& vi, const T& value)
-    {
-        verify(vi._array.rows() == value.rows(),
-            std::string("size mismatch (id=") + vi._si._full_name + ")(" + std::to_string(vi._array.rows()) +
-            " vs " + std::to_string(value.rows()) + ")!");
-        vi._array = value;
-        if (vi._si.is_deriv())
-            vi._deriv_array = value;
-        vi._assigned = true;
+        verify_value_signal(si);
+        return _value_infos[si->as_value()->_index];
     }
 
 public:
@@ -268,26 +328,26 @@ public:
     const decltype(_derivs)& derivs() const {return _derivs;}
 
     template<typename T>
-    auto get(Signal sig) const -> const auto
+    const auto& get(Signal sig) const
     {
-        const auto& vi = get_value_info(sig);
-        verify(vi.is_assigned(), "attempting to access an unassigned value!");
-        return _get<T>(vi);
+        return get_value_info(sig).get<T>();
     }
 
-    double get_scalar(Signal sig) const;
-    auto    get_array(Signal sig) const;
+    double        get(ScalarSignal sig) const {return get<double>(sig);}
+    double get_scalar(Signal       sig) const {return get<double>(sig);}
+    const auto&       get(ArraySignal sig) const {return get<Array>(sig);}
+    const auto& get_array(Signal      sig) const {return get<Array>(sig);}
 
     template<typename T>
     void set(Signal sig, const T& value)
     {
-        auto& vi = get_value_info(sig->as_value());
-        verify(!vi.is_assigned(), sig->_full_name + ": re-assignment is prohibited!");
-        _set<T>(vi, value);
+        get_value_info(sig).set<T>(value);
     }
 
-    void set_scalar(Signal sig, double value);
-    void  set_array(Signal sig, const Array& value);
+    void        set(ScalarSignal sig, double value) {set<double>(sig, value);}
+    void set_scalar(Signal       sig, double value) {set<double>(sig, value);}
+    // void       set(ArraySignal sig, const Array& value) {set<Array>(sig, value);} // ambiguous
+    void set_array(Signal      sig, const Array& value) {set<Array>(sig, value);}
 
     void set_states(const Eigen::ArrayXd& states);
 
@@ -302,36 +362,6 @@ public:
         os << "\n";
     }
 };
-
-template<>
-inline auto Values::_get<Array>(const Values::ValueInfo& vi) const -> const auto
-{
-    verify(!vi._scalar, vi._si._full_name + ": attempting to retrieve a scalar as an array!");
-    return vi._array;
-}
-
-template<>
-inline auto Values::_get<double>(const Values::ValueInfo& vi) const -> const auto
-{
-    verify(vi._scalar, "attempting to retrieve an array as a scalar!");
-    return *vi._scalar;
-}
-
-inline double Values::get_scalar(Signal sig) const {return get<double>(sig);}
-inline auto   Values::get_array (Signal sig) const {return get<Array> (sig);}
-
-template<>
-inline void Values::_set<double>(ValueInfo& vi, const double& value)
-{
-    verify(vi._scalar, "cannot assign scalar to array!");
-    *vi._scalar = value;
-    if (vi._si.is_deriv())
-        *vi._deriv_scalar = value;
-    vi._assigned = true;
-}
-
-inline void Values::set_scalar(Signal sig,       double value) {set<double>(sig, value);}
-inline void Values::set_array (Signal sig, const Array& value) {set<Array> (sig, value);}
 
 inline std::ostream& operator<<(std::ostream& os, const Values& values)
 {

@@ -26,10 +26,10 @@ void History::update(uint k, double t, const Values& values)
     {
         for (const auto& vi: values.value_infos())
         {
-            if (vi._scalar)
+            if (vi.is_scalar())
                 insert_or_assign(&vi._si, Array(_nrows_grow));
             else
-                insert_or_assign(&vi._si, Eigen::MatrixXd(_nrows_grow, vi._array.size()));
+                insert_or_assign(&vi._si, Eigen::MatrixXd(_nrows_grow, vi.size()));
         }
     }
 
@@ -41,7 +41,7 @@ void History::update(uint k, double t, const Values& values)
         auto& h = at(&vi._si);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-        if (vi._scalar)
+        if (vi.is_scalar())
             h(k, 0) = values.get_scalar(&vi._si);
         else
             h.row(k) = values.get_array(&vi._si);

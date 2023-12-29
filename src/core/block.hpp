@@ -327,6 +327,7 @@ class MulDivT : public Block
 protected:
     std::string _operators;
     T             _initial;
+    T                 _ret;
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
@@ -345,20 +346,20 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        T ret = _initial;
+        _ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
             const auto &v = values.get<T>(signal);
             if (*p == '*')
-                ret *= v;
+                _ret *= v;
             else if (*p == '/')
-                ret /= v;
+                _ret /= v;
             else
                  assert(false);
             p++;
         }
-        values.set<T>(_oports[0], ret);
+        values.set<T>(_oports[0], _ret);
     }
 };
 
@@ -478,9 +479,9 @@ public:
             return false;
 
         // input signals
-        _iports.bind(0, _s_x       );
-        _iports.bind(1, _s_delay   );
-        _iports.bind(2, _s_initial );
+        _iports.bind(0, _s_x);
+        _iports.bind(1, _s_delay);
+        _iports.bind(2, _s_initial);
 
         // output signal
         _oports.bind(0, _s_y);

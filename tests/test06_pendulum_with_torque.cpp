@@ -94,10 +94,10 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set_scalar(  m,  0.2);
-            values.set_scalar(  l,  0.1);
-            values.set_scalar(  g, 9.81);
-            values.set_scalar(tau, 0.13);
+            values.set(  m,  0.2);
+            values.set(  l,  0.1);
+            values.set(  g, 9.81);
+            values.set(tau, 0.13);
         },
         &stepper, true);
 

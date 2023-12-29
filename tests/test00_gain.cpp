@@ -41,7 +41,7 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set_scalar(x, std::sin(M_PI * t / 5));
+            values.set(x, std::sin(M_PI * t / 5));
         });
 
     pooya::History history(model);

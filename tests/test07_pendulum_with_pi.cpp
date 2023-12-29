@@ -159,10 +159,10 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set_scalar(      m,    0.2);
-            values.set_scalar(      l,    0.1);
-            values.set_scalar(      g,   9.81);
-            values.set_scalar(des_phi, M_PI_4);
+            values.set(      m,    0.2);
+            values.set(      l,    0.1);
+            values.set(      g,   9.81);
+            values.set(des_phi, M_PI_4);
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference
 

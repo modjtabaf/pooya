@@ -353,8 +353,8 @@ protected:
     ChassisDynamics _chdyn;
 
     // input signals
-    pooya::Signal _s_delta_Rq;
-    pooya::Signal _s_engine_torque;
+    pooya::ScalarSignal _s_delta_Rq;
+    pooya::ScalarSignal _s_engine_torque;
 
 public:
     SimpleTruckModel() : pooya::Model("SimpleTruck"), _chdyn(_params)
@@ -381,8 +381,8 @@ public:
         else
             delta_Rq = 0;
 
-        values.set_scalar(     _s_delta_Rq, delta_Rq);
-        values.set_scalar(_s_engine_torque,   5000.0);
+        values.set(     _s_delta_Rq, delta_Rq);
+        values.set(_s_engine_torque,   5000.0);
     }
 };
 
@@ -418,7 +418,7 @@ int main()
     const auto& T = history.time();
     // auto q = history.at(sig_reg.find_signal(".q"));
     auto dq = history.at(sig_reg.find_signal(".dq"));
-    auto a = history.at(sig_reg.find_signal("_angle"));
+    auto a  = history.at(sig_reg.find_signal("_angle"));
 
     const auto& vx = dq.col(0);
     const auto& vy = dq.col(1);

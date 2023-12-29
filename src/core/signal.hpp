@@ -41,7 +41,16 @@ public:
     }
 };
 
-using Array = ArrayN<>;
+using Array  = ArrayN<>;
+using Array1 = ArrayN<1>; // use a scalar instead
+using Array2 = ArrayN<3>;
+using Array3 = ArrayN<3>;
+using Array4 = ArrayN<4>;
+using Array5 = ArrayN<5>;
+using Array6 = ArrayN<6>;
+using Array7 = ArrayN<7>;
+using Array8 = ArrayN<8>;
+using Array9 = ArrayN<9>;
 
 class SignalRegistry;
 class       SignalInfo;

@@ -118,7 +118,7 @@ public:
         double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
         double F_lon = F * cos(delta) - 500 * dq(0);
 
-        pooya::ArrayN<3> F_lat;
+        pooya::Array3 F_lat;
         F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
 
         // set outputs
@@ -190,7 +190,7 @@ public:
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // second derivatives
-        pooya::ArrayN<4> d2q;
+        pooya::Array4 d2q;
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);
@@ -313,8 +313,8 @@ protected:
     PT                     _pt{0.1};
     Forces             _forces;
     EquationsOfMotion     _eom;
-    pooya::IntegratorA _integ1{"dq", pooya::ArrayN<4>::Zero()};
-    pooya::IntegratorA _integ2{ "q", pooya::ArrayN<4>::Zero()};
+    pooya::IntegratorA _integ1{"dq", pooya::Array4::Zero()};
+    pooya::IntegratorA _integ2{ "q", pooya::Array4::Zero()};
 
 public:
     ChassisDynamics(Parameters& params) : pooya::Submodel("ChassisDynamics"), _eom(params) {}

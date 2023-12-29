@@ -126,7 +126,7 @@ Model* Block::model()
 template<>
 void SinT<double>::activation_function(double /*t*/, Values& values)
 {
-    scalar_output(0, std::sin(scalar_input(0)));
+    values.set(_oports[0], std::sin(values.get_scalar(_iports[0])));
 }
 
 std::string Parent::make_signal_name(const std::string& given_name)

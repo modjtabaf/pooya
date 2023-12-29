@@ -159,11 +159,11 @@ public:
     {
         if (_init)
         {
-            _value = get_input(T, 0);
+            _value = values.get<T>(_iports[0]);
             _iports.clear();
             _init = false;
         }
-        set_output(T, 0, _value);
+        values.set<T>(_oports[0], _value);
     }
 };
 
@@ -181,7 +181,7 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        set_output(T, 0, _value);
+        values.set<T>(_oports[0], _value);
     }
 };
 
@@ -199,7 +199,7 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        set_output(T, 0, _k * get_input(T, 0));
+        values.set<T>(_oports[0], _k * values.get<T>(_iports[0]));
     }
 };
 
@@ -214,18 +214,12 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        if constexpr (std::is_same_v<T, double>)
-        {
-            double x = scalar_input(0);
-            scalar_output(0, std::sin(x));
-        }
-        else
-        {
-            const T& x = array_input(0);
-            array_output(0, x.sin());
-        }
+        values.set<T>(_oports[0], values.get<T>(_iports[0]).sin());
     }
 };
+
+template<>
+void SinT<double>::activation_function(double, Values&);
 
 using Sin  = SinT<double>;
 using SinA = SinT<Array>;
@@ -245,7 +239,7 @@ public:
 
     void activation_function(double t, Values& values) override
     {
-        set_output(T, 0, _act_func(t, get_input(T, 0)));
+        values.set<T>(_oports[0], _act_func(t, values.get<T>(_iports[0])));
     }
 };
 
@@ -258,6 +252,7 @@ class AddSubT : public Block
 protected:
     std::string _operators;
     T             _initial;
+    T                 _ret;
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override
     {
@@ -277,20 +272,20 @@ public:
 
     void activation_function(double /*t*/, Values& values) override
     {
-        T ret = _initial;
+        _ret = _initial;
         const char* p = _operators.c_str();
         for (const auto& signal: _iports)
         {
             const auto &v = values.get<T>(signal);
             if (*p == '+')
-                ret += v;
+                _ret += v;
             else if (*p == '-')
-                ret -= v;
+                _ret -= v;
             else
                  assert(false);
             p++;
         }
-        set_output(T, 0, ret);
+        values.set<T>(_oports[0], _ret);
     }
 };
 
@@ -363,7 +358,7 @@ public:
                  assert(false);
             p++;
         }
-        set_output(T, 0, ret);
+        values.set<T>(_oports[0], ret);
     }
 };
 
@@ -421,7 +416,7 @@ public:
     void step(double /*t*/, const Values& values) override
     {
         assert(values.valid(_oports[0]));
-        _value = get_input(T, 0);
+        _value = values.get<T>(_iports[0]);
     }
 
     uint _process(double /*t*/, Values& values, bool /*go_deep*/ = true) override
@@ -466,8 +461,32 @@ protected:
     std::vector<double> _t;
     std::vector<T> _x;
 
+    // input signals
+    typename pooya::Types<T>::Signal _s_x;       // [0]
+    pooya::ScalarSignal              _s_delay;   // [1]
+    typename pooya::Types<T>::Signal _s_initial; // [2]
+
+    // output signal
+    typename pooya::Types<T>::Signal _s_y; // [0]
+
 public:
     DelayT(std::string given_name, double lifespan=10.0) : Block(given_name, 3, 1), _lifespan(lifespan) {}
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override
+    {
+        if (!Block::init(parent, iports, oports))
+            return false;
+
+        // input signals
+        _iports.bind(0, _s_x       );
+        _iports.bind(1, _s_delay   );
+        _iports.bind(2, _s_initial );
+
+        // output signal
+        _oports.bind(0, _s_y);
+
+        return true;
+    }
 
     void step(double t, const Values& values) override
     {
@@ -485,28 +504,28 @@ public:
             _x.erase(_x.begin(), _x.begin() + k);
         }
 
-        assert(_t.empty() or (t > _t.back()));
+        assert(_t.empty() || (t > _t.back()));
         _t.push_back(t);
-        _x.push_back(get_input(T, 0));
+        _x.push_back(values.get(_s_x));
     }
 
     void activation_function(double t, Values& values) override
     {
         if (_t.empty())
         {
-            set_output(T, 0, get_input(T, 2));
+            values.set(_s_y, values.get(_s_initial));
             return;
         }
     
-        double delay = scalar_input(1);
+        double delay = values.get(_s_delay);
         t -= delay;
         if (t <= _t[0])
         {
-            set_output(T, 0, get_input(T, 2));
+            values.set(_s_y, values.get(_s_initial));
         }
         else if (t >= _t.back())
         {
-            set_output(T, 0, _x.back());
+            values.set(_s_y, _x.back());
         }
         else
         {
@@ -518,7 +537,7 @@ public:
                 k++;
             }
 
-            set_output(T, 0, (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
+            values.set(_s_y, (_x[k] - _x[k - 1])*(t - _t[k - 1])/(_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
@@ -538,7 +557,7 @@ public:
 
     void step(double /*t*/, const Values& values) override
     {
-        _value = get_input(T, 0);
+        _value = values.get<T>(_iports[0]);
     }
 
     // # Memory can be implemented either by defining the following activation function
@@ -554,7 +573,7 @@ public:
         if (_processed)
             return 0;
 
-        set_output(T, 0, _value);
+        values.set<T>(_oports[0], _value);
         _processed = true;
         return 1;
     }
@@ -579,7 +598,7 @@ public:
     void step(double t, const Values& values) override
     {
         _t = t;
-        _x = get_input(T, 0);
+        _x = values.get<T>(_iports[0]);
         _y = _x;
         _first_step = false;
     }
@@ -589,16 +608,16 @@ public:
         if (_first_step)
         {
             _t = t;
-            _x = get_input(T, 0);
-            set_output(T, 0, _y);
+            _x = values.get<T>(_iports[0]);
+            values.set<T>(_oports[0], _y);
         }
         else if (_t == t)
         {
-            set_output(T, 0, _y);
+            values.set<T>(_oports[0], _y);
         }
         else
         {
-            set_output(T, 0, (get_input(T, 0) - _x)/(t - _t));
+            values.set<T>(_oports[0], (values.get<T>(_iports[0]) - _x)/(t - _t));
         }
     }
 };

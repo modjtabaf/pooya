@@ -76,23 +76,54 @@ struct Parameters
 
 class Forces : public pooya::Block
 {
+protected:
+    // input signals
+    pooya::ScalarSignal         _s_delta; // [0]
+    pooya::ScalarSignal _s_engine_torque; // [1]
+    pooya::ArraySignal             _s_dq; // [2]
+
+    // output signals
+    pooya::ScalarSignal _s_F_lon; // [0]
+    pooya::ArraySignal  _s_F_lat; // [1]
+
 public:
     Forces() : pooya::Block("Forces", 3, 2) {}
 
+    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    {
+        if (!pooya::Block::init(parent, iports, oports))
+            return false;
+
+        // input signals
+        iports.bind(0, _s_delta);
+        iports.bind(1, _s_engine_torque);
+        iports.bind(2, _s_dq);
+
+        // output signals
+        oports.bind(0, _s_F_lon);
+        oports.bind(1, _s_F_lat);
+
+        return true;
+    }
+
     void activation_function(double /*t*/, pooya::Values& values) override
     {
-        double           delta = scalar_input(0);
-        double   engine_torque = scalar_input(1);
-        const pooya::Array& dq =  array_input(2);
+        // get inputs
+        double           delta = values.get(_s_delta);
+        double   engine_torque = values.get(_s_engine_torque);
+        const pooya::Array& dq = values.get(_s_dq);
+
+        // do the math
 
         double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
         double F_lon = F * cos(delta) - 500 * dq(0);
 
-        pooya::Array F_lat(3);
+        pooya::ArrayN<3> F_lat;
         F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
 
-        scalar_output(0, F_lon);
-        array_output(1, F_lat);
+        // set outputs
+        values.set(_s_F_lon, F_lon);
+        values.set(_s_F_lat, F_lat);
     }
 };
 
@@ -102,14 +133,14 @@ protected:
     Parameters& _p;
 
     // input signals
-    pooya::Signal _s_delta;
-    pooya::Signal _s_F_lon;
-    pooya::Signal _s_F_lat;
-    pooya::Signal     _s_q;
-    pooya::Signal    _s_dq;
+    pooya::ScalarSignal _s_delta;
+    pooya::ScalarSignal _s_F_lon;
+    pooya::ArraySignal  _s_F_lat;
+    pooya::ArraySignal      _s_q;
+    pooya::ArraySignal     _s_dq;
 
     // output signal
-    pooya::Signal _s_d2q;
+    pooya::ArraySignal _s_d2q;
 
 public:
     EquationsOfMotion(Parameters& params) : pooya::Block("EquationsOfMotion", 5, 1), _p(params) {}
@@ -119,25 +150,29 @@ public:
         if (!pooya::Block::init(parent, iports, oports))
             return false;
 
-        _s_delta = iports[0];
-        _s_F_lon = iports[1];
-        _s_F_lat = iports[2];
-        _s_q     = iports[3];
-        _s_dq    = iports[4];
+        // input signals
+        iports.bind(0, _s_delta);
+        iports.bind(1, _s_F_lon);
+        iports.bind(2, _s_F_lat);
+        iports.bind(3, _s_q);
+        iports.bind(4, _s_dq);
 
-        _s_d2q   = oports[0];
+        // output signal
+        oports.bind(0, _s_d2q);
 
         return true;
     }
 
     void activation_function(double /*t*/, pooya::Values& values) override
     {
-        // inputs
-        double              delta = values.get_scalar(_s_delta);
-        double              F_lon = values.get_scalar(_s_F_lon);
-        const pooya::Array& F_lat = values.get_array(_s_F_lat);
-        const pooya::Array&     q = values.get_array(_s_q);
-        const pooya::Array&    dq = values.get_array(_s_dq);
+        // get inputs
+        double              delta = values.get(_s_delta);
+        double              F_lon = values.get(_s_F_lon);
+        const pooya::Array& F_lat = values.get(_s_F_lat);
+        const pooya::Array&     q = values.get(_s_q);
+        const pooya::Array&    dq = values.get(_s_dq);
+
+        // do the math
 
         // lateral force components of axles
         double Fyf = F_lat[0];
@@ -155,7 +190,7 @@ public:
         // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         // second derivatives
-        pooya::Array d2q(4);
+        pooya::ArrayN<4> d2q;
 
         double s1 = sin(psi1);
         double c1 = cos(psi1);
@@ -226,7 +261,8 @@ public:
                  ,                                                  0;
         }
 
-        values.set_array(_s_d2q, d2q);
+        // set output
+        values.set(_s_d2q, d2q);
     }
 };
 

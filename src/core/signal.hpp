@@ -371,10 +371,8 @@ public:
         return get_value_info(sig).get<T>();
     }
 
-    double        get(ScalarSignal sig) const {return get<double>(sig);}
-    double get_scalar(Signal       sig) const {return get<double>(sig);}
-    const auto&       get(ArraySignal sig) const {return get<Array>(sig);}
-    const auto& get_array(Signal      sig) const {return get<Array>(sig);}
+    double      get(ScalarSignal sig) const {return get<double>(sig);}
+    const auto& get(ArraySignal  sig) const {return get<Array>(sig);}
 
     template<typename T>
     void set(Signal sig, const T& value)
@@ -382,10 +380,8 @@ public:
         get_value_info(sig).set<T>(value);
     }
 
-    void        set(ScalarSignal sig, double value) {set<double>(sig, value);}
-    void set_scalar(Signal       sig, double value) {set<double>(sig, value);}
-    // void       set(ArraySignal sig, const Array& value) {set<Array>(sig, value);} // ambiguous
-    void set_array(Signal      sig, const Array& value) {set<Array>(sig, value);}
+    void set(ScalarSignal sig, double value) {set<double>(sig, value);}
+    // void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);} // ambiguous
 
     void set_states(const Eigen::ArrayXd& states);
 

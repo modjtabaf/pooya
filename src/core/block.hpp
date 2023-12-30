@@ -111,6 +111,7 @@ public:
 
     ScalarSignal signal(const std::string& given_name="");
     ArraySignal  signal(const std::string& given_name, std::size_t size);
+    BusSignal    signal(const std::string& given_name, std::initializer_list<BusSignalInfo::NameSignal> l);
 
     std::string make_signal_name(const std::string& given_name);
     ScalarSignal parameter(const std::string& given_name);

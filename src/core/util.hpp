@@ -52,6 +52,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
     verify_valid_signal(sig); \
     verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
+#define verify_bus_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
+
 // utility functions
 
 #endif // __POOYA_UTIL_HPP__

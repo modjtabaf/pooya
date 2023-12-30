@@ -140,7 +140,7 @@ ScalarSignal SignalRegistry::register_signal(const std::string& name)
     verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
-    auto* sig = new ScalarSignalInfo(name, index);
+    auto* sig = new ScalarSignalInfo(name, index, _vi_index++);
     _signal_infos.push_back(sig);
 
     return sig;
@@ -153,7 +153,20 @@ ArraySignal SignalRegistry::register_signal(const std::string& name, std::size_t
     verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
-    auto* sig = new ArraySignalInfo(name, index, size);
+    auto* sig = new ArraySignalInfo(name, index, _vi_index++, size);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
+
+BusSignal SignalRegistry::register_signal(const std::string& name, std::initializer_list<BusSignalInfo::NameSignal> l)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new BusSignalInfo(name, index, l);
     _signal_infos.push_back(sig);
 
     return sig;
@@ -168,9 +181,9 @@ ValueSignalInfo* SignalRegistry::_register_state(Signal sig, Signal deriv_sig)
     verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
         sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
 
-    ValueSignalInfo* ret = _signal_infos[sig->_value->_index]->_value;
+    ValueSignalInfo* ret = _signal_infos[sig->_index]->_value;
     ret->_deriv_sig = deriv_sig->_value;
-    _signal_infos[deriv_sig->_value->_index]->_value->_is_deriv = true;
+    _signal_infos[deriv_sig->_index]->_value->_is_deriv = true;
 
     return ret;
 }

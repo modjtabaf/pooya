@@ -43,7 +43,7 @@ public:
 
 using Array  = ArrayN<>;
 using Array1 = ArrayN<1>; // use a scalar instead
-using Array2 = ArrayN<3>;
+using Array2 = ArrayN<2>;
 using Array3 = ArrayN<3>;
 using Array4 = ArrayN<4>;
 using Array5 = ArrayN<5>;
@@ -109,14 +109,14 @@ protected:
     ValueSignal _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     bool _is_deriv{false};           // is this the derivative of another signal?
 
-public:
-    const std::size_t _vi_index{0};   // the index of associated ValueInfo
-
     ValueSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) :
         SignalInfo(full_name, index), _vi_index(vi_index)
     {
         _value = this;
     }
+
+public:
+    const std::size_t _vi_index{0};   // the index of associated ValueInfo
 
     bool is_state() const {return _deriv_sig;}
     bool is_deriv() const {return _is_deriv;}
@@ -130,12 +130,12 @@ class ScalarSignalInfo : public ValueSignalInfo
 protected:
     double _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
 
-public:
     ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _scalar = this;
     }
 
+public:
     double iv() const {return _iv;}
 };
 
@@ -146,14 +146,14 @@ class ArraySignalInfo : public ValueSignalInfo
 protected:
     Array _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
 
-public:
-    const std::size_t _size;
-
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t size, std::size_t vi_index) :
+    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
         ValueSignalInfo(full_name, index, vi_index), _size(size)
     {
         _array = this;
     }
+
+public:
+    const std::size_t _size;
 
     const Array& iv() const {return _iv;}
 };
@@ -168,15 +168,17 @@ public:
 protected:
     const std::vector<NameSignal> _signals;
 
-public:
     BusSignalInfo(const std::string& full_name, std::size_t index, std::initializer_list<NameSignal> l) :
         SignalInfo(full_name, index), _signals(l)
     {
+#if !defined(NDEBUG)
         for (const auto& ns: _signals)
             verify_valid_signal(ns.second);
+#endif // !defined(NDEBUG)
         _bus = this;
     }
 
+public:
     Signal at(const std::string& name) const
     {
         auto it = std::find_if(_signals.begin(), _signals.end(),

@@ -89,9 +89,9 @@ Values::Values(const pooya::Model& model)
 
         // auto& vi = get_value_info(signal->as_value());
         if (signal->as_scalar())
-            set_scalar(signal, signal->as_scalar()->iv());
+            set<double>(signal, signal->as_scalar()->iv());
         else
-            set_array(signal, signal->as_array()->iv());
+            set<Array>(signal, signal->as_array()->iv());
     }
 }
 

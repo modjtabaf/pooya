@@ -42,9 +42,9 @@ void History::update(uint k, double t, const Values& values)
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         if (vi.is_scalar())
-            h(k, 0) = values.get_scalar(&vi._si);
+            h(k, 0) = values.get<double>(&vi._si);
         else
-            h.row(k) = values.get_array(&vi._si);
+            h.row(k) = values.get<Array>(&vi._si);
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))

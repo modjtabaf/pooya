@@ -77,9 +77,9 @@ protected:
     pooya::Subtract _sub{"sub"};
     pooya::Divide  _div3{"div3"};
 
-    pooya::Signal       _s_front_wheel_angle;
-    pooya::Signal _s_front_wheel_angle_right;
-    pooya::Signal  _s_front_wheel_angle_left;
+    pooya::ScalarSignal       _s_front_wheel_angle;
+    pooya::ScalarSignal _s_front_wheel_angle_right;
+    pooya::ScalarSignal  _s_front_wheel_angle_left;
 
 public:
     ComputeFrontWheelAngleRightLeftPinpoint() : pooya::Submodel("ComputeFrontWheelAngleRightLeftPinpoint", 1, 2) {}
@@ -98,9 +98,10 @@ public:
         auto s30 = signal();
         auto s40 = signal();
 
-        _s_front_wheel_angle       = iports[0];
-        _s_front_wheel_angle_right = oports[0];
-        _s_front_wheel_angle_left  = oports[1];
+        iports.bind(0, _s_front_wheel_angle);
+
+        oports.bind(0, _s_front_wheel_angle_right);
+        oports.bind(1, _s_front_wheel_angle_left);
 
         // blocks
         add_block(_div1, {tractor_wheelbase, _s_front_wheel_angle}, s10);
@@ -130,16 +131,11 @@ protected:
     pooya::Gain          _k2{"K2", -1};
     ComputeFrontWheelAngleRightLeftPinpoint _cfwarlp;
 
-    pooya::Signal     _s_ad_DsrdFtWhlAngl_Rq_VD;
-    pooya::Signal          _s_front_wheel_angle;
-    pooya::Signal     _s_front_wheel_angle_rate;
-    pooya::Signal      _s_front_wheel_angle_neg;
-    pooya::Signal _s_front_wheel_angle_rate_neg;
-    pooya::Signal           _s_AxFr_front_right;
-    pooya::Signal            _s_AxFr_front_left;
+    pooya::ScalarSignal _s_ad_DsrdFtWhlAngl_Rq_VD;
+    pooya::BusSignal    _s_steering_info;
 
 public:
-    SteeringSystem() : pooya::Submodel("Steering_System", 1, 6) {}
+    SteeringSystem() : pooya::Submodel("Steering_System", 1, 1) {}
 
     bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
@@ -147,15 +143,17 @@ public:
             return false;
 
         // signals
-        _s_ad_DsrdFtWhlAngl_Rq_VD     = iports[0];
+        iports.bind(0, _s_ad_DsrdFtWhlAngl_Rq_VD);
 
-        _s_front_wheel_angle          = oports[0];
-        _s_front_wheel_angle_rate     = oports[1];
-        _s_front_wheel_angle_neg      = oports[2];
-        _s_front_wheel_angle_rate_neg = oports[3];
-        _s_AxFr_front_right           = oports[4];
-        _s_AxFr_front_left            = oports[5];
+        oports.bind(0, _s_steering_info);
 
+        auto          s_front_wheel_angle = _s_steering_info->at("front_wheel_angle");
+        auto     s_front_wheel_angle_rate = _s_steering_info->at("front_wheel_angle_rate");
+        auto      s_front_wheel_angle_neg = _s_steering_info->at("front_wheel_angle_neg");
+        auto s_front_wheel_angle_rate_neg = _s_steering_info->at("front_wheel_angle_rate_neg");
+        auto           s_AxFr_front_right = _s_steering_info->at("AxFr_front_right");
+        auto            s_AxFr_front_left = _s_steering_info->at("AxFr_front_left");
+    
         auto       front_wheel_ang_gain = parameter("front_wheel_ang_gain");
         auto      front_wheel_ang_delay = parameter("front_wheel_ang_delay");
         auto front_wheel_ang_init_value = parameter("front_wheel_ang_init_value");
@@ -170,19 +168,11 @@ public:
         add_block(    _mul, {_s_ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, s10);
         add_block(  _delay, {s10, front_wheel_ang_delay, front_wheel_ang_init_value}, s20);
         add_block(  _clamp, front_wheel_ang_t_const, s30);
-        add_block(     _pt, {s20, s30}, _s_front_wheel_angle);
-        add_block(  _deriv, _s_front_wheel_angle, _s_front_wheel_angle_rate);
-        add_block(     _k1, _s_front_wheel_angle, _s_front_wheel_angle_neg);
-        add_block(     _k2, _s_front_wheel_angle_rate, _s_front_wheel_angle_rate_neg);
-        add_block(_cfwarlp, _s_front_wheel_angle, {_s_AxFr_front_right, _s_AxFr_front_left});
-        // new Bus(*this, "Bus", {
-        //     front_wheel_angle,
-        //     front_wheel_angle_rate,
-        //     front_wheel_angle_neg,
-        //     front_wheel_angle_rate_neg,
-        //     AxFr_front_right,
-        //     AxFr_front_left
-        //     }, steering_info);
+        add_block(     _pt, {s20, s30}, s_front_wheel_angle);
+        add_block(  _deriv, s_front_wheel_angle, s_front_wheel_angle_rate);
+        add_block(     _k1, s_front_wheel_angle, s_front_wheel_angle_neg);
+        add_block(     _k2, s_front_wheel_angle_rate, s_front_wheel_angle_rate_neg);
+        add_block(_cfwarlp, s_front_wheel_angle, {s_AxFr_front_right, s_AxFr_front_left});
 
         return true;
     }
@@ -213,23 +203,17 @@ int main()
     auto model = pooya::Model();
     auto str_sys = SteeringSystem();
 
-    auto       front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
-    auto          front_wheel_angle = model.signal("front_wheel_angle");
-    auto     front_wheel_angle_rate = model.signal("front_wheel_angle_rate");
-    auto      front_wheel_angle_neg = model.signal("front_wheel_angle_neg");
-    auto front_wheel_angle_rate_neg = model.signal("front_wheel_angle_rate_neg");
-    auto           AxFr_front_right = model.signal("AxFr_front_right");
-    auto            AxFr_front_left = model.signal("AxFr_front_left");
-
-    model.add_block(str_sys, front_wheel_angle_Rq,
-        {
-            front_wheel_angle,
-            front_wheel_angle_rate,
-            front_wheel_angle_neg,
-            front_wheel_angle_rate_neg,
-            AxFr_front_right,
-            AxFr_front_left
+    auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
+    auto        steering_info = model.signal("steering_info", {
+        {"front_wheel_angle",          model.signal("front_wheel_angle")},
+        {"front_wheel_angle_rate",     model.signal("front_wheel_angle_rate")},
+        {"front_wheel_angle_neg",      model.signal("front_wheel_angle_neg")},
+        {"front_wheel_angle_rate_neg", model.signal("front_wheel_angle_rate_neg")},
+        {"AxFr_front_right",           model.signal("AxFr_front_right")},
+        {"AxFr_front_left",            model.signal("AxFr_front_left")},
         });
+
+    model.add_block(str_sys, front_wheel_angle_Rq, steering_info);
 
     auto          tractor_wheelbase = model.parameter("tractor_wheelbase");
     auto              tractor_Width = model.parameter("tractor_Width");
@@ -242,14 +226,14 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model& /*model*/, double t, pooya::Values& values) -> void
         {
-            values.set_scalar(front_wheel_angle_Rq,
+            values.set(front_wheel_angle_Rq,
                 interp1d(t, FRONT_WHEEL_ANGLE_RQ_X, FRONT_WHEEL_ANGLE_RQ_Y));
-            values.set_scalar(tractor_wheelbase, 5.8325);
-            values.set_scalar(tractor_Width, 2.5);
-            values.set_scalar(front_wheel_ang_t_const, 0.1);
-            values.set_scalar(front_wheel_ang_delay, 0.02);
-            values.set_scalar(front_wheel_ang_gain, 1.0);
-            values.set_scalar(front_wheel_ang_init_value, 0.0);
+            values.set(tractor_wheelbase, 5.8325);
+            values.set(tractor_Width, 2.5);
+            values.set(front_wheel_ang_t_const, 0.1);
+            values.set(front_wheel_ang_delay, 0.02);
+            values.set(front_wheel_ang_gain, 1.0);
+            values.set(front_wheel_ang_init_value, 0.0);
         },
         &stepper, true);
 
@@ -275,6 +259,6 @@ int main()
 	gp << "set xrange [0:2000]\n";
     gp << "set yrange [-0.6:0.6]\n";
 	gp << "plot" << gp.file1d((history[front_wheel_angle_Rq] * (180/M_PI)).eval()) << "with lines title 'front\\_wheel\\_angle\\_Rq',"
-	    << gp.file1d(((history[AxFr_front_right] + history[AxFr_front_left])/2 * (180/M_PI)).eval()) << "with lines title 'dphi',"
+	    << gp.file1d(((history[steering_info->at("AxFr_front_right")] + history[steering_info->at("AxFr_front_left")])/2 * (180/M_PI)).eval()) << "with lines title 'dphi',"
         "\n";
 }

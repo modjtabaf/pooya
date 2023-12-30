@@ -216,6 +216,20 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
     return sig->as_array();
 }
 
+BusSignal Parent::signal(const std::string& given_name, std::initializer_list<BusSignalInfo::NameSignal> l)
+{
+    auto* model_ = model();
+    if (!model_) return nullptr;
+
+    std::string reg_name = make_signal_name(given_name);
+    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    if (!sig)
+        sig = model_->signal_registry().register_signal(reg_name, l);
+
+    verify_bus_signal(sig);
+    return sig->as_bus();
+}
+
 Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 {
     _assign_valid_given_name(_given_name);

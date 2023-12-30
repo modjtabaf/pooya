@@ -81,17 +81,20 @@ class SignalInfo
 {
     friend class SignalRegistry;
 
+public:
+    const std::string _full_name; // full name of the signal
+    const std::size_t _index{0};  // the signal index
+
 protected:
+
     ValueSignalInfo*   _value{nullptr};
     ScalarSignalInfo* _scalar{nullptr};
     ArraySignalInfo*   _array{nullptr};
     BusSignalInfo*       _bus{nullptr};
 
-    SignalInfo(const std::string& full_name) : _full_name(full_name) {}
+    SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
 
 public:
-    const std::string _full_name; // full name of the signal
-
     ValueSignal   as_value() const {return  _value;}
     ScalarSignal as_scalar() const {return _scalar;}
     ArraySignal   as_array() const {return  _array;}
@@ -107,10 +110,10 @@ protected:
     bool _is_deriv{false};           // is this the derivative of another signal?
 
 public:
-    const std::size_t _index{0};                // the signal index
+    const std::size_t _vi_index{0};   // the index of associated ValueInfo
 
-    ValueSignalInfo(const std::string& full_name, std::size_t index) :
-        SignalInfo(full_name), _index(index)
+    ValueSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) :
+        SignalInfo(full_name, index), _vi_index(vi_index)
     {
         _value = this;
     }
@@ -128,7 +131,7 @@ protected:
     double _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
 
 public:
-    ScalarSignalInfo(const std::string& full_name, std::size_t index) : ValueSignalInfo(full_name, index)
+    ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _scalar = this;
     }
@@ -146,8 +149,8 @@ protected:
 public:
     const std::size_t _size;
 
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t size) :
-        ValueSignalInfo(full_name, index), _size(size)
+    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t size, std::size_t vi_index) :
+        ValueSignalInfo(full_name, index, vi_index), _size(size)
     {
         _array = this;
     }
@@ -159,14 +162,32 @@ struct BusSignalInfo : public SignalInfo
 {
     friend class SignalRegistry;
 
+public:
+    using NameSignal = std::pair<std::string, Signal>;
+
 protected:
-    const std::vector<std::pair<std::string, Signal>> _signals;
+    const std::vector<NameSignal> _signals;
 
 public:
-    BusSignalInfo(const std::string& full_name) : SignalInfo(full_name)
+    BusSignalInfo(const std::string& full_name, std::size_t index, std::initializer_list<NameSignal> l) :
+        SignalInfo(full_name, index), _signals(l)
     {
+        for (const auto& ns: _signals)
+            verify_valid_signal(ns.second);
         _bus = this;
     }
+
+    Signal at(const std::string& name) const
+    {
+        auto it = std::find_if(_signals.begin(), _signals.end(),
+            [&](const NameSignal& ns)
+            {
+                return ns.first == name;
+            });
+        return it == _signals.end() ? nullptr : it->second;
+    }
+
+    Signal at(std::size_t index) const {return _signals[index].second;}
 };
 
 class SignalRegistry
@@ -176,6 +197,7 @@ public:
 
 protected:
     SignalInfos _signal_infos;
+    std::size_t _vi_index{0};
 
     ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
 
@@ -197,6 +219,7 @@ public:
     Signal           find_signal(const std::string& name, bool exact_match=false) const;
     ScalarSignal register_signal(const std::string& name);
     ArraySignal  register_signal(const std::string& name, std::size_t size);
+    BusSignal    register_signal(const std::string& name, std::initializer_list<BusSignalInfo::NameSignal> l);
 };
 
 class Signals : public std::vector<Signal>
@@ -220,6 +243,12 @@ public:
     {
         verify_array_signal(at(index));
         sig = at(index)->as_array();
+    }
+
+    void bind(std::size_t index, BusSignal& sig) const
+    {
+        verify_bus_signal(at(index));
+        sig = at(index)->as_bus();
     }
 };
 
@@ -310,10 +339,10 @@ protected:
     Eigen::Map<Eigen::ArrayXd>  _states{nullptr, Eigen::Dynamic};
     Eigen::ArrayXd              _derivs;
 
-    inline ValueInfo& get_value_info(Signal si)
+    inline ValueInfo& get_value_info(Signal sig)
     {
-        verify_value_signal(si);
-        return _value_infos[si->as_value()->_index];
+        verify_value_signal(sig);
+        return _value_infos[sig->as_value()->_vi_index];
     }
 
 public:
@@ -323,7 +352,7 @@ public:
     {
         verify(sig, "invalid signal!");
         verify(sig->as_value(), sig->_full_name + ": value signal needed!");
-        return _value_infos[sig->as_value()->_index];
+        return _value_infos[sig->as_value()->_vi_index];
     }
 
     bool valid(Signal sig) const

@@ -204,7 +204,7 @@ int main()
     auto str_sys = SteeringSystem();
 
     auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
-    auto        steering_info = model.signal("steering_info", {
+    auto        steering_info = model.bus("steering_info", {
         {"front_wheel_angle",          model.signal("front_wheel_angle")},
         {"front_wheel_angle_rate",     model.signal("front_wheel_angle_rate")},
         {"front_wheel_angle_neg",      model.signal("front_wheel_angle_neg")},

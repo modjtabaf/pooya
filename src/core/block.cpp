@@ -216,7 +216,7 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
     return sig->as_array();
 }
 
-BusSignal Parent::signal(const std::string& given_name, std::initializer_list<BusSignalInfo::NameSignal> l)
+BusSignal Parent::signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
 {
     auto* model_ = model();
     if (!model_) return nullptr;

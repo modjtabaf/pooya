@@ -178,7 +178,20 @@ protected:
         _bus = this;
     }
 
+    template<typename Iter>
+    BusSignalInfo(const std::string& full_name, std::size_t index, Iter begin_, Iter end_) :
+        SignalInfo(full_name, index), _signals(begin_, end_)
+    {
+#if !defined(NDEBUG)
+        for (const auto& ns: _signals)
+            verify_valid_signal(ns.second);
+#endif // !defined(NDEBUG)
+        _bus = this;
+    }
+
 public:
+    auto size() const -> auto {return _signals.size();}
+
     Signal at(const std::string& name) const
     {
         auto it = std::find_if(_signals.begin(), _signals.end(),
@@ -189,7 +202,7 @@ public:
         return it == _signals.end() ? nullptr : it->second;
     }
 
-    Signal at(std::size_t index) const {return _signals[index].second;}
+    const NameSignal& at(std::size_t index) const {return _signals[index];}
 };
 
 class SignalRegistry
@@ -221,8 +234,27 @@ public:
     Signal           find_signal(const std::string& name, bool exact_match=false) const;
     ScalarSignal register_signal(const std::string& name);
     ArraySignal  register_signal(const std::string& name, std::size_t size);
-    BusSignal    register_signal(const std::string& name, std::initializer_list<BusSignalInfo::NameSignal> l);
+    template<typename Iter>
+    BusSignal    register_signal(const std::string& name, Iter begin_, Iter end_);
+    BusSignal    register_signal(const std::string& name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+    {
+        return register_signal(name, l.begin(), l.end());
+    }
 };
+
+template<typename Iter>
+BusSignal SignalRegistry::register_signal(const std::string& name, Iter begin_, Iter end_)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new BusSignalInfo(name, index, begin_, end_);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
 
 class Signals : public std::vector<Signal>
 {

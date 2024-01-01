@@ -216,7 +216,8 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
     return sig->as_array();
 }
 
-BusSignal Parent::signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+template<typename Iter>
+BusSignal Parent::signal(const std::string& given_name, Iter begin_, Iter end_)
 {
     auto* model_ = model();
     if (!model_) return nullptr;
@@ -224,10 +225,44 @@ BusSignal Parent::signal(const std::string& given_name, const std::initializer_l
     std::string reg_name = make_signal_name(given_name);
     Signal sig = model_->signal_registry().find_signal(reg_name, true);
     if (!sig)
-        sig = model_->signal_registry().register_signal(reg_name, l);
+        sig = model_->signal_registry().register_signal(reg_name, begin_, end_);
 
     verify_bus_signal(sig);
     return sig->as_bus();
+}
+
+BusSignal Parent::signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+{
+    return signal(given_name, l.begin(), l.end());
+}
+
+Signal Parent::signal(const std::string& given_name, Signal sig)
+{
+    verify_valid_signal(sig);
+    if (sig->as_scalar())
+    {
+        verify_scalar_signal(sig);
+        return signal(given_name);
+    }
+    else if (sig->as_array())
+    {
+        verify_array_signal(sig);
+        return signal(given_name, sig->as_array()->_size);
+    }
+    else
+    {
+        verify_bus_signal(sig);
+        auto& bus = *sig->as_bus();
+        std::size_t n = bus.size();
+        std::vector<BusSignalInfo::NameSignal> sigs;
+        sigs.reserve(n);
+        for (std::size_t k = 0; k < n; k++)
+        {
+            const auto& ns = bus.at(k);
+            sigs.emplace_back(BusSignalInfo::NameSignal(ns.first, signal("", ns.second)));
+        }
+        return signal(given_name, sigs.begin(), sigs.end());
+    }
 }
 
 Model::Model(std::string given_name) : Parent(given_name, 0, 0)

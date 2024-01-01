@@ -159,19 +159,6 @@ ArraySignal SignalRegistry::register_signal(const std::string& name, std::size_t
     return sig;
 }
 
-BusSignal SignalRegistry::register_signal(const std::string& name, std::initializer_list<BusSignalInfo::NameSignal> l)
-{
-    if (name.empty()) return nullptr;
-
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, l);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
 ValueSignalInfo* SignalRegistry::_register_state(Signal sig, Signal deriv_sig)
 {
     verify_value_signal(sig);

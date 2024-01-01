@@ -17,3 +17,4 @@
 - A (virtual ?) method for verifying the number and types of input and output signals of a block
 * internal arrays of ode solvers are defined as static. convert them to class members.
 * change SignalId from integer to SignalInfo*
+- rename signal() to create_signal()

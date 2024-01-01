@@ -114,23 +114,23 @@ public:
     template<typename Iter>
     BusSignal    signal(const std::string& given_name, Iter begin_, Iter end_);
     BusSignal    signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l);
-    BusSignal       bus(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+
+    Signal       clone_signal(const std::string& given_name, Signal sig);
+    ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
+    {
+        return clone_signal(given_name, Signal(sig))->as_scalar();
+    }
+    ArraySignal clone_signal(const std::string& given_name, ArraySignal sig)
+    {
+        return clone_signal(given_name, Signal(sig))->as_array();
+    }
+    BusSignal clone_signal(const std::string& given_name, BusSignal sig)
+    {
+        return clone_signal(given_name, Signal(sig))->as_bus();
+    }
+    BusSignal bus(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
     {
         return signal(given_name, l);
-    }
-
-    Signal       signal(const std::string& given_name, Signal sig);
-    ScalarSignal signal(const std::string& given_name, ScalarSignal sig)
-    {
-        return signal(given_name, Signal(sig))->as_scalar();
-    }
-    ArraySignal  signal(const std::string& given_name, ArraySignal sig)
-    {
-        return signal(given_name, Signal(sig))->as_array();
-    }
-    BusSignal    signal(const std::string& given_name, BusSignal sig)
-    {
-        return signal(given_name, Signal(sig))->as_bus();
     }
 
     std::string make_signal_name(const std::string& given_name);

@@ -236,7 +236,7 @@ BusSignal Parent::signal(const std::string& given_name, const std::initializer_l
     return signal(given_name, l.begin(), l.end());
 }
 
-Signal Parent::signal(const std::string& given_name, Signal sig)
+Signal Parent::clone_signal(const std::string& given_name, Signal sig)
 {
     verify_valid_signal(sig);
     if (sig->as_scalar())
@@ -259,7 +259,7 @@ Signal Parent::signal(const std::string& given_name, Signal sig)
         for (std::size_t k = 0; k < n; k++)
         {
             const auto& ns = bus.at(k);
-            sigs.emplace_back(BusSignalInfo::NameSignal(ns.first, signal("", ns.second)));
+            sigs.emplace_back(BusSignalInfo::NameSignal(ns.first, clone_signal("", ns.second)));
         }
         return signal(given_name, sigs.begin(), sigs.end());
     }

@@ -223,6 +223,26 @@ cc_binary(
 )
 
 cc_binary(
+    name = "test11",
+    srcs = ["tests/test11_memory_with_bus.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+    ],
+)
+
+cc_binary(
     name = "stm",
     srcs = ["tests/simple_truck_model.cpp"],
     copts = [

@@ -21,11 +21,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define POOYA_HERE(s) std::cout << "Pooya: " << __FILE__ << ":" << __LINE__ << ": " << s << "\n" << std::flush;
 // #undef POOYA_HERE
-// #define POOYA_HERE
+// #define POOYA_HERE(s)
 
 #define POOYA_HERE0 POOYA_HERE("")
-// #undef POOYA_HERE0
-// #define POOYA_HERE0
 
 #if defined(NDEBUG)
 #define verify(cond, msg)
@@ -52,9 +50,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
     verify_valid_signal(sig); \
     verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
+#define verify_array_signal_size(sig, size_) \
+    verify_array_signal(sig); \
+    verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
+
 #define verify_bus_signal(sig) \
     verify_valid_signal(sig); \
     verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
+
+#define verify_bus_signal_spec(sig, spec_) \
+    verify_bus_signal(sig); \
+    verify((sig)->as_bus()->spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
 
 // utility functions
 

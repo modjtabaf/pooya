@@ -28,6 +28,7 @@ bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
     _assign_valid_given_name(_given_name);
     if (_full_name.empty())
         _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+    POOYA_HERE(_full_name)
 
     verify((_num_iports == NoIOLimit) || (iports.size() == _num_iports),
         _num_iports == 0 ?
@@ -68,9 +69,9 @@ bool Block::_add_dependecny(Signal signal)
 
 void Block::_assign_valid_given_name(std::string given_name)
 {
-    auto verify_unique_name_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
+    auto verify_unique_name_cb = [&] (const Block& c, uint32_t level) -> bool
     {
-        return (&c == static_cast<Block*>(_parent)) || (c._given_name != given_name);
+        return (level == 0) || (c._given_name != given_name);
     };
 
     if (given_name.empty())
@@ -89,7 +90,7 @@ void Block::_assign_valid_given_name(std::string given_name)
     if (_parent)
     {
         uint n = 0;
-        while (!_parent->traverse(verify_unique_name_cb, 0, false))
+        while (!_parent->traverse(verify_unique_name_cb, 0, 1))
             given_name = _given_name + "_" + std::to_string(n++);
 
         _given_name = given_name;
@@ -108,7 +109,7 @@ uint Block::_process(double t, Values& values, bool /*go_deep*/)
 
     for (auto& signal: _dependencies)
     {
-        if (!values.valid(signal))
+        if (!signal->as_bus() && !values.valid(signal))
             return 0;
     }
 
@@ -151,7 +152,9 @@ void Parent::_mark_unprocessed()
     Block::_mark_unprocessed();
 
     for (auto* component: _components)
+    {
         component->_mark_unprocessed();
+    }
 }
 
 uint Parent::_process(double t, Values& values, bool go_deep)
@@ -181,9 +184,13 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
         return false;
 
     if (level < max_level)
-        for (auto it = _components.begin(); it != _components.end(); it++)
-            if (!(*it)->traverse(cb, level + 1, max_level))
+    {
+        for (auto& c: _components)
+        {
+            if (!c->traverse(cb, level + 1, max_level))
                 return false;
+        }
+    }
 
     return true;
 }
@@ -217,7 +224,7 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 }
 
 template<typename Iter>
-BusSignal Parent::signal(const std::string& given_name, Iter begin_, Iter end_)
+BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
     auto* model_ = model();
     if (!model_) return nullptr;
@@ -225,15 +232,15 @@ BusSignal Parent::signal(const std::string& given_name, Iter begin_, Iter end_)
     std::string reg_name = make_signal_name(given_name);
     Signal sig = model_->signal_registry().find_signal(reg_name, true);
     if (!sig)
-        sig = model_->signal_registry().register_signal(reg_name, begin_, end_);
+        sig = model_->signal_registry().register_signal(reg_name, spec, begin_, end_);
 
     verify_bus_signal(sig);
     return sig->as_bus();
 }
 
-BusSignal Parent::signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
 {
-    return signal(given_name, l.begin(), l.end());
+    return signal(given_name, spec, l.begin(), l.end());
 }
 
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
@@ -252,16 +259,16 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
     else
     {
         verify_bus_signal(sig);
-        auto& bus = *sig->as_bus();
-        std::size_t n = bus.size();
+        BusSignal bus = sig->as_bus();
+        std::size_t n = bus->spec()._wires.size();
         std::vector<BusSignalInfo::NameSignal> sigs;
         sigs.reserve(n);
         for (std::size_t k = 0; k < n; k++)
         {
-            const auto& ns = bus.at(k);
+            const auto& ns = bus->at(k);
             sigs.emplace_back(BusSignalInfo::NameSignal(ns.first, clone_signal("", ns.second)));
         }
-        return signal(given_name, sigs.begin(), sigs.end());
+        return signal(given_name, bus->spec(), sigs.begin(), sigs.end());
     }
 }
 
@@ -274,6 +281,45 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
     return true;
+}
+
+BusBlockBuilder::~BusBlockBuilder()
+{
+    for (auto* p: _blocks)
+        if (p)
+            delete p;
+}
+
+bool BusBlockBuilder::init(Parent& parent, const Signals& iports, const Signals& oports)
+{
+    if (!Block::init(parent, iports, oports))
+        return false;
+
+    iports.bind(0, _x);
+    oports.bind(0, _y);
+
+    const auto& bus_spec = _x->spec();
+    verify(bus_spec == _y->spec(), "Bus specs don't match!");
+
+    _blocks.reserve(bus_spec.total_size());
+    traverse_bus("", bus_spec);
+
+    return true;
+}
+
+void BusBlockBuilder::traverse_bus(const std::string& path, const BusSpec& bus_spec)
+{
+    for (const auto& wi: bus_spec._wires)
+    {
+        auto new_path = path + "/" + wi._name;
+        if (wi._bus)
+            traverse_bus(new_path, *wi._bus);
+        else
+        {
+            _blocks.push_back(_builder(new_path, wi));
+            _parent->add_block(*_blocks.back(), _x->at(wi._name), _y->at(wi._name));
+        }
+    }
 }
 
 }

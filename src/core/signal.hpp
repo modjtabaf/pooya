@@ -211,35 +211,32 @@ public:
 
     const BusSpec& _spec;
 
-private:
-    template<typename Iter>
-    void _ctor(Iter begin_, Iter end_)
-    {
-        _signals.reserve(_spec._wires.size());
-        for(const auto& wi: _spec._wires)
-            _signals.push_back({wi._name, nullptr});
-        for (auto& it = begin_; it != end_; it++)
-            _set(it->first, it->second);
-        _bus = this;
-    }
-
 protected:
     std::vector<NameSignal> _signals;
 
 protected:
-    void _set(const std::string& name, Signal sig);
-
-    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, std::initializer_list<NameSignal> l) :
-        SignalInfo(full_name, index), _spec(spec), _signals(l)
-    {
-        _ctor(l.begin(), l.end());
-    }
+    void _set(std::size_t index, Signal sig);
 
     template<typename Iter>
     BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, Iter begin_, Iter end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
-        _ctor(begin_, end_);
+        _signals.reserve(_spec._wires.size());
+        for(const auto& wi: _spec._wires)
+            _signals.push_back({wi._name, nullptr});
+        if constexpr (std::is_same_v<Iter, const Signal*>)
+        {
+            std::size_t index = 0;
+            for(auto it = begin_; it < end_; it++)
+                _set(index++, *it);
+            verify(index == _spec._wires.size(), "insufficient number of signals!");
+        }
+        else
+        {
+            for (auto& it = begin_; it != end_; it++)
+                _set(index_of(it->first), it->second);
+        }
+        _bus = this;
     }
 
 public:
@@ -295,10 +292,6 @@ public:
     ArraySignal  register_signal(const std::string& name, std::size_t size);
     template<typename Iter>
     BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
-    BusSignal    register_signal(const std::string& name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
-    {
-        return register_signal(name, spec, l.begin(), l.end());
-    }
 };
 
 template<typename Iter>

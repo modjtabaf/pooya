@@ -22,18 +22,41 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
+class BusMemory : public pooya::BusBlockBuilder
+{
+public:
+    BusMemory(std::string given_name) : pooya::BusBlockBuilder(given_name) {}
+
+protected:
+    void block_builder(const std::string& /*path*/, const pooya::BusSpec::WireInfo& wi, pooya::Signal sig_in, pooya::Signal sig_out) override
+    {
+        if (wi._name == "x2")
+        {
+            // delay x2 by 2 steps
+            auto z = _parent->signal();
+
+            _blocks.push_back(new pooya::Memory("memory", 0.5));
+            _parent->add_block(*_blocks.back(), sig_in, z);
+
+            _blocks.push_back(new pooya::Memory("memory", 1.0));
+            _parent->add_block(*_blocks.back(), z, sig_out);
+        }
+        else
+        {
+            _blocks.push_back(new pooya::Memory("memory"));
+            _parent->add_block(*_blocks.back(), sig_in, sig_out);
+        }
+    }
+};
+
 int main()
 {
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model                model("test11");
-    pooya::BusBlockBuilder bus_memory("memory",
-        [](const std::string& /*path*/, const pooya::BusSpec::WireInfo& /*wi*/) -> pooya::Block*
-        {
-            return new pooya::Memory("memory");
-        });
+    pooya::Model   model("test11");
+    BusMemory bus_memory("memory");
 
     pooya::BusSpec bus_spec({
         {"x1"}, // scalar
@@ -42,16 +65,19 @@ int main()
         });
 
     // create buses (signals)
+
+    // create bus by specifying wire names (neither order nor count matters)
     auto x = model.bus("x", bus_spec,{
         {"x1", model.signal("x1")},
-        {"x2", model.signal("x2")},
         {"x3", model.signal("x3")},
+        {"x2", model.signal("x2")},
         });
 
+    // create bus without specifying wire names (both order and count matter)
     auto y = model.bus("y", bus_spec, {
-        {"x1", model.signal("y1")},
-        {"x2", model.signal("y2")},
-        {"x3", model.signal("y3")},
+        model.signal("y1"),
+        model.signal("y2"),
+        model.signal("y3"),
         });
 
     // setup the model
@@ -69,7 +95,7 @@ int main()
 
     uint k = 0;
     double t;
-    while (pooya::arange(k, t, 0, 10, 0.2))
+    while (pooya::arange(k, t, 0, 10, 0.5))
     {
         sim.run(t);
         history.update(k, t, sim.values());

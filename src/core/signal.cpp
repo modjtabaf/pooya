@@ -113,10 +113,9 @@ void Values::set_states(const Eigen::ArrayXd& states)
     }
 }
 
-void BusSignalInfo::_set(const std::string& name, Signal sig)
+void BusSignalInfo::_set(std::size_t index, Signal sig)
 {
-    auto index = index_of(name);
-    verify(index < _signals.size(), name + ": invalid bus wire name!");
+    verify(index < _signals.size(), "bus wire index out of range!");
     auto& ns = _signals[index];
     auto& wi = _spec._wires[index];
     verify(ns.second == nullptr, ns.first + ": cannot re-assign a bus wire!");

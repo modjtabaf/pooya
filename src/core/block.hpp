@@ -99,7 +99,7 @@ public:
         if (!component.init(*this, iports, oports))
             return false;
 
-        _components.emplace_back(&component);
+        _components.push_back(&component);
         return true;
     }
 
@@ -112,8 +112,8 @@ public:
     ScalarSignal signal(const std::string& given_name="");
     ArraySignal  signal(const std::string& given_name, std::size_t size);
     template<typename Iter>
-    BusSignal    signal(const std::string& given_name, Iter begin_, Iter end_);
-    BusSignal    signal(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l);
+    BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l);
 
     Signal       clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
@@ -128,9 +128,9 @@ public:
     {
         return clone_signal(given_name, Signal(sig))->as_bus();
     }
-    BusSignal bus(const std::string& given_name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
     {
-        return signal(given_name, l);
+        return signal(given_name, spec, l);
     }
 
     std::string make_signal_name(const std::string& given_name);
@@ -646,6 +646,30 @@ public:
 
 using Derivative  = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
+
+class BusBlockBuilder : public Block
+{
+public:
+    using BlockBuilder = std::function<Block*(const std::string& path, const BusSpec::WireInfo& wi)>;
+
+protected:
+    BlockBuilder _builder;
+
+    BusSignal _x;
+    BusSignal _y;
+
+    std::vector<Block*> _blocks;
+
+    void traverse_bus(const std::string& path, const BusSpec& bus_spec);
+
+public:
+    BusBlockBuilder(std::string given_name, BlockBuilder builder) :
+        Block(given_name, 1, 1), _builder(builder) {}
+
+    ~BusBlockBuilder() override;
+
+    bool init(Parent& parent, const Signals& iports, const Signals& oports) override;
+};
 
 inline ScalarSignal Parent::parameter(const std::string& given_name)
 {

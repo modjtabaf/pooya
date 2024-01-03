@@ -158,6 +158,50 @@ public:
     const Array& iv() const {return _iv;}
 };
 
+class BusSpec
+{
+    friend class BusSignalInfo;
+
+public:
+    struct WireInfo
+    {
+        const std::string _name;
+        const BusSpec* _bus{nullptr};
+        const bool _scalar{false};
+        const std::size_t _array_size{0};
+
+        // scalar
+        WireInfo(const std::string& name) : _name(name), _scalar(true) {}
+
+        // array
+        WireInfo(const std::string& name, std::size_t array_size) : _name(name), _array_size(array_size)
+        {
+            verify(array_size > 0, "array size cannot be zero!");
+        }
+
+        // bus
+        WireInfo(const std::string& name, const BusSpec& bus) : _name(name), _bus(&bus) {}
+    };
+
+    const std::vector<WireInfo> _wires;
+
+    template<typename Iter>
+    BusSpec(Iter begin_, Iter end_) : _wires(begin_, end_) {}
+
+    BusSpec(const std::initializer_list<WireInfo>& l) : _wires(l) {}
+
+    std::size_t total_size() const
+    {
+        std::size_t ret = _wires.size();
+        for (const auto& wi: _wires)
+            if (wi._bus)
+                ret += wi._bus->total_size();
+        return ret;
+    }
+
+    bool operator==(const BusSpec& other) const {return this == &other;}
+};
+
 struct BusSignalInfo : public SignalInfo
 {
     friend class SignalRegistry;
@@ -165,44 +209,59 @@ struct BusSignalInfo : public SignalInfo
 public:
     using NameSignal = std::pair<std::string, Signal>;
 
-protected:
-    const std::vector<NameSignal> _signals;
+    const BusSpec& _spec;
 
-    BusSignalInfo(const std::string& full_name, std::size_t index, std::initializer_list<NameSignal> l) :
-        SignalInfo(full_name, index), _signals(l)
+private:
+    template<typename Iter>
+    void _ctor(Iter begin_, Iter end_)
     {
-#if !defined(NDEBUG)
-        for (const auto& ns: _signals)
-            verify_valid_signal(ns.second);
-#endif // !defined(NDEBUG)
+        _signals.reserve(_spec._wires.size());
+        for(const auto& wi: _spec._wires)
+            _signals.push_back({wi._name, nullptr});
+        for (auto& it = begin_; it != end_; it++)
+            _set(it->first, it->second);
         _bus = this;
+    }
+
+protected:
+    std::vector<NameSignal> _signals;
+
+protected:
+    void _set(const std::string& name, Signal sig);
+
+    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, std::initializer_list<NameSignal> l) :
+        SignalInfo(full_name, index), _spec(spec), _signals(l)
+    {
+        _ctor(l.begin(), l.end());
     }
 
     template<typename Iter>
-    BusSignalInfo(const std::string& full_name, std::size_t index, Iter begin_, Iter end_) :
-        SignalInfo(full_name, index), _signals(begin_, end_)
+    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, Iter begin_, Iter end_) :
+        SignalInfo(full_name, index), _spec(spec)
     {
-#if !defined(NDEBUG)
-        for (const auto& ns: _signals)
-            verify_valid_signal(ns.second);
-#endif // !defined(NDEBUG)
-        _bus = this;
+        _ctor(begin_, end_);
     }
 
 public:
-    auto size() const -> auto {return _signals.size();}
+    const BusSpec& spec() const {return _spec;}
 
-    Signal at(const std::string& name) const
+    std::size_t index_of(const std::string& name) const
     {
-        auto it = std::find_if(_signals.begin(), _signals.end(),
-            [&](const NameSignal& ns)
-            {
-                return ns.first == name;
-            });
-        return it == _signals.end() ? nullptr : it->second;
+        return std::distance(_signals.begin(),
+            std::find_if(_signals.begin(), _signals.end(),
+                [&](const NameSignal& ns)
+                {
+                    return ns.first == name;
+                }
+            ));
     }
 
-    const NameSignal& at(std::size_t index) const {return _signals[index];}
+    const NameSignal& at(std::size_t index) const
+    {
+        verify(index < _signals.size(), "index out of range!");
+        return _signals[index];
+    }
+    Signal at(const std::string& name) const {return at(index_of(name)).second;}
 };
 
 class SignalRegistry
@@ -235,22 +294,22 @@ public:
     ScalarSignal register_signal(const std::string& name);
     ArraySignal  register_signal(const std::string& name, std::size_t size);
     template<typename Iter>
-    BusSignal    register_signal(const std::string& name, Iter begin_, Iter end_);
-    BusSignal    register_signal(const std::string& name, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+    BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
+    BusSignal    register_signal(const std::string& name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
     {
-        return register_signal(name, l.begin(), l.end());
+        return register_signal(name, spec, l.begin(), l.end());
     }
 };
 
 template<typename Iter>
-BusSignal SignalRegistry::register_signal(const std::string& name, Iter begin_, Iter end_)
+BusSignal SignalRegistry::register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
 {
     if (name.empty()) return nullptr;
 
     verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, begin_, end_);
+    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
     _signal_infos.push_back(sig);
 
     return sig;

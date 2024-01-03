@@ -203,8 +203,21 @@ int main()
     auto model = pooya::Model();
     auto str_sys = SteeringSystem();
 
+    // bus specification
+    pooya::BusSpec bus_spec({
+        {"front_wheel_angle"},
+        {"front_wheel_angle_rate"},
+        {"front_wheel_angle_neg"},
+        {"front_wheel_angle_rate_neg"},
+        {"AxFr_front_right"},
+        {"AxFr_front_left"},
+        });
+
+    // input signal
     auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
-    auto        steering_info = model.bus("steering_info", {
+
+    // output signal (bus)
+    auto steering_info = model.bus("steering_info", bus_spec, {
         {"front_wheel_angle",          model.signal("front_wheel_angle")},
         {"front_wheel_angle_rate",     model.signal("front_wheel_angle_rate")},
         {"front_wheel_angle_neg",      model.signal("front_wheel_angle_neg")},
@@ -222,7 +235,7 @@ int main()
     auto       front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
     auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
 
-    pooya::Rkf45 stepper(model);
+    pooya::Rk4 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model& /*model*/, double t, pooya::Values& values) -> void
         {

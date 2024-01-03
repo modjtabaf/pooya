@@ -113,6 +113,30 @@ void Values::set_states(const Eigen::ArrayXd& states)
     }
 }
 
+void BusSignalInfo::_set(const std::string& name, Signal sig)
+{
+    auto index = index_of(name);
+    verify(index < _signals.size(), name + ": invalid bus wire name!");
+    auto& ns = _signals[index];
+    auto& wi = _spec._wires[index];
+    verify(ns.second == nullptr, ns.first + ": cannot re-assign a bus wire!");
+#if !defined(NDEBUG)
+    if (wi._bus)
+    {
+        verify_bus_signal_spec(sig, *wi._bus);
+    }
+    else if (wi._scalar)
+    {
+        verify_scalar_signal(sig);
+    }
+    else
+    {
+        verify_array_signal_size(sig, wi._array_size);
+    }
+#endif // !defined(NDEBUG)
+    ns.second = sig;
+}
+
 Signal SignalRegistry::find_signal(const std::string& name, bool exact_match) const
 {
     if (name.empty())

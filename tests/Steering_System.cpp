@@ -147,12 +147,12 @@ public:
 
         oports.bind(0, _s_steering_info);
 
-        auto          s_front_wheel_angle = _s_steering_info->at("front_wheel_angle");
-        auto     s_front_wheel_angle_rate = _s_steering_info->at("front_wheel_angle_rate");
-        auto      s_front_wheel_angle_neg = _s_steering_info->at("front_wheel_angle_neg");
-        auto s_front_wheel_angle_rate_neg = _s_steering_info->at("front_wheel_angle_rate_neg");
-        auto           s_AxFr_front_right = _s_steering_info->at("AxFr_front_right");
-        auto            s_AxFr_front_left = _s_steering_info->at("AxFr_front_left");
+        auto          s_front_wheel_angle = (*_s_steering_info)["front_wheel_angle"];
+        auto     s_front_wheel_angle_rate = (*_s_steering_info)["front_wheel_angle_rate"];
+        auto      s_front_wheel_angle_neg = (*_s_steering_info)["front_wheel_angle_neg"];
+        auto s_front_wheel_angle_rate_neg = (*_s_steering_info)["front_wheel_angle_rate_neg"];
+        auto           s_AxFr_front_right = (*_s_steering_info)["AxFr_front_right"];
+        auto            s_AxFr_front_left = (*_s_steering_info)["AxFr_front_left"];
     
         auto       front_wheel_ang_gain = parameter("front_wheel_ang_gain");
         auto      front_wheel_ang_delay = parameter("front_wheel_ang_delay");
@@ -205,12 +205,12 @@ int main()
 
     // bus specification
     pooya::BusSpec bus_spec({
-        {"front_wheel_angle"},
-        {"front_wheel_angle_rate"},
-        {"front_wheel_angle_neg"},
-        {"front_wheel_angle_rate_neg"},
-        {"AxFr_front_right"},
-        {"AxFr_front_left"},
+        {"front_wheel_angle"},          // scalar
+        {"front_wheel_angle_rate"},     // scalar
+        {"front_wheel_angle_neg"},      // scalar
+        {"front_wheel_angle_rate_neg"}, // scalar
+        {"AxFr_front_right"},           // scalar
+        {"AxFr_front_left"},            // scalar
         });
 
     // input signal
@@ -218,12 +218,12 @@ int main()
 
     // output signal (bus)
     auto steering_info = model.bus("steering_info", bus_spec, {
-        {"front_wheel_angle",          model.signal("front_wheel_angle")},
-        {"front_wheel_angle_rate",     model.signal("front_wheel_angle_rate")},
-        {"front_wheel_angle_neg",      model.signal("front_wheel_angle_neg")},
-        {"front_wheel_angle_rate_neg", model.signal("front_wheel_angle_rate_neg")},
-        {"AxFr_front_right",           model.signal("AxFr_front_right")},
-        {"AxFr_front_left",            model.signal("AxFr_front_left")},
+        model.signal("front_wheel_angle"),
+        model.signal("front_wheel_angle_rate"),
+        model.signal("front_wheel_angle_neg"),
+        model.signal("front_wheel_angle_rate_neg"),
+        model.signal("AxFr_front_right"),
+        model.signal("AxFr_front_left"),
         });
 
     model.add_block(str_sys, front_wheel_angle_Rq, steering_info);

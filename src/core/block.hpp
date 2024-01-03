@@ -36,6 +36,7 @@ public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
 
 protected:
+    bool _initialized{false};
     Signals _iports;
     Signals _oports;
     Signals _dependencies;
@@ -54,6 +55,7 @@ protected:
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
+    virtual void post_init() {}
 
 public:
     virtual ~Block() = default;
@@ -71,6 +73,7 @@ public:
 
     Parent* parent() {return _parent;}
     bool processed() const {return _processed;}
+    bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;}
     const Signals& iports() const {return _iports;}
@@ -100,6 +103,7 @@ public:
             return false;
 
         _components.push_back(&component);
+        component.post_init();
         return true;
     }
 
@@ -114,6 +118,7 @@ public:
     template<typename Iter>
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l);
+    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
 
     Signal       clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
@@ -129,6 +134,10 @@ public:
         return clone_signal(given_name, Signal(sig))->as_bus();
     }
     BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+    {
+        return signal(given_name, spec, l);
+    }
+    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
     {
         return signal(given_name, spec, l);
     }
@@ -649,12 +658,7 @@ using DerivativeA = DerivativeT<Array>;
 
 class BusBlockBuilder : public Block
 {
-public:
-    using BlockBuilder = std::function<Block*(const std::string& path, const BusSpec::WireInfo& wi)>;
-
 protected:
-    BlockBuilder _builder;
-
     BusSignal _x;
     BusSignal _y;
 
@@ -662,13 +666,16 @@ protected:
 
     void traverse_bus(const std::string& path, const BusSpec& bus_spec);
 
+    virtual void block_builder(const std::string& path, const BusSpec::WireInfo& wi, Signal sig_in, Signal sig_out) = 0;
+
 public:
-    BusBlockBuilder(std::string given_name, BlockBuilder builder) :
-        Block(given_name, 1, 1), _builder(builder) {}
+    BusBlockBuilder(std::string given_name) :
+        Block(given_name, 1, 1) {}
 
     ~BusBlockBuilder() override;
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override;
+    void post_init() override;
 };
 
 inline ScalarSignal Parent::parameter(const std::string& given_name)

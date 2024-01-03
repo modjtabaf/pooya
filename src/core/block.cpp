@@ -24,11 +24,11 @@ bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
     if (_parent) return false;
 
     _parent = &parent;
+    verify(_parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
 
     _assign_valid_given_name(_given_name);
     if (_full_name.empty())
         _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
-    POOYA_HERE(_full_name)
 
     verify((_num_iports == NoIOLimit) || (iports.size() == _num_iports),
         _num_iports == 0 ?
@@ -53,6 +53,7 @@ bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
     for (auto& p: oports)
         _oports.push_back(p);
     
+    _initialized = true;
     return true;
 }
 
@@ -243,6 +244,11 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, con
     return signal(given_name, spec, l.begin(), l.end());
 }
 
+BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
+{
+    return signal(given_name, spec, l.begin(), l.end());
+}
+
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
 {
     verify_valid_signal(sig);
@@ -276,6 +282,7 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 {
     _assign_valid_given_name(_given_name);
     _full_name = "/" + _given_name;
+    _initialized = true;
 }
 
 bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
@@ -298,13 +305,16 @@ bool BusBlockBuilder::init(Parent& parent, const Signals& iports, const Signals&
     iports.bind(0, _x);
     oports.bind(0, _y);
 
-    const auto& bus_spec = _x->spec();
-    verify(bus_spec == _y->spec(), "Bus specs don't match!");
-
-    _blocks.reserve(bus_spec.total_size());
-    traverse_bus("", bus_spec);
+    verify(_x->spec() == _y->spec(), "Bus specs don't match!");
 
     return true;
+}
+
+void BusBlockBuilder::post_init()
+{
+    const auto& bus_spec = _x->spec();
+    _blocks.reserve(bus_spec.total_size());
+    traverse_bus("", bus_spec);
 }
 
 void BusBlockBuilder::traverse_bus(const std::string& path, const BusSpec& bus_spec)
@@ -315,10 +325,7 @@ void BusBlockBuilder::traverse_bus(const std::string& path, const BusSpec& bus_s
         if (wi._bus)
             traverse_bus(new_path, *wi._bus);
         else
-        {
-            _blocks.push_back(_builder(new_path, wi));
-            _parent->add_block(*_blocks.back(), _x->at(wi._name), _y->at(wi._name));
-        }
+            block_builder(new_path, wi, _x->at(wi._name), _y->at(wi._name));
     }
 }
 

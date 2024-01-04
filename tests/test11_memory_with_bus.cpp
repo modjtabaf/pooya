@@ -59,9 +59,9 @@ int main()
     BusMemory bus_memory("memory");
 
     pooya::BusSpec bus_spec({
-        {"x1"}, // scalar
-        {"x2"}, // scalar
-        {"x3"}, // scalar
+        {"x0"}, // wire 0 called "x1" carries a scalar signal
+        {"x1"}, // wire 1 called "x2" carries a scalar signal
+        {"x2"}, // wire 2 called "x3" carries a scalar signal
         });
 
     // create buses (signals)
@@ -70,17 +70,17 @@ int main()
     /*
     // alternative 1
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
+        model.signal("x0"),
         model.signal("x1"),
         model.signal("x2"),
-        model.signal("x3"),
     });
     */
     /*
     // alternative 2
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely while specifying wire labels (order does not matter)
-        {"x3", model.signal("x3"),},
-        {"x1", model.signal("x1"),},
         {"x2", model.signal("x2"),},
+        {"x0", model.signal("x0"),},
+        {"x1", model.signal("x1"),},
     });
     */
 
@@ -89,16 +89,16 @@ int main()
     // setup the model
     model.add_block(bus_memory, x, y);
 
+    auto x_x0 = x->at("x0");
     auto x_x1 = x->at("x1");
     auto x_x2 = x->at("x2");
-    auto x_x3 = x->at("x3");
 
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set(x_x1, std::sin(M_PI * t / 3));
-            values.set(x_x2, std::sin(M_PI * t / 5));
-            values.set(x_x3, std::sin(M_PI * t / 7));
+            values.set(x_x0, std::sin(M_PI * t / 3));
+            values.set(x_x1, std::sin(M_PI * t / 5));
+            values.set(x_x2, std::sin(M_PI * t / 7));
         });
 
     pooya::History history(model);
@@ -119,20 +119,20 @@ int main()
 
     history.shrink_to_fit();
 
+    auto y_x0 = y->at("x0");
     auto y_x1 = y->at("x1");
     auto y_x2 = y->at("x2");
-    auto y_x3 = y->at("x3");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
 	gp << "plot"
+        << gp.file1d(history[x_x0]) << "with lines title 'x0',"
+		<< gp.file1d(history[y_x0]) << "with lines title 'y0',"
         << gp.file1d(history[x_x1]) << "with lines title 'x1',"
 		<< gp.file1d(history[y_x1]) << "with lines title 'y1',"
         << gp.file1d(history[x_x2]) << "with lines title 'x2',"
 		<< gp.file1d(history[y_x2]) << "with lines title 'y2',"
-        << gp.file1d(history[x_x3]) << "with lines title 'x3',"
-		<< gp.file1d(history[y_x3]) << "with lines title 'y3',"
         "\n";
 
     return 0;

@@ -66,7 +66,24 @@ int main()
 
     // create buses (signals)
 
-    auto x = model.bus("x", bus_spec);
+    auto x = model.bus("x", bus_spec); // assign bus wires implicitely
+    // alternative 1
+    /*
+    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
+        model.signal("x1"),
+        model.signal("x2"),
+        model.signal("x3"),
+    });
+    */
+    // alternative 2
+    /*
+    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely while specifying wire labels (order does not matter)
+        {"x3", model.signal("x3"),},
+        {"x1", model.signal("x1"),},
+        {"x2", model.signal("x2"),},
+    });
+    */
+
     auto y = model.bus("y", bus_spec);
 
     // setup the model

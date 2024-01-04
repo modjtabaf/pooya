@@ -251,6 +251,7 @@ protected:
     BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, Iter begin_, Iter end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
+        verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals!");
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
             _signals.push_back({wi._name, nullptr});
@@ -259,7 +260,6 @@ protected:
             std::size_t index = 0;
             for(auto it = begin_; it < end_; it++)
                 _set(index++, *it);
-            verify(index == _spec._wires.size(), "insufficient number of signals!");
         }
         else
         {

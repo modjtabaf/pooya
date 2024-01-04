@@ -40,6 +40,7 @@ void Rk4::step(StepperCallback callback, double t0, const Array& v0, double t1, 
     v1 = v0 + _K1 / 6 + _K2 / 3 + _K3 / 3 + _K4 / 6;
 }
 
+// source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
 void Rkf45::step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h)
 {
     _callback = callback;

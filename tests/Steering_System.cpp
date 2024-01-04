@@ -203,7 +203,10 @@ int main()
     auto model = pooya::Model();
     auto str_sys = SteeringSystem();
 
-    // bus specification
+    // input signal
+    auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
+
+    // output signal (bus)
     pooya::BusSpec bus_spec({
         {"front_wheel_angle"},          // scalar
         {"front_wheel_angle_rate"},     // scalar
@@ -212,19 +215,7 @@ int main()
         {"AxFr_front_right"},           // scalar
         {"AxFr_front_left"},            // scalar
         });
-
-    // input signal
-    auto front_wheel_angle_Rq = model.signal("front_wheel_angle_Rq");
-
-    // output signal (bus)
-    auto steering_info = model.bus("steering_info", bus_spec, {
-        model.signal("front_wheel_angle"),
-        model.signal("front_wheel_angle_rate"),
-        model.signal("front_wheel_angle_neg"),
-        model.signal("front_wheel_angle_rate_neg"),
-        model.signal("AxFr_front_right"),
-        model.signal("AxFr_front_left"),
-        });
+    auto steering_info = model.bus("steering_info", bus_spec);
 
     model.add_block(str_sys, front_wheel_angle_Rq, steering_info);
 

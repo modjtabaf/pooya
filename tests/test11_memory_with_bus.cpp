@@ -66,19 +66,8 @@ int main()
 
     // create buses (signals)
 
-    // create bus by specifying wire names (neither order nor count matters)
-    auto x = model.bus("x", bus_spec,{
-        {"x1", model.signal("x1")},
-        {"x3", model.signal("x3")},
-        {"x2", model.signal("x2")},
-        });
-
-    // create bus without specifying wire names (both order and count matter)
-    auto y = model.bus("y", bus_spec, {
-        model.signal("y1"),
-        model.signal("y2"),
-        model.signal("y3"),
-        });
+    auto x = model.bus("x", bus_spec);
+    auto y = model.bus("y", bus_spec);
 
     // setup the model
     model.add_block(bus_memory, x, y);

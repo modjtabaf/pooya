@@ -119,6 +119,7 @@ public:
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l);
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
+    BusSignal    signal(const std::string& given_name, const BusSpec& spec);
 
     Signal       clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
@@ -140,6 +141,10 @@ public:
     BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
     {
         return signal(given_name, spec, l);
+    }
+    BusSignal bus(const std::string& given_name, const BusSpec& spec)
+    {
+        return signal(given_name, spec);
     }
 
     std::string make_signal_name(const std::string& given_name);

@@ -89,12 +89,15 @@ int main()
     // setup the model
     model.add_block(bus_memory, x, y);
 
+    auto& xr = *x;
+    auto& yr = *y;
+
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set(x->at("x1"), std::sin(M_PI * t / 3));
-            values.set(x->at("x2"), std::sin(M_PI * t / 5));
-            values.set(x->at("x3"), std::sin(M_PI * t / 7));
+            values.set(xr["x1"], std::sin(M_PI * t / 3));
+            values.set(xr["x2"], std::sin(M_PI * t / 5));
+            values.set(xr["x3"], std::sin(M_PI * t / 7));
         });
 
     pooya::History history(model);
@@ -119,12 +122,12 @@ int main()
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
 	gp << "plot"
-        << gp.file1d(history[x->at("x1")]) << "with lines title 'x1',"
-		<< gp.file1d(history[y->at("x1")]) << "with lines title 'y1',"
-        << gp.file1d(history[x->at("x2")]) << "with lines title 'x2',"
-		<< gp.file1d(history[y->at("x2")]) << "with lines title 'y2',"
-        << gp.file1d(history[x->at("x3")]) << "with lines title 'x3',"
-		<< gp.file1d(history[y->at("x3")]) << "with lines title 'y3',"
+        << gp.file1d(history[xr["x1"]]) << "with lines title 'x1',"
+		<< gp.file1d(history[yr["x1"]]) << "with lines title 'y1',"
+        << gp.file1d(history[xr["x2"]]) << "with lines title 'x2',"
+		<< gp.file1d(history[yr["x2"]]) << "with lines title 'y2',"
+        << gp.file1d(history[xr["x3"]]) << "with lines title 'x3',"
+		<< gp.file1d(history[yr["x3"]]) << "with lines title 'y3',"
         "\n";
 
     return 0;

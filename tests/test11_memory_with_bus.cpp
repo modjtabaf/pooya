@@ -67,16 +67,16 @@ int main()
     // create buses (signals)
 
     auto x = model.bus("x", bus_spec); // assign bus wires implicitely
-    // alternative 1
     /*
+    // alternative 1
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
         model.signal("x1"),
         model.signal("x2"),
         model.signal("x3"),
     });
     */
-    // alternative 2
     /*
+    // alternative 2
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely while specifying wire labels (order does not matter)
         {"x3", model.signal("x3"),},
         {"x1", model.signal("x1"),},
@@ -89,15 +89,16 @@ int main()
     // setup the model
     model.add_block(bus_memory, x, y);
 
-    auto& xr = *x;
-    auto& yr = *y;
+    auto x_x1 = x->at("x1");
+    auto x_x2 = x->at("x2");
+    auto x_x3 = x->at("x3");
 
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set(xr["x1"], std::sin(M_PI * t / 3));
-            values.set(xr["x2"], std::sin(M_PI * t / 5));
-            values.set(xr["x3"], std::sin(M_PI * t / 7));
+            values.set(x_x1, std::sin(M_PI * t / 3));
+            values.set(x_x2, std::sin(M_PI * t / 5));
+            values.set(x_x3, std::sin(M_PI * t / 7));
         });
 
     pooya::History history(model);
@@ -118,16 +119,20 @@ int main()
 
     history.shrink_to_fit();
 
+    auto y_x1 = y->at("x1");
+    auto y_x2 = y->at("x2");
+    auto y_x3 = y->at("x3");
+
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
 	gp << "plot"
-        << gp.file1d(history[xr["x1"]]) << "with lines title 'x1',"
-		<< gp.file1d(history[yr["x1"]]) << "with lines title 'y1',"
-        << gp.file1d(history[xr["x2"]]) << "with lines title 'x2',"
-		<< gp.file1d(history[yr["x2"]]) << "with lines title 'y2',"
-        << gp.file1d(history[xr["x3"]]) << "with lines title 'x3',"
-		<< gp.file1d(history[yr["x3"]]) << "with lines title 'y3',"
+        << gp.file1d(history[x_x1]) << "with lines title 'x1',"
+		<< gp.file1d(history[y_x1]) << "with lines title 'y1',"
+        << gp.file1d(history[x_x2]) << "with lines title 'x2',"
+		<< gp.file1d(history[y_x2]) << "with lines title 'y2',"
+        << gp.file1d(history[x_x3]) << "with lines title 'x3',"
+		<< gp.file1d(history[y_x3]) << "with lines title 'y3',"
         "\n";
 
     return 0;

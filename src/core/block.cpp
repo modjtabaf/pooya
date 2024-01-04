@@ -220,7 +220,7 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
     if (!sig)
         sig = model_->signal_registry().register_signal(reg_name, size);
 
-    verify_array_signal(sig);
+    verify_array_signal_size(sig, size);
     return sig->as_array();
 }
 
@@ -235,7 +235,7 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, Ite
     if (!sig)
         sig = model_->signal_registry().register_signal(reg_name, spec, begin_, end_);
 
-    verify_bus_signal(sig);
+    verify_bus_signal_spec(sig, spec);
     return sig->as_bus();
 }
 

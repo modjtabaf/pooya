@@ -27,21 +27,26 @@ public:
 
 protected:
     const Model& _model;
+    Values _X;
+    StepperCallback _callback;
+
+    auto f(double t, const Array& v) -> const auto&
+    {
+        _X.set_states(v);
+        _callback(t, _X);
+        return _X.derivs();
+    }
 
 public:
-    StepperBase(const Model& model) : _model(model) {}
+    StepperBase(const Model& model) : _model(model), _X(model) {}
 
     virtual void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) = 0;
 };
 
 class Euler : public StepperBase
 {
-protected:
-    Values _X;
-    Array _K;
-
 public:
-    Euler(const Model& model);
+    Euler(const Model& model) : StepperBase(model) {}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -49,14 +54,13 @@ public:
 class Rk4 : public StepperBase
 {
 protected:
-    Values _X;
     Array _K1;
     Array _K2;
     Array _K3;
     Array _K4;
 
 public:
-    Rk4(const Model& model);
+    Rk4(const Model& model) : StepperBase(model) {}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -64,7 +68,6 @@ public:
 class Rkf45 : public StepperBase
 {
 protected:
-    Values _X;
     Array _K1;
     Array _K2;
     Array _K3;
@@ -74,7 +77,7 @@ protected:
     Array _ZT;
 
 public:
-    Rkf45(const Model& model);
+    Rkf45(const Model& model) : StepperBase(model) {}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };

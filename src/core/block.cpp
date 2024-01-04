@@ -249,6 +249,19 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, con
     return signal(given_name, spec, l.begin(), l.end());
 }
 
+BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec)
+{
+    Signals signals;
+    signals.reserve(spec._wires.size());
+    for (const auto& wi: spec._wires)
+    {
+        std::string name = given_name + "~" + wi._name;
+        signals.push_back(wi._scalar ? Signal(signal(name)) : (wi._array_size > 0 ? Signal(signal(name, wi._array_size)) :
+            Signal(signal(name, *wi._bus))));
+    }
+    return signal(given_name, spec, signals.begin(), signals.end());
+}
+
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
 {
     verify_valid_signal(sig);

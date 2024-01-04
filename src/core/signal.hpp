@@ -101,6 +101,36 @@ public:
     BusSignal       as_bus() const {return    _bus;}
 };
 
+class Signals : public std::vector<Signal>
+{
+public:
+    using _Parent = std::vector<Signal>;
+    using _Parent::vector;
+
+    Signals(Signal signal)
+    {
+        push_back(signal);
+    }
+
+    void bind(std::size_t index, ScalarSignal& sig) const
+    {
+        verify_scalar_signal(at(index));
+        sig = at(index)->as_scalar();
+    }
+
+    void bind(std::size_t index, ArraySignal& sig) const
+    {
+        verify_array_signal(at(index));
+        sig = at(index)->as_array();
+    }
+
+    void bind(std::size_t index, BusSignal& sig) const
+    {
+        verify_bus_signal(at(index));
+        sig = at(index)->as_bus();
+    }
+};
+
 class ValueSignalInfo : public SignalInfo
 {
     friend class SignalRegistry;
@@ -224,7 +254,7 @@ protected:
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
             _signals.push_back({wi._name, nullptr});
-        if constexpr (std::is_same_v<Iter, const Signal*>)
+        if constexpr ((std::is_same_v<Iter, const Signal*>) || (std::is_same_v<Iter, Signals::iterator>))
         {
             std::size_t index = 0;
             for(auto it = begin_; it < end_; it++)
@@ -313,36 +343,6 @@ BusSignal SignalRegistry::register_signal(const std::string& name, const BusSpec
 
     return sig;
 }
-
-class Signals : public std::vector<Signal>
-{
-public:
-    using _Parent = std::vector<Signal>;
-    using _Parent::vector;
-
-    Signals(Signal signal)
-    {
-        push_back(signal);
-    }
-
-    void bind(std::size_t index, ScalarSignal& sig) const
-    {
-        verify_scalar_signal(at(index));
-        sig = at(index)->as_scalar();
-    }
-
-    void bind(std::size_t index, ArraySignal& sig) const
-    {
-        verify_array_signal(at(index));
-        sig = at(index)->as_array();
-    }
-
-    void bind(std::size_t index, BusSignal& sig) const
-    {
-        verify_bus_signal(at(index));
-        sig = at(index)->as_bus();
-    }
-};
 
 inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
 {

@@ -30,7 +30,8 @@ protected:
     Values _X;
     StepperCallback _callback;
 
-    auto f(double t, const Array& v) -> const auto&
+    template<typename T>
+    auto f(double t, const T& v) -> const auto&
     {
         _X.set_states(v);
         _callback(t, _X);

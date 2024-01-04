@@ -18,3 +18,5 @@
 * internal arrays of ode solvers are defined as static. convert them to class members.
 * change SignalId from integer to SignalInfo*
 - rename signal() to create_signal()
+- light weight Signal wrapper so it supports operator[]
+- rework Model and integrate SignalRegsitry into it

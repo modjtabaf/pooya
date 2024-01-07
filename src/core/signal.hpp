@@ -52,7 +52,6 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
-class SignalRegistry;
 class       SignalInfo;
 class  ValueSignalInfo;
 class ScalarSignalInfo;
@@ -79,7 +78,7 @@ struct Types<double>
 
 class SignalInfo
 {
-    friend class SignalRegistry;
+    friend class Model;
 
 public:
     const std::string _full_name; // full name of the signal
@@ -133,7 +132,7 @@ public:
 
 class ValueSignalInfo : public SignalInfo
 {
-    friend class SignalRegistry;
+    friend class Model;
 
 protected:
     ValueSignal _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
@@ -155,7 +154,7 @@ public:
 
 class ScalarSignalInfo : public ValueSignalInfo
 {
-    friend class SignalRegistry;
+    friend class Model;
 
 protected:
     double _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
@@ -171,7 +170,7 @@ public:
 
 class ArraySignalInfo : public ValueSignalInfo
 {
-    friend class SignalRegistry;
+    friend class Model;
 
 protected:
     Array _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
@@ -234,7 +233,7 @@ public:
 
 struct BusSignalInfo : public SignalInfo
 {
-    friend class SignalRegistry;
+    friend class Model;
 
 public:
     using NameSignal = std::pair<std::string, Signal>;
@@ -297,60 +296,7 @@ public:
     Signal at(const std::string& name) const {return at(index_of(name)).second;}
 };
 
-class SignalRegistry
-{
-public:
-    using SignalInfos = std::vector<Signal>;
-
-protected:
-    SignalInfos _signal_infos;
-    std::size_t _vi_index{0};
-
-    ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
-
-public:
-    ~SignalRegistry();
-
-    const SignalInfos& signals() const {return _signal_infos;}
-
-    void register_state(Signal sig, Signal deriv_sig, double iv)
-    {
-        _register_state(sig, deriv_sig)->_scalar->_iv = iv;
-    }
-
-    void register_state(Signal sig, Signal deriv_sig, const Array& iv)
-    {
-        _register_state(sig, deriv_sig)->_array->_iv = iv;
-    }
-
-    Signal           find_signal(const std::string& name, bool exact_match=false) const;
-    ScalarSignal register_signal(const std::string& name);
-    ArraySignal  register_signal(const std::string& name, std::size_t size);
-    template<typename Iter>
-    BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
-};
-
-template<typename Iter>
-BusSignal SignalRegistry::register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
-{
-    if (name.empty()) return nullptr;
-
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const Signals& signals)
-{
-    os << "signals:\n";
-    for (const auto& signal: signals)
-        os << "- " << signal;
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, const Signals& signals);
 
 struct ValueInfo
 {

@@ -414,11 +414,10 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto& sig_reg = model.signal_registry();
     const auto& T = history.time();
-    // auto q = history.at(sig_reg.find_signal(".q"));
-    auto dq = history.at(sig_reg.find_signal(".dq"));
-    auto a  = history.at(sig_reg.find_signal("_angle"));
+    // auto q = history.at(model.find_signal(".q"));
+    auto dq = history.at(model.find_signal(".dq"));
+    auto a  = history.at(model.find_signal("_angle"));
 
     const auto& vx = dq.col(0);
     const auto& vy = dq.col(1);

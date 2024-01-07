@@ -191,10 +191,9 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto& sig_reg = model.signal_registry();
-    auto  phi = sig_reg.find_signal("/test08/pendulum_with_PID.phi", true); // find using the exact name
-    auto dphi = sig_reg.find_signal(".dphi"); // find using the partial name
-    auto  tau = sig_reg.find_signal("tau");   // find using the partial name
+    auto  phi = model.find_signal("/test08/pendulum_with_PID.phi", true); // find using the exact name
+    auto dphi = model.find_signal(".dphi"); // find using the partial name
+    auto  tau = model.find_signal("tau");   // find using the partial name
 
     history.shrink_to_fit();
 

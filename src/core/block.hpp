@@ -164,21 +164,57 @@ public:
 
 class Model : public Parent
 {
+public:
+    using SignalInfos = std::vector<Signal>;
+
 protected:
-    SignalRegistry _signal_registry;
+    SignalInfos _signal_infos;
+    std::size_t _vi_index{0};
+
+    ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
 
     bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
 
 public:
     Model(std::string given_name="model");
+    ~Model();
 
     Model* model() override {return this;}
 
-    const SignalRegistry& signal_registry() const {return _signal_registry;}
-    SignalRegistry& signal_registry() {return _signal_registry;}
-
     virtual void input_cb(double /*t*/, Values& /*values*/) {}
+
+    const SignalInfos& signals() const {return _signal_infos;}
+
+    void register_state(Signal sig, Signal deriv_sig, double iv)
+    {
+        _register_state(sig, deriv_sig)->_scalar->_iv = iv;
+    }
+
+    void register_state(Signal sig, Signal deriv_sig, const Array& iv)
+    {
+        _register_state(sig, deriv_sig)->_array->_iv = iv;
+    }
+
+    Signal           find_signal(const std::string& name, bool exact_match=false) const;
+    ScalarSignal register_signal(const std::string& name);
+    ArraySignal  register_signal(const std::string& name, std::size_t size);
+    template<typename Iter>
+    BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
 };
+
+template<typename Iter>
+BusSignal Model::register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
 
 template<typename T>
 class InitialValueT : public Block
@@ -444,7 +480,7 @@ public:
         if (!Block::init(parent, iports, oports))
             return false;
 
-        model_ref().signal_registry().register_state(_oports[0], _iports[0], _value);
+        model_ref().register_state(_oports[0], _iports[0], _value);
 
         return true;
     }

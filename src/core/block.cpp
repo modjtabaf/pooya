@@ -125,6 +125,74 @@ Model* Block::model()
     return _parent ? _parent->model() : nullptr;
 }
 
+Model::~Model()
+{
+    for (auto* si: _signal_infos)
+        delete si;
+}
+
+Signal Model::find_signal(const std::string& name, bool exact_match) const
+{
+    if (name.empty())
+        return nullptr;
+
+    auto name_len = name.length();
+
+    auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
+        [&] (Signal sig) -> bool
+        {
+            if (exact_match)
+                return sig->_full_name == name;
+                
+            auto str_len = sig->_full_name.length();
+            return (str_len >= name_len) && (sig->_full_name.substr(str_len - name_len) == name);
+        });
+
+    return it == _signal_infos.end() ? nullptr : *it;
+}
+
+ScalarSignal Model::register_signal(const std::string& name)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new ScalarSignalInfo(name, index, _vi_index++);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
+
+ArraySignal Model::register_signal(const std::string& name, std::size_t size)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new ArraySignalInfo(name, index, _vi_index++, size);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
+
+ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
+{
+    verify_value_signal(sig);
+    verify_value_signal(deriv_sig);
+    verify(!sig->_value->is_state(), sig->_full_name + ": signal is already registered as a state!");
+    verify(!deriv_sig->_value->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state derivative!");
+    verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
+        sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
+
+    ValueSignalInfo* ret = _signal_infos[sig->_index]->_value;
+    ret->_deriv_sig = deriv_sig->_value;
+    _signal_infos[deriv_sig->_index]->_value->_is_deriv = true;
+
+    return ret;
+}
+
 template<>
 void SinT<double>::activation_function(double /*t*/, Values& values)
 {
@@ -202,9 +270,9 @@ ScalarSignal Parent::signal(const std::string& given_name)
     if (!model_) return nullptr;
 
     std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    Signal sig = model_->find_signal(reg_name, true);
     if (!sig)
-        sig = model_->signal_registry().register_signal(reg_name);
+        sig = model_->register_signal(reg_name);
 
     verify_scalar_signal(sig);
     return sig->as_scalar();
@@ -216,9 +284,9 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
     if (!model_) return nullptr;
 
     std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    Signal sig = model_->find_signal(reg_name, true);
     if (!sig)
-        sig = model_->signal_registry().register_signal(reg_name, size);
+        sig = model_->register_signal(reg_name, size);
 
     verify_array_signal_size(sig, size);
     return sig->as_array();
@@ -231,9 +299,9 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, Ite
     if (!model_) return nullptr;
 
     std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->signal_registry().find_signal(reg_name, true);
+    Signal sig = model_->find_signal(reg_name, true);
     if (!sig)
-        sig = model_->signal_registry().register_signal(reg_name, spec, begin_, end_);
+        sig = model_->register_signal(reg_name, spec, begin_, end_);
 
     verify_bus_signal_spec(sig, spec);
     return sig->as_bus();

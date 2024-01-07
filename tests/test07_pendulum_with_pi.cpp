@@ -182,8 +182,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto& sig_reg = model.signal_registry();
-    auto phi = sig_reg.find_signal(".phi");
+    auto phi = model.find_signal(".phi");
 
     history.shrink_to_fit();
 

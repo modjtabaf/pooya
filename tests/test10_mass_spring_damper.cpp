@@ -51,9 +51,8 @@ public:
         _s_xd  = parent.signal( "xd");
         _s_xdd = parent.signal("xdd");
 
-        auto& sig_reg = model_ref().signal_registry();
-        sig_reg.register_state( _s_x,  _s_xd,  _x0);
-        sig_reg.register_state(_s_xd, _s_xdd, _xd0);
+        model_ref().register_state( _s_x,  _s_xd,  _x0);
+        model_ref().register_state(_s_xd, _s_xdd, _xd0);
 
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
         _add_dependecny(_s_x);
@@ -117,8 +116,7 @@ int main()
 
     history.shrink_to_fit();
 
-    auto& sig_reg = model.signal_registry();
-    auto x = sig_reg.find_signal(".x");
+    auto x = model.find_signal(".x");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

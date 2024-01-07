@@ -32,12 +32,14 @@ void Rk4::step(StepperCallback callback, double t0, const Array& v0, double t1, 
 {
     _callback = callback;
     double h = new_h = t1 - t0;
+    double h_2 = h / 2;
 
-    _K1 = h * f(t0, v0);
-    _K2 = h * f(t0 + h/2, v0 + _K1 / 2);
-    _K3 = h * f(t0 + h/2, v0 + _K2 / 2);
-    _K4 = h * f(t0 + h  , v0 + _K3);
-    v1 = v0 + _K1 / 6 + _K2 / 3 + _K3 / 3 + _K4 / 6;
+    _K1 = h_2 * f(t0      , v0      );
+    _K2 = h_2 * f(t0 + h_2, v0 + _K1);
+    _K3 = h   * f(t0 + h_2, v0 + _K2);
+    _K4 = h   * f(t0 + h  , v0 + _K3);
+
+    v1 = v0 + (1./3) * _K1 + (2./3) * _K2 + (1./3) * _K3 + (1./6) * _K4;
 }
 
 // source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html

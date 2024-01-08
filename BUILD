@@ -182,7 +182,7 @@ cc_binary(
 
 cc_binary(
     name = "test09",
-    srcs = ["tests/Steering_System.cpp"],
+    srcs = ["tests/test09_mass_spring_damper.cpp"],
     copts = [
         "-pedantic-errors",
         "-Wall",
@@ -203,7 +203,7 @@ cc_binary(
 
 cc_binary(
     name = "test10",
-    srcs = ["tests/test10_mass_spring_damper.cpp"],
+    srcs = ["tests/test10_memory_with_bus.cpp"],
     copts = [
         "-pedantic-errors",
         "-Wall",
@@ -218,53 +218,5 @@ cc_binary(
     deps = [
         "//src:core",
         "//src:misc",
-        "//tests/data:data",
-    ],
-)
-
-cc_binary(
-    name = "test11",
-    srcs = ["tests/test11_memory_with_bus.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
-)
-
-cc_binary(
-    name = "stm",
-    srcs = ["tests/simple_truck_model.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        "-O3",
-        "-fno-math-errno",
-        "-ffast-math",
-        ],
-    defines = [
-        "NDEBUG",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-        "//tests/data:data",
     ],
 )

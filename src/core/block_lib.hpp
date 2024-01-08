@@ -12,209 +12,13 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_HPP__
-#define __POOYA_BLOCK_HPP__
+#ifndef __POOYA_BLOCK_LIB_HPP__
+#define __POOYA_BLOCK_LIB_HPP__
 
-#include <cassert>
-#include "util.hpp"
-#include "signal.hpp"
+#include "block_base.hpp"
 
 namespace pooya
 {
-
-class Block;
-class Parent;
-class Model;
-
-using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
-
-class Block
-{
-    friend class Parent;
-
-public:
-    static constexpr uint16_t NoIOLimit = uint16_t(-1);
-
-protected:
-    bool _initialized{false};
-    Signals _iports;
-    Signals _oports;
-    Signals _dependencies;
-    Parent* _parent{nullptr};
-    std::string _given_name;
-    std::string _full_name;
-    uint16_t _num_iports{NoIOLimit};
-    uint16_t _num_oports{NoIOLimit};
-    std::size_t _unnamed_signal_counter{0};
-
-    bool _processed{false};
-    void _assign_valid_given_name(std::string given_name);
-    bool _add_dependecny(Signal signal);
-
-    Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
-
-    virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
-    virtual void post_init() {}
-
-public:
-    virtual ~Block() = default;
-
-    virtual void step(double /*t*/, const Values& /*states*/) {}
-    virtual void activation_function(double /*t*/, Values& /*x*/) {}
-    virtual Model* model();
-
-    Model& model_ref()
-    {
-        auto* mdl = model();
-        verify(mdl, _full_name + ": a model is necessary but none is defined!");
-        return *mdl;
-    }
-
-    Parent* parent() {return _parent;}
-    bool processed() const {return _processed;}
-    bool is_initialized() const {return _initialized;}
-    const std::string& given_name() const {return _given_name;}
-    const std::string& full_name() const {return _full_name;}
-    const Signals& iports() const {return _iports;}
-    const Signals& oports() const {return _oports;}
-
-    virtual void _mark_unprocessed();
-    virtual uint _process(double t, Values& values, bool go_deep = true);
-
-    virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
-    {
-        return (level > max_level) || cb(*this, level);
-    }
-}; // class Block
-
-class Parent : public Block
-{
-protected:
-    std::vector<Block*> _components;
-
-    Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, num_iports, num_oports) {}
-
-public:
-    bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
-    {
-        if (!component.init(*this, iports, oports))
-            return false;
-
-        _components.push_back(&component);
-        component.post_init();
-        return true;
-    }
-
-    void step(double t, const Values& values) override
-    {
-        for (auto* component: _components)
-            component->step(t, values);
-    }
-
-    ScalarSignal signal(const std::string& given_name="");
-    ArraySignal  signal(const std::string& given_name, std::size_t size);
-    template<typename Iter>
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec);
-
-    Signal       clone_signal(const std::string& given_name, Signal sig);
-    ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
-    {
-        return clone_signal(given_name, Signal(sig))->as_scalar();
-    }
-    ArraySignal clone_signal(const std::string& given_name, ArraySignal sig)
-    {
-        return clone_signal(given_name, Signal(sig))->as_array();
-    }
-    BusSignal clone_signal(const std::string& given_name, BusSignal sig)
-    {
-        return clone_signal(given_name, Signal(sig))->as_bus();
-    }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
-    {
-        return signal(given_name, spec, l);
-    }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
-    {
-        return signal(given_name, spec, l);
-    }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec)
-    {
-        return signal(given_name, spec);
-    }
-
-    std::string make_signal_name(const std::string& given_name);
-    ScalarSignal parameter(const std::string& given_name);
-    ArraySignal  parameter(const std::string& given_name, std::size_t size);
-    void _mark_unprocessed() override;
-    uint _process(double t, Values& values, bool go_deep = true) override;
-    bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
-}; // class Parent
-
-class Submodel : public Parent
-{
-public:
-    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
-
-}; // class Submodel
-
-class Model : public Parent
-{
-public:
-    using SignalInfos = std::vector<Signal>;
-
-protected:
-    SignalInfos _signal_infos;
-    std::size_t _vi_index{0};
-
-    ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
-
-    bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
-
-public:
-    Model(std::string given_name="model");
-    ~Model();
-
-    Model* model() override {return this;}
-
-    virtual void input_cb(double /*t*/, Values& /*values*/) {}
-
-    const SignalInfos& signals() const {return _signal_infos;}
-
-    void register_state(Signal sig, Signal deriv_sig, double iv)
-    {
-        _register_state(sig, deriv_sig)->_scalar->_iv = iv;
-    }
-
-    void register_state(Signal sig, Signal deriv_sig, const Array& iv)
-    {
-        _register_state(sig, deriv_sig)->_array->_iv = iv;
-    }
-
-    Signal           find_signal(const std::string& name, bool exact_match=false) const;
-    ScalarSignal register_signal(const std::string& name);
-    ArraySignal  register_signal(const std::string& name, std::size_t size);
-    template<typename Iter>
-    BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
-};
-
-template<typename Iter>
-BusSignal Model::register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
-{
-    if (name.empty()) return nullptr;
-
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
 
 template<typename T>
 class InitialValueT : public Block
@@ -504,27 +308,6 @@ public:
 using Integrator  = IntegratorT<double>;
 using IntegratorA = IntegratorT<Array>;
 
-// # it is still unclear how to deal with states when using this numerical integrator
-// # class NumericalIntegrator(Base):
-// #     def __init__(self, y0, name, iport='-', oport='-'):
-// #         super().__init__(name, [iport], [oport])
-// #         self._t = None
-// #         self._x = None
-// #         self._y = y0
-    
-// #     def step(self, t, states):
-// #         self._t = t
-// #         self._x = states[self._iports[0]]
-// #         self._y = states[self._oports[0]]
-
-// #     def activation_function(self, t, x):
-// #         if self._t is None:
-// #             self._t = t
-// #             self._x = x[0]
-// #             return [self._y]
-// #         else:
-// #             return [self._y + 0.5*(t - self._t)*(x[0] + self._x)]
-
 template<typename T>
 class DelayT : public Block
 {
@@ -719,18 +502,6 @@ public:
     void post_init() override;
 };
 
-inline ScalarSignal Parent::parameter(const std::string& given_name)
-{
-    auto* model_ = model();
-    return model_ ? model_->signal(given_name) : nullptr;
 }
 
-inline ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
-{
-    auto* model_ = model();
-    return model_ ? model_->signal(given_name, size) : nullptr;
-}
-
-}
-
-#endif // __POOYA_BLOCK_HPP__
+#endif // __POOYA_BLOCK_LIB_HPP__

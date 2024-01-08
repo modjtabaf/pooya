@@ -13,7 +13,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include "block.hpp"
+#include "block_base.hpp"
 
 namespace pooya
 {
@@ -193,12 +193,6 @@ ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
     return ret;
 }
 
-template<>
-void SinT<double>::activation_function(double /*t*/, Values& values)
-{
-    values.set<double>(_oports[0], std::sin(values.get<double>(_iports[0])));
-}
-
 std::string Parent::make_signal_name(const std::string& given_name)
 {
     std::string name(given_name);
@@ -369,45 +363,6 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
     return true;
-}
-
-BusBlockBuilder::~BusBlockBuilder()
-{
-    for (auto* p: _blocks)
-        if (p)
-            delete p;
-}
-
-bool BusBlockBuilder::init(Parent& parent, const Signals& iports, const Signals& oports)
-{
-    if (!Block::init(parent, iports, oports))
-        return false;
-
-    iports.bind(0, _x);
-    oports.bind(0, _y);
-
-    verify(_x->spec() == _y->spec(), "Bus specs don't match!");
-
-    return true;
-}
-
-void BusBlockBuilder::post_init()
-{
-    const auto& bus_spec = _x->spec();
-    _blocks.reserve(bus_spec.total_size());
-    traverse_bus("", bus_spec);
-}
-
-void BusBlockBuilder::traverse_bus(const std::string& path, const BusSpec& bus_spec)
-{
-    for (const auto& wi: bus_spec._wires)
-    {
-        auto new_path = path + "/" + wi._name;
-        if (wi._bus)
-            traverse_bus(new_path, *wi._bus);
-        else
-            block_builder(new_path, wi, _x->at(wi._name), _y->at(wi._name));
-    }
 }
 
 }

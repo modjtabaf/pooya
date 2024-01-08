@@ -220,7 +220,7 @@ void Parent::_mark_unprocessed()
 {
     Block::_mark_unprocessed();
 
-    for (auto* component: _components)
+    for (auto component: _components)
     {
         component->_mark_unprocessed();
     }

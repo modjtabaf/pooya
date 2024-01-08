@@ -197,7 +197,6 @@ cc_binary(
     deps = [
         "//src:core",
         "//src:misc",
-        "//tests/data:data",
     ],
 )
 

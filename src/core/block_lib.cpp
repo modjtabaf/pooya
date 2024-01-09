@@ -51,15 +51,17 @@ void BusBlockBuilder::post_init()
     traverse_bus("", bus_spec);
 }
 
-void BusBlockBuilder::traverse_bus(const std::string& path, const BusSpec& bus_spec)
+void BusBlockBuilder::traverse_bus(const std::string& path_name, const BusSpec& bus_spec)
 {
     for (const auto& wi: bus_spec._wires)
     {
-        auto new_path = path + "/" + wi._name;
         if (wi._bus)
-            traverse_bus(new_path, *wi._bus);
+            traverse_bus(path_name + wi._name + ".", *wi._bus);
         else
-            block_builder(new_path, wi, _x->at(wi._name), _y->at(wi._name));
+        {
+            auto name = path_name + wi._name;
+            block_builder(name, wi, _x->at(name), _y->at(name));
+        }
     }
 }
 

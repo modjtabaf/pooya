@@ -290,13 +290,14 @@ public:
         verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
-    Signal operator[](const std::string& name) const {return operator[](index_of(name)).second;}
 
     const NameSignal& at(std::size_t index) const
     {
         return _signals.at(index);
     }
-    Signal at(const std::string& name) const {return at(index_of(name)).second;}
+
+    Signal operator[](const std::string& name) const;
+    Signal at(const std::string& name) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Signals& signals);

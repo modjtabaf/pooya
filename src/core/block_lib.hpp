@@ -488,9 +488,9 @@ protected:
 
     std::vector<Block*> _blocks;
 
-    void traverse_bus(const std::string& path, const BusSpec& bus_spec);
+    void traverse_bus(const std::string& path_name, const BusSpec& bus_spec);
 
-    virtual void block_builder(const std::string& path, const BusSpec::WireInfo& wi, Signal sig_in, Signal sig_out) = 0;
+    virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo& wi, Signal sig_in, Signal sig_out) = 0;
 
 public:
     BusBlockBuilder(std::string given_name) :

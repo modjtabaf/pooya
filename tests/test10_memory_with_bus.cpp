@@ -28,9 +28,9 @@ public:
     BusMemory(std::string given_name) : pooya::BusBlockBuilder(given_name) {}
 
 protected:
-    void block_builder(const std::string& /*path*/, const pooya::BusSpec::WireInfo& wi, pooya::Signal sig_in, pooya::Signal sig_out) override
+    void block_builder(const std::string& path_name, const pooya::BusSpec::WireInfo& wi, pooya::Signal sig_in, pooya::Signal sig_out) override
     {
-        if (wi._name == "x2")
+        if (path_name == "x2")
         {
             // delay x2 by 2 steps
             auto z = _parent->signal();
@@ -58,10 +58,15 @@ int main()
     pooya::Model   model("test11");
     BusMemory bus_memory("memory");
 
+    pooya::BusSpec internal_bus_spec({
+        {"z3"}, // wire 0 called "z3" carries a scalar signal
+        });
+
     pooya::BusSpec bus_spec({
-        {"x0"}, // wire 0 called "x1" carries a scalar signal
-        {"x1"}, // wire 1 called "x2" carries a scalar signal
-        {"x2"}, // wire 2 called "x3" carries a scalar signal
+        {"x0"},                   // wire 0 called "x0" carries a scalar signal
+        {"x1"},                   // wire 1 called "x1" carries a scalar signal
+        {"Z", internal_bus_spec}, // wire 2 called "Z" carries a bus
+        {"x2"},                   // wire 3 called "x2" carries a scalar signal
         });
 
     // create buses (signals)
@@ -92,6 +97,7 @@ int main()
     auto x_x0 = x->at("x0");
     auto x_x1 = x->at("x1");
     auto x_x2 = x->at("x2");
+    auto x_z3 = x->at("Z.z3");
 
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
@@ -99,6 +105,7 @@ int main()
             values.set(x_x0, std::sin(M_PI * t / 3));
             values.set(x_x1, std::sin(M_PI * t / 5));
             values.set(x_x2, std::sin(M_PI * t / 7));
+            values.set(x_z3, std::sin(M_PI * t / 9));
         });
 
     pooya::History history(model);
@@ -122,6 +129,7 @@ int main()
     auto y_x0 = y->at("x0");
     auto y_x1 = y->at("x1");
     auto y_x2 = y->at("x2");
+    auto y_z3 = y->at("Z.z3");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
@@ -133,6 +141,8 @@ int main()
 		<< gp.file1d(history[y_x1]) << "with lines title 'y1',"
         << gp.file1d(history[x_x2]) << "with lines title 'x2',"
 		<< gp.file1d(history[y_x2]) << "with lines title 'y2',"
+        << gp.file1d(history[x_z3]) << "with lines title 'x3',"
+		<< gp.file1d(history[y_z3]) << "with lines title 'y3',"
         "\n";
 
     return 0;

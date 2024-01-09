@@ -374,7 +374,7 @@ protected:
     std::vector<ValueInfo> _value_infos;
     std::size_t             _total_size{0};
     Eigen::ArrayXd              _values;
-    Eigen::Map<Eigen::ArrayXd>  _states{nullptr, Eigen::Dynamic};
+    Eigen::Map<Eigen::ArrayXd>  _states{nullptr, 0};
     Eigen::ArrayXd              _derivs;
 
     inline ValueInfo& get_value_info(Signal sig)

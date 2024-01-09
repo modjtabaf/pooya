@@ -214,6 +214,9 @@ public:
 
     const std::vector<WireInfo> _wires;
 
+    // empty
+    BusSpec() = default;
+
     template<typename Iter>
     BusSpec(Iter begin_, Iter end_) : _wires(begin_, end_) {}
 

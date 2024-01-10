@@ -317,12 +317,12 @@ protected:
     std::vector<T> _x;
 
     // input signals
-    typename pooya::Types<T>::Signal _s_x;       // [0]
-    pooya::ScalarSignal              _s_delay;   // [1]
-    typename pooya::Types<T>::Signal _s_initial; // [2]
+    typename Types<T>::Signal _s_x;       // [0]
+    ScalarSignal              _s_delay;   // [1]
+    typename Types<T>::Signal _s_initial; // [2]
 
     // output signal
-    typename pooya::Types<T>::Signal _s_y; // [0]
+    typename Types<T>::Signal _s_y; // [0]
 
 public:
     DelayT(std::string given_name, double lifespan=10.0) : Block(given_name, 3, 1), _lifespan(lifespan) {}
@@ -500,6 +500,43 @@ public:
 
     bool init(Parent& parent, const Signals& iports, const Signals& oports) override;
     void post_init() override;
+};
+
+class BusMemory : public BusBlockBuilder
+{
+public:
+    using LabelValue = std::pair<std::string, Value>;
+
+protected:
+    const std::vector<LabelValue> _init_values;
+
+public:
+    BusMemory(std::string given_name, const std::initializer_list<LabelValue>& l={}) : BusBlockBuilder(given_name), _init_values(l) {}
+
+protected:
+    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, Signal sig_in, Signal sig_out) override
+    {
+        auto it = std::find_if(_init_values.begin(), _init_values.end(),
+            [&](const LabelValue& lv)
+            {
+                return lv.first == full_label;
+            });
+
+        Block* block = nullptr;
+        if (wi._scalar)
+            block = (it == _init_values.end()) ?
+                new Memory("memory") :
+                new Memory("memory", it->second.as_scalar());
+        else if (wi._array_size > 0)
+            block = (it == _init_values.end()) ?
+                new MemoryA("memory") :
+                new MemoryA("memory", it->second.as_array());
+        else
+            verify(false, "cannot create a memory block for a non-value signal.");
+
+        _blocks.push_back(block);
+        _parent->add_block(*block, sig_in, sig_out);
+    }
 };
 
 }

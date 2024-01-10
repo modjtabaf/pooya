@@ -22,41 +22,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-class BusMemory : public pooya::BusBlockBuilder
-{
-public:
-    BusMemory(std::string given_name) : pooya::BusBlockBuilder(given_name) {}
-
-protected:
-    void block_builder(const std::string& full_label, const pooya::BusSpec::WireInfo& /*wi*/, pooya::Signal sig_in, pooya::Signal sig_out) override
-    {
-        if (full_label == "x2")
-        {
-            // delay x2 by 2 steps
-            auto z = _parent->signal();
-
-            _blocks.push_back(new pooya::Memory("memory", 0.5));
-            _parent->add_block(*_blocks.back(), sig_in, z);
-
-            _blocks.push_back(new pooya::Memory("memory", 1.0));
-            _parent->add_block(*_blocks.back(), z, sig_out);
-        }
-        else
-        {
-            _blocks.push_back(new pooya::Memory("memory"));
-            _parent->add_block(*_blocks.back(), sig_in, sig_out);
-        }
-    }
-};
-
 int main()
 {
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model   model("test11");
-    BusMemory bus_memory("memory");
+    pooya::Model model("test11");
+    pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}});
 
     pooya::BusSpec internal_bus_spec({
         {"z3"}, // wire 0 labeled "z3" carries a scalar signal

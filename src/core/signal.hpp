@@ -302,6 +302,32 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Signals& signals);
 
+class Value
+{
+protected:
+    const bool _is_scalar{true};
+    double _scalar{0.0};
+    Array _array;
+
+public:
+    Value(double v) : _scalar(v) {}
+    Value(const Array& v) : _is_scalar(false), _array(v) {}
+
+    bool is_scalar() const {return _is_scalar;}
+
+    double as_scalar() const
+    {
+        verify(_is_scalar, "attempting to retrieve an array as a scalar!");
+        return _scalar;
+    }
+
+    const Array& as_array() const
+    {
+        verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
+        return _array;
+    }
+};
+
 struct ValueInfo
 {
     friend class Values;

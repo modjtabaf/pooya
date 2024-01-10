@@ -28,26 +28,26 @@ std::ostream& operator<<(std::ostream& os, const Signals& signals)
     return os;
 }
 
-Signal BusSignalInfo::operator[](const std::string& name) const
+Signal BusSignalInfo::operator[](const std::string& label) const
 {
-    auto pos = name.find(".");
+    auto pos = label.find(".");
     if (pos == std::string::npos)
-        return operator[](index_of(name)).second;
+        return operator[](index_of(label)).second;
 
-    auto sig = operator[](index_of(name.substr(0, pos))).second;
+    auto sig = operator[](index_of(label.substr(0, pos))).second;
     verify_bus_signal(sig);
-    return sig->as_bus()->operator[](name.substr(pos + 1));
+    return sig->as_bus()->operator[](label.substr(pos + 1));
 }
 
-Signal BusSignalInfo::at(const std::string& name) const
+Signal BusSignalInfo::at(const std::string& label) const
 {
-    auto pos = name.find(".");
+    auto pos = label.find(".");
     if (pos == std::string::npos)
-        return at(index_of(name)).second;
+        return at(index_of(label)).second;
 
-    auto sig = at(index_of(name.substr(0, pos))).second;
+    auto sig = at(index_of(label.substr(0, pos))).second;
     verify_bus_signal(sig);
-    return sig->as_bus()->at(name.substr(pos + 1));
+    return sig->as_bus()->at(label.substr(pos + 1));
 }
 
 Values::Values(const pooya::Model& model)

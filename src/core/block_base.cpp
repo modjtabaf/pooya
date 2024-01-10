@@ -301,7 +301,7 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, Ite
     return sig->as_bus();
 }
 
-BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
 {
     return signal(given_name, spec, l.begin(), l.end());
 }
@@ -317,7 +317,7 @@ BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec)
     signals.reserve(spec._wires.size());
     for (const auto& wi: spec._wires)
     {
-        std::string name = given_name + "~" + wi._name;
+        std::string name = given_name + "~" + wi._label;
         signals.push_back(wi._scalar ? Signal(signal(name)) : (wi._array_size > 0 ? Signal(signal(name, wi._array_size)) :
             Signal(signal(name, *wi._bus))));
     }
@@ -342,12 +342,12 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
         verify_bus_signal(sig);
         BusSignal bus = sig->as_bus();
         std::size_t n = bus->spec()._wires.size();
-        std::vector<BusSignalInfo::NameSignal> sigs;
+        std::vector<BusSignalInfo::LabelSignal> sigs;
         sigs.reserve(n);
         for (std::size_t k = 0; k < n; k++)
         {
             const auto& ns = bus->at(k);
-            sigs.emplace_back(BusSignalInfo::NameSignal(ns.first, clone_signal("", ns.second)));
+            sigs.emplace_back(BusSignalInfo::LabelSignal(ns.first, clone_signal("", ns.second)));
         }
         return signal(given_name, bus->spec(), sigs.begin(), sigs.end());
     }

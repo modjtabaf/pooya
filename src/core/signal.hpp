@@ -194,22 +194,22 @@ class BusSpec
 public:
     struct WireInfo
     {
-        const std::string _name;
+        const std::string _label;
         const BusSpec* _bus{nullptr};
         const bool _scalar{false};
         const std::size_t _array_size{0};
 
         // scalar
-        WireInfo(const std::string& name) : _name(name), _scalar(true) {}
+        WireInfo(const std::string& label) : _label(label), _scalar(true) {}
 
         // array
-        WireInfo(const std::string& name, std::size_t array_size) : _name(name), _array_size(array_size)
+        WireInfo(const std::string& label, std::size_t array_size) : _label(label), _array_size(array_size)
         {
             verify(array_size > 0, "array size cannot be zero!");
         }
 
         // bus
-        WireInfo(const std::string& name, const BusSpec& bus) : _name(name), _bus(&bus) {}
+        WireInfo(const std::string& label, const BusSpec& bus) : _label(label), _bus(&bus) {}
     };
 
     const std::vector<WireInfo> _wires;
@@ -239,12 +239,12 @@ struct BusSignalInfo : public SignalInfo
     friend class Model;
 
 public:
-    using NameSignal = std::pair<std::string, Signal>;
+    using LabelSignal = std::pair<std::string, Signal>;
 
     const BusSpec& _spec;
 
 protected:
-    std::vector<NameSignal> _signals;
+    std::vector<LabelSignal> _signals;
 
 protected:
     void _set(std::size_t index, Signal sig);
@@ -256,7 +256,7 @@ protected:
         verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals!");
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
-            _signals.push_back({wi._name, nullptr});
+            _signals.push_back({wi._label, nullptr});
         if constexpr ((std::is_same_v<Iter, const Signal*>) || (std::is_same_v<Iter, Signals::iterator>))
         {
             std::size_t index = 0;
@@ -274,30 +274,30 @@ protected:
 public:
     const BusSpec& spec() const {return _spec;}
 
-    std::size_t index_of(const std::string& name) const
+    std::size_t index_of(const std::string& label) const
     {
         return std::distance(_signals.begin(),
             std::find_if(_signals.begin(), _signals.end(),
-                [&](const NameSignal& ns)
+                [&](const LabelSignal& ns)
                 {
-                    return ns.first == name;
+                    return ns.first == label;
                 }
             ));
     }
 
-    const NameSignal& operator[](std::size_t index) const
+    const LabelSignal& operator[](std::size_t index) const
     {
         verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
-    const NameSignal& at(std::size_t index) const
+    const LabelSignal& at(std::size_t index) const
     {
         return _signals.at(index);
     }
 
-    Signal operator[](const std::string& name) const;
-    Signal at(const std::string& name) const;
+    Signal operator[](const std::string& label) const;
+    Signal at(const std::string& label) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Signals& signals);

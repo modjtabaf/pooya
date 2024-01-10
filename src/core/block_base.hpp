@@ -117,7 +117,7 @@ public:
     ArraySignal  signal(const std::string& given_name, std::size_t size);
     template<typename Iter>
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l);
+    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
     BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
     BusSignal    signal(const std::string& given_name, const BusSpec& spec);
 
@@ -134,7 +134,7 @@ public:
     {
         return clone_signal(given_name, Signal(sig))->as_bus();
     }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::NameSignal>& l)
+    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
     {
         return signal(given_name, spec, l);
     }

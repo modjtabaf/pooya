@@ -28,9 +28,9 @@ public:
     BusMemory(std::string given_name) : pooya::BusBlockBuilder(given_name) {}
 
 protected:
-    void block_builder(const std::string& path_name, const pooya::BusSpec::WireInfo& wi, pooya::Signal sig_in, pooya::Signal sig_out) override
+    void block_builder(const std::string& full_label, const pooya::BusSpec::WireInfo& /*wi*/, pooya::Signal sig_in, pooya::Signal sig_out) override
     {
-        if (path_name == "x2")
+        if (full_label == "x2")
         {
             // delay x2 by 2 steps
             auto z = _parent->signal();
@@ -59,14 +59,14 @@ int main()
     BusMemory bus_memory("memory");
 
     pooya::BusSpec internal_bus_spec({
-        {"z3"}, // wire 0 called "z3" carries a scalar signal
+        {"z3"}, // wire 0 labeled "z3" carries a scalar signal
         });
 
     pooya::BusSpec bus_spec({
-        {"x0"},                   // wire 0 called "x0" carries a scalar signal
-        {"x1"},                   // wire 1 called "x1" carries a scalar signal
-        {"Z", internal_bus_spec}, // wire 2 called "Z" carries a bus
-        {"x2"},                   // wire 3 called "x2" carries a scalar signal
+        {"x0"},                   // wire 0 labeled "x0" carries a scalar signal
+        {"x1"},                   // wire 1 labeled "x1" carries a scalar signal
+        {"Z", internal_bus_spec}, // wire 2 labeled "Z" carries a bus
+        {"x2"},                   // wire 3 labeled "x2" carries a scalar signal
         });
 
     // create buses (signals)
@@ -77,6 +77,7 @@ int main()
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
         model.signal("x0"),
         model.signal("x1"),
+        model.bus("any_name_you_like", internal_bus_spec, {model.signal("z3")}),
         model.signal("x2"),
     });
     */
@@ -86,6 +87,7 @@ int main()
         {"x2", model.signal("x2"),},
         {"x0", model.signal("x0"),},
         {"x1", model.signal("x1"),},
+        {"Z", model.bus("any_name_you_like", internal_bus_spec)},
     });
     */
 

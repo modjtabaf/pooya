@@ -524,15 +524,21 @@ protected:
 
         Block* block = nullptr;
         if (wi._scalar)
+        {
             block = (it == _init_values.end()) ?
                 new Memory("memory") :
                 new Memory("memory", it->second.as_scalar());
+        }
         else if (wi._array_size > 0)
+        {
             block = (it == _init_values.end()) ?
                 new MemoryA("memory") :
                 new MemoryA("memory", it->second.as_array());
+        }
         else
+        {
             verify(false, "cannot create a memory block for a non-value signal.");
+        }
 
         _blocks.push_back(block);
         _parent->add_block(*block, sig_in, sig_out);

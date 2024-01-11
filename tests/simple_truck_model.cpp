@@ -74,76 +74,28 @@ struct Parameters
     }
 };
 
-class Forces : public pooya::Block
-{
-protected:
-    // input signals
-    pooya::ScalarSignal         _s_delta; // [0]
-    pooya::ScalarSignal _s_engine_torque; // [1]
-    pooya::ArraySignal             _s_dq; // [2]
-
-    // output signals
-    pooya::ScalarSignal _s_F_lon; // [0]
-    pooya::ArraySignal  _s_F_lat; // [1]
-
-public:
-    Forces() : pooya::Block("Forces", 3, 2) {}
-
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
-    {
-        if (!pooya::Block::init(parent, iports, oports))
-            return false;
-
-        // input signals
-        iports.bind(0, _s_delta);
-        iports.bind(1, _s_engine_torque);
-        iports.bind(2, _s_dq);
-
-        // output signals
-        oports.bind(0, _s_F_lon);
-        oports.bind(1, _s_F_lat);
-
-        return true;
-    }
-
-    void activation_function(double /*t*/, pooya::Values& values) override
-    {
-        // get inputs
-        double           delta = values.get(_s_delta);
-        double   engine_torque = values.get(_s_engine_torque);
-        const pooya::Array& dq = values.get(_s_dq);
-
-        // do the math
-
-        double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
-        double F_lon = F * cos(delta) - 500 * dq(0);
-
-        pooya::Array3 F_lat;
-        F_lat << F * sin(delta) - 500 * dq(1), 0, 0;
-
-        // set outputs
-        values.set(_s_F_lon, F_lon);
-        values.set(_s_F_lat, F_lat);
-    }
-};
-
 class EquationsOfMotion : public pooya::Block
 {
 protected:
     Parameters& _p;
 
     // input signals
-    pooya::ScalarSignal _s_delta;
-    pooya::ScalarSignal _s_F_lon;
-    pooya::ArraySignal  _s_F_lat;
-    pooya::ArraySignal      _s_q;
-    pooya::ArraySignal     _s_dq;
+    pooya::ScalarSignal      _s_delta_rq; // [0]
+    pooya::ScalarSignal _s_engine_torque; // [1]
+    pooya::ArraySignal              _s_q; // [2]
+    pooya::ArraySignal             _s_dq; // [3]
 
     // output signal
     pooya::ArraySignal _s_d2q;
 
+    // internal signal of interest
+    pooya::ScalarSignal _s_delta;
+
+    pooya::util::PT1 _pt;
+    bool _first_step{true};
+
 public:
-    EquationsOfMotion(Parameters& params) : pooya::Block("EquationsOfMotion", 5, 1), _p(params) {}
+    EquationsOfMotion(Parameters& params) : pooya::Block("EquationsOfMotion", 4, 1), _p(params), _pt(0.1) {}
 
     bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
     {
@@ -151,33 +103,50 @@ public:
             return false;
 
         // input signals
-        iports.bind(0, _s_delta);
-        iports.bind(1, _s_F_lon);
-        iports.bind(2, _s_F_lat);
-        iports.bind(3, _s_q);
-        iports.bind(4, _s_dq);
+        iports.bind(0, _s_delta_rq);
+        iports.bind(1, _s_engine_torque);
+        iports.bind(2, _s_q);
+        iports.bind(3, _s_dq);
 
         // output signal
         oports.bind(0, _s_d2q);
 
+        // internal signal of interest
+        _s_delta = parent.signal("front_wheel_angle");
+
         return true;
     }
 
-    void activation_function(double /*t*/, pooya::Values& values) override
+    void activation_function(double t, pooya::Values& values) override
     {
         // get inputs
-        double              delta = values.get(_s_delta);
-        double              F_lon = values.get(_s_F_lon);
-        const pooya::Array& F_lat = values.get(_s_F_lat);
-        const pooya::Array&     q = values.get(_s_q);
-        const pooya::Array&    dq = values.get(_s_dq);
+        double        delta_rq = values.get(_s_delta_rq);
+        double   engine_torque = values.get(_s_engine_torque);
+        const pooya::Array&  q = values.get(_s_q);
+        const pooya::Array& dq = values.get(_s_dq);
+
+        if (_first_step)
+        {
+            _pt._t0 = t;
+            _pt._u0 = delta_rq;
+            _pt._y0 = delta_rq;
+            _first_step = false;
+        }
 
         // do the math
 
+        double delta = _pt(t, delta_rq);
+        values.set(_s_delta, delta);
+
+        // forces
+
+        double     F = engine_torque * (0.5 * 5 * 2.41 / 0.5); // efficiency * gear_ratio * diff_ratio / R_tire
+        double F_lon = F * cos(delta) - 500 * dq(0);
+
         // lateral force components of axles
-        double Fyf = F_lat[0];
-        double Fyr = F_lat[1];
-        double Fyt = F_lat[2];
+        double Fyf = F * sin(delta) - 500 * dq(1);
+        double Fyr = 0.0;
+        double Fyt = 0.0;
 
         // yaw angles and rates
         double  psi1 =  q[2];
@@ -264,54 +233,17 @@ public:
         // set output
         values.set(_s_d2q, d2q);
     }
-};
 
-class PT : public pooya::Submodel
-{
-protected:
-    pooya::Subtract     _sub{"sub"};
-    pooya::Const      _const;
-    pooya::Divide       _div{"div"};
-    pooya::Integrator _integ{"int"};
-    pooya::InitialValue  _iv{"iv"};
-    pooya::Add          _add{"add"};
-
-public:
-    PT(double tau) : pooya::Submodel("PT", 2, 1), _const("tau", tau) {}
-
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    void step(double t, const pooya::Values& values) override
     {
-        if (!pooya::Submodel::init(parent, iports, oports))
-            return false;
-
-        // choose random names for these internal signals
-        auto s10 = signal();
-        auto s15 = signal();
-        auto s20 = signal();
-        auto s30 = signal();
-        auto s40 = signal();
-
-        auto&  y_in = iports[0];
-        auto&    y0 = iports[1];
-        auto& y_out = oports[0];
-
-        // blocks
-        add_block(  _sub, {y_in, y_out},   s10);
-        add_block(_const,            {},   s15);
-        add_block(  _div,    {s10, s15},   s20);
-        add_block(_integ,          s20 ,   s30);
-        add_block(   _iv,           y0 ,   s40);
-        add_block(  _add,    {s30, s40}, y_out);
-
-        return true;
+        Block::step(t, values);
+        _pt.step(t, values.get(_s_delta_rq), values.get(_s_delta));
     }
 };
 
 class ChassisDynamics : public pooya::Submodel
 {
 protected:
-    PT                     _pt{0.1};
-    Forces             _forces;
     EquationsOfMotion     _eom;
     pooya::IntegratorA _integ1{"dq", pooya::Array4::Zero()};
     pooya::IntegratorA _integ2{ "q", pooya::Array4::Zero()};
@@ -325,21 +257,16 @@ public:
             return false;
 
         // signals
-        auto s_delta = signal("front_wheel_angle");
         auto     s_q = signal(  "q", 4);
         auto    s_dq = signal( "dq", 4);
         auto   s_d2q = signal("d2q", 4);
-        auto s_F_lon = signal("F_lon");
-        auto s_F_lat = signal("F_lat", 3);
 
         auto&      s_delta_Rq = iports[0];
         auto& s_engine_torque = iports[1];
 
-        add_block(    _pt,               {s_delta_Rq, s_delta_Rq},           s_delta );
-        add_block(_forces,       {s_delta, s_engine_torque, s_dq}, {s_F_lon, s_F_lat});
-        add_block(   _eom, {s_delta, s_F_lon, s_F_lat, s_q, s_dq},             s_d2q );
-        add_block(_integ1,                                 s_d2q ,              s_dq );
-        add_block(_integ2,                                  s_dq ,               s_q );
+        add_block(   _eom, {s_delta_Rq, s_engine_torque, s_q, s_dq},             s_d2q);
+        add_block(_integ1,                                   s_d2q ,              s_dq);
+        add_block(_integ2,                                    s_dq ,               s_q);
 
         return true;
     }
@@ -415,14 +342,11 @@ int main()
               << " milliseconds\n";
 
     const auto& T = history.time();
-    // auto q = history.at(model.find_signal(".q"));
     auto dq = history.at(model.find_signal(".dq"));
     auto a  = history.at(model.find_signal("_angle"));
 
     const auto& vx = dq.col(0);
     const auto& vy = dq.col(1);
-    // const auto& psi1 = q.col(2);
-    // const auto& psi2 = q.col(3);
 
     Gnuplot gp;
 	gp << "set xrange [0:" << T.size() - 1 << "]\n";
@@ -430,9 +354,6 @@ int main()
 	gp << "plot"
         << gp.file1d(vx) << "with lines title 'vx', "
         << gp.file1d(vy) << "with lines title 'vy', "
-        // << gp.file1d(psi1) << "with lines title 'psi1', "
-	    // << gp.file1d(psi2) << "with lines title 'psi2', "
-	    // << gp.file1d(a) << "with lines title 'angle', "
         "\n";
 
     return 0;

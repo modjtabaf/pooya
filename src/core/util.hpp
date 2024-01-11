@@ -131,6 +131,42 @@ public:
 
 // utility classes
 
+class Deriv
+{
+public:
+    double _t0{0.0};
+    double _u0{0.0};
+
+public:
+    double operator()(double t, double u)
+    {
+        double dt = t - _t0;
+        return dt == 0 ? 0 : (u - _u0)/dt;
+    }
+
+    void step(double t, double u)
+    {
+        _t0 = t;
+        _u0 = u;
+    }
+};
+
+class PT1 : public Deriv
+{
+public:
+    double _y0{0.0};
+
+public:
+    double _T{1.0};
+    double _C{1.0};
+    double _K{1.0};
+
+    PT1(double T=1.0, double C=1.0, double K=1.0) : _T(T), _C(C), _K(K) {}
+
+    double operator()(double t, double u);
+    void step(double t, double u, double y);
+};
+
 }
 
 #endif // __POOYA_UTIL_HPP__

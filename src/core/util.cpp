@@ -1,4 +1,7 @@
 
+#include <iostream>
+#include <cmath>
+
 #include "util.hpp"
 
 namespace pooya::util
@@ -34,5 +37,20 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
 }
 
 #endif // !defined(POOYA_NDEBUG)
+
+double PT1::operator()(double t, double u)
+{
+    double U = Deriv::operator()(t, u);
+    double T_C = _T/_C;
+    double K_C = _K/_C;
+
+    return std::exp((_t0 - t) / T_C)*(_y0 - K_C*_u0 + K_C*T_C*U) + K_C*(u - T_C*U);
+}
+
+void PT1::step(double t, double u, double y)
+{
+    Deriv::step(t, u);
+    _y0 = y;
+}
 
 }

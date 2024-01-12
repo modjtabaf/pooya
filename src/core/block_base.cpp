@@ -131,7 +131,7 @@ Model::~Model()
         delete si;
 }
 
-Signal Model::find_signal(const std::string& name, bool exact_match) const
+Signal Model::lookup_signal(const std::string& name, bool exact_match) const
 {
     if (name.empty())
         return nullptr;
@@ -155,7 +155,7 @@ ScalarSignal Model::register_signal(const std::string& name)
 {
     if (name.empty()) return nullptr;
 
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
     auto* sig = new ScalarSignalInfo(name, index, _vi_index++);
@@ -168,7 +168,7 @@ ArraySignal Model::register_signal(const std::string& name, std::size_t size)
 {
     if (name.empty()) return nullptr;
 
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
     auto* sig = new ArraySignalInfo(name, index, _vi_index++, size);
@@ -193,7 +193,7 @@ ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
     return ret;
 }
 
-std::string Parent::make_signal_name(const std::string& given_name)
+std::string Parent::make_signal_name(const std::string& given_name, bool make_new)
 {
     std::string name(given_name);
     if (name.empty())
@@ -207,7 +207,19 @@ std::string Parent::make_signal_name(const std::string& given_name)
         std::replace(name.begin(), name.end(), '/', '_');
     }
 
-    return _full_name + "." + name;
+    std::string sig_name =  _full_name + "." + name;
+    if (!make_new)
+        return sig_name;
+
+    auto& model_ = model_ref();
+
+    int k = 0;
+    std::string postfix = "";
+    while(model_.lookup_signal(sig_name + postfix, true))
+    {
+        postfix = "_" + std::to_string(k++);
+    }
+    return sig_name + postfix;
 }
 
 void Parent::_mark_unprocessed()
@@ -258,70 +270,125 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-ScalarSignal Parent::signal(const std::string& given_name)
+Signal Parent::get_generic_signal(const std::string& given_name)
 {
-    auto* model_ = model();
-    if (!model_) return nullptr;
+    return model_ref().lookup_signal(make_signal_name(given_name), true);
+}
 
-    std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->find_signal(reg_name, true);
+ScalarSignal Parent::get_signal(const std::string& given_name)
+{
+    Signal sig = get_generic_signal(given_name);
     if (!sig)
-        sig = model_->register_signal(reg_name);
-
+        return nullptr;
     verify_scalar_signal(sig);
     return sig->as_scalar();
 }
 
-ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
+ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
 {
-    auto* model_ = model();
-    if (!model_) return nullptr;
-
-    std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->find_signal(reg_name, true);
+    Signal sig = get_generic_signal(given_name);
     if (!sig)
-        sig = model_->register_signal(reg_name, size);
-
+        return nullptr;
     verify_array_signal_size(sig, size);
     return sig->as_array();
 }
 
-template<typename Iter>
-BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
+BusSignal Parent::get_bus(const std::string& given_name, const BusSpec& spec)
 {
-    auto* model_ = model();
-    if (!model_) return nullptr;
-
-    std::string reg_name = make_signal_name(given_name);
-    Signal sig = model_->find_signal(reg_name, true);
+    Signal sig = get_generic_signal(given_name);
     if (!sig)
-        sig = model_->register_signal(reg_name, spec, begin_, end_);
-
+        return nullptr;
     verify_bus_signal_spec(sig, spec);
     return sig->as_bus();
 }
 
-BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
+ScalarSignal Parent::get_parameter(const std::string& given_name)
 {
-    return signal(given_name, spec, l.begin(), l.end());
+    return model_ref().get_signal(given_name);
 }
 
-BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
+ArraySignal Parent::get_parameter(const std::string& given_name, std::size_t size)
 {
-    return signal(given_name, spec, l.begin(), l.end());
+    return model_ref().get_signal(given_name, size);
 }
 
-BusSignal Parent::signal(const std::string& given_name, const BusSpec& spec)
+ScalarSignal Parent::signal(const std::string& given_name)
+{
+    auto sig = get_signal(given_name);
+    return sig ? sig : create_signal(given_name);
+}
+
+ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
+{
+    auto sig = get_signal(given_name, size);
+    return sig ? sig : create_signal(given_name, size);
+}
+
+BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
+{
+    auto sig = get_bus(given_name, spec);
+    return sig ? sig : create_bus(given_name, spec);
+}
+
+ScalarSignal Parent::parameter(const std::string& given_name)
+{
+    auto sig = get_parameter(given_name);
+    return sig ? sig : create_parameter(given_name);
+}
+
+ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
+{
+    auto sig = get_parameter(given_name, size);
+    return sig ? sig : create_parameter(given_name, size);
+}
+
+ScalarSignal Parent::create_signal(const std::string& given_name)
+{
+    return model_ref().register_signal(make_signal_name(given_name, true))->as_scalar();
+}
+
+ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)
+{
+    return model_ref().register_signal(make_signal_name(given_name, true), size)->as_array();
+}
+
+template<typename Iter>
+BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
+{
+    return model_ref().register_bus(make_signal_name(given_name, true), spec, begin_, end_)->as_bus();
+}
+
+BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
+{
+    return create_bus(given_name, spec, l.begin(), l.end());
+}
+
+BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
+{
+    return create_bus(given_name, spec, l.begin(), l.end());
+}
+
+BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec)
 {
     Signals signals;
     signals.reserve(spec._wires.size());
     for (const auto& wi: spec._wires)
     {
         std::string name = given_name + "~" + wi._label;
-        signals.push_back(wi._scalar ? Signal(signal(name)) : (wi._array_size > 0 ? Signal(signal(name, wi._array_size)) :
-            Signal(signal(name, *wi._bus))));
+        signals.push_back(wi._scalar ? Signal(create_signal(name)) : (wi._array_size > 0 ? Signal(create_signal(name, wi._array_size)) :
+            Signal(create_bus(name, *wi._bus))));
     }
-    return signal(given_name, spec, signals.begin(), signals.end());
+    return create_bus(given_name, spec, signals.begin(), signals.end());
+}
+
+ScalarSignal Parent::create_parameter(const std::string& given_name)
+{
+    return model_ref().create_signal(given_name);
+}
+
+ArraySignal Parent::create_parameter(const std::string& given_name, std::size_t size)
+{
+    return model_ref().create_signal(given_name, size);
 }
 
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
@@ -329,13 +396,11 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
     verify_valid_signal(sig);
     if (sig->as_scalar())
     {
-        verify_scalar_signal(sig);
-        return signal(given_name);
+        return create_signal(given_name);
     }
     else if (sig->as_array())
     {
-        verify_array_signal(sig);
-        return signal(given_name, sig->as_array()->_size);
+        return create_signal(given_name, sig->as_array()->_size);
     }
     else
     {
@@ -349,7 +414,7 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
             const auto& ns = bus->at(k);
             sigs.emplace_back(BusSignalInfo::LabelSignal(ns.first, clone_signal("", ns.second)));
         }
-        return signal(given_name, bus->spec(), sigs.begin(), sigs.end());
+        return create_bus(given_name, bus->spec(), sigs.begin(), sigs.end());
     }
 }
 

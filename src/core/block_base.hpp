@@ -113,14 +113,33 @@ public:
             component->step(t, values);
     }
 
+    // retrieve an existing signal
+    Signal get_generic_signal(const std::string& given_name);
+    ScalarSignal get_signal(const std::string& given_name);
+    ArraySignal  get_signal(const std::string& given_name, std::size_t size);
+    BusSignal    get_bus(const std::string& given_name, const BusSpec& spec);
+    ScalarSignal get_parameter(const std::string& given_name);
+    ArraySignal  get_parameter(const std::string& given_name, std::size_t size);
+
+    // get if exists, create otherwise
     ScalarSignal signal(const std::string& given_name="");
     ArraySignal  signal(const std::string& given_name, std::size_t size);
-    template<typename Iter>
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
-    BusSignal    signal(const std::string& given_name, const BusSpec& spec);
+    BusSignal    bus(const std::string& given_name, const BusSpec& spec);
+    ScalarSignal parameter(const std::string& given_name);
+    ArraySignal  parameter(const std::string& given_name, std::size_t size);
 
+    // create with a unique name
+    ScalarSignal create_signal(const std::string& given_name="");
+    ArraySignal  create_signal(const std::string& given_name, std::size_t size);
+    template<typename Iter>
+    BusSignal    create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+    BusSignal    create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
+    BusSignal    create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
+    BusSignal    create_bus(const std::string& given_name, const BusSpec& spec);
+    ScalarSignal create_parameter(const std::string& given_name);
+    ArraySignal  create_parameter(const std::string& given_name, std::size_t size);
+
+    // clone (make a new copy)
     Signal       clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
     {
@@ -130,26 +149,12 @@ public:
     {
         return clone_signal(given_name, Signal(sig))->as_array();
     }
-    BusSignal clone_signal(const std::string& given_name, BusSignal sig)
+    BusSignal clone_bus(const std::string& given_name, BusSignal sig)
     {
         return clone_signal(given_name, Signal(sig))->as_bus();
     }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
-    {
-        return signal(given_name, spec, l);
-    }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
-    {
-        return signal(given_name, spec, l);
-    }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec)
-    {
-        return signal(given_name, spec);
-    }
 
-    std::string make_signal_name(const std::string& given_name);
-    ScalarSignal parameter(const std::string& given_name);
-    ArraySignal  parameter(const std::string& given_name, std::size_t size);
+    std::string make_signal_name(const std::string& given_name, bool make_new=false);
     void _mark_unprocessed() override;
     uint _process(double t, Values& values, bool go_deep = true) override;
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
@@ -164,6 +169,8 @@ public:
 
 class Model : public Parent
 {
+    friend class Parent;
+
 public:
     using SignalInfos = std::vector<Signal>;
 
@@ -174,6 +181,11 @@ protected:
     ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
 
     bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
+
+    ScalarSignal register_signal(const std::string& name);
+    ArraySignal  register_signal(const std::string& name, std::size_t size);
+    template<typename Iter>
+    BusSignal    register_bus(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
     Model(std::string given_name="model");
@@ -195,37 +207,21 @@ public:
         _register_state(sig, deriv_sig)->_array->_iv = iv;
     }
 
-    Signal           find_signal(const std::string& name, bool exact_match=false) const;
-    ScalarSignal register_signal(const std::string& name);
-    ArraySignal  register_signal(const std::string& name, std::size_t size);
-    template<typename Iter>
-    BusSignal    register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
+    Signal lookup_signal(const std::string& name, bool exact_match=false) const;
 };
 
 template<typename Iter>
-BusSignal Model::register_signal(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
+BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
 {
     if (name.empty()) return nullptr;
 
-    verify(!find_signal(name, true), "Re-registering a signal is not allowed!");
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
     auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
     _signal_infos.push_back(sig);
 
     return sig;
-}
-
-inline ScalarSignal Parent::parameter(const std::string& given_name)
-{
-    auto* model_ = model();
-    return model_ ? model_->signal(given_name) : nullptr;
-}
-
-inline ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
-{
-    auto* model_ = model();
-    return model_ ? model_->signal(given_name, size) : nullptr;
 }
 
 }

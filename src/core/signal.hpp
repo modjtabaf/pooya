@@ -68,12 +68,16 @@ template<typename T>
 struct Types
 {
     using Signal = ArraySignal;
+    using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
+    using SetValue = const Array&;
 };
 
 template<>
 struct Types<double>
 {
     using Signal = ScalarSignal;
+    using GetValue = double;
+    using SetValue = double;
 };
 
 class SignalInfo
@@ -350,7 +354,7 @@ protected:
 
 public:
     template<typename T>
-    const auto& get() const
+    typename Types<T>::GetValue get() const
     {
         verify(_scalar == nullptr, _si._full_name + ": attempting to retrieve a scalar as an array!");
         verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
@@ -358,7 +362,7 @@ public:
     }
 
     template<typename T>
-    void set(const T& value)
+    void set(typename Types<T>::SetValue value)
     {
         verify(_scalar == nullptr, _si._full_name + ": cannot assign non-scalar to scalar!");
         verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
@@ -380,7 +384,7 @@ public:
 };
 
 template<>
-inline const auto& ValueInfo::get<double>() const
+inline typename Types<double>::GetValue ValueInfo::get<double>() const
 {
     verify(_scalar != nullptr, _si._full_name + ": attempting to retrieve an array as a scalar!");
     verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
@@ -388,7 +392,7 @@ inline const auto& ValueInfo::get<double>() const
 }
 
 template<>
-inline void ValueInfo::set<double>(const double& value)
+inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
 {
     verify(_scalar != nullptr, _si._full_name + ": cannot assign scalar to non-scalar!");
     verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
@@ -434,22 +438,22 @@ public:
     const decltype(_derivs)& derivs() const {return _derivs;}
 
     template<typename T>
-    const auto& get(Signal sig) const
+    typename Types<T>::GetValue get(Signal sig) const
     {
         return get_value_info(sig).get<T>();
     }
 
-    double      get(ScalarSignal sig) const {return get<double>(sig);}
-    const auto& get(ArraySignal  sig) const {return get<Array>(sig);}
+    typename Types<double>::GetValue get(ScalarSignal sig) const {return get<double>(sig);}
+    typename Types<Array >::GetValue get(ArraySignal  sig) const {return get<Array >(sig);}
 
     template<typename T>
-    void set(Signal sig, const T& value)
+    void set(Signal sig, typename Types<T>::SetValue value)
     {
         get_value_info(sig).set<T>(value);
     }
 
-    void set(ScalarSignal sig, double value) {set<double>(sig, value);}
-    // void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);} // ambiguous
+    void set(Signal sig, double value) {set<double>(sig, value);}
+    void set(Signal sig, const Array& value) {set<Array>(sig, value);}
 
     void set_states(const Eigen::ArrayXd& states);
 

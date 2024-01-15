@@ -73,7 +73,19 @@ void History::export_csv(std::string filename)
     // header
     ofs << "time";
     for (const auto& h: *this)
-        ofs << "," << h.first->_full_name;
+    {
+        if (h.first)
+        {
+            if (h.first->as_scalar())
+                ofs << "," << h.first->_full_name;
+            else
+            {
+                auto sig = h.first->as_array();
+                for (std::size_t k=0; k < sig->_size; k++)
+                    ofs << "," << h.first->_full_name << "[" << k << "]";
+            }
+        }
+    }
     ofs << "\n";
 
     // values
@@ -82,8 +94,17 @@ void History::export_csv(std::string filename)
     {
         ofs << time()(k);
         for (const auto& h: *this)
-            if (h.first != 0)
+        if (h.first)
+        {
+            if (h.first->as_scalar())
                 ofs << "," << h.second(k);
+            else
+            {
+                auto sig = h.first->as_array();
+                for (std::size_t j=0; j < sig->_size; j++)
+                    ofs << "," << h.second(k, j);
+            }
+        }
         ofs << "\n";
     }
 }

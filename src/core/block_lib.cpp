@@ -36,8 +36,8 @@ bool BusBlockBuilder::init(Parent& parent, const Signals& iports, const Signals&
     if (!Block::init(parent, iports, oports))
         return false;
 
-    iports.bind(0, _x);
-    oports.bind(0, _y);
+    _iports.bind(_x);
+    _oports.bind(_y);
 
     verify(_x->spec() == _y->spec(), "Bus specs don't match!");
 

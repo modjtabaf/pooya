@@ -333,12 +333,12 @@ public:
             return false;
 
         // input signals
-        _iports.bind(0, _s_x);
-        _iports.bind(1, _s_delay);
-        _iports.bind(2, _s_initial);
+        _iports.bind(_s_x);
+        _iports.bind(_s_delay);
+        _iports.bind(_s_initial);
 
         // output signal
-        _oports.bind(0, _s_y);
+        _oports.bind(_s_y);
 
         return true;
     }

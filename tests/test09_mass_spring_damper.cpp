@@ -45,7 +45,7 @@ public:
         if (!pooya::Block::init(parent, iports))
             return false;
 
-        iports.bind(0, _s_tau);
+        _iports.bind(_s_tau);
 
         _s_x   = parent.signal(  "x");
         _s_xd  = parent.signal( "xd");

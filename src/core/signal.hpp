@@ -106,6 +106,9 @@ public:
 
 class Signals : public std::vector<Signal>
 {
+protected:
+    std::size_t _implicit_binding_index{0};
+
 public:
     using _Parent = std::vector<Signal>;
     using _Parent::vector;
@@ -115,6 +118,7 @@ public:
         push_back(signal);
     }
 
+    // explicit binding
     void bind(std::size_t index, ScalarSignal& sig) const
     {
         verify_scalar_signal(at(index));
@@ -132,6 +136,11 @@ public:
         verify_bus_signal(at(index));
         sig = at(index)->as_bus();
     }
+
+    // implicit binding
+    void bind(ScalarSignal& sig) {bind(_implicit_binding_index++, sig);}
+    void bind(ArraySignal&  sig) {bind(_implicit_binding_index++, sig);}
+    void bind(BusSignal&    sig) {bind(_implicit_binding_index++, sig);}
 };
 
 class ValueSignalInfo : public SignalInfo

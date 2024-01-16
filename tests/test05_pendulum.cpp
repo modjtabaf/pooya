@@ -50,8 +50,9 @@ public:
 
         auto s10 = signal(); // choose a random name for this internal signal
 
-        auto g = parameter("g");
-        auto l = parameter("l");
+        auto& model_ = model_ref();
+        auto g = model_.signal("g");
+        auto l = model_.signal("l");
 
         // setup the submodel
         add_block(_integ1,       d2phi,  dphi);

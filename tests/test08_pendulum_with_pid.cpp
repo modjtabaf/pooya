@@ -49,9 +49,10 @@ public:
         auto s30 = signal();
         auto s40 = signal();
 
-        auto m = parameter("m");
-        auto g = parameter("g");
-        auto l = parameter("l");
+        auto& model_ = model_ref();
+        auto m = model_.signal("m");
+        auto g = model_.signal("g");
+        auto l = model_.signal("l");
 
         auto& tau = iports[0];
         auto& phi = oports[0];
@@ -135,7 +136,7 @@ public:
         auto tau = signal("tau");
         auto err = signal("err");
 
-        auto des_phi = parameter("des_phi");
+        auto des_phi = model_ref().signal("des_phi");
 
         // blocks
         add_block( _sub, {des_phi ,

@@ -55,10 +55,11 @@ public:
         auto s20 = signal();
         auto s30 = signal();
 
-        auto tau = parameter("tau");
-        auto   m = parameter(  "m");
-        auto   g = parameter(  "g");
-        auto   l = parameter(  "l");
+        auto& model_ = model_ref();
+        auto tau = model_.signal("tau");
+        auto   m = model_.signal(  "m");
+        auto   g = model_.signal(  "g");
+        auto   l = model_.signal(  "l");
 
         // setup the submodel
         add_block( _integ1,          d2phi,  dphi);

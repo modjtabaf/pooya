@@ -328,16 +328,6 @@ BusSignal Parent::get_bus(const std::string& given_name, const BusSpec& spec)
     return sig->as_bus();
 }
 
-ScalarSignal Parent::get_parameter(const std::string& given_name)
-{
-    return model_ref().get_signal(given_name);
-}
-
-ArraySignal Parent::get_parameter(const std::string& given_name, std::size_t size)
-{
-    return model_ref().get_signal(given_name, size);
-}
-
 ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 {
     auto sig = get_signal(given_name, size);
@@ -348,18 +338,6 @@ BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
 {
     auto sig = get_bus(given_name, spec);
     return sig ? sig : create_bus(given_name, spec);
-}
-
-ScalarSignal Parent::parameter(const std::string& given_name)
-{
-    auto sig = get_parameter(given_name);
-    return sig ? sig : create_parameter(given_name);
-}
-
-ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
-{
-    auto sig = get_parameter(given_name, size);
-    return sig ? sig : create_parameter(given_name, size);
 }
 
 template<>
@@ -406,16 +384,6 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec)
             Signal(create_bus(name, *wi._bus))));
     }
     return create_bus(given_name, spec, signals.begin(), signals.end());
-}
-
-ScalarSignal Parent::create_parameter(const std::string& given_name)
-{
-    return model_ref().create_signal(given_name);
-}
-
-ArraySignal Parent::create_parameter(const std::string& given_name, std::size_t size)
-{
-    return model_ref().create_signal(given_name, size);
 }
 
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)

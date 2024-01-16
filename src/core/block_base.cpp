@@ -151,7 +151,8 @@ Signal Model::lookup_signal(const std::string& name, bool exact_match) const
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-ScalarSignal Model::register_signal(const std::string& name)
+template<>
+typename Types<double>::Signal Model::register_signal<double>(const std::string& name)
 {
     if (name.empty()) return nullptr;
 
@@ -159,6 +160,20 @@ ScalarSignal Model::register_signal(const std::string& name)
 
     auto index = _signal_infos.size();
     auto* sig = new ScalarSignalInfo(name, index, _vi_index++);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
+
+template<>
+typename Types<int>::Signal Model::register_signal<int>(const std::string& name)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new IntegerSignalInfo(name, index, _vi_index++);
     _signal_infos.push_back(sig);
 
     return sig;
@@ -179,8 +194,8 @@ ArraySignal Model::register_signal(const std::string& name, std::size_t size)
 
 ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
 {
-    verify_value_signal(sig);
-    verify_value_signal(deriv_sig);
+    verify_float_signal(sig);
+    verify_float_signal(deriv_sig);
     verify(!sig->_value->is_state(), sig->_full_name + ": signal is already registered as a state!");
     verify(!deriv_sig->_value->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state derivative!");
     verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
@@ -275,13 +290,24 @@ Signal Parent::get_generic_signal(const std::string& given_name)
     return model_ref().lookup_signal(make_signal_name(given_name), true);
 }
 
-ScalarSignal Parent::get_signal(const std::string& given_name)
+template<>
+typename Types<double>::Signal Parent::get_signal<double>(const std::string& given_name)
 {
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
     verify_scalar_signal(sig);
     return sig->as_scalar();
+}
+
+template<>
+typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_name)
+{
+    Signal sig = get_generic_signal(given_name);
+    if (!sig)
+        return nullptr;
+    verify_integer_signal(sig);
+    return sig->as_integer();
 }
 
 ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
@@ -312,12 +338,6 @@ ArraySignal Parent::get_parameter(const std::string& given_name, std::size_t siz
     return model_ref().get_signal(given_name, size);
 }
 
-ScalarSignal Parent::signal(const std::string& given_name)
-{
-    auto sig = get_signal(given_name);
-    return sig ? sig : create_signal(given_name);
-}
-
 ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 {
     auto sig = get_signal(given_name, size);
@@ -342,9 +362,16 @@ ArraySignal Parent::parameter(const std::string& given_name, std::size_t size)
     return sig ? sig : create_parameter(given_name, size);
 }
 
-ScalarSignal Parent::create_signal(const std::string& given_name)
+template<>
+typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name)
 {
-    return model_ref().register_signal(make_signal_name(given_name, true))->as_scalar();
+    return model_ref().register_signal<double>(make_signal_name(given_name, true))->as_scalar();
+}
+
+template<>
+typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name)
+{
+    return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_integer();
 }
 
 ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)

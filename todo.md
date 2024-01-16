@@ -10,6 +10,8 @@
 * internal arrays of ode solvers are defined as static. convert them to class members.
 * change SignalId from integer to SignalInfo*
 * rework Model and integrate SignalRegsitry into it
+* introduce create_signal()
+* introduce integer signals
 
 - Use DOT to generate a graph presentation of the model
 - Doxygen
@@ -21,5 +23,4 @@
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->
 <!-- - A (virtual ?) method for verifying the number and types of input and output signals of a block -->
-<!-- - rename signal() to create_signal() -->
 <!-- - light weight Signal wrapper so it supports operator[] -->

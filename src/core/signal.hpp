@@ -52,17 +52,19 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
-class       SignalInfo;
-class  ValueSignalInfo;
-class ScalarSignalInfo;
-class  ArraySignalInfo;
-class    BusSignalInfo;
+class        SignalInfo;
+class   ValueSignalInfo;
+class  ScalarSignalInfo;
+class IntegerSignalInfo;
+class   ArraySignalInfo;
+class     BusSignalInfo;
 
-using       Signal = const       SignalInfo*;
-using  ValueSignal = const  ValueSignalInfo*;
-using ScalarSignal = const ScalarSignalInfo*;
-using  ArraySignal = const  ArraySignalInfo*;
-using    BusSignal = const    BusSignalInfo*;
+using        Signal = const        SignalInfo*;
+using   ValueSignal = const   ValueSignalInfo*;
+using  ScalarSignal = const  ScalarSignalInfo*;
+using IntegerSignal = const IntegerSignalInfo*;
+using   ArraySignal = const   ArraySignalInfo*;
+using     BusSignal = const     BusSignalInfo*;
 
 template<typename T>
 struct Types
@@ -80,6 +82,14 @@ struct Types<double>
     using SetValue = double;
 };
 
+template<>
+struct Types<int>
+{
+    using Signal = IntegerSignal;
+    using GetValue = int;
+    using SetValue = int;
+};
+
 class SignalInfo
 {
     friend class Model;
@@ -90,18 +100,20 @@ public:
 
 protected:
 
-    ValueSignalInfo*   _value{nullptr};
-    ScalarSignalInfo* _scalar{nullptr};
-    ArraySignalInfo*   _array{nullptr};
-    BusSignalInfo*       _bus{nullptr};
+    ValueSignalInfo*     _value{nullptr};
+    ScalarSignalInfo*   _scalar{nullptr};
+    ArraySignalInfo*     _array{nullptr};
+    IntegerSignalInfo* _integer{nullptr};
+    BusSignalInfo*         _bus{nullptr};
 
     SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
 
 public:
-    ValueSignal   as_value() const {return  _value;}
-    ScalarSignal as_scalar() const {return _scalar;}
-    ArraySignal   as_array() const {return  _array;}
-    BusSignal       as_bus() const {return    _bus;}
+    ValueSignal     as_value() const {return   _value;}
+    ScalarSignal   as_scalar() const {return  _scalar;}
+    IntegerSignal as_integer() const {return _integer;}
+    ArraySignal     as_array() const {return   _array;}
+    BusSignal         as_bus() const {return     _bus;}
 };
 
 class Signals : public std::vector<Signal>
@@ -125,6 +137,12 @@ public:
         sig = at(index)->as_scalar();
     }
 
+    void bind(std::size_t index, IntegerSignal& sig) const
+    {
+        verify_integer_signal(at(index));
+        sig = at(index)->as_integer();
+    }
+
     void bind(std::size_t index, ArraySignal& sig) const
     {
         verify_array_signal(at(index));
@@ -138,9 +156,10 @@ public:
     }
 
     // implicit binding
-    void bind(ScalarSignal& sig) {bind(_implicit_binding_index++, sig);}
-    void bind(ArraySignal&  sig) {bind(_implicit_binding_index++, sig);}
-    void bind(BusSignal&    sig) {bind(_implicit_binding_index++, sig);}
+    void bind(ScalarSignal&  sig) {bind(_implicit_binding_index++, sig);}
+    void bind(IntegerSignal& sig) {bind(_implicit_binding_index++, sig);}
+    void bind(ArraySignal&   sig) {bind(_implicit_binding_index++, sig);}
+    void bind(BusSignal&     sig) {bind(_implicit_binding_index++, sig);}
 };
 
 class ValueSignalInfo : public SignalInfo
@@ -179,6 +198,17 @@ protected:
 
 public:
     double iv() const {return _iv;}
+};
+
+class IntegerSignalInfo : public ValueSignalInfo
+{
+    friend class Model;
+
+protected:
+    IntegerSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
+    {
+        _integer = this;
+    }
 };
 
 class ArraySignalInfo : public ValueSignalInfo
@@ -346,20 +376,25 @@ struct ValueInfo
     friend class Values;
 
 public:
-    const ValueSignalInfo& _si;              // corresponding signal info
+    const ValueSignalInfo& _si;                          // corresponding signal info
 
 protected:
-    bool _assigned{false};                   // has the value been assigned?
+    bool _assigned{false};                               // has the value been assigned?
 
-    double* _scalar{nullptr};                // valid if this is a scalar signal, nullptr otherwise
-    Eigen::Map<Eigen::ArrayXd> _array;       // used only if this is an array signal, empty otherwise
+    double* _scalar{nullptr};                            // valid if this is a scalar signal (either integer or float), nullptr otherwise
+    bool _integer{false};                                // used only if this is a scalar signal, false otherwise
+    Eigen::Map<Eigen::ArrayXd> _array{nullptr, 0};       // used only if this is an array signal, empty otherwise
 
-    double* _deriv_scalar{nullptr};          // only valid if _is_deriv member of the signal info is true and this is a scalar signal, nullptr otherwise
-    Eigen::Map<Eigen::ArrayXd> _deriv_array; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
+    double* _deriv_scalar{nullptr};                      // only valid if _is_deriv member of the signal info is true and this is a float scalar signal, nullptr otherwise
+    Eigen::Map<Eigen::ArrayXd> _deriv_array{nullptr, 0}; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
 
-    ValueInfo(const ValueSignalInfo& si, double* data, std::size_t size) :
-        _si(si), _scalar(size == 0 ? data : nullptr), _array(size == 0 ? nullptr : data, size),
-        _deriv_array(nullptr, 0) {}
+    // float scalar or array
+    ValueInfo(const ValueSignalInfo& si, double* data, std::size_t float_size) :
+        _si(si), _scalar(float_size == 0 ? data : nullptr), _array(float_size == 0 ? nullptr : data, float_size) {}
+
+    // integer scalar
+    ValueInfo(const ValueSignalInfo& si, double* data) :
+        _si(si), _scalar(data), _integer(true) {}
 
 public:
     template<typename T>
@@ -386,6 +421,7 @@ public:
 
     bool is_assigned() const {return _assigned;}
     bool is_scalar() const {return _scalar != nullptr;}
+    bool is_integer() const {return _integer && is_scalar();}
     std::size_t size() const
     {
         return _scalar == nullptr ? _array.size() : 0;
@@ -395,16 +431,41 @@ public:
 template<>
 inline typename Types<double>::GetValue ValueInfo::get<double>() const
 {
-    verify(_scalar != nullptr, _si._full_name + ": attempting to retrieve an array as a scalar!");
-    verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
+    verify(is_scalar(), _si._full_name + ": attempting to retrieve an array as a scalar!");
+    verify(is_assigned(), _si._full_name + ": attempting to access an unassigned value!");
     return *_scalar;
+}
+
+template<>
+inline typename Types<int>::GetValue ValueInfo::get<int>() const
+{
+    verify(is_scalar(), _si._full_name + ": attempting to retrieve an array as an integer!");
+    verify(is_integer(), _si._full_name + ": attempting to retrieve a float as an integer!");
+    verify(is_assigned(), _si._full_name + ": attempting to access an unassigned value!");
+    return std::round(*_scalar);
+}
+
+template<>
+inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
+{
+    verify(is_scalar(), _si._full_name + ": cannot assign an integer to a non-scalar!");
+    verify(is_integer(), _si._full_name + ": cannot assign an integer to a float!");
+    verify(!is_assigned(), _si._full_name + ": re-assignment is prohibited!");
+    *_scalar = value;
+    _assigned = true;
 }
 
 template<>
 inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
 {
-    verify(_scalar != nullptr, _si._full_name + ": cannot assign scalar to non-scalar!");
-    verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
+    if (is_integer())
+    {
+        set<int>(std::round(value));
+        return;
+    }
+
+    verify(is_scalar(), _si._full_name + ": cannot assign a scalar to a non-scalar!");
+    verify(!is_assigned(), _si._full_name + ": re-assignment is prohibited!");
     *_scalar = value;
     if (_si.is_deriv())
         *_deriv_scalar = value;
@@ -452,8 +513,9 @@ public:
         return get_value_info(sig).get<T>();
     }
 
-    typename Types<double>::GetValue get(ScalarSignal sig) const {return get<double>(sig);}
-    typename Types<Array >::GetValue get(ArraySignal  sig) const {return get<Array >(sig);}
+    typename Types<double>::GetValue get(ScalarSignal  sig) const {return get<double>(sig);}
+    typename Types<int   >::GetValue get(IntegerSignal sig) const {return get<int   >(sig);}
+    typename Types<Array >::GetValue get(ArraySignal   sig) const {return get<Array >(sig);}
 
     template<typename T>
     void set(Signal sig, typename Types<T>::SetValue value)
@@ -461,8 +523,9 @@ public:
         get_value_info(sig).set<T>(value);
     }
 
-    void set(Signal sig, double value) {set<double>(sig, value);}
-    void set(Signal sig, const Array& value) {set<Array>(sig, value);}
+    void set(ScalarSignal sig, double value) {set<double>(sig, value);}
+    void set(IntegerSignal sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
+    void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);}
 
     void set_states(const Eigen::ArrayXd& states);
 

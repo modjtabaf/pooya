@@ -117,20 +117,12 @@ public:
     Signal get_generic_signal(const std::string& given_name);
     template<typename T=double>
     typename Types<T>::Signal get_signal(const std::string& given_name);
-    ArraySignal      get_signal(const std::string& given_name, std::size_t size);
-    BusSignal        get_bus(const std::string& given_name, const BusSpec& spec);
-    // template<typename T=double>
-    // typename Types<T>::Signal get_parameter(const std::string& given_name);
-    ScalarSignal get_parameter(const std::string& given_name);
-    ArraySignal      get_parameter(const std::string& given_name, std::size_t size);
+    ArraySignal get_signal(const std::string& given_name, std::size_t size);
+    BusSignal get_bus(const std::string& given_name, const BusSpec& spec);
 
     // get if exists, create otherwise
-    ArraySignal      signal(const std::string& given_name, std::size_t size);
-    BusSignal        bus(const std::string& given_name, const BusSpec& spec);
-    // template<typename T=double>
-    // typename Types<T>::Signal parameter(const std::string& given_name);
-    ScalarSignal parameter(const std::string& given_name);
-    ArraySignal      parameter(const std::string& given_name, std::size_t size);
+    ArraySignal signal(const std::string& given_name, std::size_t size);
+    BusSignal bus(const std::string& given_name, const BusSpec& spec);
 
     template<typename T=double>
     typename Types<T>::Signal signal(const std::string& given_name="")
@@ -142,19 +134,15 @@ public:
     // create with a unique name
     template<typename T=double>
     typename Types<T>::Signal create_signal(const std::string& given_name="");
-    ArraySignal      create_signal(const std::string& given_name, std::size_t size);
+    ArraySignal create_signal(const std::string& given_name, std::size_t size);
     template<typename Iter>
-    BusSignal        create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
-    BusSignal        create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
-    BusSignal        create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
-    BusSignal        create_bus(const std::string& given_name, const BusSpec& spec);
-    // template<typename T=double>
-    // typename Types<T>::Signal create_parameter(const std::string& given_name);
-    ScalarSignal create_parameter(const std::string& given_name);
-    ArraySignal      create_parameter(const std::string& given_name, std::size_t size);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec);
 
     // clone (make a new copy)
-    Signal       clone_signal(const std::string& given_name, Signal sig);
+    Signal clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
     {
         return clone_signal(given_name, Signal(sig))->as_scalar();

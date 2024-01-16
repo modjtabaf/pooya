@@ -69,10 +69,10 @@ int main()
     // setup the model
     model.add_block(bus_memory, x, y);
 
-    auto x_x0 = x->at("x0");
-    auto x_x1 = x->at("x1");
-    auto x_x2 = x->at("x2");
-    auto x_z3 = x->at("Z.z3");
+    auto x_x0 = x->at("x0")->as_scalar();
+    auto x_x1 = x->at("x1")->as_scalar();
+    auto x_x2 = x->at("x2")->as_scalar();
+    auto x_z3 = x->at("Z.z3")->as_scalar();
 
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void

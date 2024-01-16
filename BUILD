@@ -219,3 +219,23 @@ cc_binary(
         "//src:misc",
     ],
 )
+
+cc_binary(
+    name = "test11",
+    srcs = ["tests/test11_int_gain.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+    ],
+)

@@ -41,7 +41,9 @@ void History::update(uint k, double t, const Values& values)
         auto& h = at(&vi._si);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-        if (vi.is_scalar())
+        if (vi.is_integer())
+            h(k, 0) = values.get<int>(&vi._si);
+        else if (vi.is_scalar())
             h(k, 0) = values.get<double>(&vi._si);
         else
             h.row(k) = values.get<Array>(&vi._si);

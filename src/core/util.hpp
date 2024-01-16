@@ -50,6 +50,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
     verify_valid_signal(sig); \
     verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
+#define verify_float_signal(sig) \
+    verify_valid_signal(sig); \
+    verify(!(sig)->as_integer(), (sig)->_full_name + ": float signal expected!");
+
+#define verify_integer_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_integer(), (sig)->_full_name + ": integer signal expected!");
+
 #define verify_array_signal_size(sig, size_) \
     verify_array_signal(sig); \
     verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");

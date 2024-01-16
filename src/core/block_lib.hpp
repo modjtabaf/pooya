@@ -63,14 +63,14 @@ public:
 using Const  = ConstT<double>;
 using ConstA = ConstT<Array>;
 
-template<typename T>
+template<typename T, typename GainType>
 class GainT : public Block
 {
 protected:
-    double _k;
+    GainType _k;
 
 public:
-    GainT(std::string given_name, double k) : Block(given_name, 1, 1), _k(k) {}
+    GainT(std::string given_name, GainType k) : Block(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values& values) override
     {
@@ -78,8 +78,9 @@ public:
     }
 };
 
-using Gain  = GainT<double>;
-using GainA = GainT<Array>;
+using Gain  = GainT<double, double>;
+using GainI = GainT<int, int>;
+using GainA = GainT<Array, double>;
 
 template<typename T>
 class SinT : public Block

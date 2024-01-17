@@ -19,6 +19,7 @@
 - use gtest and cc_test
 - selective history
 - parallel processing
+- move BusBlockBuilder::traverse_bus to BusSpec
 
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->

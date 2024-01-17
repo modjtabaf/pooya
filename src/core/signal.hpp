@@ -316,6 +316,7 @@ protected:
 
 public:
     const BusSpec& spec() const {return _spec;}
+    std::size_t size() const {return _signals.size();}
 
     std::size_t index_of(const std::string& label) const
     {

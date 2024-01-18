@@ -105,7 +105,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.lookup_signal("/pendulum.phi");
+    auto phi = model.lookup_signal("/pendulum->phi");
 
     history.shrink_to_fit();
 

@@ -222,7 +222,7 @@ std::string Parent::make_signal_name(const std::string& given_name, bool make_ne
         std::replace(name.begin(), name.end(), '/', '_');
     }
 
-    std::string sig_name =  _full_name + "." + name;
+    std::string sig_name =  _full_name + "->" + name;
     if (!make_new)
         return sig_name;
 
@@ -379,7 +379,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec)
     signals.reserve(spec._wires.size());
     for (const auto& wi: spec._wires)
     {
-        std::string name = given_name + "->" + wi._label;
+        std::string name = given_name + "." + wi._label;
         signals.push_back(wi._scalar ? Signal(create_signal(name)) : (wi._array_size > 0 ? Signal(create_signal(name, wi._array_size)) :
             Signal(create_bus(name, *wi._bus))));
     }

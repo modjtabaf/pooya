@@ -75,10 +75,10 @@ int main() {
   // setup the model
   model.add_block(bus_memory, x, y);
 
-  auto x_x0 = x->at("x0")->as_scalar();
-  auto x_x1 = x->at("x1")->as_scalar();
-  auto x_x2 = x->at("x2")->as_scalar();
-  auto x_z3 = x->at("Z.z3")->as_scalar();
+  auto x_x0 = x->scalar_at("x0");
+  auto x_x1 = x->scalar_at("x1");
+  auto x_x2 = x->scalar_at("x2");
+  auto x_z3 = x->scalar_at("Z.z3");
 
   pooya::Simulator sim(
       model, [&](pooya::Model &, double t, pooya::Values &values) -> void {
@@ -105,10 +105,10 @@ int main() {
 
   history.shrink_to_fit();
 
-  auto y_x0 = y->at("x0");
-  auto y_x1 = y->at("x1");
-  auto y_x2 = y->at("x2");
-  auto y_z3 = y->at("Z.z3");
+  auto y_x0 = y->scalar_at("x0");
+  auto y_x1 = y->scalar_at("x1");
+  auto y_x2 = y->scalar_at("x2");
+  auto y_z3 = y->scalar_at("Z.z3");
 
   Gnuplot gp;
   gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

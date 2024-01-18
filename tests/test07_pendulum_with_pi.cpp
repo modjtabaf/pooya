@@ -183,7 +183,7 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.lookup_signal("->phi");
+    auto phi = model.lookup_signal("~phi");
 
     history.shrink_to_fit();
 

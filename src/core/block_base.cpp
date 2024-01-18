@@ -82,7 +82,7 @@ void Block::_assign_valid_given_name(std::string given_name)
     else
     {
         std::replace(given_name.begin(), given_name.end(), ' ', '_');
-        std::replace(given_name.begin(), given_name.end(), '.', '_');
+        std::replace(given_name.begin(), given_name.end(), '~', '_');
         std::replace(given_name.begin(), given_name.end(), '/', '_');
     }
 
@@ -218,11 +218,11 @@ std::string Parent::make_signal_name(const std::string& given_name, bool make_ne
     else
     {
         std::replace(name.begin(), name.end(), ' ', '_');
-        std::replace(name.begin(), name.end(), '.', '_');
+        std::replace(name.begin(), name.end(), '~', '_');
         std::replace(name.begin(), name.end(), '/', '_');
     }
 
-    std::string sig_name =  _full_name + "->" + name;
+    std::string sig_name =  _full_name + "~" + name;
     if (!make_new)
         return sig_name;
 

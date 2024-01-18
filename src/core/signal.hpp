@@ -342,6 +342,34 @@ public:
 
     Signal operator[](const std::string& label) const;
     Signal at(const std::string& label) const;
+
+    ScalarSignal scalar_at(const std::string& label) const
+    {
+        Signal sig = at(label);
+        verify_scalar_signal(sig);
+        return sig->as_scalar();
+    }
+
+    IntegerSignal integer_at(const std::string& label) const
+    {
+        Signal sig = at(label);
+        verify_integer_signal(sig);
+        return sig->as_integer();
+    }
+
+    ArraySignal array_at(const std::string& label) const
+    {
+        Signal sig = at(label);
+        verify_array_signal(sig);
+        return sig->as_array();
+    }
+
+    BusSignal bus_at(const std::string& label) const
+    {
+        Signal sig = at(label);
+        verify_bus_signal(sig);
+        return sig->as_bus();
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, const Signals& signals);

@@ -34,7 +34,7 @@ int main() {
   auto start = std::chrono::high_resolution_clock::now();
 
   // create raw blocks
-  pooya::Model model("test11");
+  pooya::Model model("test10");
   pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}});
 
   pooya::BusSpec internal_bus_spec({
@@ -78,7 +78,7 @@ int main() {
   auto x_x0 = x->at("x0")->as_scalar();
   auto x_x1 = x->at("x1")->as_scalar();
   auto x_x2 = x->at("x2")->as_scalar();
-  auto x_z3 = x->at("Z->z3")->as_scalar();
+  auto x_z3 = x->at("Z.z3")->as_scalar();
 
   pooya::Simulator sim(
       model, [&](pooya::Model &, double t, pooya::Values &values) -> void {
@@ -108,7 +108,7 @@ int main() {
   auto y_x0 = y->at("x0");
   auto y_x1 = y->at("x1");
   auto y_x2 = y->at("x2");
-  auto y_z3 = y->at("Z->z3");
+  auto y_z3 = y->at("Z.z3");
 
   Gnuplot gp;
   gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

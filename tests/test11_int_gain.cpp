@@ -28,7 +28,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model model("test00");
+    pooya::Model model("test11");
     pooya::GainI gain("gain", 2);
 
     // create signals

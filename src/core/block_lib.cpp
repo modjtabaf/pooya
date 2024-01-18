@@ -54,7 +54,7 @@ void BusBlockBuilder::traverse_bus(const std::string &full_label,
                                    const BusSpec &bus_spec) {
   for (const auto &wi : bus_spec._wires) {
     if (wi._bus)
-      traverse_bus(full_label + wi._label + "->", *wi._bus);
+      traverse_bus(full_label + wi._label + ".", *wi._bus);
     else {
       auto label = full_label + wi._label;
       block_builder(label, wi, _x->at(label), _y->at(label));

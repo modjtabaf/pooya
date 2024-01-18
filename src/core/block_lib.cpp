@@ -62,12 +62,16 @@ void BusBlockBuilder::traverse_bus(const std::string &full_label,
   }
 }
 
+void BusMemory::post_init()
+{
+  BusBlockBuilder::post_init();
+  verify(_init_values.empty(), full_name() + ": Some initial values of bus memory block were not used!");
+}
+
 void BusMemory::block_builder(const std::string &full_label,
                               const BusSpec::WireInfo &wi, Signal sig_in,
                               Signal sig_out) {
-  auto it = std::find_if(
-      _init_values.begin(), _init_values.end(),
-      [&](const LabelValue &lv) { return lv.first == full_label; });
+  auto it = _init_values.find(full_label);
 
   std::unique_ptr<Block> block;
   if (wi._scalar) {
@@ -80,6 +84,11 @@ void BusMemory::block_builder(const std::string &full_label,
                 : std::make_unique<MemoryA>("memory", it->second.as_array());
   } else {
     verify(false, "cannot create a memory block for a non-value signal.");
+  }
+
+  if (it != _init_values.end())
+  {
+    _init_values.erase(it);
   }
 
   _parent->add_block(*block, sig_in, sig_out);

@@ -15,7 +15,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_BLOCK_BASE_HPP__
 #define __POOYA_BLOCK_BASE_HPP__
 
-#include <cassert>
+#include <functional>
+
 #include "util.hpp"
 #include "signal.hpp"
 

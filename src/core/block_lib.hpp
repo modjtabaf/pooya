@@ -22,6 +22,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_LIB_HPP__
 #define __POOYA_BLOCK_LIB_HPP__
 
+#include <cassert>
+#include <map>
+
 #include "block_base.hpp"
 
 namespace pooya {
@@ -471,10 +474,11 @@ public:
 
 class BusMemory : public BusBlockBuilder {
 public:
-  using LabelValue = std::pair<std::string, Value>;
+  using LabelValueMap = std::map<std::string, Value>;
+  using LabelValue = LabelValueMap::value_type;
 
 protected:
-  const std::vector<LabelValue> _init_values;
+  LabelValueMap _init_values;
 
 public:
   BusMemory(std::string given_name,
@@ -484,6 +488,7 @@ public:
 protected:
   void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi,
                      Signal sig_in, Signal sig_out) override;
+  void post_init() override;
 };
 
 class BusPipe : public BusBlockBuilder {

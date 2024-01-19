@@ -362,30 +362,54 @@ ArraySignal Parent::create_signal(const std::string& given_name, std::size_t siz
 template<typename Iter>
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
-    return model_ref().register_bus(make_signal_name(given_name, true), spec, begin_, end_)->as_bus();
+    auto size = spec._wires.size();
+    verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
+
+    std::vector<BusSignalInfo::LabelSignal> label_signals;
+    label_signals.reserve(size);
+    for (const auto& wi: spec._wires)
+        label_signals.push_back({wi._label, nullptr});
+    for (auto it=begin_; it != end_; it++)
+    {
+        auto index = spec.index_of(it->first);
+        verify(!label_signals.at(index).second, std::string("Duplicate label: ") + it->first);
+        label_signals.at(index).second = it->second;
+    }
+    auto wit = spec._wires.begin();
+    for (auto& ls: label_signals)
+    {
+        if (!ls.second)
+        {
+            std::string name = given_name + "." + wit->_label;
+            ls.second = wit->_scalar ? create_signal(name) : (wit->_array_size > 0 ? Signal(create_signal(name, wit->_array_size)) :
+                create_bus(name, *wit->_bus));
+        }
+        wit++;
+    }
+
+    return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
 }
 
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
 {
+    verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
     return create_bus(given_name, spec, l.begin(), l.end());
 }
 
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
 {
-    return create_bus(given_name, spec, l.begin(), l.end());
-}
+    verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec)
-{
-    Signals signals;
-    signals.reserve(spec._wires.size());
-    for (const auto& wi: spec._wires)
+    std::vector<BusSignalInfo::LabelSignal> label_signals;
+    label_signals.reserve(l.size());
+
+    auto wit = spec._wires.begin();
+    for (const auto& sig: l)
     {
-        std::string name = given_name + "." + wi._label;
-        signals.push_back(wi._scalar ? Signal(create_signal(name)) : (wi._array_size > 0 ? Signal(create_signal(name, wi._array_size)) :
-            Signal(create_bus(name, *wi._bus))));
+        label_signals.push_back({wit->_label, sig});
     }
-    return create_bus(given_name, spec, signals.begin(), signals.end());
+
+    return create_bus(given_name, spec, label_signals.begin(), label_signals.end());
 }
 
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
@@ -425,6 +449,19 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
 {
     return true;
+}
+
+BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, BusSignalInfo::LabelSignals::const_iterator begin_, BusSignalInfo::LabelSignals::const_iterator end_)
+{
+    if (name.empty()) return nullptr;
+
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
+    _signal_infos.push_back(sig);
+
+    return sig;
 }
 
 }

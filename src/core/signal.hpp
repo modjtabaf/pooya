@@ -274,6 +274,17 @@ public:
         return ret;
     }
 
+    std::size_t index_of(const std::string& label) const
+    {
+        return std::distance(_wires.begin(),
+            std::find_if(_wires.begin(), _wires.end(),
+                [&](const WireInfo& wi)
+                {
+                    return wi._label == label;
+                }
+            ));
+    }
+
     bool operator==(const BusSpec& other) const {return this == &other;}
 };
 
@@ -283,51 +294,37 @@ struct BusSignalInfo : public SignalInfo
 
 public:
     using LabelSignal = std::pair<std::string, Signal>;
+    using LabelSignals = std::vector<LabelSignal>;
 
     const BusSpec& _spec;
 
 protected:
-    std::vector<LabelSignal> _signals;
+    LabelSignals _signals;
 
 protected:
     void _set(std::size_t index, Signal sig);
 
-    template<typename Iter>
-    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, Iter begin_, Iter end_) :
+    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
-        verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals!");
+        verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
             _signals.push_back({wi._label, nullptr});
-        if constexpr ((std::is_same_v<Iter, const Signal*>) || (std::is_same_v<Iter, Signals::iterator>))
+        for (auto& it = begin_; it != end_; it++)
+            _set(_spec.index_of(it->first), it->second);
+#if !defined(NDEBUG)
+        for (const auto& ls: _signals)
         {
-            std::size_t index = 0;
-            for(auto it = begin_; it < end_; it++)
-                _set(index++, *it);
+            verify(ls.second, "Unassigned wire detected: " + ls.first);
         }
-        else
-        {
-            for (auto& it = begin_; it != end_; it++)
-                _set(index_of(it->first), it->second);
-        }
+#endif // !defined(NDEBUG)
         _bus = this;
     }
 
 public:
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
-
-    std::size_t index_of(const std::string& label) const
-    {
-        return std::distance(_signals.begin(),
-            std::find_if(_signals.begin(), _signals.end(),
-                [&](const LabelSignal& ns)
-                {
-                    return ns.first == label;
-                }
-            ));
-    }
 
     const LabelSignal& operator[](std::size_t index) const
     {

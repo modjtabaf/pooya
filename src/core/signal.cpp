@@ -32,9 +32,9 @@ Signal BusSignalInfo::operator[](const std::string& label) const
 {
     auto pos = label.find(".");
     if (pos == std::string::npos)
-        return operator[](index_of(label)).second;
+        return operator[](_spec.index_of(label)).second;
 
-    auto sig = operator[](index_of(label.substr(0, pos))).second;
+    auto sig = operator[](_spec.index_of(label.substr(0, pos))).second;
     verify_bus_signal(sig);
     return sig->as_bus()->operator[](label.substr(pos + 1));
 }
@@ -43,9 +43,9 @@ Signal BusSignalInfo::at(const std::string& label) const
 {
     auto pos = label.find(".");
     if (pos == std::string::npos)
-        return at(index_of(label)).second;
+        return at(_spec.index_of(label)).second;
 
-    auto sig = at(index_of(label.substr(0, pos))).second;
+    auto sig = at(_spec.index_of(label.substr(0, pos))).second;
     verify_bus_signal(sig);
     return sig->as_bus()->at(label.substr(pos + 1));
 }

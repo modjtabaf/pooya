@@ -20,7 +20,9 @@
 - selective history
 - parallel processing
 - move BusBlockBuilder::traverse_bus to BusSpec
-
+- pass std::string as const ref
+- In BusSignalInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
+- 
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->
 <!-- - A (virtual ?) method for verifying the number and types of input and output signals of a block -->

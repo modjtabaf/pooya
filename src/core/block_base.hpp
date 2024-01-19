@@ -97,6 +97,9 @@ protected:
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports) {}
 
+    template<typename Iter>
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+
 public:
     bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
     {
@@ -136,11 +139,8 @@ public:
     template<typename T=double>
     typename Types<T>::Signal create_signal(const std::string& given_name="");
     ArraySignal create_signal(const std::string& given_name, std::size_t size);
-    template<typename Iter>
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
     BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l);
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l={});
 
     // clone (make a new copy)
     Signal clone_signal(const std::string& given_name, Signal sig);
@@ -203,9 +203,8 @@ protected:
 
     template<typename T>
     typename Types<T>::Signal register_signal(const std::string& name);
-    ArraySignal  register_signal(const std::string& name, std::size_t size);
-    template<typename Iter>
-    BusSignal    register_bus(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_);
+    ArraySignal register_signal(const std::string& name, std::size_t size);
+    BusSignal register_bus(const std::string& name, const BusSpec& spec, BusSignalInfo::LabelSignals::const_iterator begin_, BusSignalInfo::LabelSignals::const_iterator end_);
 
 public:
     Model(std::string given_name="model");
@@ -235,20 +234,6 @@ typename Types<double>::Signal Model::register_signal<double>(const std::string&
 
 template<>
 typename Types<int>::Signal Model::register_signal<int>(const std::string& name);
-
-template<typename Iter>
-BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, Iter begin_, Iter end_)
-{
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
 
 }
 

@@ -195,7 +195,7 @@ public:
 
     // implicit binding by index
     template<typename SignalType>
-    void bind(SignalType&  sig)
+    void bind(SignalType&  sig) const
     {
         verify(_label_signals_list.size() == 1, "Implicit binding is allowed only if there is one and only one signal.");
         bind(0, sig);

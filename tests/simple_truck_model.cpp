@@ -97,19 +97,19 @@ protected:
 public:
     EquationsOfMotion(Parameters& params) : pooya::Block("EquationsOfMotion", 4, 1), _p(params), _pt(0.1) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Block::init(parent, iports, oports))
             return false;
 
         // input signals
-        iports.bind(0, _s_delta_rq);
-        iports.bind(1, _s_engine_torque);
-        iports.bind(2, _s_q);
-        iports.bind(3, _s_dq);
+        iports.bind("delta_rq", _s_delta_rq);
+        iports.bind("engine_torque", _s_engine_torque);
+        iports.bind("q", _s_q);
+        iports.bind("dq", _s_dq);
 
         // output signal
-        oports.bind(0, _s_d2q);
+        oports.bind(_s_d2q);
 
         // internal signal of interest
         _s_delta = parent.signal("front_wheel_angle");
@@ -249,9 +249,9 @@ protected:
     pooya::IntegratorA _integ2{ "q", pooya::Array4::Zero()};
 
 public:
-    ChassisDynamics(Parameters& params) : pooya::Submodel("ChassisDynamics"), _eom(params) {}
+    ChassisDynamics(Parameters& params) : pooya::Submodel("ChassisDynamics", 2, 0), _eom(params) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;
@@ -261,12 +261,17 @@ public:
         auto    s_dq = signal( "dq", 4);
         auto   s_d2q = signal("d2q", 4);
 
-        auto&      s_delta_Rq = iports[0];
-        auto& s_engine_torque = iports[1];
+        auto      s_delta_Rq = iports["delta_rq"];
+        auto s_engine_torque = iports["engine_torque"];
 
-        add_block(   _eom, {s_delta_Rq, s_engine_torque, s_q, s_dq},             s_d2q);
-        add_block(_integ1,                                   s_d2q ,              s_dq);
-        add_block(_integ2,                                    s_dq ,               s_q);
+        add_block(_eom, {
+          {"delta_rq", s_delta_Rq},
+          {"engine_torque", s_engine_torque},
+          {"q", s_q},
+          {"dq", s_dq}},
+          s_d2q);
+        add_block(_integ1, s_d2q, s_dq);
+        add_block(_integ2, s_dq, s_q);
 
         return true;
     }
@@ -291,7 +296,9 @@ public:
         _s_engine_torque = signal("engine_torque");
 
         // setup the model
-        add_block(_chdyn, {_s_delta_Rq, _s_engine_torque});
+        add_block(_chdyn, {
+          {"delta_rq", _s_delta_Rq},
+          {"engine_torque", _s_engine_torque}});
     }
 
     void input_cb(double t, pooya::Values& values) override
@@ -342,8 +349,8 @@ int main()
               << " milliseconds\n";
 
     const auto& T = history.time();
-    auto dq = history.at(model.find_signal(".dq"));
-    auto a  = history.at(model.find_signal("_angle"));
+    auto dq = history.at(model.lookup_signal("~dq"));
+    auto a  = history.at(model.lookup_signal("_angle"));
 
     const auto& vx = dq.col(0);
     const auto& vy = dq.col(1);

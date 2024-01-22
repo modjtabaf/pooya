@@ -39,7 +39,7 @@ protected:
 public:
     PT(double tau) : pooya::Submodel("PT", 2, 1), _const("tau", tau) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;
@@ -51,9 +51,9 @@ public:
         auto s30 = signal();
         auto s40 = signal();
 
-        auto&  y_in = iports[0];
-        auto&    y0 = iports[1];
-        auto& y_out = oports[0];
+        auto  y_in = iports["in"];
+        auto    y0 = iports["initial"];
+        auto y_out = oports["out"];
 
         // blocks
         add_block(  _sub, {y_in, y_out},   s10);
@@ -84,13 +84,14 @@ protected:
 public:
     ComputeFrontWheelAngleRightLeftPinpoint() : pooya::Submodel("ComputeFrontWheelAngleRightLeftPinpoint", 1, 2) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
-        auto tractor_wheelbase = parameter("tractor_wheelbase");
-        auto     tractor_Width = parameter("tractor_Width");
+        auto& model_ = model_ref();
+        auto tractor_wheelbase = model_.signal("tractor_wheelbase");
+        auto     tractor_Width = model_.signal("tractor_Width");
 
         // choose random names for these internal signals
         auto s10 = signal();
@@ -98,10 +99,10 @@ public:
         auto s30 = signal();
         auto s40 = signal();
 
-        iports.bind(0, _s_front_wheel_angle);
+        iports.bind("front_wheel_angle", _s_front_wheel_angle);
 
-        oports.bind(0, _s_front_wheel_angle_right);
-        oports.bind(1, _s_front_wheel_angle_left);
+        oports.bind("front_wheel_angle_right", _s_front_wheel_angle_right);
+        oports.bind("front_wheel_angle_left", _s_front_wheel_angle_left);
 
         // blocks
         add_block(_div1, {tractor_wheelbase, _s_front_wheel_angle}, s10);
@@ -137,15 +138,15 @@ protected:
 public:
     SteeringSystem() : pooya::Submodel("Steering_System", 1, 1) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
         // signals
-        iports.bind(0, _s_ad_DsrdFtWhlAngl_Rq_VD);
+        iports.bind(_s_ad_DsrdFtWhlAngl_Rq_VD);
 
-        oports.bind(0, _s_steering_info);
+        oports.bind(_s_steering_info);
 
         auto          s_front_wheel_angle = (*_s_steering_info)["front_wheel_angle"];
         auto     s_front_wheel_angle_rate = (*_s_steering_info)["front_wheel_angle_rate"];
@@ -154,10 +155,11 @@ public:
         auto           s_AxFr_front_right = (*_s_steering_info)["AxFr_front_right"];
         auto            s_AxFr_front_left = (*_s_steering_info)["AxFr_front_left"];
     
-        auto       front_wheel_ang_gain = parameter("front_wheel_ang_gain");
-        auto      front_wheel_ang_delay = parameter("front_wheel_ang_delay");
-        auto front_wheel_ang_init_value = parameter("front_wheel_ang_init_value");
-        auto    front_wheel_ang_t_const = parameter("front_wheel_ang_t_const");
+        auto& model_ = model_ref();
+        auto       front_wheel_ang_gain = model_.signal("front_wheel_ang_gain");
+        auto      front_wheel_ang_delay = model_.signal("front_wheel_ang_delay");
+        auto front_wheel_ang_init_value = model_.signal("front_wheel_ang_init_value");
+        auto    front_wheel_ang_t_const = model_.signal("front_wheel_ang_t_const");
 
         // choose random names for these internal signals
         auto s10 = signal();
@@ -166,13 +168,16 @@ public:
 
         // blocks
         add_block(    _mul, {_s_ad_DsrdFtWhlAngl_Rq_VD, front_wheel_ang_gain}, s10);
-        add_block(  _delay, {s10, front_wheel_ang_delay, front_wheel_ang_init_value}, s20);
+        add_block(  _delay, {{"in", s10}, {"delay", front_wheel_ang_delay}, {"initial", front_wheel_ang_init_value}}, s20);
         add_block(  _clamp, front_wheel_ang_t_const, s30);
-        add_block(     _pt, {s20, s30}, s_front_wheel_angle);
+        add_block(     _pt, {{"in", s20}, {"initial", s30}}, {{"out", s_front_wheel_angle}});
         add_block(  _deriv, s_front_wheel_angle, s_front_wheel_angle_rate);
         add_block(     _k1, s_front_wheel_angle, s_front_wheel_angle_neg);
         add_block(     _k2, s_front_wheel_angle_rate, s_front_wheel_angle_rate_neg);
-        add_block(_cfwarlp, s_front_wheel_angle, {s_AxFr_front_right, s_AxFr_front_left});
+        add_block(_cfwarlp, {
+            {"front_wheel_angle", s_front_wheel_angle}}, {
+            {"front_wheel_angle_right", s_AxFr_front_right},
+            {"front_wheel_angle_left", s_AxFr_front_left}});
 
         return true;
     }
@@ -219,12 +224,12 @@ int main()
 
     model.add_block(str_sys, front_wheel_angle_Rq, steering_info);
 
-    auto          tractor_wheelbase = model.parameter("tractor_wheelbase");
-    auto              tractor_Width = model.parameter("tractor_Width");
-    auto    front_wheel_ang_t_const = model.parameter("front_wheel_ang_t_const");
-    auto      front_wheel_ang_delay = model.parameter("front_wheel_ang_delay");
-    auto       front_wheel_ang_gain = model.parameter("front_wheel_ang_gain");
-    auto front_wheel_ang_init_value = model.parameter("front_wheel_ang_init_value");
+    auto          tractor_wheelbase = model.signal("tractor_wheelbase");
+    auto              tractor_Width = model.signal("tractor_Width");
+    auto    front_wheel_ang_t_const = model.signal("front_wheel_ang_t_const");
+    auto      front_wheel_ang_delay = model.signal("front_wheel_ang_delay");
+    auto       front_wheel_ang_gain = model.signal("front_wheel_ang_gain");
+    auto front_wheel_ang_init_value = model.signal("front_wheel_ang_init_value");
 
     pooya::Rk4 stepper(model);
     pooya::Simulator sim(model,

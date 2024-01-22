@@ -24,6 +24,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 #include <map>
+#include <memory>
 
 #include "block_base.hpp"
 
@@ -121,8 +122,8 @@ protected:
   T _initial;
   T _ret;
 
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     if (!Block::init(parent, iports, oports))
       return false;
 
@@ -142,8 +143,8 @@ public:
   void activation_function(double /*t*/, Values &values) override {
     _ret = _initial;
     const char *p = _operators.c_str();
-    for (const auto &signal : _iports) {
-      const auto &v = values.get<T>(signal);
+    for (const auto &ls: _iports) {
+      const auto &v = values.get<T>(ls.second);
       if (*p == '+')
         _ret += v;
       else if (*p == '-')
@@ -161,8 +162,8 @@ using AddSubA = AddSubT<Array>;
 
 template <typename T> class AddT : public AddSubT<T> {
 protected:
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     AddSubT<T>::_operators = std::string(iports.size(), '+');
     return AddSubT<T>::init(parent, iports, oports);
   }
@@ -190,8 +191,8 @@ protected:
   T _initial;
   T _ret;
 
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     if (!Block::init(parent, iports, oports))
       return false;
 
@@ -210,8 +211,8 @@ public:
   void activation_function(double /*t*/, Values &values) override {
     _ret = _initial;
     const char *p = _operators.c_str();
-    for (const auto &signal : _iports) {
-      const auto &v = values.get<T>(signal);
+    for (const auto &ls: _iports) {
+      const auto &v = values.get<T>(ls.second);
       if (*p == '*')
         _ret *= v;
       else if (*p == '/')
@@ -229,8 +230,8 @@ using MulDivA = MulDivT<Array>;
 
 template <typename T> class MultiplyT : public MulDivT<T> {
 protected:
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     MulDivT<T>::_operators = std::string(iports.size(), '*');
     return MulDivT<T>::init(parent, iports, oports);
   }
@@ -260,8 +261,8 @@ public:
   IntegratorT(std::string given_name, T ic = T(0.0))
       : Block(given_name, 1, 1), _value(ic) {}
 
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     if (!Block::init(parent, iports, oports))
       return false;
 
@@ -295,9 +296,9 @@ protected:
   std::vector<T> _x;
 
   // input signals
-  typename Types<T>::Signal _s_x;       // [0]
-  ScalarSignal _s_delay;                // [1]
-  typename Types<T>::Signal _s_initial; // [2]
+  typename Types<T>::Signal _s_x;       // in
+  ScalarSignal _s_delay;                // delay
+  typename Types<T>::Signal _s_initial; // initial
 
   // output signal
   typename Types<T>::Signal _s_y; // [0]
@@ -306,15 +307,15 @@ public:
   DelayT(std::string given_name, double lifespan = 10.0)
       : Block(given_name, 3, 1), _lifespan(lifespan) {}
 
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override {
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override {
     if (!Block::init(parent, iports, oports))
       return false;
 
     // input signals
-    _iports.bind(_s_x);
-    _iports.bind(_s_delay);
-    _iports.bind(_s_initial);
+    _iports.bind("in", _s_x);
+    _iports.bind("delay", _s_delay);
+    _iports.bind("initial", _s_initial);
 
     // output signal
     _oports.bind(_s_y);
@@ -467,8 +468,8 @@ protected:
 public:
   BusBlockBuilder(std::string given_name) : Block(given_name, 1, 1) {}
 
-  bool init(Parent &parent, const Signals &iports,
-            const Signals &oports) override;
+  bool init(Parent &parent, const LabelSignals& iports,
+            const LabelSignals& oports) override;
   void post_init() override;
 };
 

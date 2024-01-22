@@ -12,19 +12,49 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <cstddef>
 #include <iostream>
 #include <cassert>
+#include <utility>
+
 #include "signal.hpp"
 #include "pooya.hpp"
 
 namespace pooya
 {
 
-std::ostream& operator<<(std::ostream& os, const Signals& signals)
+void LabelSignals::_init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
+{
+    for (auto it=begin_; it != end_; it++)
+        push_back(*it);
+}
+
+LabelSignals::LabelSignals(Signal signal)
+{
+    LabelSignalList lsl({{_make_auto_label(0), signal}});
+    _init(lsl.begin(), lsl.end());
+}
+
+LabelSignals::LabelSignals(const std::initializer_list<Signal>& il)
+{
+    LabelSignalList lsl;
+    std::size_t index=0;
+    for (const auto& sig: il)
+        lsl.push_back({_make_auto_label(index++), sig});
+    _init(lsl.begin(), lsl.end());
+}
+
+LabelSignals::LabelSignals(const std::initializer_list<LabelSignal>& il)
+{
+    LabelSignalList lsl(il);
+    _init(lsl.begin(), lsl.end());
+}
+
+std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
 {
     os << "signals:\n";
-    for (const auto& signal: signals)
-        os << "- " << signal;
+    for (const auto& ls: signals)
+        os << "- " << ls.first << ": " << ls.second << "\n";
     return os;
 }
 

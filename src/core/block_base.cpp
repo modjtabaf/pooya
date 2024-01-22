@@ -20,7 +20,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
+bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
 {
     assert(_parent == nullptr);
     if (_parent) return false;
@@ -44,16 +44,16 @@ bool Block::init(Parent& parent, const Signals& iports, const Signals& oports)
     
     _iports.reserve(iports.size());
     _dependencies.reserve(iports.size());
-    for (const auto& p: iports)
+    for (const auto& ls: iports)
     {
-        _iports.push_back(p);
-        _add_dependecny(p);
+        _iports.push_back(ls);
+        _add_dependecny(ls.second);
     }
     _dependencies.shrink_to_fit();
 
     _oports.reserve(oports.size());
-    for (auto& p: oports)
-        _oports.push_back(p);
+    for (auto& ls: oports)
+        _oports.push_back(ls);
     
     _initialized = true;
     return true;
@@ -365,7 +365,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
     auto size = spec._wires.size();
     verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
-    std::vector<BusSignalInfo::LabelSignal> label_signals;
+    std::vector<LabelSignal> label_signals;
     label_signals.reserve(size);
     for (const auto& wi: spec._wires)
         label_signals.push_back({wi._label, nullptr});
@@ -390,7 +390,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
     return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
 }
 
-BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l)
+BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l)
 {
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
     return create_bus(given_name, spec, l.begin(), l.end());
@@ -400,7 +400,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
 {
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-    std::vector<BusSignalInfo::LabelSignal> label_signals;
+    LabelSignals label_signals;
     label_signals.reserve(l.size());
 
     auto wit = spec._wires.begin();
@@ -428,12 +428,12 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
         verify_bus_signal(sig);
         BusSignal bus = sig->as_bus();
         std::size_t n = bus->spec()._wires.size();
-        std::vector<BusSignalInfo::LabelSignal> sigs;
+        std::vector<LabelSignal> sigs;
         sigs.reserve(n);
         for (std::size_t k = 0; k < n; k++)
         {
             const auto& ns = bus->at(k);
-            sigs.emplace_back(BusSignalInfo::LabelSignal(ns.first, clone_signal("", ns.second)));
+            sigs.emplace_back(ns.first, clone_signal("", ns.second));
         }
         return create_bus(given_name, bus->spec(), sigs.begin(), sigs.end());
     }
@@ -446,12 +446,12 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
     _initialized = true;
 }
 
-bool Model::init(Parent& parent, const Signals& iports, const Signals& oports)
+bool Model::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
 {
     return true;
 }
 
-BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, BusSignalInfo::LabelSignals::const_iterator begin_, BusSignalInfo::LabelSignals::const_iterator end_)
+BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
 {
     if (name.empty()) return nullptr;
 

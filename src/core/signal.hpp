@@ -15,7 +15,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_HPP__
 #define __POOYA_SIGNAL_HPP__
 
-#include <memory>
+#include <initializer_list>
+#include <map>
+#include <string>
+
 #include "Eigen/Core"
 #include "util.hpp"
 
@@ -65,6 +68,10 @@ using  ScalarSignal = const  ScalarSignalInfo*;
 using IntegerSignal = const IntegerSignalInfo*;
 using   ArraySignal = const   ArraySignalInfo*;
 using     BusSignal = const     BusSignalInfo*;
+
+using LabelSignal = std::pair<std::string, Signal>;
+using LabelSignalList = std::vector<LabelSignal>;
+using LabelSignalMap = std::map<LabelSignal::first_type, LabelSignal::second_type>;
 
 template<typename T>
 struct Types
@@ -116,50 +123,113 @@ public:
     BusSignal         as_bus() const {return     _bus;}
 };
 
-class Signals : public std::vector<Signal>
+class LabelSignals
 {
 protected:
     std::size_t _implicit_binding_index{0};
 
-public:
-    using _Parent = std::vector<Signal>;
-    using _Parent::vector;
+    LabelSignalMap _label_signals_map;
+    LabelSignalList _label_signals_list;
 
-    Signals(Signal signal)
+    std::string _make_auto_label(std::size_t index) const {return "sig" + std::to_string(index);}
+
+    void _init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_);
+
+public:
+    LabelSignals() = default;
+    LabelSignals(Signal signal);
+    LabelSignals(const std::initializer_list<Signal>& il);
+    LabelSignals(const std::initializer_list<LabelSignal>& il);
+
+    // explicit binding by label
+    void bind(const std::string& label, ScalarSignal& sig) const
     {
-        push_back(signal);
+        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
+        verify_scalar_signal(_label_signals_map.at(label));
+        sig = _label_signals_map.at(label)->as_scalar();
     }
 
-    // explicit binding
+    void bind(const std::string& label, IntegerSignal& sig) const
+    {
+        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
+        verify_integer_signal(_label_signals_map.at(label));
+        sig = _label_signals_map.at(label)->as_integer();
+    }
+
+    void bind(const std::string& label, ArraySignal& sig) const
+    {
+        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
+        verify_array_signal(_label_signals_map.at(label));
+        sig = _label_signals_map.at(label)->as_array();
+    }
+
+    void bind(const std::string& label, BusSignal& sig) const
+    {
+        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
+        verify_bus_signal(_label_signals_map.at(label));
+        sig = _label_signals_map.at(label)->as_bus();
+    }
+
+    // explicit binding by index
     void bind(std::size_t index, ScalarSignal& sig) const
     {
-        verify_scalar_signal(at(index));
-        sig = at(index)->as_scalar();
+        verify_scalar_signal(_label_signals_list.at(index).second);
+        sig = _label_signals_list.at(index).second->as_scalar();
     }
 
     void bind(std::size_t index, IntegerSignal& sig) const
     {
-        verify_integer_signal(at(index));
-        sig = at(index)->as_integer();
+        verify_integer_signal(_label_signals_list.at(index).second);
+        sig = _label_signals_list.at(index).second->as_integer();
     }
 
     void bind(std::size_t index, ArraySignal& sig) const
     {
-        verify_array_signal(at(index));
-        sig = at(index)->as_array();
+        verify_array_signal(_label_signals_list.at(index).second);
+        sig = _label_signals_list.at(index).second->as_array();
     }
 
     void bind(std::size_t index, BusSignal& sig) const
     {
-        verify_bus_signal(at(index));
-        sig = at(index)->as_bus();
+        verify_bus_signal(_label_signals_list.at(index).second);
+        sig = _label_signals_list.at(index).second->as_bus();
     }
 
-    // implicit binding
+    // implicit binding by index
     void bind(ScalarSignal&  sig) {bind(_implicit_binding_index++, sig);}
     void bind(IntegerSignal& sig) {bind(_implicit_binding_index++, sig);}
     void bind(ArraySignal&   sig) {bind(_implicit_binding_index++, sig);}
     void bind(BusSignal&     sig) {bind(_implicit_binding_index++, sig);}
+
+    using const_iterator = LabelSignalList::const_iterator;
+
+    Signal operator[](std::size_t index) const {return _label_signals_list[index].second;}
+    void clear() noexcept
+    {
+        _label_signals_map.clear();
+        _label_signals_list.clear();
+    }
+    std::size_t size() const noexcept
+    {
+        return _label_signals_list.size();
+    }
+    const_iterator begin() const noexcept {return _label_signals_list.begin();}
+    const_iterator end() const noexcept {return _label_signals_list.end();}
+    void reserve(std::size_t new_cap)
+    {
+        _label_signals_list.reserve(new_cap);
+    }
+    bool push_back( const LabelSignal& ls)
+    {
+        if (_label_signals_map.find(ls.first) == _label_signals_map.end())
+        {
+            _label_signals_map[ls.first] = ls.second;
+            _label_signals_list.push_back(ls);
+            return true;
+        }
+        return false;
+    }
+    void shrink_to_fit() {_label_signals_list.shrink_to_fit();}
 };
 
 class ValueSignalInfo : public SignalInfo
@@ -293,18 +363,15 @@ struct BusSignalInfo : public SignalInfo
     friend class Model;
 
 public:
-    using LabelSignal = std::pair<std::string, Signal>;
-    using LabelSignals = std::vector<LabelSignal>;
-
     const BusSpec& _spec;
 
 protected:
-    LabelSignals _signals;
+    LabelSignalList _signals;
 
 protected:
     void _set(std::size_t index, Signal sig);
 
-    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_) :
+    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
         verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
@@ -369,7 +436,7 @@ public:
     }
 };
 
-std::ostream& operator<<(std::ostream& os, const Signals& signals);
+std::ostream& operator<<(std::ostream& os, const LabelSignals& signals);
 
 class Value
 {

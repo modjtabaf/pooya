@@ -46,9 +46,10 @@ public:
         // setup the submodel
         add_block(_const1,          {}, time_delay);
         add_block(_const2,          {},    initial);
-        add_block( _delay, {_s_x      ,
-                            time_delay,
-                            initial  },       _s_y);
+        add_block(_delay, {
+            {"delay", time_delay},
+            {"in", _s_x},
+            {"initial", initial}}, _s_y);
     }
 
     void input_cb(double t, pooya::Values& values) override

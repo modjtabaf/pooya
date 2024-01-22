@@ -40,7 +40,7 @@ public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
         pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals&) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals&) override
     {
         if (!pooya::Block::init(parent, iports))
             return false;

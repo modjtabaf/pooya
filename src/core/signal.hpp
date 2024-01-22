@@ -204,6 +204,7 @@ public:
     using const_iterator = LabelSignalList::const_iterator;
 
     Signal operator[](std::size_t index) const {return _label_signals_list[index].second;}
+    Signal operator[](const std::string& label) const {return _label_signals_map.at(label);}
     void clear() noexcept
     {
         _label_signals_map.clear();

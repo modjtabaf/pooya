@@ -126,8 +126,6 @@ public:
 class LabelSignals
 {
 protected:
-    std::size_t _implicit_binding_index{0};
-
     LabelSignalMap _label_signals_map;
     LabelSignalList _label_signals_list;
 
@@ -196,10 +194,12 @@ public:
     }
 
     // implicit binding by index
-    void bind(ScalarSignal&  sig) {bind(_implicit_binding_index++, sig);}
-    void bind(IntegerSignal& sig) {bind(_implicit_binding_index++, sig);}
-    void bind(ArraySignal&   sig) {bind(_implicit_binding_index++, sig);}
-    void bind(BusSignal&     sig) {bind(_implicit_binding_index++, sig);}
+    template<typename SignalType>
+    void bind(SignalType&  sig)
+    {
+        verify(_label_signals_list.size() == 1, "Implicit binding is allowed only if there is one and only one signal.");
+        bind(0, sig);
+    }
 
     using const_iterator = LabelSignalList::const_iterator;
 

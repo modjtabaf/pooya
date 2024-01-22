@@ -35,7 +35,7 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent))
             return false;
@@ -54,8 +54,8 @@ public:
         auto g = model_.signal("g");
         auto l = model_.signal("l");
 
-        auto& tau = iports[0];
-        auto& phi = oports[0];
+        auto tau = iports[0];
+        auto phi = oports[0];
 
         // setup the submodel
         add_block(_muldiv1, {tau, m, l, l},  s10);
@@ -85,7 +85,7 @@ public:
         _gain_i("Ki", Ki)
     {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent))
             return false;
@@ -95,8 +95,8 @@ public:
         auto s20 = signal();
         auto s30 = signal();
 
-        auto& x = iports[0];
-        auto& y = oports[0];
+        auto x = iports[0];
+        auto y = oports[0];
 
         // blocks
         add_block(_gain_p,          x, s10);
@@ -118,7 +118,7 @@ protected:
 public:
     PendulumWithPI() : pooya::Submodel("pendulum_with_PI") {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals&, const pooya::Signals&) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals&, const pooya::LabelSignals&) override
     {
         if (!pooya::Submodel::init(parent))
             return false;

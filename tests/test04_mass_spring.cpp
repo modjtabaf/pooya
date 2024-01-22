@@ -32,7 +32,7 @@ protected:
 public:
     MyModel() : pooya::Submodel("MyModel") {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;

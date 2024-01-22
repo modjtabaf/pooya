@@ -31,8 +31,8 @@ void SinT<double>::activation_function(double /*t*/, Values &values) {
   values.set<double>(_oports[0], std::sin(values.get<double>(_iports[0])));
 }
 
-bool BusBlockBuilder::init(Parent &parent, const Signals &iports,
-                           const Signals &oports) {
+bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports,
+                           const LabelSignals& oports) {
   if (!Block::init(parent, iports, oports))
     return false;
 

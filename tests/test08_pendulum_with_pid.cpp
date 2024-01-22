@@ -35,7 +35,7 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent))
             return false;
@@ -54,8 +54,8 @@ public:
         auto g = model_.signal("g");
         auto l = model_.signal("l");
 
-        auto& tau = iports[0];
-        auto& phi = oports[0];
+        auto tau = iports[0];
+        auto phi = oports[0];
 
         // setup the submodel
         add_block(_muldiv1, {tau, m, l, l}, s10);
@@ -87,7 +87,7 @@ public:
         _gain_i("Ki", Ki),
         _gain_d("Kd", Kd) {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals& iports, const pooya::Signals& oports) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
         if (!pooya::Submodel::init(parent))
             return false;
@@ -99,8 +99,8 @@ public:
         auto s40 = signal();
         auto s50 = signal();
 
-        auto& x = iports[0];
-        auto& y = oports[0];
+        auto x = iports[0];
+        auto y = oports[0];
 
         // blocks
         add_block(_gain_p,    x , s10);
@@ -108,9 +108,7 @@ public:
         add_block(_gain_i,  s20 , s30);
         add_block( _deriv,    x , s40);
         add_block(_gain_d,  s40 , s50);
-        add_block(   _add, {s10 ,
-                        s30 ,
-                        s50},   y);
+        add_block(   _add, {s10, s30, s50},  y);
 
         return true;
     }
@@ -126,7 +124,7 @@ protected:
 public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
 
-    bool init(pooya::Parent& parent, const pooya::Signals&, const pooya::Signals&) override
+    bool init(pooya::Parent& parent, const pooya::LabelSignals&, const pooya::LabelSignals&) override
     {
         if (!pooya::Submodel::init(parent))
             return false;
@@ -139,10 +137,9 @@ public:
         auto des_phi = model_ref().signal("des_phi");
 
         // blocks
-        add_block( _sub, {des_phi ,
-                          phi}, err);
-        add_block (_pid,      err , tau);
-        add_block(_pend,      tau , phi);
+        add_block( _sub, {des_phi, phi}, err);
+        add_block (_pid, err, tau);
+        add_block(_pend, tau, phi);
 
         return true;
     }

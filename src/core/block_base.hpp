@@ -38,9 +38,9 @@ public:
 
 protected:
     bool _initialized{false};
-    Signals _iports;
-    Signals _oports;
-    Signals _dependencies;
+    LabelSignals _iports;
+    LabelSignals _oports;
+    std::vector<Signal> _dependencies;
     Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
@@ -55,7 +55,7 @@ protected:
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent& parent, const Signals& iports={}, const Signals& oports={});
+    virtual bool init(Parent& parent, const LabelSignals& iports=LabelSignals(), const LabelSignals& oports=LabelSignals());
     virtual void post_init() {}
 
 public:
@@ -77,8 +77,8 @@ public:
     bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;}
-    const Signals& iports() const {return _iports;}
-    const Signals& oports() const {return _oports;}
+    const LabelSignals& iports() const {return _iports;}
+    const LabelSignals& oports() const {return _oports;}
 
     virtual void _mark_unprocessed();
     virtual uint _process(double t, Values& values, bool go_deep = true);
@@ -101,7 +101,7 @@ protected:
     BusSignal create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
-    bool add_block(Block& component, const Signals& iports={}, const Signals& oports={})
+    bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={})
     {
         if (!component.init(*this, iports, oports))
             return false;
@@ -139,7 +139,7 @@ public:
     template<typename T=double>
     typename Types<T>::Signal create_signal(const std::string& given_name="");
     ArraySignal create_signal(const std::string& given_name, std::size_t size);
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<BusSignalInfo::LabelSignal>& l);
+    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l);
     BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l={});
 
     // clone (make a new copy)
@@ -199,12 +199,12 @@ protected:
 
     ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
 
-    bool init(Parent&, const Signals& = {}, const Signals& = {}) override;
+    bool init(Parent&, const LabelSignals&, const LabelSignals&) override;
 
     template<typename T>
     typename Types<T>::Signal register_signal(const std::string& name);
     ArraySignal register_signal(const std::string& name, std::size_t size);
-    BusSignal register_bus(const std::string& name, const BusSpec& spec, BusSignalInfo::LabelSignals::const_iterator begin_, BusSignalInfo::LabelSignals::const_iterator end_);
+    BusSignal register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_);
 
 public:
     Model(std::string given_name="model");

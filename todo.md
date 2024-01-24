@@ -27,6 +27,8 @@
 - pass std::string as const ref
 - In BusSignalInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
 - 
+- convert Signal to a light wrapper class
+
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->
 <!-- - A (virtual ?) method for verifying the number and types of input and output signals of a block -->

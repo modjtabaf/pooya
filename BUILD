@@ -262,8 +262,35 @@ cc_binary(
 )
 
 cc_binary(
-    name = "stm",
-    srcs = ["tests/simple_truck_model.cpp"],
+    name = "stm_old",
+    srcs = ["tests/simple_truck_model_oldpt1.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O3",
+        "-fno-math-errno",
+        "-ffast-math",
+        ],
+    defines = [
+        "NDEBUG",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+        "//tests/data:data",
+    ],
+)
+
+cc_binary(
+    name = "stm_new",
+    srcs = ["tests/simple_truck_model_newpt1.cpp"],
     copts = [
         "-pedantic-errors",
         "-Wall",

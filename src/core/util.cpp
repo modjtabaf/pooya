@@ -57,17 +57,8 @@ void Deriv::step(double t, double u)
 
 double PT1::operator()(double t, double u)
 {
-    if (_first_step)
-        _y0 = u;
-
     double dudt = Deriv::operator()(t, u);
-    return std::exp((_t0 - t)/_tau)*(_y0 - _k*_u0 + _k*_tau*dudt) + _k*(u - _tau*dudt);
-}
-
-void PT1::step(double t, double u, double y)
-{
-    Deriv::step(t, u);
-    _y0 = y;
+    return _k*_tau*dudt*(std::exp((_t0 - t)/_tau) - 1) + _k*u;
 }
 
 }

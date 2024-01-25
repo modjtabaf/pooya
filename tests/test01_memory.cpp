@@ -24,6 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 int main()
 {
+    pooya_trace0;
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
@@ -41,6 +42,7 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
+            pooya_trace0;
             values.set(x, std::sin(M_PI * t / 5));
         });
 
@@ -67,6 +69,8 @@ int main()
     gp << "set yrange [-1:1]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
 		<< gp.file1d(history[y]) << "with lines title 'y'\n";
+
+    assert(pooya::util::pooya_trace_info.size() == 1);
 
     return 0;
 }

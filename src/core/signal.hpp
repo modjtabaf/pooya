@@ -37,6 +37,7 @@ public:
 
     ArrayN(double v=0) : _Parent()
     {
+        pooya_trace0;
         verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
         if constexpr (N == Eigen::Dynamic)
             _Parent::resize(1);
@@ -142,6 +143,7 @@ public:
     // explicit binding by label
     void bind(const std::string& label, ScalarSignal& sig) const
     {
+        pooya_trace0;
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_scalar_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_scalar();
@@ -149,6 +151,7 @@ public:
 
     void bind(const std::string& label, IntegerSignal& sig) const
     {
+        pooya_trace0;
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_integer_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_integer();
@@ -156,6 +159,7 @@ public:
 
     void bind(const std::string& label, ArraySignal& sig) const
     {
+        pooya_trace0;
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_array_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_array();
@@ -163,6 +167,7 @@ public:
 
     void bind(const std::string& label, BusSignal& sig) const
     {
+        pooya_trace0;
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_bus_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_bus();
@@ -171,24 +176,28 @@ public:
     // explicit binding by index
     void bind(std::size_t index, ScalarSignal& sig) const
     {
+        pooya_trace0;
         verify_scalar_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_scalar();
     }
 
     void bind(std::size_t index, IntegerSignal& sig) const
     {
+        pooya_trace0;
         verify_integer_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_integer();
     }
 
     void bind(std::size_t index, ArraySignal& sig) const
     {
+        pooya_trace0;
         verify_array_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_array();
     }
 
     void bind(std::size_t index, BusSignal& sig) const
     {
+        pooya_trace0;
         verify_bus_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_bus();
     }
@@ -197,6 +206,7 @@ public:
     template<typename SignalType>
     void bind(SignalType&  sig) const
     {
+        pooya_trace0;
         verify(_label_signals_list.size() == 1, "Implicit binding is allowed only if there is one and only one signal.");
         bind(0, sig);
     }
@@ -222,13 +232,20 @@ public:
     }
     bool push_back( const LabelSignal& ls)
     {
-        if (_label_signals_map.find(ls.first) == _label_signals_map.end())
-        {
-            _label_signals_map[ls.first] = ls.second;
-            _label_signals_list.push_back(ls);
-            return true;
-        }
-        return false;
+        pooya_trace0;
+        verify(!ls.first.empty(), "Signal label can not be empty!");
+        verify(ls.second, ls.first + ": invalid signal!");
+        if (ls.first.empty() || (ls.second == nullptr))
+            return false;
+
+        auto it = _label_signals_map.find(ls.first);
+        verify(it == _label_signals_map.end(), ls.first + ": label already exists!");
+        if (it != _label_signals_map.end())
+            return false;
+
+        _label_signals_map[ls.first] = ls.second;
+        _label_signals_list.push_back(ls);
+        return true;
     }
     void shrink_to_fit() {_label_signals_list.shrink_to_fit();}
 };
@@ -338,6 +355,7 @@ public:
 
     std::size_t total_size() const
     {
+        pooya_trace0;
         std::size_t ret = _wires.size();
         for (const auto& wi: _wires)
             if (wi._bus)
@@ -347,6 +365,7 @@ public:
 
     std::size_t index_of(const std::string& label) const
     {
+        pooya_trace0;
         return std::distance(_wires.begin(),
             std::find_if(_wires.begin(), _wires.end(),
                 [&](const WireInfo& wi)
@@ -375,6 +394,7 @@ protected:
     BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
+        pooya_trace0;
         verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
@@ -396,12 +416,14 @@ public:
 
     const LabelSignal& operator[](std::size_t index) const
     {
+        pooya_trace0;
         verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
     const LabelSignal& at(std::size_t index) const
     {
+        pooya_trace0;
         return _signals.at(index);
     }
 
@@ -410,6 +432,7 @@ public:
 
     ScalarSignal scalar_at(const std::string& label) const
     {
+        pooya_trace0;
         Signal sig = at(label);
         verify_scalar_signal(sig);
         return sig->as_scalar();
@@ -417,6 +440,7 @@ public:
 
     IntegerSignal integer_at(const std::string& label) const
     {
+        pooya_trace0;
         Signal sig = at(label);
         verify_integer_signal(sig);
         return sig->as_integer();
@@ -424,6 +448,7 @@ public:
 
     ArraySignal array_at(const std::string& label) const
     {
+        pooya_trace0;
         Signal sig = at(label);
         verify_array_signal(sig);
         return sig->as_array();
@@ -431,6 +456,7 @@ public:
 
     BusSignal bus_at(const std::string& label) const
     {
+        pooya_trace0;
         Signal sig = at(label);
         verify_bus_signal(sig);
         return sig->as_bus();
@@ -454,12 +480,14 @@ public:
 
     double as_scalar() const
     {
+        pooya_trace0;
         verify(_is_scalar, "attempting to retrieve an array as a scalar!");
         return _scalar;
     }
 
     const Array& as_array() const
     {
+        pooya_trace0;
         verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
         return _array;
     }
@@ -494,6 +522,7 @@ public:
     template<typename T>
     typename Types<T>::GetValue get() const
     {
+        pooya_trace0;
         verify(_scalar == nullptr, _si._full_name + ": attempting to retrieve a scalar as an array!");
         verify(_assigned, _si._full_name + ": attempting to access an unassigned value!");
         return _array;
@@ -502,6 +531,7 @@ public:
     template<typename T>
     void set(typename Types<T>::SetValue value)
     {
+        pooya_trace0;
         verify(_scalar == nullptr, _si._full_name + ": cannot assign non-scalar to scalar!");
         verify(!_assigned, _si._full_name + ": re-assignment is prohibited!");
         verify(_array.rows() == value.rows(),
@@ -525,6 +555,7 @@ public:
 template<>
 inline typename Types<double>::GetValue ValueInfo::get<double>() const
 {
+    pooya_trace0;
     verify(is_scalar(), _si._full_name + ": attempting to retrieve an array as a scalar!");
     verify(is_assigned(), _si._full_name + ": attempting to access an unassigned value!");
     return *_scalar;
@@ -533,6 +564,7 @@ inline typename Types<double>::GetValue ValueInfo::get<double>() const
 template<>
 inline typename Types<int>::GetValue ValueInfo::get<int>() const
 {
+    pooya_trace0;
     verify(is_scalar(), _si._full_name + ": attempting to retrieve an array as an integer!");
     verify(is_integer(), _si._full_name + ": attempting to retrieve a float as an integer!");
     verify(is_assigned(), _si._full_name + ": attempting to access an unassigned value!");
@@ -542,6 +574,7 @@ inline typename Types<int>::GetValue ValueInfo::get<int>() const
 template<>
 inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
 {
+    pooya_trace0;
     verify(is_scalar(), _si._full_name + ": cannot assign an integer to a non-scalar!");
     verify(is_integer(), _si._full_name + ": cannot assign an integer to a float!");
     verify(!is_assigned(), _si._full_name + ": re-assignment is prohibited!");
@@ -552,6 +585,7 @@ inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
 template<>
 inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
 {
+    pooya_trace0;
     if (is_integer())
     {
         set<int>(std::round(value));
@@ -577,6 +611,7 @@ protected:
 
     inline ValueInfo& get_value_info(Signal sig)
     {
+        pooya_trace0;
         verify_value_signal(sig);
         return _value_infos[sig->as_value()->_vi_index];
     }
@@ -586,6 +621,7 @@ public:
 
     inline const ValueInfo& get_value_info(Signal sig) const
     {
+        pooya_trace0;
         verify(sig, "invalid signal!");
         verify(sig->as_value(), sig->_full_name + ": value signal needed!");
         return _value_infos[sig->as_value()->_vi_index];
@@ -593,6 +629,7 @@ public:
 
     bool valid(Signal sig) const
     {
+        pooya_trace0;
         return get_value_info(sig).is_assigned();
     }
 
@@ -604,6 +641,7 @@ public:
     template<typename T>
     typename Types<T>::GetValue get(Signal sig) const
     {
+        pooya_trace0;
         return get_value_info(sig).get<T>();
     }
 
@@ -614,6 +652,7 @@ public:
     template<typename T>
     void set(Signal sig, typename Types<T>::SetValue value)
     {
+        pooya_trace0;
         get_value_info(sig).set<T>(value);
     }
 
@@ -625,6 +664,7 @@ public:
 
     void stream(std::ostream& os) const
     {
+        pooya_trace0;
         int k = 0;
         for (const auto& vi: _value_infos)
         {
@@ -637,6 +677,7 @@ public:
 
 inline std::ostream& operator<<(std::ostream& os, const Values& values)
 {
+    pooya_trace0;
     values.stream(os);
     return os;
 }

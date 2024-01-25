@@ -34,6 +34,7 @@ public:
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
+        pooya_trace0;
         if (!pooya::Submodel::init(parent, iports, oports))
             return false;
 
@@ -53,6 +54,7 @@ public:
 
 int main()
 {
+    pooya_trace0;
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
@@ -93,6 +95,8 @@ int main()
     gp << "set yrange [-0.15:0.15]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
 		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
+
+    assert(pooya::util::pooya_trace_info.size() == 1);
 
     return 0;
 }

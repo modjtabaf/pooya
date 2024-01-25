@@ -22,6 +22,7 @@ namespace pooya
 
 void History::update(uint k, double t, const Values& values)
 {
+    pooya_trace0;
     if (empty())
     {
         for (const auto& vi: values.value_infos())
@@ -55,6 +56,7 @@ void History::update(uint k, double t, const Values& values)
 
 void History::shrink_to_fit()
 {
+    pooya_trace0;
     const uint nrows = _bottom_row + 1;
 
     if (nrows >= _time.rows()) // practically, nrows can't be the greater
@@ -67,6 +69,7 @@ void History::shrink_to_fit()
 
 void History::export_csv(std::string filename)
 {
+    pooya_trace0;
     if (size() == 0)
         return;
 
@@ -120,11 +123,13 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _values(model), _stepper(stepper), _reuse_order(reuse_order)
 {
+    pooya_trace0;
     _states = _values.states();
 }
 
 uint Simulator::_process(double t, Values& values)
 {
+    pooya_trace0;
     _model._mark_unprocessed();
 
     uint n_processed = 0;
@@ -199,8 +204,10 @@ uint Simulator::_process(double t, Values& values)
 
 void Simulator::run(double t, double min_time_step, double max_time_step)
 {
+    pooya_trace0;
     auto stepper_callback = [&](double t, Values& values) -> void
     {
+        pooya_trace0;
         _inputs_cb ? _inputs_cb(_model, t, values) : _model.input_cb(t, values);
         _process(t, values);
     };

@@ -36,6 +36,7 @@ public:
 public:
     MyModel() : pooya::Model("test02")
     {
+        pooya_trace0;
         // create signals
         auto time_delay = signal("time_delay");
         auto    initial = signal(   "initial");
@@ -54,12 +55,14 @@ public:
 
     void input_cb(double t, pooya::Values& values) override
     {
+        pooya_trace0;
         values.set(_s_x, std::sin(M_PI * t / 5));
     }
 };
 
 int main()
 {
+    pooya_trace0;
     using milli = std::chrono::milliseconds;
     auto start  = std::chrono::high_resolution_clock::now();
 
@@ -91,6 +94,8 @@ int main()
     gp << "set yrange [-1:1]\n";
 	gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x',"
 		<< gp.file1d(history[model._s_y]) << "with lines title 'xd'\n";
+
+    assert(pooya::util::pooya_trace_info.size() == 1);
 
     return 0;
 }

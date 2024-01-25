@@ -25,18 +25,21 @@ namespace pooya
 
 void LabelSignals::_init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
 {
+    pooya_trace0;
     for (auto it=begin_; it != end_; it++)
         push_back(*it);
 }
 
 LabelSignals::LabelSignals(Signal signal)
 {
+    pooya_trace0;
     LabelSignalList lsl({{_make_auto_label(0), signal}});
     _init(lsl.begin(), lsl.end());
 }
 
 LabelSignals::LabelSignals(const std::initializer_list<Signal>& il)
 {
+    pooya_trace0;
     LabelSignalList lsl;
     std::size_t index=0;
     for (const auto& sig: il)
@@ -46,12 +49,14 @@ LabelSignals::LabelSignals(const std::initializer_list<Signal>& il)
 
 LabelSignals::LabelSignals(const std::initializer_list<LabelSignal>& il)
 {
+    pooya_trace0;
     LabelSignalList lsl(il);
     _init(lsl.begin(), lsl.end());
 }
 
 std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
 {
+    pooya_trace0;
     os << "signals:\n";
     for (const auto& ls: signals)
         os << "- " << ls.first << ": " << ls.second << "\n";
@@ -60,6 +65,7 @@ std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
 
 Signal BusSignalInfo::operator[](const std::string& label) const
 {
+    pooya_trace0;
     auto pos = label.find(".");
     if (pos == std::string::npos)
         return operator[](_spec.index_of(label)).second;
@@ -71,6 +77,7 @@ Signal BusSignalInfo::operator[](const std::string& label) const
 
 Signal BusSignalInfo::at(const std::string& label) const
 {
+    pooya_trace0;
     auto pos = label.find(".");
     if (pos == std::string::npos)
         return at(_spec.index_of(label)).second;
@@ -82,6 +89,7 @@ Signal BusSignalInfo::at(const std::string& label) const
 
 Values::Values(const pooya::Model& model)
 {
+    pooya_trace0;
     const auto& signals = model.signals();
 
     std::size_t states_size{0};
@@ -153,6 +161,7 @@ Values::Values(const pooya::Model& model)
 
 void Values::set_states(const Eigen::ArrayXd& states)
 {
+    pooya_trace0;
     _states = states;
     for (auto& vi: _value_infos)
     {
@@ -171,6 +180,7 @@ void Values::set_states(const Eigen::ArrayXd& states)
 
 void BusSignalInfo::_set(std::size_t index, Signal sig)
 {
+    pooya_trace0;
     verify(index < _signals.size(), "bus wire index out of range!");
     auto& ns = _signals[index];
     auto& wi = _spec._wires[index];

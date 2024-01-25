@@ -15,7 +15,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SOLVER_HPP__
 #define __POOYA_SOLVER_HPP__
 
+#include <functional>
+
 #include "signal.hpp"
+#include "util.hpp"
 
 namespace pooya
 {
@@ -33,6 +36,8 @@ protected:
     template<typename T>
     auto f(double t, const T& v) -> const auto&
     {
+#include <functional>
+        pooya_trace0;
         _X.set_states(v);
         _callback(t, _X);
         return _X.derivs();

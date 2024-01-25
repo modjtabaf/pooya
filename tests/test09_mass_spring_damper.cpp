@@ -42,6 +42,7 @@ public:
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals&) override
     {
+        pooya_trace0;
         if (!pooya::Block::init(parent, iports))
             return false;
 
@@ -63,6 +64,7 @@ public:
 
     void activation_function(double /*t*/, pooya::Values& values) override
     {
+        pooya_trace0;
         // get states and input
         double   x = values.get(  _s_x);
         double  xd = values.get( _s_xd);
@@ -78,6 +80,7 @@ public:
 
 int main()
 {
+    pooya_trace0;
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -95,6 +98,7 @@ int main()
     pooya::Simulator sim(model,
     [&](pooya::Model&, double t, pooya::Values& values) -> void
     {
+        pooya_trace0;
         values.set(tau, 0.01 * std::sin(t));
     }, &stepper);
 
@@ -122,6 +126,8 @@ int main()
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.4:0.5]\n";
 	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x'\n";
+
+    assert(pooya::util::pooya_trace_info.size() == 1);
 
     return 0;
 }

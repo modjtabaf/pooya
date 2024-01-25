@@ -16,12 +16,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <ostream>
 #include <type_traits>
 #include "solver.hpp"
+#include "util.hpp"
 
 namespace pooya
 {
 
 void Euler::step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h)
 {
+    pooya_trace0;
     _callback = callback;
     double h = new_h = t1 - t0;
 
@@ -30,6 +32,7 @@ void Euler::step(StepperCallback callback, double t0, const Array& v0, double t1
 
 void Rk4::step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h)
 {
+    pooya_trace0;
     _callback = callback;
     double h = new_h = t1 - t0;
     double h_2 = h / 2;
@@ -45,6 +48,7 @@ void Rk4::step(StepperCallback callback, double t0, const Array& v0, double t1, 
 // source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
 void Rkf45::step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h)
 {
+    pooya_trace0;
     _callback = callback;
     double h = t1 - t0;
     static const double eps_abs = 0.001;

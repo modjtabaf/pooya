@@ -37,6 +37,7 @@ public:
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
+        pooya_trace0;
         if (!pooya::Submodel::init(parent))
             return false;
 
@@ -87,6 +88,7 @@ public:
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
     {
+        pooya_trace0;
         if (!pooya::Submodel::init(parent))
             return false;
 
@@ -120,6 +122,7 @@ public:
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals&, const pooya::LabelSignals&) override
     {
+        pooya_trace0;
         if (!pooya::Submodel::init(parent))
             return false;
 
@@ -141,6 +144,7 @@ public:
 
 int main()
 {
+    pooya_trace0;
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
@@ -160,6 +164,7 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
+            pooya_trace0;
             values.set(      m,    0.2);
             values.set(      l,    0.1);
             values.set(      g,   9.81);
@@ -195,6 +200,8 @@ int main()
 	    // << gp.file1d(history[sig_reg.lookup_signal(".dphi")]) << "with lines title 'dphi',"
 	    // << gp.file1d(history[sig_reg.lookup_signal(".tau")]) << "with lines title 'tau'"
         "\n";
+
+    assert(pooya::util::pooya_trace_info.size() == 1);
 
     return 0;
 }

@@ -36,7 +36,6 @@ protected:
     template<typename T>
     auto f(double t, const T& v) -> const auto&
     {
-#include <functional>
         pooya_trace0;
         _X.set_states(v);
         _callback(t, _X);

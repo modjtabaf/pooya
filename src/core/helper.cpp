@@ -14,6 +14,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "pooya.hpp"
 #include "helper.hpp"
 
@@ -22,7 +23,7 @@ namespace pooya
 
 void History::update(uint k, double t, const Values& values)
 {
-    pooya_trace0;
+    pooya_trace("k = " + std::to_string(k));
     if (empty())
     {
         for (const auto& vi: values.value_infos())
@@ -69,7 +70,7 @@ void History::shrink_to_fit()
 
 void History::export_csv(std::string filename)
 {
-    pooya_trace0;
+    pooya_trace("filename = " + filename);
     if (size() == 0)
         return;
 
@@ -123,13 +124,13 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _values(model), _stepper(stepper), _reuse_order(reuse_order)
 {
-    pooya_trace0;
+    pooya_trace("model: " + model.full_name());
     _states = _values.states();
 }
 
 uint Simulator::_process(double t, Values& values)
 {
-    pooya_trace0;
+    pooya_trace("t: " + std::to_string(t));
     _model._mark_unprocessed();
 
     uint n_processed = 0;
@@ -204,10 +205,10 @@ uint Simulator::_process(double t, Values& values)
 
 void Simulator::run(double t, double min_time_step, double max_time_step)
 {
-    pooya_trace0;
+    pooya_trace("t: " + std::to_string(t));
     auto stepper_callback = [&](double t, Values& values) -> void
     {
-        pooya_trace0;
+        pooya_trace("t: " + std::to_string(t));
         _inputs_cb ? _inputs_cb(_model, t, values) : _model.input_cb(t, values);
         _process(t, values);
     };

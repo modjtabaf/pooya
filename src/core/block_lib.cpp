@@ -29,13 +29,13 @@ namespace pooya {
 template <>
 void SinT<double>::activation_function(double /*t*/, Values &values)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     values.set<double>(_oports[0], std::sin(values.get<double>(_iports[0])));
 }
 
 bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (!Block::init(parent, iports, oports))
         return false;
 
@@ -49,7 +49,7 @@ bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports, const Lab
 
 void BusBlockBuilder::post_init()
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     const auto &bus_spec = _x->spec();
     _blocks.reserve(bus_spec.total_size());
     traverse_bus("", bus_spec);
@@ -57,7 +57,7 @@ void BusBlockBuilder::post_init()
 
 void BusBlockBuilder::traverse_bus(const std::string &full_label, const BusSpec &bus_spec)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     for (const auto &wi : bus_spec._wires)
     {
         if (wi._bus)
@@ -72,7 +72,7 @@ void BusBlockBuilder::traverse_bus(const std::string &full_label, const BusSpec 
 
 void BusMemory::post_init()
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     BusBlockBuilder::post_init();
     verify(_init_values.empty(), full_name() + ": Some initial values of bus memory block were not used!");
 }
@@ -80,7 +80,7 @@ void BusMemory::post_init()
 void BusMemory::block_builder(const std::string &full_label, const BusSpec::WireInfo &wi,
   Signal sig_in, Signal sig_out)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     auto it = _init_values.find(full_label);
 
     std::unique_ptr<Block> block;
@@ -113,7 +113,7 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
 void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
     Signal sig_in, Signal sig_out)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     std::unique_ptr<Block> block;
     if (wi._scalar) {
         block = std::make_unique<Pipe>("pipe");

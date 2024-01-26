@@ -67,7 +67,7 @@ public:
 
     Model& model_ref()
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         auto* mdl = model();
         verify(mdl, _full_name + ": a model is necessary but none is defined!");
         return *mdl;
@@ -86,7 +86,7 @@ public:
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         return (level > max_level) || cb(*this, level);
     }
 }; // class Block
@@ -105,7 +105,7 @@ protected:
 public:
     bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={})
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!component.init(*this, iports, oports))
             return false;
 
@@ -116,7 +116,7 @@ public:
 
     void step(double t, const Values& values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         for (auto* component: _components)
             component->step(t, values);
     }
@@ -135,7 +135,7 @@ public:
     template<typename T=double>
     typename Types<T>::Signal signal(const std::string& given_name="")
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         auto sig = get_signal<T>(given_name);
         return sig ? sig : create_signal<T>(given_name);
     }
@@ -151,22 +151,22 @@ public:
     Signal clone_signal(const std::string& given_name, Signal sig);
     ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         return clone_signal(given_name, Signal(sig))->as_scalar();
     }
     IntegerSignal clone_signal(const std::string& given_name, IntegerSignal sig)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         return clone_signal(given_name, Signal(sig))->as_integer();
     }
     ArraySignal clone_signal(const std::string& given_name, ArraySignal sig)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         return clone_signal(given_name, Signal(sig))->as_array();
     }
     BusSignal clone_bus(const std::string& given_name, BusSignal sig)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         return clone_signal(given_name, Signal(sig))->as_bus();
     }
 
@@ -227,13 +227,13 @@ public:
 
     void register_state(Signal sig, Signal deriv_sig, double iv)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _register_state(sig, deriv_sig)->_scalar->_iv = iv;
     }
 
     void register_state(Signal sig, Signal deriv_sig, const Array& iv)
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _register_state(sig, deriv_sig)->_array->_iv = iv;
     }
 

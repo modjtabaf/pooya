@@ -65,7 +65,7 @@ std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
 
 Signal BusSignalInfo::operator[](const std::string& label) const
 {
-    pooya_trace0;
+    pooya_trace("label: " + label);
     auto pos = label.find(".");
     if (pos == std::string::npos)
         return operator[](_spec.index_of(label)).second;
@@ -77,7 +77,7 @@ Signal BusSignalInfo::operator[](const std::string& label) const
 
 Signal BusSignalInfo::at(const std::string& label) const
 {
-    pooya_trace0;
+    pooya_trace("label: " + label);
     auto pos = label.find(".");
     if (pos == std::string::npos)
         return at(_spec.index_of(label)).second;
@@ -89,7 +89,7 @@ Signal BusSignalInfo::at(const std::string& label) const
 
 Values::Values(const pooya::Model& model)
 {
-    pooya_trace0;
+    pooya_trace("model: " + model.full_name());
     const auto& signals = model.signals();
 
     std::size_t states_size{0};
@@ -180,7 +180,7 @@ void Values::set_states(const Eigen::ArrayXd& states)
 
 void BusSignalInfo::_set(std::size_t index, Signal sig)
 {
-    pooya_trace0;
+    pooya_trace("index: " + index);
     verify(index < _signals.size(), "bus wire index out of range!");
     auto& ns = _signals[index];
     auto& wi = _spec._wires[index];

@@ -44,7 +44,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (_init)
         {
             _value = values.get<T>(_iports[0]);
@@ -70,7 +70,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         values.set<T>(_oports[0], _value);
     }
 };
@@ -89,7 +89,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         values.set<T>(_oports[0], _k * values.get<T>(_iports[0]));
     }
 };
@@ -106,7 +106,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         values.set<T>(_oports[0], values.get<T>(_iports[0]).sin());
     }
 };
@@ -132,7 +132,7 @@ public:
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         values.set<T>(_oports[0], _act_func(t, values.get<T>(_iports[0])));
     }
 };
@@ -150,7 +150,7 @@ protected:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!Block::init(parent, iports, oports))
             return false;
 
@@ -168,7 +168,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
         for (const auto &ls: _iports)
@@ -195,7 +195,7 @@ class AddT : public AddSubT<T>
 protected:
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + AddSubT<T>::full_name());
         AddSubT<T>::_operators = std::string(iports.size(), '+');
         return AddSubT<T>::init(parent, iports, oports);
     }
@@ -229,7 +229,7 @@ protected:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!Block::init(parent, iports, oports))
             return false;
 
@@ -246,7 +246,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
         for (const auto &ls: _iports)
@@ -273,7 +273,7 @@ class MultiplyT : public MulDivT<T>
 protected:
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + MulDivT<T>::full_name());
         MulDivT<T>::_operators = std::string(iports.size(), '*');
         return MulDivT<T>::init(parent, iports, oports);
     }
@@ -309,7 +309,7 @@ public:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!Block::init(parent, iports, oports))
             return false;
 
@@ -320,14 +320,14 @@ public:
 
     void step(double /*t*/, const Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         assert(values.valid(_oports[0]));
         _value = values.get<T>(_iports[0]);
     }
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/ = true) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (_processed)
             return 0;
 
@@ -360,7 +360,7 @@ public:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!Block::init(parent, iports, oports))
             return false;
 
@@ -377,7 +377,7 @@ public:
 
     void step(double t, const Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (!_t.empty())
         {
             double t1 = t - _lifespan;
@@ -399,7 +399,7 @@ public:
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (_t.empty())
         {
             values.set(_s_y, values.get(_s_initial));
@@ -446,7 +446,7 @@ public:
 
     void step(double /*t*/, const Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _value = values.get<T>(_iports[0]);
     }
 
@@ -461,7 +461,7 @@ public:
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (_processed)
             return 0;
 
@@ -489,7 +489,7 @@ public:
 
     void step(double t, const Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         _t = t;
         _x = values.get<T>(_iports[0]);
         _y = _x;
@@ -498,7 +498,7 @@ public:
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         if (_first_step)
         {
             _t = t;
@@ -527,7 +527,7 @@ public:
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + full_name());
         values.set<T>(_oports[0], values.get<T>(_iports[0]));
     }
 };

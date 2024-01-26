@@ -16,13 +16,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <iostream>
 
 #include "block_base.hpp"
+#include "util.hpp"
 
 namespace pooya
 {
 
 bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
 {
-    pooya_trace0;
+    pooya_trace(_given_name);
     assert(_parent == nullptr);
     if (_parent) return false;
 
@@ -62,7 +63,8 @@ bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals&
 
 bool Block::_add_dependecny(Signal signal)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
+    verify_valid_signal(signal);
     if (std::find(_dependencies.begin(), _dependencies.end(), signal) == _dependencies.end())
     {
         _dependencies.push_back(signal);
@@ -74,7 +76,7 @@ bool Block::_add_dependecny(Signal signal)
 
 void Block::_assign_valid_given_name(std::string given_name)
 {
-    pooya_trace0;
+    pooya_trace(_given_name);
     auto verify_unique_name_cb = [&] (const Block& c, uint32_t level) -> bool
     {
         return (level == 0) || (c._given_name != given_name);
@@ -110,7 +112,7 @@ void Block::_mark_unprocessed()
 
 uint Block::_process(double t, Values& values, bool /*go_deep*/)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (_processed)
         return 0;
 
@@ -128,20 +130,20 @@ uint Block::_process(double t, Values& values, bool /*go_deep*/)
 
 Model* Block::model()
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     return _parent ? _parent->model() : nullptr;
 }
 
 Model::~Model()
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     for (auto* si: _signal_infos)
         delete si;
 }
 
 Signal Model::lookup_signal(const std::string& name, bool exact_match) const
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (name.empty())
         return nullptr;
 
@@ -163,7 +165,7 @@ Signal Model::lookup_signal(const std::string& name, bool exact_match) const
 template<>
 typename Types<double>::Signal Model::register_signal<double>(const std::string& name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (name.empty()) return nullptr;
 
     verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -178,7 +180,7 @@ typename Types<double>::Signal Model::register_signal<double>(const std::string&
 template<>
 typename Types<int>::Signal Model::register_signal<int>(const std::string& name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (name.empty()) return nullptr;
 
     verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -192,7 +194,7 @@ typename Types<int>::Signal Model::register_signal<int>(const std::string& name)
 
 ArraySignal Model::register_signal(const std::string& name, std::size_t size)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (name.empty()) return nullptr;
 
     verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -206,7 +208,7 @@ ArraySignal Model::register_signal(const std::string& name, std::size_t size)
 
 ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     verify_float_signal(sig);
     verify_float_signal(deriv_sig);
     verify(!sig->_value->is_state(), sig->_full_name + ": signal is already registered as a state!");
@@ -223,7 +225,7 @@ ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
 
 std::string Parent::make_signal_name(const std::string& given_name, bool make_new)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     std::string name(given_name);
     if (name.empty())
     {
@@ -253,7 +255,7 @@ std::string Parent::make_signal_name(const std::string& given_name, bool make_ne
 
 void Parent::_mark_unprocessed()
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     Block::_mark_unprocessed();
 
     for (auto component: _components)
@@ -264,7 +266,7 @@ void Parent::_mark_unprocessed()
 
 uint Parent::_process(double t, Values& values, bool go_deep)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     uint n_processed = 0;
     if (!_processed)
     {
@@ -283,7 +285,7 @@ uint Parent::_process(double t, Values& values, bool go_deep)
 
 bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (level > max_level)
         return true;
 
@@ -304,14 +306,14 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
 
 Signal Parent::get_generic_signal(const std::string& given_name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     return model_ref().lookup_signal(make_signal_name(given_name), true);
 }
 
 template<>
 typename Types<double>::Signal Parent::get_signal<double>(const std::string& given_name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
@@ -322,7 +324,7 @@ typename Types<double>::Signal Parent::get_signal<double>(const std::string& giv
 template<>
 typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
@@ -332,7 +334,7 @@ typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_nam
 
 ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
@@ -342,7 +344,7 @@ ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
 
 BusSignal Parent::get_bus(const std::string& given_name, const BusSpec& spec)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
@@ -352,14 +354,14 @@ BusSignal Parent::get_bus(const std::string& given_name, const BusSpec& spec)
 
 ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     auto sig = get_signal(given_name, size);
     return sig ? sig : create_signal(given_name, size);
 }
 
 BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     auto sig = get_bus(given_name, spec);
     return sig ? sig : create_bus(given_name, spec);
 }
@@ -367,27 +369,27 @@ BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
 template<>
 typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     return model_ref().register_signal<double>(make_signal_name(given_name, true))->as_scalar();
 }
 
 template<>
 typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_integer();
 }
 
 ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     return model_ref().register_signal(make_signal_name(given_name, true), size)->as_array();
 }
 
 template<typename Iter>
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     auto size = spec._wires.size();
     verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
@@ -418,14 +420,14 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
 
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
     return create_bus(given_name, spec, l.begin(), l.end());
 }
 
 BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
     LabelSignals label_signals;
@@ -442,7 +444,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
 
 Signal Parent::clone_signal(const std::string& given_name, Signal sig)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     verify_valid_signal(sig);
     if (sig->as_scalar())
     {
@@ -470,7 +472,7 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
 
 Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     _assign_valid_given_name(_given_name);
     _full_name = "/" + _given_name;
     _initialized = true;
@@ -483,7 +485,7 @@ bool Model::init(Parent& parent, const LabelSignals& iports, const LabelSignals&
 
 BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
 {
-    pooya_trace0;
+    pooya_trace("block: " + full_name());
     if (name.empty()) return nullptr;
 
     verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");

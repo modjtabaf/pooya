@@ -143,7 +143,7 @@ public:
     // explicit binding by label
     void bind(const std::string& label, ScalarSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_scalar_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_scalar();
@@ -151,7 +151,7 @@ public:
 
     void bind(const std::string& label, IntegerSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_integer_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_integer();
@@ -159,7 +159,7 @@ public:
 
     void bind(const std::string& label, ArraySignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_array_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_array();
@@ -167,7 +167,7 @@ public:
 
     void bind(const std::string& label, BusSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
         verify_bus_signal(_label_signals_map.at(label));
         sig = _label_signals_map.at(label)->as_bus();
@@ -176,35 +176,35 @@ public:
     // explicit binding by index
     void bind(std::size_t index, ScalarSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         verify_scalar_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_scalar();
     }
 
     void bind(std::size_t index, IntegerSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         verify_integer_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_integer();
     }
 
     void bind(std::size_t index, ArraySignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         verify_array_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_array();
     }
 
     void bind(std::size_t index, BusSignal& sig) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         verify_bus_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_bus();
     }
 
     // implicit binding by index
     template<typename SignalType>
-    void bind(SignalType&  sig) const
+    void bind(SignalType& sig) const
     {
         pooya_trace0;
         verify(_label_signals_list.size() == 1, "Implicit binding is allowed only if there is one and only one signal.");
@@ -230,7 +230,7 @@ public:
     {
         _label_signals_list.reserve(new_cap);
     }
-    bool push_back( const LabelSignal& ls)
+    bool push_back(const LabelSignal& ls)
     {
         pooya_trace0;
         verify(!ls.first.empty(), "Signal label can not be empty!");
@@ -365,7 +365,7 @@ public:
 
     std::size_t index_of(const std::string& label) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         return std::distance(_wires.begin(),
             std::find_if(_wires.begin(), _wires.end(),
                 [&](const WireInfo& wi)
@@ -394,7 +394,7 @@ protected:
     BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
-        pooya_trace0;
+        pooya_trace("fullname: " + full_name);
         verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
@@ -416,14 +416,14 @@ public:
 
     const LabelSignal& operator[](std::size_t index) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
     const LabelSignal& at(std::size_t index) const
     {
-        pooya_trace0;
+        pooya_trace("index: " + std::to_string(index));
         return _signals.at(index);
     }
 
@@ -432,7 +432,7 @@ public:
 
     ScalarSignal scalar_at(const std::string& label) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         Signal sig = at(label);
         verify_scalar_signal(sig);
         return sig->as_scalar();
@@ -440,7 +440,7 @@ public:
 
     IntegerSignal integer_at(const std::string& label) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         Signal sig = at(label);
         verify_integer_signal(sig);
         return sig->as_integer();
@@ -448,7 +448,7 @@ public:
 
     ArraySignal array_at(const std::string& label) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         Signal sig = at(label);
         verify_array_signal(sig);
         return sig->as_array();
@@ -456,7 +456,7 @@ public:
 
     BusSignal bus_at(const std::string& label) const
     {
-        pooya_trace0;
+        pooya_trace("label: " + label);
         Signal sig = at(label);
         verify_bus_signal(sig);
         return sig->as_bus();
@@ -574,7 +574,7 @@ inline typename Types<int>::GetValue ValueInfo::get<int>() const
 template<>
 inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
 {
-    pooya_trace0;
+    pooya_trace("value: " + std::to_string(value));
     verify(is_scalar(), _si._full_name + ": cannot assign an integer to a non-scalar!");
     verify(is_integer(), _si._full_name + ": cannot assign an integer to a float!");
     verify(!is_assigned(), _si._full_name + ": re-assignment is prohibited!");
@@ -585,7 +585,7 @@ inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
 template<>
 inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
 {
-    pooya_trace0;
+    pooya_trace("value: " + std::to_string(value));
     if (is_integer())
     {
         set<int>(std::round(value));

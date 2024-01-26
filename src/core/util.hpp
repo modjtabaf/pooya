@@ -16,6 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_UTIL_HPP__
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -37,19 +38,20 @@ namespace pooya::util
 #define verify(cond, msg) \
     if (!(cond)) \
     { \
-        std::string full_msg = \
-            "\nPooya Exception:\n" + \
-            std::string("  " __FILE__ ":") + std::to_string(__LINE__) + "\n" \
-            "  " + (msg) + "\n\n"; \
-        full_msg += "Pooya Backtrace:\n"; \
+        std::stringstream full_msg; \
+        full_msg << \
+            "\nPooya Exception:\n" << \
+            std::string("  " __FILE__ ":") << std::to_string(__LINE__) << "\n" \
+            "  " << (msg) << "\n\n"; \
+        full_msg << "Pooya Traceback:\n"; \
         for (auto it=pooya::util::pooya_trace_info.rbegin(); it != pooya::util::pooya_trace_info.rend(); it++) \
         { \
-            full_msg += \
-                "- " + it->_file + ":" + std::to_string(it->_line) + "\n"; \
+            full_msg << \
+                "- " + it->_file << ":" << std::to_string(it->_line) << "\n"; \
             if (!it->_msg.empty()) \
-                full_msg += "  " + it->_msg + "\n"; \
+                full_msg << "  " << it->_msg << "\n"; \
         } \
-        throw std::runtime_error(full_msg); \
+        throw std::runtime_error(full_msg.str()); \
     }
 
 struct PooyaTraceInfo

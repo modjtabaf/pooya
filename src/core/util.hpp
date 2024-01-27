@@ -25,13 +25,19 @@ namespace pooya::util
 
 // helper macros
 
+#ifdef NDEBUG
+#define POOYA_NDEBUG
+#else
+#undef POOYA_NDEBUG
+#endif
+
 #define pooya_here(s) std::cout << "Pooya: " << __FILE__ << ":" << __LINE__ << ": " << s << "\n" << std::flush;
 // #undef pooya_here
 // #define pooya_here(s)
 
 #define pooya_here0 pooya_here("")
 
-#if defined(NDEBUG)
+#if defined(POOYA_NDEBUG)
 #define verify(cond, msg)
 #define pooya_trace(msg)
 #else

@@ -4,7 +4,7 @@
 namespace pooya::util
 {
 
-#ifndef NDEBUG
+#ifndef POOYA_NDEBUG
 
 std::vector<PooyaTraceInfo> pooya_trace_info;
 
@@ -26,6 +26,6 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
     throw std::runtime_error(full_msg.str());
 }
 
-#endif // !defined(NDEBUG)
+#endif // !defined(POOYA_NDEBUG)
 
 }

@@ -16,6 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <fstream>
 #include <string>
 #include "pooya.hpp"
+#include "util.hpp"
 #include "helper.hpp"
 
 namespace pooya
@@ -213,7 +214,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _process(t, values);
     };
 
-    if (_values.states().size() > 0)
+    if (_values.num_states() > 0)
     {
         assert(_stepper);
         assert(t >= _t_prev);
@@ -254,11 +255,14 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             double new_h;
             double t1 = _t_prev;
             double t2 = t;
-
-            _states_orig = _values.states();
             bool force_accept = false;
             while (t1 < t)
             {
+                _values.invalidate();
+                _model.pre_step(t1, _values);
+                _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
+                _states_orig = _values.states();
+
                 _stepper->step(stepper_callback, t1, _states_orig, t2, _states, new_h);
 
                 double h = t2 - t1;
@@ -272,11 +276,10 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
                     if (t1 < t)
                     {
-                        _values.set_states(_states);
-                        _states_orig = _states;
+                        _values.reset_with_states(_states);
                         _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
                         _process(t1, _values);
-                        _model.step(t1, _values);
+                        _model.post_step(t1, _values);
                     }
                 }
                 else
@@ -284,7 +287,6 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     // redo this step
                     force_accept = new_h <= min_time_step;
                     new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                    _states = _states_orig;
                     t2 = t1 + new_h;
                 }
             }
@@ -295,10 +297,10 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     if (_first_iter)
         _first_iter = false;
 
-    _values.set_states(_states);
+    _values.reset_with_states(_states);
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
-    _model.step(t, _values);
+    _model.post_step(t, _values);
 
     _t_prev = t;
 }

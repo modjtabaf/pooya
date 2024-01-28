@@ -13,7 +13,7 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
     std::stringstream full_msg;
     full_msg <<
         "\nPooya Exception:\n" <<
-        "  " << file << ":" << std::to_string(__LINE__) << "\n"
+        "  " << file << ":" << std::to_string(line) << "\n"
         "  " << msg << "\n\n";
     full_msg << "Pooya Traceback:\n";
     for (auto it=pooya::util::pooya_trace_info.rbegin(); it != pooya::util::pooya_trace_info.rend(); it++)

@@ -61,7 +61,8 @@ protected:
 public:
     virtual ~Block() = default;
 
-    virtual void step(double /*t*/, const Values& /*states*/) {}
+    virtual void pre_step(double /*t*/, Values& /*states*/) {}
+    virtual void post_step(double /*t*/, const Values& /*states*/) {}
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
     virtual Model* model();
 
@@ -114,11 +115,18 @@ public:
         return true;
     }
 
-    void step(double t, const Values& values) override
+    void pre_step(double t, Values& values) override
     {
         pooya_trace("block: " + full_name());
         for (auto* component: _components)
-            component->step(t, values);
+            component->pre_step(t, values);
+    }
+
+    void post_step(double t, const Values& values) override
+    {
+        pooya_trace("block: " + full_name());
+        for (auto* component: _components)
+            component->post_step(t, values);
     }
 
     // retrieve an existing signal

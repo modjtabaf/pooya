@@ -633,9 +633,14 @@ public:
         return get_value_info(sig).is_assigned();
     }
 
+    std::size_t num_states() const {return _states.size();}
     const decltype(_value_infos)& value_infos() const {return _value_infos;}
     const decltype(_values)& values() const {return _values;}
+#ifdef POOYA_NDEBUG
     const decltype(_states)& states() const {return _states;}
+#else
+    const decltype(_states)& states() const;
+#endif // definded(POOYA_NDEBUG)
     const decltype(_derivs)& derivs() const {return _derivs;}
 
     template<typename T>
@@ -660,7 +665,8 @@ public:
     void set(IntegerSignal sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
     void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);}
 
-    void set_states(const Eigen::ArrayXd& states);
+    void invalidate();
+    void reset_with_states(const Eigen::ArrayXd& states);
 
     void stream(std::ostream& os) const
     {

@@ -313,7 +313,7 @@ public:
         if (!Block::init(parent, iports, oports))
             return false;
 
-        model_ref().register_state(_oports[0], _iports[0], _value);
+        model_ref().register_state(_oports[0], _iports[0]);
 
         return true;
     }
@@ -494,18 +494,6 @@ public:
     DerivativeT(std::string given_name, const T &y0 = 0)
             : Block(given_name, 1, 1), _y(y0) {}
 
-    void pre_step(double t, Values &values) override
-    {
-        pooya_trace("block: " + full_name());
-        if (_first_step)
-        {
-            _t = t;
-            _x = values.get<T>(_iports[0]);
-            values.set<T>(_oports[0], _y);
-            _first_step = false;
-        }
-    }
-
     void post_step(double t, const Values &values) override
     {
         pooya_trace("block: " + full_name());
@@ -518,7 +506,13 @@ public:
     void activation_function(double t, Values &values) override
     {
         pooya_trace("block: " + full_name());
-        if (_t == t)
+        if (_first_step)
+        {
+            _t = t;
+            _x = values.get<T>(_iports[0]);
+            values.set<T>(_oports[0], _y);
+        }
+        else if (_t == t)
         {
             values.set<T>(_oports[0], _y);
         }

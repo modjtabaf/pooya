@@ -214,8 +214,6 @@ protected:
     SignalInfos _signal_infos;
     std::size_t _vi_index{0};
 
-    ValueSignalInfo* _register_state(Signal sig, Signal deriv_sig);
-
     bool init(Parent&, const LabelSignals&, const LabelSignals&) override;
 
     template<typename T>
@@ -233,18 +231,7 @@ public:
 
     const SignalInfos& signals() const {return _signal_infos;}
 
-    void register_state(Signal sig, Signal deriv_sig, double iv)
-    {
-        pooya_trace("block: " + full_name());
-        _register_state(sig, deriv_sig)->_scalar->_iv = iv;
-    }
-
-    void register_state(Signal sig, Signal deriv_sig, const Array& iv)
-    {
-        pooya_trace("block: " + full_name());
-        _register_state(sig, deriv_sig)->_array->_iv = iv;
-    }
-
+    void register_state(Signal sig, Signal deriv_sig);
     Signal lookup_signal(const std::string& name, bool exact_match=false) const;
 };
 

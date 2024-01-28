@@ -53,8 +53,8 @@ public:
         _s_xdd = parent.signal("xdd");
 
         auto& model_ = model_ref();
-        model_.register_state( _s_x,  _s_xd,  _x);
-        model_.register_state(_s_xd, _s_xdd, _xd);
+        model_.register_state( _s_x,  _s_xd);
+        model_.register_state(_s_xd, _s_xdd);
 
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
         _add_dependecny(_s_x);

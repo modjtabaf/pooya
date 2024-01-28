@@ -126,7 +126,6 @@ Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper
     _model(model), _inputs_cb(inputs_cb), _values(model), _stepper(stepper), _reuse_order(reuse_order)
 {
     pooya_trace("model: " + model.full_name());
-    _states = _values.states();
 }
 
 uint Simulator::_process(double t, Values& values)
@@ -295,9 +294,16 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     }
 
     if (_first_iter)
+    {
+        _values.invalidate();
+        _model.pre_step(t, _values);
         _first_iter = false;
+    }
+    else
+    {
+        _values.reset_with_states(_states);
+    }
 
-    _values.reset_with_states(_states);
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.post_step(t, _values);

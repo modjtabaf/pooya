@@ -42,6 +42,7 @@ namespace pooya::util
 #define pooya_trace(msg)
 #else
 
+std::string pooya_trace_info_string();
 void pooya_throw_exception(const std::string& file, int line, const std::string& msg);
 
 #define verify(cond, msg) if (!(cond)) {pooya::util::pooya_throw_exception(__FILE__, __LINE__, msg);}

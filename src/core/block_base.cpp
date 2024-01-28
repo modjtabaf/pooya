@@ -206,7 +206,7 @@ ArraySignal Model::register_signal(const std::string& name, std::size_t size)
     return sig;
 }
 
-ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
+void Model::register_state(Signal sig, Signal deriv_sig)
 {
     pooya_trace("block: " + full_name());
     verify_float_signal(sig);
@@ -216,11 +216,8 @@ ValueSignalInfo* Model::_register_state(Signal sig, Signal deriv_sig)
     verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
         sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
 
-    ValueSignalInfo* ret = _signal_infos[sig->_index]->_value;
-    ret->_deriv_sig = deriv_sig->_value;
+    _signal_infos[sig->_index]->_value->_deriv_sig = deriv_sig->_value;
     _signal_infos[deriv_sig->_index]->_value->_is_deriv = true;
-
-    return ret;
 }
 
 std::string Parent::make_signal_name(const std::string& given_name, bool make_new)

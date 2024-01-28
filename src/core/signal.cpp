@@ -159,13 +159,41 @@ Values::Values(const pooya::Model& model)
     }
 }
 
-void Values::set_states(const Eigen::ArrayXd& states)
+#ifndef POOYA_NDEBUG
+const decltype(Values::_states)& Values::states() const
+{
+    for (const auto& vi: _value_infos)
+    {
+        verify(!vi._si.is_state() || vi.is_assigned(), "unassigned state");
+    }
+    return _states;
+}
+#endif // !definded(POOYA_NDEBUG)
+
+void Values::invalidate()
+{
+#ifndef POOYA_NDEBUG
+    _values.setZero();
+    _derivs.setZero();
+#endif // !defined(POOYA_NDEBUG)
+    for (auto& vi: _value_infos)
+    {
+        vi._assigned = false;
+    }
+}
+
+void Values::reset_with_states(const Eigen::ArrayXd& states)
 {
     pooya_trace0;
+#ifndef POOYA_NDEBUG
+    _values.setZero();
+    _derivs.setZero();
+#endif // !defined(POOYA_NDEBUG)
     _states = states;
     for (auto& vi: _value_infos)
     {
-        if (!(vi._assigned = vi._si.is_state()))
+        vi._assigned = vi._si.is_state();
+        if (!vi._assigned)
             continue;
 
         if (vi._si.is_deriv())

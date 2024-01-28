@@ -25,11 +25,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class MassSpringDamper : public pooya::Block
 {
 protected:
-    double   _m;
-    double   _k;
-    double   _c;
-    double  _x0;
-    double _xd0;
+    double  _m;
+    double  _k;
+    double  _c;
+    double  _x;
+    double _xd;
 
     pooya::ScalarSignal _s_tau;
     pooya::ScalarSignal   _s_x;
@@ -38,7 +38,7 @@ protected:
 
 public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
-        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x0(x0), _xd0(xd0) {}
+        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
 
     bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals&) override
     {
@@ -52,8 +52,9 @@ public:
         _s_xd  = parent.signal( "xd");
         _s_xdd = parent.signal("xdd");
 
-        model_ref().register_state( _s_x,  _s_xd,  _x0);
-        model_ref().register_state(_s_xd, _s_xdd, _xd0);
+        auto& model_ = model_ref();
+        model_.register_state( _s_x,  _s_xd,  _x);
+        model_.register_state(_s_xd, _s_xdd, _xd);
 
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
         _add_dependecny(_s_x);
@@ -76,6 +77,18 @@ public:
         // assign acceleration
         values.set(_s_xdd, xdd);
     }
+
+    void pre_step(double /*t*/, pooya::Values& values) override
+    {
+        values.set(_s_x, _x);
+        values.set(_s_xd, _xd);
+    }
+
+    void post_step(double /*t*/, const pooya::Values& values) override
+    {
+        _x = values.get(_s_x);
+        _xd = values.get(_s_xd);
+    }
 };
 
 int main()
@@ -94,7 +107,7 @@ int main()
     // setup the model
     model.add_block(msd, tau);
 
-    pooya::Rk4 stepper(model);
+    pooya::Euler stepper(model);
     pooya::Simulator sim(model,
     [&](pooya::Model&, double t, pooya::Values& values) -> void
     {

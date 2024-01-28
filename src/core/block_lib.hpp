@@ -318,11 +318,18 @@ public:
         return true;
     }
 
-    void step(double /*t*/, const Values &values) override
+    void pre_step(double /*t*/, Values &values) override
+    {
+        pooya_trace("block: " + full_name());
+        assert(!values.valid(_oports[0]));
+        values.set<T>(_oports[0], _value);
+    }
+
+    void post_step(double /*t*/, const Values &values) override
     {
         pooya_trace("block: " + full_name());
         assert(values.valid(_oports[0]));
-        _value = values.get<T>(_iports[0]);
+        _value = values.get<T>(_oports[0]);
     }
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/ = true) override
@@ -375,7 +382,7 @@ public:
         return true;
     }
 
-    void step(double t, const Values &values) override
+    void post_step(double t, const Values &values) override
     {
         pooya_trace("block: " + full_name());
         if (!_t.empty())
@@ -444,7 +451,7 @@ public:
     MemoryT(std::string given_name, const T &ic = 0)
             : Block(given_name, 1, 1), _value(ic) {}
 
-    void step(double /*t*/, const Values &values) override
+    void post_step(double /*t*/, const Values &values) override
     {
         pooya_trace("block: " + full_name());
         _value = values.get<T>(_iports[0]);
@@ -487,7 +494,19 @@ public:
     DerivativeT(std::string given_name, const T &y0 = 0)
             : Block(given_name, 1, 1), _y(y0) {}
 
-    void step(double t, const Values &values) override
+    void pre_step(double t, Values &values) override
+    {
+        pooya_trace("block: " + full_name());
+        if (_first_step)
+        {
+            _t = t;
+            _x = values.get<T>(_iports[0]);
+            values.set<T>(_oports[0], _y);
+            _first_step = false;
+        }
+    }
+
+    void post_step(double t, const Values &values) override
     {
         pooya_trace("block: " + full_name());
         _t = t;
@@ -499,13 +518,7 @@ public:
     void activation_function(double t, Values &values) override
     {
         pooya_trace("block: " + full_name());
-        if (_first_step)
-        {
-            _t = t;
-            _x = values.get<T>(_iports[0]);
-            values.set<T>(_oports[0], _y);
-        }
-        else if (_t == t)
+        if (_t == t)
         {
             values.set<T>(_oports[0], _y);
         }

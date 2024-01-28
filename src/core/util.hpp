@@ -95,11 +95,15 @@ public:
 
 #define verify_float_signal(sig) \
     verify_valid_signal(sig); \
-    verify(!(sig)->as_integer(), (sig)->_full_name + ": float signal expected!");
+    verify(!(sig)->as_int() && !(sig)->as_bool(), (sig)->_full_name + ": float signal expected!");
 
-#define verify_integer_signal(sig) \
+#define verify_int_signal(sig) \
     verify_valid_signal(sig); \
-    verify((sig)->as_integer(), (sig)->_full_name + ": integer signal expected!");
+    verify((sig)->as_int(), (sig)->_full_name + ": int signal expected!");
+
+#define verify_bool_signal(sig) \
+    verify_valid_signal(sig); \
+    verify((sig)->as_bool(), (sig)->_full_name + ": bool signal expected!");
 
 #define verify_array_signal_size(sig, size_) \
     verify_array_signal(sig); \

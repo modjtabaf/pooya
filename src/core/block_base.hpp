@@ -162,10 +162,15 @@ public:
         pooya_trace("block: " + full_name());
         return clone_signal(given_name, Signal(sig))->as_scalar();
     }
-    IntegerSignal clone_signal(const std::string& given_name, IntegerSignal sig)
+    IntSignal clone_signal(const std::string& given_name, IntSignal sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_integer();
+        return clone_signal(given_name, Signal(sig))->as_int();
+    }
+    BoolSignal clone_signal(const std::string& given_name, BoolSignal sig)
+    {
+        pooya_trace("block: " + full_name());
+        return clone_signal(given_name, Signal(sig))->as_bool();
     }
     ArraySignal clone_signal(const std::string& given_name, ArraySignal sig)
     {
@@ -240,6 +245,9 @@ typename Types<double>::Signal Model::register_signal<double>(const std::string&
 
 template<>
 typename Types<int>::Signal Model::register_signal<int>(const std::string& name);
+
+template<>
+typename Types<bool>::Signal Model::register_signal<bool>(const std::string& name);
 
 }
 

@@ -30,9 +30,9 @@ void History::update(uint k, double t, const Values& values)
         for (const auto& vi: values.value_infos())
         {
             if (vi.is_scalar())
-                insert_or_assign(&vi._si, Array(_nrows_grow));
+                insert_or_assign(vi._si, Array(_nrows_grow));
             else
-                insert_or_assign(&vi._si, Eigen::MatrixXd(_nrows_grow, vi.size()));
+                insert_or_assign(vi._si, Eigen::MatrixXd(_nrows_grow, vi.size()));
         }
     }
 
@@ -41,15 +41,17 @@ void History::update(uint k, double t, const Values& values)
     _time(k, 0) = t;
     for (const auto& vi: values.value_infos())
     {
-        auto& h = at(&vi._si);
+        auto& h = at(vi._si);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-        if (vi.is_integer())
-            h(k, 0) = values.get<int>(&vi._si);
+        if (vi.is_int())
+            h(k, 0) = values.get<int>(vi._si);
+        if (vi.is_bool())
+            h(k, 0) = values.get<bool>(vi._si);
         else if (vi.is_scalar())
-            h(k, 0) = values.get<double>(&vi._si);
+            h(k, 0) = values.get<double>(vi._si);
         else
-            h.row(k) = values.get<Array>(&vi._si);
+            h.row(k) = values.get<Array>(vi._si);
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))

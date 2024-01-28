@@ -98,7 +98,7 @@ Values::Values(const pooya::Model& model)
     for (const auto* signal: signals)
     {
         if (!signal->as_value()) continue;
-        auto size = (signal->as_scalar() || signal->as_integer()) ? 1 : signal->as_array()->_size;
+        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
         _total_size += size;
         if (signal->as_value()->is_state())
             states_size += size;
@@ -113,9 +113,11 @@ Values::Values(const pooya::Model& model)
     {
         if (!signal->as_value()) continue;
         auto& start = signal->as_value()->is_state() ? state_start : other_start;
-        auto size = (signal->as_scalar() || signal->as_integer()) ? 0 : signal->as_array()->_size;
-        if (signal->as_integer())
-            _value_infos.push_back({*signal->as_value(), start});
+        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
+        if (signal->as_int())
+            _value_infos.push_back({*signal->as_int(), start});
+        else if (signal->as_bool())
+            _value_infos.push_back({*signal->as_bool(), start});
         else
             _value_infos.push_back({*signal->as_value(), start, size});
         start += std::max<std::size_t>(size, 1);
@@ -164,7 +166,7 @@ const decltype(Values::_states)& Values::states() const
 {
     for (const auto& vi: _value_infos)
     {
-        verify(!vi._si.is_state() || vi.is_assigned(), "unassigned state");
+        verify(!vi._si->is_state() || vi.is_assigned(), "unassigned state");
     }
     return _states;
 }
@@ -192,11 +194,11 @@ void Values::reset_with_states(const Eigen::ArrayXd& states)
     _states = states;
     for (auto& vi: _value_infos)
     {
-        vi._assigned = vi._si.is_state();
+        vi._assigned = vi._si->is_state();
         if (!vi._assigned)
             continue;
 
-        if (vi._si.is_deriv())
+        if (vi._si->is_deriv())
         {
             if (vi._deriv_scalar)
                 *vi._deriv_scalar = *vi._scalar;

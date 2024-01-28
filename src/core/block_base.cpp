@@ -186,7 +186,22 @@ typename Types<int>::Signal Model::register_signal<int>(const std::string& name)
     verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
     auto index = _signal_infos.size();
-    auto* sig = new IntegerSignalInfo(name, index, _vi_index++);
+    auto* sig = new IntSignalInfo(name, index, _vi_index++);
+    _signal_infos.push_back(sig);
+
+    return sig;
+}
+
+template<>
+typename Types<bool>::Signal Model::register_signal<bool>(const std::string& name)
+{
+    pooya_trace("block: " + full_name());
+    if (name.empty()) return nullptr;
+
+    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+
+    auto index = _signal_infos.size();
+    auto* sig = new BoolSignalInfo(name, index, _vi_index++);
     _signal_infos.push_back(sig);
 
     return sig;
@@ -325,8 +340,8 @@ typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_nam
     Signal sig = get_generic_signal(given_name);
     if (!sig)
         return nullptr;
-    verify_integer_signal(sig);
-    return sig->as_integer();
+    verify_int_signal(sig);
+    return sig->as_int();
 }
 
 ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
@@ -374,7 +389,7 @@ template<>
 typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
-    return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_integer();
+    return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_int();
 }
 
 ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)

@@ -15,6 +15,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <cstddef>
 #include <iostream>
 #include <cassert>
+#include <string>
 #include <utility>
 
 #include "signal.hpp"
@@ -210,7 +211,7 @@ void Values::reset_with_states(const Eigen::ArrayXd& states)
 
 void BusSignalInfo::_set(std::size_t index, Signal sig)
 {
-    pooya_trace("index: " + index);
+    pooya_trace("index: " + std::to_string(index));
     verify(index < _signals.size(), "bus wire index out of range!");
     auto& ns = _signals[index];
     verify(ns.second == nullptr, ns.first + ": cannot re-assign a bus wire!");

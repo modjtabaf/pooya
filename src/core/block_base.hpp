@@ -132,10 +132,42 @@ public:
 
     // retrieve an existing signal
     Signal get_generic_signal(const std::string& given_name);
-    template<typename T=double>
-    typename Types<T>::Signal get_signal(const std::string& given_name);
-    ArraySignal get_signal(const std::string& given_name, std::size_t size);
-    BusSignal get_bus(const std::string& given_name, const BusSpec& spec);
+    template<typename T, typename... Ts>
+    typename Types<T>::Signal get_signal(const std::string& given_name, Ts... args)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        Signal sig = get_generic_signal(given_name);
+        if (!sig)
+            return nullptr;
+        Types<T>::verify_signal_type(sig, args...);
+        return Types<T>::as_type(sig);
+    }
+
+    ScalarSignal get_scalar_signal(const std::string& given_name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return get_signal<double>(given_name);
+    }
+    IntSignal get_int_signal(const std::string& given_name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return get_signal<int>(given_name);
+    }
+    BoolSignal get_bool_signal(const std::string& given_name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return get_signal<bool>(given_name);
+    }
+    ArraySignal get_array_signal(const std::string& given_name, std::size_t size)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return get_signal<Array>(given_name, size);
+    }
+    BusSignal get_bus(const std::string& given_name, const BusSpec& spec)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return get_signal<BusSpec>(given_name, spec);
+    }
 
     // get if exists, create otherwise
     ArraySignal signal(const std::string& given_name, std::size_t size);
@@ -191,15 +223,6 @@ public:
 }; // class Parent
 
 template<>
-typename Types<double>::Signal Parent::get_signal<double>(const std::string& given_name);
-
-template<>
-typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_name);
-
-template<>
-typename Types<bool>::Signal Parent::get_signal<bool>(const std::string& given_name);
-
-template<>
 typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name);
 
 template<>
@@ -228,10 +251,46 @@ protected:
 
     bool init(Parent&, const LabelSignals&, const LabelSignals&) override;
 
-    template<typename T>
-    typename Types<T>::Signal register_signal(const std::string& name);
-    ArraySignal register_signal(const std::string& name, std::size_t size);
-    BusSignal register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_);
+    template<typename T, typename... Ts>
+    typename Types<T>::Signal register_signal(const std::string& name, Ts... args)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        if (name.empty()) return nullptr;
+
+        verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+
+        auto index = _signal_infos.size();
+        auto* sig = new typename Types<T>::SignalInfo(name, index, args...);
+        _signal_infos.push_back(sig);
+
+        return sig;
+    }
+
+    ScalarSignal register_scalar_signal(const std::string& name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        return register_signal<double, std::size_t>(name, _vi_index++);
+    }
+    IntSignal register_int_signal(const std::string& name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        return register_signal<int, std::size_t>(name, _vi_index++);
+    }
+    BoolSignal register_bool_signal(const std::string& name)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        return register_signal<bool, std::size_t>(name, _vi_index++);
+    }
+    ArraySignal register_array_signal(const std::string& name, std::size_t size)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        return register_signal<Array, std::size_t>(name, _vi_index++, size);
+    }
+    BusSignal register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + name);
+        return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
+    }
 
 public:
     Model(std::string given_name="model");
@@ -246,15 +305,6 @@ public:
     void register_state(Signal sig, Signal deriv_sig);
     Signal lookup_signal(const std::string& name, bool exact_match=false) const;
 };
-
-template<>
-typename Types<double>::Signal Model::register_signal<double>(const std::string& name);
-
-template<>
-typename Types<int>::Signal Model::register_signal<int>(const std::string& name);
-
-template<>
-typename Types<bool>::Signal Model::register_signal<bool>(const std::string& name);
 
 }
 

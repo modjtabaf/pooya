@@ -173,65 +173,6 @@ Signal Model::lookup_signal(const std::string& name, bool exact_match) const
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-template<>
-typename Types<double>::Signal Model::register_signal<double>(const std::string& name)
-{
-    pooya_trace("block: " + full_name());
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new ScalarSignalInfo(name, index, _vi_index++);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
-template<>
-typename Types<int>::Signal Model::register_signal<int>(const std::string& name)
-{
-    pooya_trace("block: " + full_name());
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new IntSignalInfo(name, index, _vi_index++);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
-template<>
-typename Types<bool>::Signal Model::register_signal<bool>(const std::string& name)
-{
-    pooya_trace("block: " + full_name());
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BoolSignalInfo(name, index, _vi_index++);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
-ArraySignal Model::register_signal(const std::string& name, std::size_t size)
-{
-    pooya_trace("block: " + full_name());
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new ArraySignalInfo(name, index, _vi_index++, size);
-    _signal_infos.push_back(sig);
-
-    return sig;
-}
-
 void Model::register_state(Signal sig, Signal deriv_sig)
 {
     pooya_trace("block: " + full_name());
@@ -333,63 +274,10 @@ Signal Parent::get_generic_signal(const std::string& given_name)
     return model_ref().lookup_signal(make_signal_name(given_name), true);
 }
 
-template<>
-typename Types<double>::Signal Parent::get_signal<double>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    Signal sig = get_generic_signal(given_name);
-    if (!sig)
-        return nullptr;
-    verify_scalar_signal(sig);
-    return sig->as_scalar();
-}
-
-template<>
-typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    Signal sig = get_generic_signal(given_name);
-    if (!sig)
-        return nullptr;
-    verify_int_signal(sig);
-    return sig->as_int();
-}
-
-template<>
-typename Types<bool>::Signal Parent::get_signal<bool>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    Signal sig = get_generic_signal(given_name);
-    if (!sig)
-        return nullptr;
-    verify_bool_signal(sig);
-    return sig->as_bool();
-}
-
-ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
-{
-    pooya_trace("block: " + full_name());
-    Signal sig = get_generic_signal(given_name);
-    if (!sig)
-        return nullptr;
-    verify_array_signal_size(sig, size);
-    return sig->as_array();
-}
-
-BusSignal Parent::get_bus(const std::string& given_name, const BusSpec& spec)
-{
-    pooya_trace("block: " + full_name());
-    Signal sig = get_generic_signal(given_name);
-    if (!sig)
-        return nullptr;
-    verify_bus_signal_spec(sig, spec);
-    return sig->as_bus();
-}
-
 ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 {
     pooya_trace("block: " + full_name());
-    auto sig = get_signal(given_name, size);
+    auto sig = get_signal<Array>(given_name, size);
     return sig ? sig : create_signal(given_name, size);
 }
 
@@ -404,27 +292,27 @@ template<>
 typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
-    return model_ref().register_signal<double>(make_signal_name(given_name, true))->as_scalar();
+    return model_ref().register_scalar_signal(make_signal_name(given_name, true))->as_scalar();
 }
 
 template<>
 typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
-    return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_int();
+    return model_ref().register_int_signal(make_signal_name(given_name, true))->as_int();
 }
 
 template<>
 typename Types<bool>::Signal Parent::create_signal<bool>(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
-    return model_ref().register_signal<bool>(make_signal_name(given_name, true))->as_bool();
+    return model_ref().register_bool_signal(make_signal_name(given_name, true))->as_bool();
 }
 
 ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)
 {
     pooya_trace("block: " + full_name());
-    return model_ref().register_signal(make_signal_name(given_name, true), size)->as_array();
+    return model_ref().register_array_signal(make_signal_name(given_name, true), size)->as_array();
 }
 
 template<typename Iter>
@@ -522,20 +410,6 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 bool Model::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
 {
     return true;
-}
-
-BusSignal Model::register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
-{
-    pooya_trace("block: " + full_name());
-    if (name.empty()) return nullptr;
-
-    verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
-
-    auto index = _signal_infos.size();
-    auto* sig = new BusSignalInfo(name, index, spec, begin_, end_);
-    _signal_infos.push_back(sig);
-
-    return sig;
 }
 
 }

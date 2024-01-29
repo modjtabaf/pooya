@@ -51,6 +51,7 @@ protected:
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
     bool _add_dependecny(Signal signal);
+    bool _remove_dependecny(Signal signal);
 
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -196,10 +197,16 @@ template<>
 typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_name);
 
 template<>
+typename Types<bool>::Signal Parent::get_signal<bool>(const std::string& given_name);
+
+template<>
 typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name);
 
 template<>
 typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name);
+
+template<>
+typename Types<bool>::Signal Parent::create_signal<bool>(const std::string& given_name);
 
 class Submodel : public Parent
 {

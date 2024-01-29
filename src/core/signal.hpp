@@ -742,6 +742,7 @@ public:
 
     void set(ScalarSignal sig, double value) {set<double>(sig, value);}
     void set(IntSignal sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
+    void set(BoolSignal sig, bool value) {set<bool>(sig, value);}
     void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);}
 
     void invalidate();

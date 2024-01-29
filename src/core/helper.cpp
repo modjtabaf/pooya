@@ -44,14 +44,20 @@ void History::update(uint k, double t, const Values& values)
         auto& h = at(vi._si);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
+        bool valid = values.valid(vi._si);
         if (vi.is_int())
-            h(k, 0) = values.get<int>(vi._si);
+            h(k, 0) = valid ? values.get<int>(vi._si) : 0;
         if (vi.is_bool())
-            h(k, 0) = values.get<bool>(vi._si);
+            h(k, 0) = valid ? values.get<bool>(vi._si) : 0;
         else if (vi.is_scalar())
-            h(k, 0) = values.get<double>(vi._si);
+            h(k, 0) = valid ? values.get<double>(vi._si) : 0;
         else
-            h.row(k) = values.get<Array>(vi._si);
+        {
+            if (valid)
+                h.row(k) = values.get<Array>(vi._si);
+            else
+                h.row(k).setZero();
+        }
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))

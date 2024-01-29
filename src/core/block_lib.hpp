@@ -298,14 +298,14 @@ using Divide = DivideT<double>;
 using DivideA = DivideT<Array>;
 
 template <typename T>
-class IntegratorT : public Block
+class IntegratorBaseT : public Block
 {
 protected:
     T _value;
 
 public:
-    IntegratorT(std::string given_name, T ic = T(0.0))
-            : Block(given_name, 1, 1), _value(ic) {}
+    IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
+            : Block(given_name, num_iports, num_oports), _value(ic) {}
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
@@ -343,8 +343,66 @@ public:
     }
 };
 
+template <typename T>
+class IntegratorT : public IntegratorBaseT<T>
+{
+public:
+    IntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
+};
+
 using Integrator = IntegratorT<double>;
 using IntegratorA = IntegratorT<Array>;
+
+template <typename T>
+class TriggeredIntegratorT : public IntegratorBaseT<T>
+{
+protected:
+    BoolSignal _trigger;
+    bool _triggered{false};
+
+public:
+    TriggeredIntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
+
+    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    {
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        if (!IntegratorBaseT<T>::init(parent, iports, oports))
+            return false;
+
+        iports.bind("trigger", _trigger);
+
+        return true;
+    }
+
+    void pre_step(double t, Values &values) override
+    {
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        if (_triggered)
+        {
+            if constexpr (std::is_same_v<T, Array>)
+                IntegratorBaseT<T>::_value.setZero();
+            else
+                IntegratorBaseT<T>::_value = 0;
+            _triggered = false;
+        }
+        IntegratorBaseT<T>::pre_step(t, values);
+    }
+
+    uint _process(double t, Values &values, bool go_deep=true) override
+    {
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        if (IntegratorBaseT<T>::_processed || !values.valid(_trigger))
+            return 0;
+
+        if (!_triggered)
+            _triggered = values.get(_trigger);
+
+        return IntegratorBaseT<T>::_process(t, values, go_deep);
+    }
+};
+
+using TriggeredIntegrator = TriggeredIntegratorT<double>;
+using TriggeredIntegratorA = TriggeredIntegratorT<Array>;
 
 template <typename T>
 class DelayT : public Block {

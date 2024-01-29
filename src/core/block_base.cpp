@@ -74,6 +74,17 @@ bool Block::_add_dependecny(Signal signal)
     return false;
 }
 
+bool Block::_remove_dependecny(Signal signal)
+{
+    pooya_trace("block: " + full_name());
+    verify_valid_signal(signal);
+    auto it = std::find(_dependencies.begin(), _dependencies.end(), signal);
+    if (it == _dependencies.end())
+        return false;
+    _dependencies.erase(it);
+    return true;
+}
+
 void Block::_assign_valid_given_name(std::string given_name)
 {
     pooya_trace(_given_name);
@@ -344,6 +355,17 @@ typename Types<int>::Signal Parent::get_signal<int>(const std::string& given_nam
     return sig->as_int();
 }
 
+template<>
+typename Types<bool>::Signal Parent::get_signal<bool>(const std::string& given_name)
+{
+    pooya_trace("block: " + full_name());
+    Signal sig = get_generic_signal(given_name);
+    if (!sig)
+        return nullptr;
+    verify_bool_signal(sig);
+    return sig->as_bool();
+}
+
 ArraySignal Parent::get_signal(const std::string& given_name, std::size_t size)
 {
     pooya_trace("block: " + full_name());
@@ -390,6 +412,13 @@ typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_
 {
     pooya_trace("block: " + full_name());
     return model_ref().register_signal<int>(make_signal_name(given_name, true))->as_int();
+}
+
+template<>
+typename Types<bool>::Signal Parent::create_signal<bool>(const std::string& given_name)
+{
+    pooya_trace("block: " + full_name());
+    return model_ref().register_signal<bool>(make_signal_name(given_name, true))->as_bool();
 }
 
 ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)

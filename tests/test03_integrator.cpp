@@ -29,15 +29,16 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model      model("test03"     );
-    pooya::Integrator integ( "integ", 1.0);
+    pooya::Model model("test03");
+    pooya::TriggeredIntegrator integ( "integ", 1.0);
 
     // create signals
     auto x  = model.signal( "x");
     auto xd = model.signal("xd");
+    auto trigger = model.signal<bool>("trigger");
 
     // setup the model
-    model.add_block(integ, xd, x);
+    model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);
 
     pooya::Euler stepper(model);
     pooya::Simulator sim(model,
@@ -45,6 +46,7 @@ int main()
         {
             pooya_trace0;
             values.set(xd, t < 3 or t > 7 ? 1.0 : 0.0);
+            values.set(trigger, t >= 4.9 && t <= 5.1);
         },
         &stepper);
 

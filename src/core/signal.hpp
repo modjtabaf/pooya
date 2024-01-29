@@ -76,38 +76,6 @@ using LabelSignal = std::pair<std::string, Signal>;
 using LabelSignalList = std::vector<LabelSignal>;
 using LabelSignalMap = std::map<LabelSignal::first_type, LabelSignal::second_type>;
 
-template<typename T>
-struct Types
-{
-    using Signal = ArraySignal;
-    using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
-    using SetValue = const Array&;
-};
-
-template<>
-struct Types<double>
-{
-    using Signal = ScalarSignal;
-    using GetValue = double;
-    using SetValue = double;
-};
-
-template<>
-struct Types<int>
-{
-    using Signal = IntSignal;
-    using GetValue = int;
-    using SetValue = int;
-};
-
-template<>
-struct Types<bool>
-{
-    using Signal = BoolSignal;
-    using GetValue = bool;
-    using SetValue = bool;
-};
-
 class SignalInfo
 {
     friend class Model;
@@ -507,6 +475,64 @@ public:
         verify_bus_signal(sig);
         return sig->as_bus();
     }
+};
+
+template<typename T>
+struct Types
+{
+};
+
+template<>
+struct Types<Array>
+{
+    using SignalInfo = ArraySignalInfo;
+    using Signal = ArraySignal;
+    using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
+    using SetValue = const Array&;
+    static void verify_signal_type(pooya::Signal sig, std::size_t size) {verify_array_signal_size(sig, size);}
+    static Signal as_type(pooya::Signal sig) {return sig->as_array();}
+};
+
+template<>
+struct Types<double>
+{
+    using SignalInfo = ScalarSignalInfo;
+    using Signal = ScalarSignal;
+    using GetValue = double;
+    using SetValue = double;
+    static void verify_signal_type(pooya::Signal sig) {verify_scalar_signal(sig);}
+    static Signal as_type(pooya::Signal sig) {return sig->as_scalar();}
+};
+
+template<>
+struct Types<int>
+{
+    using SignalInfo = IntSignalInfo;
+    using Signal = IntSignal;
+    using GetValue = int;
+    using SetValue = int;
+    static void verify_signal_type(pooya::Signal sig) {verify_int_signal(sig);}
+    static Signal as_type(pooya::Signal sig) {return sig->as_int();}
+};
+
+template<>
+struct Types<bool>
+{
+    using SignalInfo = BoolSignalInfo;
+    using Signal = BoolSignal;
+    using GetValue = bool;
+    using SetValue = bool;
+    static void verify_signal_type(pooya::Signal sig) {verify_bool_signal(sig);}
+    static Signal as_type(pooya::Signal sig) {return sig->as_bool();}
+};
+
+template<>
+struct Types<BusSpec>
+{
+    using SignalInfo = BusSignalInfo;
+    using Signal = BusSignal;
+    static void verify_signal_type(pooya::Signal sig, const BusSpec& spec) {verify_bus_signal_spec(sig, spec);}
+    static Signal as_type(pooya::Signal sig) {return sig->as_bus();}
 };
 
 std::ostream& operator<<(std::ostream& os, const LabelSignals& signals);

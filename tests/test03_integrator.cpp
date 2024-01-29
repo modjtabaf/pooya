@@ -37,6 +37,11 @@ int main()
     auto xd = model.signal("xd");
     auto trigger = model.signal<bool>("trigger");
 
+    pooya::BusSpec spec{{"z"}};
+    pooya_here(model.get_signal<double>("x"));
+    pooya_here(model.get_signal<pooya::Array>("x", 1));
+    pooya_here(model.get_signal<pooya::BusSpec>("x", spec));
+
     // setup the model
     model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);
 

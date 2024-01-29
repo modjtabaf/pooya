@@ -416,7 +416,7 @@ public:
     bool operator==(const BusSpec& other) const {return this == &other;}
 };
 
-struct BusSignalInfo : public SignalInfo
+class BusSignalInfo : public SignalInfo
 {
     friend class Model;
 

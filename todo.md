@@ -12,8 +12,8 @@
 * rework Model and integrate SignalRegsitry into it
 * introduce create_signal()
 * introduce integer signals
+* Deprecate the initial values for states
 
-- Deprecate the initial values for states
 - Make _assigned a debug-only flag
 - Use DOT to generate a graph presentation of the model
 - Doxygen

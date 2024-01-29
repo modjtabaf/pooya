@@ -25,12 +25,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv    _muldiv1{ "tau_ml2", "*///"};
-    pooya::Subtract      _sub{     "err"};
-    pooya::Integrator _integ1{    "dphi"};
-    pooya::Integrator _integ2{     "phi"};
-    pooya::Sin           _sin{"sin(phi)"};
-    pooya::MulDiv    _muldiv2{     "g_l", "**/"};
+    pooya::MulDiv _muldiv1{ "tau_ml2", "*///"};
+    pooya::Subtract _sub{"err"};
+    pooya::Integrator _integ1{"dphi"};
+    pooya::Integrator _integ2{"phi"};
+    pooya::Sin _sin{"sin(phi)"};
+    pooya::MulDiv _muldiv2{"g_l", "**/"};
 
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
@@ -42,29 +42,29 @@ public:
             return false;
 
         // create signals
-        auto dphi = signal( "dphi");
+        auto dphi = scalar_signal("dphi");
 
         // choose random names for these internal signals
-        auto s10 = signal();
-        auto s20 = signal();
-        auto s30 = signal();
-        auto s40 = signal();
+        auto s10 = scalar_signal();
+        auto s20 = scalar_signal();
+        auto s30 = scalar_signal();
+        auto s40 = scalar_signal();
 
         auto& model_ = model_ref();
-        auto m = model_.signal("m");
-        auto g = model_.signal("g");
-        auto l = model_.signal("l");
+        auto m = model_.scalar_signal("m");
+        auto g = model_.scalar_signal("g");
+        auto l = model_.scalar_signal("l");
 
         auto tau = iports[0];
         auto phi = oports[0];
 
         // setup the submodel
         add_block(_muldiv1, {tau, m, l, l}, s10);
-        add_block(    _sub,  {s10, s20},  s30);
-        add_block( _integ1,         s30, dphi);
-        add_block( _integ2,        dphi,  phi);
-        add_block(    _sin,         phi,  s40);
-        add_block(_muldiv2, {s40, g, l},  s20);
+        add_block(_sub,  {s10, s20}, s30);
+        add_block(_integ1, s30, dphi);
+        add_block(_integ2, dphi, phi);
+        add_block(_sin, phi,  s40);
+        add_block(_muldiv2, {s40, g, l}, s20);
 
         return true;
     }
@@ -73,18 +73,18 @@ public:
 class PID : public pooya::Submodel
 {
 protected:
-    pooya::Gain      _gain_p;
+    pooya::Gain _gain_p;
     pooya::Integrator _integ;
-    pooya::Gain      _gain_i;
-    pooya::Add          _add{"Add"};
-    pooya::Derivative _deriv{ "dx"};
-    pooya::Gain      _gain_d;
+    pooya::Gain _gain_i;
+    pooya::Add _add{"Add"};
+    pooya::Derivative _deriv{"dx"};
+    pooya::Gain _gain_d;
 
 public:
     PID(double Kp, double Ki, double Kd, double x0=0.0) :
         pooya::Submodel("PI"),
         _gain_p("Kp", Kp),
-        _integ ("ix", x0),
+        _integ("ix", x0),
         _gain_i("Ki", Ki),
         _gain_d("Kd", Kd) {}
 
@@ -95,22 +95,22 @@ public:
             return false;
 
         // choose random names for these internal signals
-        auto s10 = signal();
-        auto s20 = signal();
-        auto s30 = signal();
-        auto s40 = signal();
-        auto s50 = signal();
+        auto s10 = scalar_signal();
+        auto s20 = scalar_signal();
+        auto s30 = scalar_signal();
+        auto s40 = scalar_signal();
+        auto s50 = scalar_signal();
 
         auto x = iports[0];
         auto y = oports[0];
 
         // blocks
-        add_block(_gain_p,    x , s10);
-        add_block( _integ,    x , s20);
-        add_block(_gain_i,  s20 , s30);
-        add_block( _deriv,    x , s40);
-        add_block(_gain_d,  s40 , s50);
-        add_block(   _add, {s10, s30, s50},  y);
+        add_block(_gain_p, x, s10);
+        add_block(_integ, x, s20);
+        add_block(_gain_i, s20, s30);
+        add_block(_deriv, x, s40);
+        add_block(_gain_d, s40, s50);
+        add_block(_add, {s10, s30, s50}, y);
 
         return true;
     }
@@ -120,8 +120,8 @@ class PendulumWithPID : public pooya::Submodel
 {
 protected:
     pooya::Subtract _sub{"Sub"};
-    PID             _pid{40.0, 20.0, 0.05};
-    Pendulum       _pend;
+    PID _pid{40.0, 20.0, 0.05};
+    Pendulum _pend;
 
 public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
@@ -133,15 +133,15 @@ public:
             return false;
 
         // signals
-        auto phi = signal("phi");
-        auto tau = signal("tau");
-        auto err = signal("err");
+        auto phi = scalar_signal("phi");
+        auto tau = scalar_signal("tau");
+        auto err = scalar_signal("err");
 
-        auto des_phi = model_ref().signal("des_phi");
+        auto des_phi = model_ref().scalar_signal("des_phi");
 
         // blocks
-        add_block( _sub, {des_phi, phi}, err);
-        add_block (_pid, err, tau);
+        add_block(_sub, {des_phi, phi}, err);
+        add_block(_pid, err, tau);
         add_block(_pend, tau, phi);
 
         return true;
@@ -161,18 +161,18 @@ int main()
     // setup the model
     model.add_block(pendulum_with_pid);
 
-    auto       m = model.signal(      "m");
-    auto       l = model.signal(      "l");
-    auto       g = model.signal(      "g");
-    auto des_phi = model.signal("des_phi");
+    auto m = model.scalar_signal("m");
+    auto l = model.scalar_signal("l");
+    auto g = model.scalar_signal("g");
+    auto des_phi = model.scalar_signal("des_phi");
 
     pooya::Rkf45 stepper(model);
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set(      m,    0.2);
-            values.set(      l,    0.1);
-            values.set(      g,   9.81);
+            values.set(m, 0.2);
+            values.set(l, 0.1);
+            values.set(g, 9.81);
             values.set(des_phi, M_PI_4);
         },
         &stepper);

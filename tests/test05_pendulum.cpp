@@ -45,21 +45,21 @@ public:
             return false;
 
         // create signals
-        auto   phi = signal(  "phi");
-        auto  dphi = signal( "dphi");
-        auto d2phi = signal("d2phi");
+        auto phi = scalar_signal("phi");
+        auto dphi = scalar_signal("dphi");
+        auto d2phi = scalar_signal("d2phi");
 
-        auto s10 = signal(); // choose a random name for this internal signal
+        auto s10 = scalar_signal(); // choose a random name for this internal signal
 
         auto& model_ = model_ref();
-        auto g = model_.signal("g");
-        auto l = model_.signal("l");
+        auto g = model_.scalar_signal("g");
+        auto l = model_.scalar_signal("l");
 
         // setup the submodel
-        add_block(_integ1,       d2phi,  dphi);
-        add_block(_integ2,        dphi,   phi);
-        // add_block(  _func,         phi,   s10);
-        add_block(   _sin,         phi,   s10);
+        add_block(_integ1, d2phi, dphi);
+        add_block(_integ2, dphi, phi);
+        // add_block(_func, phi, s10);
+        add_block(_sin, phi, s10);
         add_block(_muldiv, {s10, g, l}, d2phi);
 
         return true;
@@ -79,8 +79,8 @@ int main()
     // setup the model
     model.add_block(pendulum);
 
-    auto l = model.signal("l");
-    auto g = model.signal("g");
+    auto l = model.scalar_signal("l");
+    auto g = model.scalar_signal("g");
 
     pooya::Rk4 stepper(model);
     pooya::Simulator sim(model,

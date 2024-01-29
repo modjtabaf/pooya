@@ -61,24 +61,24 @@ bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals&
     return true;
 }
 
-bool Block::_add_dependecny(Signal signal)
+bool Block::_add_dependecny(Signal sig)
 {
     pooya_trace("block: " + full_name());
-    verify_valid_signal(signal);
-    if (std::find(_dependencies.begin(), _dependencies.end(), signal) == _dependencies.end())
+    verify_valid_signal(sig);
+    if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
     {
-        _dependencies.push_back(signal);
+        _dependencies.push_back(sig);
         return true;
     }
 
     return false;
 }
 
-bool Block::_remove_dependecny(Signal signal)
+bool Block::_remove_dependecny(Signal sig)
 {
     pooya_trace("block: " + full_name());
-    verify_valid_signal(signal);
-    auto it = std::find(_dependencies.begin(), _dependencies.end(), signal);
+    verify_valid_signal(sig);
+    auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
     if (it == _dependencies.end())
         return false;
     _dependencies.erase(it);
@@ -127,9 +127,9 @@ uint Block::_process(double t, Values& values, bool /*go_deep*/)
     if (_processed)
         return 0;
 
-    for (auto& signal: _dependencies)
+    for (auto& sig: _dependencies)
     {
-        if (!signal->as_bus() && !values.valid(signal))
+        if (!sig->as_bus() && !values.valid(sig))
             return 0;
     }
 
@@ -272,20 +272,6 @@ Signal Parent::get_generic_signal(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
     return model_ref().lookup_signal(make_signal_name(given_name), true);
-}
-
-ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
-{
-    pooya_trace("block: " + full_name());
-    auto sig = get_signal<Array>(given_name, size);
-    return sig ? sig : create_signal<Array, std::size_t>(given_name, size);
-}
-
-BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
-{
-    pooya_trace("block: " + full_name());
-    auto sig = get_bus(given_name, spec);
-    return sig ? sig : create_bus(given_name, spec);
 }
 
 template<typename Iter>

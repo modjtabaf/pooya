@@ -33,14 +33,11 @@ int main()
     pooya::TriggeredIntegrator integ( "integ", 1.0);
 
     // create signals
-    auto x  = model.signal( "x");
-    auto xd = model.signal("xd");
-    auto trigger = model.signal<bool>("trigger");
+    auto x  = model.scalar_signal("x");
+    auto xd = model.scalar_signal("xd");
+    auto trigger = model.bool_signal("trigger");
 
     pooya::BusSpec spec{{"z"}};
-    pooya_here(model.get_signal<double>("x"));
-    pooya_here(model.get_signal<pooya::Array>("x", 1));
-    pooya_here(model.get_signal<pooya::BusSpec>("x", spec));
 
     // setup the model
     model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);

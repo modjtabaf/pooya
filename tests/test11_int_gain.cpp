@@ -33,8 +33,8 @@ int main()
     pooya::GainI gain("gain", 2);
 
     // create signals
-    auto x = model.signal<int>("x");
-    auto y = model.signal<int>("y");
+    auto x = model.int_signal("x");
+    auto y = model.int_signal("y");
 
     // setup the model
     model.add_block(gain, x, y);

@@ -29,12 +29,12 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model model("test00"     );
-    pooya::Gain   gain(  "gain", 2.0);
+    pooya::Model model("test00");
+    pooya::Gain gain("gain", 2.0);
 
     // create signals
-    auto x = model.signal("x");
-    auto y = model.signal("y");
+    auto x = model.scalar_signal("x");
+    auto y = model.scalar_signal("y");
 
     // setup the model
     model.add_block(gain, x, y);

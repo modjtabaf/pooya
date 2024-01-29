@@ -278,7 +278,7 @@ ArraySignal Parent::signal(const std::string& given_name, std::size_t size)
 {
     pooya_trace("block: " + full_name());
     auto sig = get_signal<Array>(given_name, size);
-    return sig ? sig : create_signal(given_name, size);
+    return sig ? sig : create_signal<Array, std::size_t>(given_name, size);
 }
 
 BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
@@ -286,33 +286,6 @@ BusSignal Parent::bus(const std::string& given_name, const BusSpec& spec)
     pooya_trace("block: " + full_name());
     auto sig = get_bus(given_name, spec);
     return sig ? sig : create_bus(given_name, spec);
-}
-
-template<>
-typename Types<double>::Signal Parent::create_signal<double>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    return model_ref().register_scalar_signal(make_signal_name(given_name, true))->as_scalar();
-}
-
-template<>
-typename Types<int>::Signal Parent::create_signal<int>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    return model_ref().register_int_signal(make_signal_name(given_name, true))->as_int();
-}
-
-template<>
-typename Types<bool>::Signal Parent::create_signal<bool>(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    return model_ref().register_bool_signal(make_signal_name(given_name, true))->as_bool();
-}
-
-ArraySignal Parent::create_signal(const std::string& given_name, std::size_t size)
-{
-    pooya_trace("block: " + full_name());
-    return model_ref().register_array_signal(make_signal_name(given_name, true), size)->as_array();
 }
 
 template<typename Iter>
@@ -338,7 +311,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
         if (!ls.second)
         {
             std::string name = given_name + "." + wit->_label;
-            ls.second = wit->_scalar ? create_signal(name) : (wit->_array_size > 0 ? Signal(create_signal(name, wit->_array_size)) :
+            ls.second = wit->_scalar ? create_scalar_signal(name) : (wit->_array_size > 0 ? Signal(create_array_signal(name, wit->_array_size)) :
                 create_bus(name, *wit->_bus));
         }
         wit++;
@@ -377,11 +350,11 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
     verify_valid_signal(sig);
     if (sig->as_scalar())
     {
-        return create_signal(given_name);
+        return create_scalar_signal(given_name);
     }
     else if (sig->as_array())
     {
-        return create_signal(given_name, sig->as_array()->_size);
+        return create_array_signal(given_name, sig->as_array()->_size);
     }
     else
     {

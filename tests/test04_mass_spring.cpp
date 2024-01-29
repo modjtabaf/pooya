@@ -25,9 +25,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{   "xd",      0.1};
-    pooya::Integrator _integ2{    "x"          };
-    pooya::Gain         _gain{"-k\\m", -1.0/1.0};
+    pooya::Integrator _integ1{"xd", 0.1};
+    pooya::Integrator _integ2{"x"};
+    pooya::Gain _gain{"-k\\m", -1.0/1.0};
 
 public:
     MyModel() : pooya::Submodel("MyModel") {}
@@ -39,14 +39,14 @@ public:
             return false;
 
         // create signals
-        auto   x = signal(  "x");
-        auto  xd = signal( "xd");
-        auto xdd = signal("xdd");
+        auto x = scalar_signal("x");
+        auto xd = scalar_signal("xd");
+        auto xdd = scalar_signal("xdd");
 
         // setup the submodel
-        add_block(_integ1, xdd,  xd);
-        add_block(_integ2,  xd,   x);
-        add_block(  _gain,   x, xdd);
+        add_block(_integ1, xdd, xd);
+        add_block(_integ2, xd, x);
+        add_block(_gain, x, xdd);
 
         return true;
     }

@@ -26,8 +26,8 @@ class MyModel : public pooya::Model
 {
 protected:
     pooya::Const _const1{"TimeDelay", 2.7435};
-    pooya::Const _const2{  "Initial",    0.0};
-    pooya::Delay  _delay{    "Delay"        };
+    pooya::Const _const2{"Initial", 0.0};
+    pooya::Delay _delay{"Delay"};
 
 public:
     pooya::ScalarSignal _s_x;
@@ -38,15 +38,15 @@ public:
     {
         pooya_trace0;
         // create signals
-        auto time_delay = signal("time_delay");
-        auto    initial = signal(   "initial");
+        auto time_delay = scalar_signal("time_delay");
+        auto initial = scalar_signal("initial");
 
-        _s_x = signal("x");
-        _s_y = signal("y");
+        _s_x = scalar_signal("x");
+        _s_y = scalar_signal("y");
 
         // setup the submodel
-        add_block(_const1,          {}, time_delay);
-        add_block(_const2,          {},    initial);
+        add_block(_const1, {}, time_delay);
+        add_block(_const2, {}, initial);
         add_block(_delay, {
             {"delay", time_delay},
             {"in", _s_x},

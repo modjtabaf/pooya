@@ -50,8 +50,8 @@ protected:
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
-    bool _add_dependecny(Signal signal);
-    bool _remove_dependecny(Signal signal);
+    bool _add_dependecny(Signal sig);
+    bool _remove_dependecny(Signal sig);
 
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -170,15 +170,34 @@ public:
     }
 
     // get if exists, create otherwise
-    ArraySignal signal(const std::string& given_name, std::size_t size);
-    BusSignal bus(const std::string& given_name, const BusSpec& spec);
-
-    template<typename T=double>
-    typename Types<T>::Signal signal(const std::string& given_name="")
+    template<typename T, typename... Ts>
+    typename Types<T>::Signal signal(const std::string& given_name="", Ts... args)
     {
-        pooya_trace("block: " + full_name());
-        auto sig = get_signal<T>(given_name);
-        return sig ? sig : create_signal<T>(given_name);
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        auto sig = get_signal<T, Ts...>(given_name, args...);
+        return sig ? sig : create_signal<T, Ts...>(given_name, args...);
+    }
+
+    ScalarSignal scalar_signal(const std::string& given_name="")
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return signal<double>(given_name);
+    }
+    IntSignal int_signal(const std::string& given_name="")
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return signal<int>(given_name);
+    }
+    BoolSignal bool_signal(const std::string& given_name="")
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        return signal<bool>(given_name);
+    }
+    BusSignal bus(const std::string& given_name, const BusSpec& spec)
+    {
+        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        auto sig = get_bus(given_name, spec);
+        return sig ? sig : create_bus(given_name, spec);
     }
 
     // create with a unique name

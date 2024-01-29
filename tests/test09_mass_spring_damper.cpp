@@ -25,15 +25,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class MassSpringDamper : public pooya::Block
 {
 protected:
-    double  _m;
-    double  _k;
-    double  _c;
-    double  _x;
+    double _m;
+    double _k;
+    double _c;
+    double _x;
     double _xd;
 
     pooya::ScalarSignal _s_tau;
-    pooya::ScalarSignal   _s_x;
-    pooya::ScalarSignal  _s_xd;
+    pooya::ScalarSignal _s_x;
+    pooya::ScalarSignal _s_xd;
     pooya::ScalarSignal _s_xdd;
 
 public:
@@ -48,12 +48,12 @@ public:
 
         _iports.bind(_s_tau);
 
-        _s_x   = parent.signal(  "x");
-        _s_xd  = parent.signal( "xd");
-        _s_xdd = parent.signal("xdd");
+        _s_x = parent.scalar_signal("x");
+        _s_xd = parent.scalar_signal("xd");
+        _s_xdd = parent.scalar_signal("xdd");
 
         auto& model_ = model_ref();
-        model_.register_state( _s_x,  _s_xd);
+        model_.register_state(_s_x, _s_xd);
         model_.register_state(_s_xd, _s_xdd);
 
         // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
@@ -67,8 +67,8 @@ public:
     {
         pooya_trace0;
         // get states and input
-        double   x = values.get(  _s_x);
-        double  xd = values.get( _s_xd);
+        double x = values.get(_s_x);
+        double xd = values.get(_s_xd);
         double tau = values.get(_s_tau);
 
         // calculate acceleration
@@ -102,7 +102,7 @@ int main()
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create signals
-    auto tau = model.signal("tau");
+    auto tau = model.scalar_signal("tau");
 
     // setup the model
     model.add_block(msd, tau);

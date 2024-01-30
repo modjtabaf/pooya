@@ -55,17 +55,22 @@ void BusBlockBuilder::post_init()
     traverse_bus("", bus_spec);
 }
 
-void BusBlockBuilder::traverse_bus(const std::string &full_label, const BusSpec &bus_spec)
+void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec& bus_spec)
 {
     pooya_trace("block: " + full_name());
+
+    if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end())
+        return;
+
     for (const auto &wi : bus_spec._wires)
     {
         if (wi._bus)
           traverse_bus(full_label + wi._label + ".", *wi._bus);
         else
         {
-          auto label = full_label + wi._label;
-          block_builder(label, wi, _x->at(label), _y->at(label));
+            auto label = full_label + wi._label;
+            if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
+                block_builder(label, wi, _x->at(label), _y->at(label));
         }
     }
 }

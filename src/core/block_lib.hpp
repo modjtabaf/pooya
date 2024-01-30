@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define __POOYA_BLOCK_LIB_HPP__
 
 #include <cassert>
+#include <initializer_list>
 #include <map>
 #include <memory>
 
@@ -608,6 +609,7 @@ protected:
     BusSignal _y;
 
     std::vector<std::unique_ptr<Block>> _blocks;
+    std::vector<std::string> _excluded_labels;
 
     void traverse_bus(const std::string &path_name, const BusSpec &bus_spec);
 
@@ -615,7 +617,8 @@ protected:
         Signal sig_in, Signal sig_out) = 0;
 
 public:
-    BusBlockBuilder(std::string given_name) : Block(given_name, 1, 1) {}
+    BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
+        : Block(given_name, 1, 1), _excluded_labels(excluded_labels) {}
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override;
     void post_init() override;
@@ -631,8 +634,8 @@ protected:
     LabelValueMap _init_values;
 
 public:
-    BusMemory(std::string given_name, const std::initializer_list<LabelValue> &l = {})
-            : BusBlockBuilder(given_name), _init_values(l) {}
+    BusMemory(const std::string& given_name, const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
+            : BusBlockBuilder(given_name, excluded_labels), _init_values(l) {}
 
 protected:
     void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi, Signal sig_in, Signal sig_out) override;
@@ -642,8 +645,8 @@ protected:
 class BusPipe : public BusBlockBuilder
 {
 public:
-    explicit BusPipe(std::string given_name)
-            : BusBlockBuilder(std::move(given_name)) {}
+    explicit BusPipe(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
+            : BusBlockBuilder(given_name, excluded_labels) {}
 
 protected:
     void block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,

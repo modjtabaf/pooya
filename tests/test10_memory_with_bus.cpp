@@ -37,7 +37,7 @@ int main()
 
     // create raw blocks
     pooya::Model model("test10");
-    pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}});
+    pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
 
     pooya::BusSpec internal_bus_spec({
         {"z3"}, // wire 0 labeled "z3" carries a scalar signal

@@ -211,6 +211,51 @@ uint Simulator::_process(double t, Values& values)
     return n_processed;
 }
 
+void Simulator::init(double t0)
+{
+    pooya_trace("t0: " + std::to_string(t0));
+
+    _t_prev = t0;
+
+    if (_values.num_states() > 0)
+    {
+        if (_reuse_order)
+        {
+            assert(_processing_order1.empty());
+            assert(_processing_order2.empty());
+
+            uint num_blocks = 0;
+            auto enum_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
+            {
+                num_blocks++;
+                return true;
+            };
+            _model.traverse(enum_blocks_cb, 0);
+
+            _processing_order1.reserve(num_blocks);
+            _processing_order2.reserve(num_blocks);
+
+            auto add_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
+            {
+                _processing_order1.push_back(&c);
+                return true;
+            };
+            _model.traverse(add_blocks_cb, 0);
+
+            _current_po = &_processing_order1;
+            _new_po = &_processing_order2;
+        }
+    }
+
+    _values.invalidate();
+    _model.pre_step(t0, _values);
+    _inputs_cb ? _inputs_cb(_model, t0, _values) : _model.input_cb(t0, _values);
+    _process(t0, _values);
+    _model.post_step(t0, _values);
+
+    _initialized = true;
+}
+
 void Simulator::run(double t, double min_time_step, double max_time_step)
 {
     pooya_trace("t: " + std::to_string(t));
@@ -221,101 +266,62 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _process(t, values);
     };
 
-    if (_first_iter)
-        _t_prev = t;
+    if (!_initialized)
+    {
+        // treat the first call as the initialization call if init(t0) was not called explicitely
+        init(t);
+        return;
+    }
 
     if (_values.num_states() > 0)
     {
         assert(_stepper);
 
-        if (_first_iter)
+        assert(t >= _t_prev);
+        assert(min_time_step > 0);
+        assert(max_time_step > min_time_step);
+
+        double new_h;
+        double t1 = _t_prev;
+        double t2 = t;
+        bool force_accept = false;
+        while (t1 < t)
         {
-            if (_reuse_order)
+            _values.invalidate();
+            _model.pre_step(t1, _values);
+            _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
+            _states_orig = _values.states();
+
+            _stepper->step(stepper_callback, t1, _states_orig, t2, _states, new_h);
+
+            double h = t2 - t1;
+            if (force_accept || (new_h >= h) || (h <= min_time_step))
             {
-                assert(_processing_order1.empty());
-                assert(_processing_order2.empty());
+                // accept this step
+                force_accept = false;
+                new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                t1 = t2;
+                t2 = std::min(t1 + new_h, t);
 
-                uint num_blocks = 0;
-                auto enum_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
+                if (t1 < t)
                 {
-                    num_blocks++;
-                    return true;
-                };
-                _model.traverse(enum_blocks_cb, 0);
-
-                _processing_order1.reserve(num_blocks);
-                _processing_order2.reserve(num_blocks);
-
-                auto add_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
-                {
-                    _processing_order1.push_back(&c);
-                    return true;
-                };
-                _model.traverse(add_blocks_cb, 0);
-
-                _current_po = &_processing_order1;
-                _new_po = &_processing_order2;
-            }
-        }
-        else
-        {
-            assert(t >= _t_prev);
-            assert(min_time_step > 0);
-            assert(max_time_step > min_time_step);
-
-            double new_h;
-            double t1 = _t_prev;
-            double t2 = t;
-            bool force_accept = false;
-            while (t1 < t)
-            {
-                _values.invalidate();
-                _model.pre_step(t1, _values);
-                _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
-                _states_orig = _values.states();
-
-                _stepper->step(stepper_callback, t1, _states_orig, t2, _states, new_h);
-
-                double h = t2 - t1;
-                if (force_accept || (new_h >= h) || (h <= min_time_step))
-                {
-                    // accept this step
-                    force_accept = false;
-                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                    t1 = t2;
-                    t2 = std::min(t1 + new_h, t);
-
-                    if (t1 < t)
-                    {
-                        _values.reset_with_states(_states);
-                        _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
-                        _process(t1, _values);
-                        _model.post_step(t1, _values);
-                    }
-                }
-                else
-                {
-                    // redo this step
-                    force_accept = new_h <= min_time_step;
-                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                    t2 = t1 + new_h;
+                    _values.reset_with_states(_states);
+                    _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+                    _process(t1, _values);
+                    _model.post_step(t1, _values);
                 }
             }
-            
+            else
+            {
+                // redo this step
+                force_accept = new_h <= min_time_step;
+                new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                t2 = t1 + new_h;
+            }
         }
     }
 
-    if (_first_iter)
-    {
-        _values.invalidate();
-        _model.pre_step(t, _values);
-        _first_iter = false;
-    }
-    else
-    {
-        _values.reset_with_states(_states);
-    }
-
+    _values.reset_with_states(_states);
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.post_step(t, _values);

@@ -54,7 +54,7 @@ protected:
     Array _states;
     Array _states_orig;
     StepperBase* _stepper{nullptr};
-    bool _first_iter{true};
+    bool _initialized{false};
 
     const bool _reuse_order;
     using ProcessingOrder = std::vector<Block*>;
@@ -68,6 +68,7 @@ protected:
 public:
     Simulator(Model& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr, bool reuse_order = false);
 
+    void init(double t0=0.0);
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
 
     const Values& values() const {return _values;}

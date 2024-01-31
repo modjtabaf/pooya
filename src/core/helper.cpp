@@ -221,12 +221,12 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         _process(t, values);
     };
 
+    if (_first_iter)
+        _t_prev = t;
+
     if (_values.num_states() > 0)
     {
         assert(_stepper);
-        assert(t >= _t_prev);
-        assert(min_time_step > 0);
-        assert(max_time_step > min_time_step);
 
         if (_first_iter)
         {
@@ -259,6 +259,10 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         }
         else
         {
+            assert(t >= _t_prev);
+            assert(min_time_step > 0);
+            assert(max_time_step > min_time_step);
+
             double new_h;
             double t1 = _t_prev;
             double t2 = t;

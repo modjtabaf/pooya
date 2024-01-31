@@ -118,7 +118,8 @@ int main()
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
-    gp << "plot" << gp.file1d(history[x_x0]) << "with lines title 'x0',"
+    gp << "plot"
+        << gp.file1d(history[x_x0]) << "with lines title 'x0',"
         << gp.file1d(history[y_x0]) << "with lines title 'y0',"
         << gp.file1d(history[x_x1]) << "with lines title 'x1',"
         << gp.file1d(history[y_x1]) << "with lines title 'y1',"

@@ -61,7 +61,7 @@ bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals&
     return true;
 }
 
-bool Block::_add_dependecny(Signal sig)
+bool Block::_add_dependecny(SignalId sig)
 {
     pooya_trace("block: " + full_name());
     verify_valid_signal(sig);
@@ -74,7 +74,7 @@ bool Block::_add_dependecny(Signal sig)
     return false;
 }
 
-bool Block::_remove_dependecny(Signal sig)
+bool Block::_remove_dependecny(SignalId sig)
 {
     pooya_trace("block: " + full_name());
     verify_valid_signal(sig);
@@ -152,7 +152,7 @@ Model::~Model()
         delete si;
 }
 
-Signal Model::lookup_signal(const std::string& name, bool exact_match) const
+SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
 {
     pooya_trace("block: " + full_name());
     if (name.empty())
@@ -161,7 +161,7 @@ Signal Model::lookup_signal(const std::string& name, bool exact_match) const
     auto name_len = name.length();
 
     auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
-        [&] (Signal sig) -> bool
+        [&] (SignalId sig) -> bool
         {
             if (exact_match)
                 return sig->_full_name == name;
@@ -173,7 +173,7 @@ Signal Model::lookup_signal(const std::string& name, bool exact_match) const
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-void Model::register_state(Signal sig, Signal deriv_sig)
+void Model::register_state(SignalId sig, SignalId deriv_sig)
 {
     pooya_trace("block: " + full_name());
     verify_float_signal(sig);
@@ -268,20 +268,20 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-Signal Parent::get_generic_signal(const std::string& given_name)
+SignalId Parent::get_generic_signal(const std::string& given_name)
 {
     pooya_trace("block: " + full_name());
     return model_ref().lookup_signal(make_signal_name(given_name), true);
 }
 
 template<typename Iter>
-BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
+BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
     pooya_trace("block: " + full_name());
     auto size = spec._wires.size();
     verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
-    std::vector<LabelSignal> label_signals;
+    std::vector<LabelSignalId> label_signals;
     label_signals.reserve(size);
     for (const auto& wi: spec._wires)
         label_signals.push_back({wi._label, nullptr});
@@ -297,7 +297,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
         if (!ls.second)
         {
             std::string name = given_name + "." + wit->_label;
-            ls.second = wit->_scalar ? create_scalar_signal(name) : (wit->_array_size > 0 ? Signal(create_array_signal(name, wit->_array_size)) :
+            ls.second = wit->_scalar ? create_scalar_signal(name) : (wit->_array_size > 0 ? SignalId(create_array_signal(name, wit->_array_size)) :
                 create_bus(name, *wit->_bus));
         }
         wit++;
@@ -306,14 +306,14 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
     return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
 }
 
-BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l)
+BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
 {
     pooya_trace("block: " + full_name());
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
     return create_bus(given_name, spec, l.begin(), l.end());
 }
 
-BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
+BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l)
 {
     pooya_trace("block: " + full_name());
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
@@ -330,7 +330,7 @@ BusSignal Parent::create_bus(const std::string& given_name, const BusSpec& spec,
     return create_bus(given_name, spec, label_signals.begin(), label_signals.end());
 }
 
-Signal Parent::clone_signal(const std::string& given_name, Signal sig)
+SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
 {
     pooya_trace("block: " + full_name());
     verify_valid_signal(sig);
@@ -345,9 +345,9 @@ Signal Parent::clone_signal(const std::string& given_name, Signal sig)
     else
     {
         verify_bus_signal(sig);
-        BusSignal bus = sig->as_bus();
+        BusId bus = sig->as_bus();
         std::size_t n = bus->spec()._wires.size();
-        std::vector<LabelSignal> sigs;
+        std::vector<LabelSignalId> sigs;
         sigs.reserve(n);
         for (std::size_t k = 0; k < n; k++)
         {

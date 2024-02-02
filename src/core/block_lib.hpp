@@ -358,7 +358,7 @@ template <typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
 {
 protected:
-    BoolSignal _trigger;
+    BoolSignalId _trigger;
     bool _triggered{false};
 
 public:
@@ -413,12 +413,12 @@ protected:
     std::vector<T> _x;
 
     // input signals
-    typename Types<T>::Signal _s_x;       // in
-    ScalarSignal _s_delay;                // delay
-    typename Types<T>::Signal _s_initial; // initial
+    typename Types<T>::SignalId _s_x;       // in
+    ScalarSignalId _s_delay;                // delay
+    typename Types<T>::SignalId _s_initial; // initial
 
     // output signal
-    typename Types<T>::Signal _s_y; // [0]
+    typename Types<T>::SignalId _s_y; // [0]
 
 public:
     DelayT(std::string given_name, double lifespan = 10.0)
@@ -605,8 +605,8 @@ using PipeA = PipeT<Array>;
 class BusBlockBuilder : public Block
 {
 protected:
-    BusSignal _x;
-    BusSignal _y;
+    BusId _x;
+    BusId _y;
 
     std::vector<std::unique_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
@@ -614,7 +614,7 @@ protected:
     void traverse_bus(const std::string &path_name, const BusSpec &bus_spec);
 
     virtual void block_builder(const std::string &path_name, const BusSpec::WireInfo &wi,
-        Signal sig_in, Signal sig_out) = 0;
+        SignalId sig_in, SignalId sig_out) = 0;
 
 public:
     BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
@@ -638,7 +638,7 @@ public:
             : BusBlockBuilder(given_name, excluded_labels), _init_values(l) {}
 
 protected:
-    void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi, Signal sig_in, Signal sig_out) override;
+    void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi, SignalId sig_in, SignalId sig_out) override;
     void post_init() override;
 };
 
@@ -650,7 +650,7 @@ public:
 
 protected:
     void block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
-        Signal sig_in, Signal sig_out) override;
+        SignalId sig_in, SignalId sig_out) override;
 };
 
 } // namespace pooya

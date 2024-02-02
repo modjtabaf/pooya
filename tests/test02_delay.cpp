@@ -30,8 +30,8 @@ protected:
     pooya::Delay _delay{"Delay"};
 
 public:
-    pooya::ScalarSignal _s_x;
-    pooya::ScalarSignal _s_y;
+    pooya::ScalarSignalId _s_x;
+    pooya::ScalarSignalId _s_y;
 
 public:
     MyModel() : pooya::Model("test02")

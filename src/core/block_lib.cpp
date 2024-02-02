@@ -83,7 +83,7 @@ void BusMemory::post_init()
 }
 
 void BusMemory::block_builder(const std::string &full_label, const BusSpec::WireInfo &wi,
-  Signal sig_in, Signal sig_out)
+  SignalId sig_in, SignalId sig_out)
 {
     pooya_trace("block: " + full_name());
     auto it = _init_values.find(full_label);
@@ -116,7 +116,7 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
 }
 
 void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
-    Signal sig_in, Signal sig_out)
+    SignalId sig_in, SignalId sig_out)
 {
     pooya_trace("block: " + full_name());
     std::unique_ptr<Block> block;

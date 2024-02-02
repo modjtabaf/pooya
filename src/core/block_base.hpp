@@ -40,7 +40,7 @@ protected:
     bool _initialized{false};
     LabelSignals _iports;
     LabelSignals _oports;
-    std::vector<Signal> _dependencies;
+    std::vector<SignalId> _dependencies;
     Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
@@ -50,8 +50,8 @@ protected:
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
-    bool _add_dependecny(Signal sig);
-    bool _remove_dependecny(Signal sig);
+    bool _add_dependecny(SignalId sig);
+    bool _remove_dependecny(SignalId sig);
 
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -102,7 +102,7 @@ protected:
         Block(given_name, num_iports, num_oports) {}
 
     template<typename Iter>
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+    BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
     bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={})
@@ -131,39 +131,39 @@ public:
     }
 
     // retrieve an existing signal
-    Signal get_generic_signal(const std::string& given_name);
+    SignalId get_generic_signal(const std::string& given_name);
     template<typename T, typename... Ts>
-    typename Types<T>::Signal get_signal(const std::string& given_name, Ts... args)
+    typename Types<T>::SignalId get_signal(const std::string& given_name, Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
-        Signal sig = get_generic_signal(given_name);
+        SignalId sig = get_generic_signal(given_name);
         if (!sig)
             return nullptr;
         Types<T>::verify_signal_type(sig, args...);
         return Types<T>::as_type(sig);
     }
 
-    ScalarSignal get_scalar_signal(const std::string& given_name)
+    ScalarSignalId get_scalar_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return get_signal<double>(given_name);
     }
-    IntSignal get_int_signal(const std::string& given_name)
+    IntSignalId get_int_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return get_signal<int>(given_name);
     }
-    BoolSignal get_bool_signal(const std::string& given_name)
+    BoolSignalId get_bool_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return get_signal<bool>(given_name);
     }
-    ArraySignal get_array_signal(const std::string& given_name, std::size_t size)
+    ArraySignalId get_array_signal(const std::string& given_name, std::size_t size)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return get_signal<Array>(given_name, size);
     }
-    BusSignal get_bus(const std::string& given_name, const BusSpec& spec)
+    BusId get_bus(const std::string& given_name, const BusSpec& spec)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return get_signal<BusSpec>(given_name, spec);
@@ -171,29 +171,29 @@ public:
 
     // get if exists, create otherwise
     template<typename T, typename... Ts>
-    typename Types<T>::Signal signal(const std::string& given_name="", Ts... args)
+    typename Types<T>::SignalId signal(const std::string& given_name="", Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         auto sig = get_signal<T, Ts...>(given_name, args...);
         return sig ? sig : create_signal<T, Ts...>(given_name, args...);
     }
 
-    ScalarSignal scalar_signal(const std::string& given_name="")
+    ScalarSignalId scalar_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return signal<double>(given_name);
     }
-    IntSignal int_signal(const std::string& given_name="")
+    IntSignalId int_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return signal<int>(given_name);
     }
-    BoolSignal bool_signal(const std::string& given_name="")
+    BoolSignalId bool_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return signal<bool>(given_name);
     }
-    BusSignal bus(const std::string& given_name, const BusSpec& spec)
+    BusId bus(const std::string& given_name, const BusSpec& spec)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         auto sig = get_bus(given_name, spec);
@@ -202,57 +202,57 @@ public:
 
     // create with a unique name
     template<typename T, typename... Ts>
-    typename Types<T>::Signal create_signal(const std::string& given_name="", Ts... args);
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l);
-    BusSignal create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l={});
+    typename Types<T>::SignalId create_signal(const std::string& given_name="", Ts... args);
+    BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l);
+    BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={});
 
-    ScalarSignal create_scalar_signal(const std::string& given_name)
+    ScalarSignalId create_scalar_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<double>(given_name);
     }
-    IntSignal create_int_signal(const std::string& given_name)
+    IntSignalId create_int_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<int>(given_name);
     }
-    BoolSignal create_bool_signal(const std::string& given_name)
+    BoolSignalId create_bool_signal(const std::string& given_name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<bool>(given_name);
     }
-    ArraySignal create_array_signal(const std::string& given_name, std::size_t size)
+    ArraySignalId create_array_signal(const std::string& given_name, std::size_t size)
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<Array, std::size_t>(given_name, size);
     }
 
     // clone (make a new copy)
-    Signal clone_signal(const std::string& given_name, Signal sig);
-    ScalarSignal clone_signal(const std::string& given_name, ScalarSignal sig)
+    SignalId clone_signal(const std::string& given_name, SignalId sig);
+    ScalarSignalId clone_signal(const std::string& given_name, ScalarSignalId sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_scalar();
+        return clone_signal(given_name, SignalId(sig))->as_scalar();
     }
-    IntSignal clone_signal(const std::string& given_name, IntSignal sig)
+    IntSignalId clone_signal(const std::string& given_name, IntSignalId sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_int();
+        return clone_signal(given_name, SignalId(sig))->as_int();
     }
-    BoolSignal clone_signal(const std::string& given_name, BoolSignal sig)
+    BoolSignalId clone_signal(const std::string& given_name, BoolSignalId sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_bool();
+        return clone_signal(given_name, SignalId(sig))->as_bool();
     }
-    ArraySignal clone_signal(const std::string& given_name, ArraySignal sig)
+    ArraySignalId clone_signal(const std::string& given_name, ArraySignalId sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_array();
+        return clone_signal(given_name, SignalId(sig))->as_array();
     }
-    BusSignal clone_bus(const std::string& given_name, BusSignal sig)
+    BusId clone_bus(const std::string& given_name, BusId sig)
     {
         pooya_trace("block: " + full_name());
-        return clone_signal(given_name, Signal(sig))->as_bus();
+        return clone_signal(given_name, SignalId(sig))->as_bus();
     }
 
     std::string make_signal_name(const std::string& given_name, bool make_new=false);
@@ -273,7 +273,7 @@ class Model : public Parent
     friend class Parent;
 
 public:
-    using SignalInfos = std::vector<Signal>;
+    using SignalInfos = std::vector<SignalId>;
 
 protected:
     SignalInfos _signal_infos;
@@ -282,7 +282,7 @@ protected:
     bool init(Parent&, const LabelSignals&, const LabelSignals&) override;
 
     template<typename T, typename... Ts>
-    typename Types<T>::Signal register_signal(const std::string& name, Ts... args)
+    typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         if (name.empty()) return nullptr;
@@ -290,7 +290,7 @@ protected:
         verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
         auto index = _signal_infos.size();
-        typename Types<T>::Signal sig;
+        typename Types<T>::SignalId sig;
         if constexpr (std::is_base_of_v<ValueSignalInfo, typename Types<T>::SignalInfo>)
             sig = new typename Types<T>::SignalInfo(name, index, _vi_index++, args...);
         else
@@ -300,27 +300,27 @@ protected:
         return sig;
     }
 
-    ScalarSignal register_scalar_signal(const std::string& name)
+    ScalarSignalId register_scalar_signal(const std::string& name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<double>(name);
     }
-    IntSignal register_int_signal(const std::string& name)
+    IntSignalId register_int_signal(const std::string& name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<int>(name);
     }
-    BoolSignal register_bool_signal(const std::string& name)
+    BoolSignalId register_bool_signal(const std::string& name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<bool>(name);
     }
-    ArraySignal register_array_signal(const std::string& name, std::size_t size)
+    ArraySignalId register_array_signal(const std::string& name, std::size_t size)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<Array, std::size_t>(name, size);
     }
-    BusSignal register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
+    BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
@@ -336,12 +336,12 @@ public:
 
     const SignalInfos& signals() const {return _signal_infos;}
 
-    void register_state(Signal sig, Signal deriv_sig);
-    Signal lookup_signal(const std::string& name, bool exact_match=false) const;
+    void register_state(SignalId sig, SignalId deriv_sig);
+    SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
 };
 
 template<typename T, typename... Ts>
-typename Types<T>::Signal Parent::create_signal(const std::string& given_name, Ts... args)
+typename Types<T>::SignalId Parent::create_signal(const std::string& given_name, Ts... args)
 {
     pooya_trace("block: " + full_name() + ", given name: " + given_name);
     return Types<T>::as_type(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));

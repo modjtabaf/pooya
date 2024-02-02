@@ -23,7 +23,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class History : public std::unordered_map<Signal, Eigen::MatrixXd>
+class History : public std::unordered_map<SignalId, Eigen::MatrixXd>
 {
 protected:
     const Model& _model;

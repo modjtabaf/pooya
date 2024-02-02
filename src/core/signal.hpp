@@ -62,19 +62,19 @@ class ScalarSignalInfo;
 class    IntSignalInfo;
 class   BoolSignalInfo;
 class  ArraySignalInfo;
-class    BusSignalInfo;
+class          BusInfo;
 
-using       Signal = const       SignalInfo*;
-using  ValueSignal = const  ValueSignalInfo*;
-using ScalarSignal = const ScalarSignalInfo*;
-using    IntSignal = const    IntSignalInfo*;
-using   BoolSignal = const   BoolSignalInfo*;
-using  ArraySignal = const  ArraySignalInfo*;
-using    BusSignal = const    BusSignalInfo*;
+using       SignalId = const       SignalInfo*;
+using  ValueSignalId = const  ValueSignalInfo*;
+using ScalarSignalId = const ScalarSignalInfo*;
+using    IntSignalId = const    IntSignalInfo*;
+using   BoolSignalId = const   BoolSignalInfo*;
+using  ArraySignalId = const  ArraySignalInfo*;
+using          BusId = const          BusInfo*;
 
-using LabelSignal = std::pair<std::string, Signal>;
-using LabelSignalList = std::vector<LabelSignal>;
-using LabelSignalMap = std::map<LabelSignal::first_type, LabelSignal::second_type>;
+using LabelSignalId = std::pair<std::string, SignalId>;
+using LabelSignalIdList = std::vector<LabelSignalId>;
+using LabelSignalIdMap = std::map<LabelSignalId::first_type, LabelSignalId::second_type>;
 
 class SignalInfo
 {
@@ -91,37 +91,37 @@ protected:
     ArraySignalInfo*   _array{nullptr};
     IntSignalInfo*      _int {nullptr};
     BoolSignalInfo*     _bool{nullptr};
-    BusSignalInfo*       _bus{nullptr};
+    BusInfo*             _bus{nullptr};
 
     SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
 
 public:
-    ValueSignal   as_value() const {return  _value;}
-    ScalarSignal as_scalar() const {return _scalar;}
-    IntSignal       as_int() const {return    _int;}
-    BoolSignal     as_bool() const {return   _bool;}
-    ArraySignal   as_array() const {return  _array;}
-    BusSignal       as_bus() const {return    _bus;}
+    ValueSignalId   as_value() const {return  _value;}
+    ScalarSignalId as_scalar() const {return _scalar;}
+    IntSignalId       as_int() const {return    _int;}
+    BoolSignalId     as_bool() const {return   _bool;}
+    ArraySignalId   as_array() const {return  _array;}
+    BusId             as_bus() const {return    _bus;}
 };
 
 class LabelSignals
 {
 protected:
-    LabelSignalMap _label_signals_map;
-    LabelSignalList _label_signals_list;
+    LabelSignalIdMap _label_signals_map;
+    LabelSignalIdList _label_signals_list;
 
     std::string _make_auto_label(std::size_t index) const {return "sig" + std::to_string(index);}
 
-    void _init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_);
+    void _init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_);
 
 public:
     LabelSignals() = default;
-    LabelSignals(Signal signal);
-    LabelSignals(const std::initializer_list<Signal>& il);
-    LabelSignals(const std::initializer_list<LabelSignal>& il);
+    LabelSignals(SignalId signal);
+    LabelSignals(const std::initializer_list<SignalId>& il);
+    LabelSignals(const std::initializer_list<LabelSignalId>& il);
 
     // explicit binding by label
-    void bind(const std::string& label, ScalarSignal& sig) const
+    void bind(const std::string& label, ScalarSignalId& sig) const
     {
         pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
@@ -129,7 +129,7 @@ public:
         sig = _label_signals_map.at(label)->as_scalar();
     }
 
-    void bind(const std::string& label, IntSignal& sig) const
+    void bind(const std::string& label, IntSignalId& sig) const
     {
         pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
@@ -137,7 +137,7 @@ public:
         sig = _label_signals_map.at(label)->as_int();
     }
 
-    void bind(const std::string& label, BoolSignal& sig) const
+    void bind(const std::string& label, BoolSignalId& sig) const
     {
         pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
@@ -145,7 +145,7 @@ public:
         sig = _label_signals_map.at(label)->as_bool();
     }
 
-    void bind(const std::string& label, ArraySignal& sig) const
+    void bind(const std::string& label, ArraySignalId& sig) const
     {
         pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
@@ -153,7 +153,7 @@ public:
         sig = _label_signals_map.at(label)->as_array();
     }
 
-    void bind(const std::string& label, BusSignal& sig) const
+    void bind(const std::string& label, BusId& sig) const
     {
         pooya_trace("label: " + label);
         verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
@@ -162,35 +162,35 @@ public:
     }
 
     // explicit binding by index
-    void bind(std::size_t index, ScalarSignal& sig) const
+    void bind(std::size_t index, ScalarSignalId& sig) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify_scalar_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_scalar();
     }
 
-    void bind(std::size_t index, IntSignal& sig) const
+    void bind(std::size_t index, IntSignalId& sig) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify_int_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_int();
     }
 
-    void bind(std::size_t index, BoolSignal& sig) const
+    void bind(std::size_t index, BoolSignalId& sig) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify_bool_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_bool();
     }
 
-    void bind(std::size_t index, ArraySignal& sig) const
+    void bind(std::size_t index, ArraySignalId& sig) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify_array_signal(_label_signals_list.at(index).second);
         sig = _label_signals_list.at(index).second->as_array();
     }
 
-    void bind(std::size_t index, BusSignal& sig) const
+    void bind(std::size_t index, BusId& sig) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify_bus_signal(_label_signals_list.at(index).second);
@@ -206,10 +206,10 @@ public:
         bind(0, sig);
     }
 
-    using const_iterator = LabelSignalList::const_iterator;
+    using const_iterator = LabelSignalIdList::const_iterator;
 
-    Signal operator[](std::size_t index) const {return _label_signals_list[index].second;}
-    Signal operator[](const std::string& label) const {return _label_signals_map.at(label);}
+    SignalId operator[](std::size_t index) const {return _label_signals_list[index].second;}
+    SignalId operator[](const std::string& label) const {return _label_signals_map.at(label);}
     void clear() noexcept
     {
         _label_signals_map.clear();
@@ -225,10 +225,10 @@ public:
     {
         _label_signals_list.reserve(new_cap);
     }
-    bool push_back(const LabelSignal& ls)
+    bool push_back(const LabelSignalId& ls)
     {
         pooya_trace0;
-        verify(!ls.first.empty(), "Signal label can not be empty!");
+        verify(!ls.first.empty(), "SignalId label can not be empty!");
         verify(ls.second, ls.first + ": invalid signal!");
         if (ls.first.empty() || (ls.second == nullptr))
             return false;
@@ -250,7 +250,7 @@ class ValueSignalInfo : public SignalInfo
     friend class Model;
 
 protected:
-    ValueSignal _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
+    ValueSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     bool _is_deriv{false};           // is this the derivative of another signal?
 
     ValueSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) :
@@ -264,7 +264,7 @@ public:
 
     bool is_state() const {return _deriv_sig;}
     bool is_deriv() const {return _is_deriv;}
-    ValueSignal deriv_info() const {return _deriv_sig;}
+    ValueSignalId deriv_info() const {return _deriv_sig;}
 };
 
 class ScalarSignalInfo : public ValueSignalInfo
@@ -326,7 +326,7 @@ public:
 
 class BusSpec
 {
-    friend class BusSignalInfo;
+    friend class BusInfo;
 
 public:
     struct WireInfo
@@ -384,7 +384,7 @@ public:
     bool operator==(const BusSpec& other) const {return this == &other;}
 };
 
-class BusSignalInfo : public SignalInfo
+class BusInfo : public SignalInfo
 {
     friend class Model;
 
@@ -392,12 +392,12 @@ public:
     const BusSpec& _spec;
 
 protected:
-    LabelSignalList _signals;
+    LabelSignalIdList _signals;
 
 protected:
-    void _set(std::size_t index, Signal sig);
+    void _set(std::size_t index, SignalId sig);
 
-    BusSignalInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_) :
+    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
@@ -420,58 +420,58 @@ public:
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
 
-    const LabelSignal& operator[](std::size_t index) const
+    const LabelSignalId& operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
-    const LabelSignal& at(std::size_t index) const
+    const LabelSignalId& at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         return _signals.at(index);
     }
 
-    Signal operator[](const std::string& label) const;
-    Signal at(const std::string& label) const;
+    SignalId operator[](const std::string& label) const;
+    SignalId at(const std::string& label) const;
 
-    ScalarSignal scalar_at(const std::string& label) const
+    ScalarSignalId scalar_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
-        Signal sig = at(label);
+        SignalId sig = at(label);
         verify_scalar_signal(sig);
         return sig->as_scalar();
     }
 
-    IntSignal int_at(const std::string& label) const
+    IntSignalId int_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
-        Signal sig = at(label);
+        SignalId sig = at(label);
         verify_int_signal(sig);
         return sig->as_int();
     }
 
-    BoolSignal bool_at(const std::string& label) const
+    BoolSignalId bool_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
-        Signal sig = at(label);
+        SignalId sig = at(label);
         verify_int_signal(sig);
         return sig->as_bool();
     }
 
-    ArraySignal array_at(const std::string& label) const
+    ArraySignalId array_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
-        Signal sig = at(label);
+        SignalId sig = at(label);
         verify_array_signal(sig);
         return sig->as_array();
     }
 
-    BusSignal bus_at(const std::string& label) const
+    BusId bus_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
-        Signal sig = at(label);
+        SignalId sig = at(label);
         verify_bus_signal(sig);
         return sig->as_bus();
     }
@@ -486,53 +486,53 @@ template<>
 struct Types<Array>
 {
     using SignalInfo = ArraySignalInfo;
-    using Signal = ArraySignal;
+    using SignalId = ArraySignalId;
     using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
     using SetValue = const Array&;
-    static void verify_signal_type(pooya::Signal sig, std::size_t size) {verify_array_signal_size(sig, size);}
-    static Signal as_type(pooya::Signal sig) {return sig->as_array();}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {verify_array_signal_size(sig, size);}
+    static SignalId as_type(pooya::SignalId sig) {return sig->as_array();}
 };
 
 template<>
 struct Types<double>
 {
     using SignalInfo = ScalarSignalInfo;
-    using Signal = ScalarSignal;
+    using SignalId = ScalarSignalId;
     using GetValue = double;
     using SetValue = double;
-    static void verify_signal_type(pooya::Signal sig) {verify_scalar_signal(sig);}
-    static Signal as_type(pooya::Signal sig) {return sig->as_scalar();}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_scalar_signal(sig);}
+    static SignalId as_type(pooya::SignalId sig) {return sig->as_scalar();}
 };
 
 template<>
 struct Types<int>
 {
     using SignalInfo = IntSignalInfo;
-    using Signal = IntSignal;
+    using SignalId = IntSignalId;
     using GetValue = int;
     using SetValue = int;
-    static void verify_signal_type(pooya::Signal sig) {verify_int_signal(sig);}
-    static Signal as_type(pooya::Signal sig) {return sig->as_int();}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_int_signal(sig);}
+    static SignalId as_type(pooya::SignalId sig) {return sig->as_int();}
 };
 
 template<>
 struct Types<bool>
 {
     using SignalInfo = BoolSignalInfo;
-    using Signal = BoolSignal;
+    using SignalId = BoolSignalId;
     using GetValue = bool;
     using SetValue = bool;
-    static void verify_signal_type(pooya::Signal sig) {verify_bool_signal(sig);}
-    static Signal as_type(pooya::Signal sig) {return sig->as_bool();}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_bool_signal(sig);}
+    static SignalId as_type(pooya::SignalId sig) {return sig->as_bool();}
 };
 
 template<>
 struct Types<BusSpec>
 {
-    using SignalInfo = BusSignalInfo;
-    using Signal = BusSignal;
-    static void verify_signal_type(pooya::Signal sig, const BusSpec& spec) {verify_bus_signal_spec(sig, spec);}
-    static Signal as_type(pooya::Signal sig) {return sig->as_bus();}
+    using SignalInfo = BusInfo;
+    using SignalId = BusId;
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {verify_bus_signal_spec(sig, spec);}
+    static SignalId as_type(pooya::SignalId sig) {return sig->as_bus();}
 };
 
 std::ostream& operator<<(std::ostream& os, const LabelSignals& signals);
@@ -713,7 +713,7 @@ protected:
     Eigen::Map<Eigen::ArrayXd>  _states{nullptr, 0};
     Eigen::ArrayXd              _derivs;
 
-    inline ValueInfo& get_value_info(Signal sig)
+    inline ValueInfo& get_value_info(SignalId sig)
     {
         pooya_trace0;
         verify_value_signal(sig);
@@ -723,7 +723,7 @@ protected:
 public:
     Values(const pooya::Model& model);
 
-    inline const ValueInfo& get_value_info(Signal sig) const
+    inline const ValueInfo& get_value_info(SignalId sig) const
     {
         pooya_trace0;
         verify(sig, "invalid signal!");
@@ -731,7 +731,7 @@ public:
         return _value_infos[sig->as_value()->_vi_index];
     }
 
-    bool valid(Signal sig) const
+    bool valid(SignalId sig) const
     {
         pooya_trace0;
         return get_value_info(sig).is_assigned();
@@ -748,28 +748,28 @@ public:
     const decltype(_derivs)& derivs() const {return _derivs;}
 
     template<typename T>
-    typename Types<T>::GetValue get(Signal sig) const
+    typename Types<T>::GetValue get(SignalId sig) const
     {
         pooya_trace0;
         return get_value_info(sig).get<T>();
     }
 
-    typename Types<double>::GetValue get(ScalarSignal sig) const {return get<double>(sig);}
-    typename Types<int   >::GetValue get(IntSignal    sig) const {return get<int   >(sig);}
-    typename Types<bool  >::GetValue get(BoolSignal   sig) const {return get<bool  >(sig);}
-    typename Types<Array >::GetValue get(ArraySignal  sig) const {return get<Array >(sig);}
+    typename Types<double>::GetValue get(ScalarSignalId sig) const {return get<double>(sig);}
+    typename Types<int   >::GetValue get(IntSignalId    sig) const {return get<int   >(sig);}
+    typename Types<bool  >::GetValue get(BoolSignalId   sig) const {return get<bool  >(sig);}
+    typename Types<Array >::GetValue get(ArraySignalId  sig) const {return get<Array >(sig);}
 
     template<typename T>
-    void set(Signal sig, typename Types<T>::SetValue value)
+    void set(SignalId sig, typename Types<T>::SetValue value)
     {
         pooya_trace0;
         get_value_info(sig).set<T>(value);
     }
 
-    void set(ScalarSignal sig, double value) {set<double>(sig, value);}
-    void set(IntSignal sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
-    void set(BoolSignal sig, bool value) {set<bool>(sig, value);}
-    void set(ArraySignal sig, const Array& value) {set<Array>(sig, value);}
+    void set(ScalarSignalId sig, double value) {set<double>(sig, value);}
+    void set(IntSignalId sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
+    void set(BoolSignalId sig, bool value) {set<bool>(sig, value);}
+    void set(ArraySignalId sig, const Array& value) {set<Array>(sig, value);}
 
     void invalidate();
     void reset_with_states(const Eigen::ArrayXd& states);

@@ -24,34 +24,34 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-void LabelSignals::_init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
+void LabelSignals::_init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
 {
     pooya_trace0;
     for (auto it=begin_; it != end_; it++)
         push_back(*it);
 }
 
-LabelSignals::LabelSignals(Signal signal)
+LabelSignals::LabelSignals(SignalId signal)
 {
     pooya_trace0;
-    LabelSignalList lsl({{_make_auto_label(0), signal}});
+    LabelSignalIdList lsl({{_make_auto_label(0), signal}});
     _init(lsl.begin(), lsl.end());
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<Signal>& il)
+LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
 {
     pooya_trace0;
-    LabelSignalList lsl;
+    LabelSignalIdList lsl;
     std::size_t index=0;
     for (const auto& sig: il)
         lsl.push_back({_make_auto_label(index++), sig});
     _init(lsl.begin(), lsl.end());
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<LabelSignal>& il)
+LabelSignals::LabelSignals(const std::initializer_list<LabelSignalId>& il)
 {
     pooya_trace0;
-    LabelSignalList lsl(il);
+    LabelSignalIdList lsl(il);
     _init(lsl.begin(), lsl.end());
 }
 
@@ -64,7 +64,7 @@ std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
     return os;
 }
 
-Signal BusSignalInfo::operator[](const std::string& label) const
+SignalId BusInfo::operator[](const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
@@ -76,7 +76,7 @@ Signal BusSignalInfo::operator[](const std::string& label) const
     return sig->as_bus()->operator[](label.substr(pos + 1));
 }
 
-Signal BusSignalInfo::at(const std::string& label) const
+SignalId BusInfo::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
@@ -209,7 +209,7 @@ void Values::reset_with_states(const Eigen::ArrayXd& states)
     }
 }
 
-void BusSignalInfo::_set(std::size_t index, Signal sig)
+void BusInfo::_set(std::size_t index, SignalId sig)
 {
     pooya_trace("index: " + std::to_string(index));
     verify(index < _signals.size(), "bus wire index out of range!");

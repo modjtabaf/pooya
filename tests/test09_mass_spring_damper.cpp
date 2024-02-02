@@ -31,10 +31,10 @@ protected:
     double _x;
     double _xd;
 
-    pooya::ScalarSignal _s_tau;
-    pooya::ScalarSignal _s_x;
-    pooya::ScalarSignal _s_xd;
-    pooya::ScalarSignal _s_xdd;
+    pooya::ScalarSignalId _s_tau;
+    pooya::ScalarSignalId _s_x;
+    pooya::ScalarSignalId _s_xd;
+    pooya::ScalarSignalId _s_xdd;
 
 public:
     MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :

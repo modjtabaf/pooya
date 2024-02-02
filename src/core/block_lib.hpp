@@ -94,6 +94,8 @@ public:
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
     }
+
+    typename Types<GainType>::GetValue gain() const {return _k;}
 };
 
 using Gain = GainT<double, double>;

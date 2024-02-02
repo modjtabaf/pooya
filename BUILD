@@ -239,3 +239,19 @@ cc_binary(
         "//src:misc",
     ],
 )
+
+cc_test(
+    name = "test_gain",
+    size = "small",
+    srcs = ["tests/test_gain.cpp"],
+    deps = [
+        "@com_google_googletest//:gtest_main",
+        "//src:core",
+        "//src:misc",
+    ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+)

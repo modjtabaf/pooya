@@ -206,17 +206,17 @@ public:
     BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l);
     BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={});
 
-    ScalarSignalId create_scalar_signal(const std::string& given_name)
+    ScalarSignalId create_scalar_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<double>(given_name);
     }
-    IntSignalId create_int_signal(const std::string& given_name)
+    IntSignalId create_int_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<int>(given_name);
     }
-    BoolSignalId create_bool_signal(const std::string& given_name)
+    BoolSignalId create_bool_signal(const std::string& given_name="")
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         return create_signal<bool>(given_name);

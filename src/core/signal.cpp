@@ -111,27 +111,27 @@ Values::Values(const pooya::Model& model)
     pooya_trace("model: " + model.full_name());
     const auto& signals = model.signals();
 
-    std::size_t states_size{0};
+    std::size_t state_variables_size{0};
 
-    // find the total sizes of signals and states
+    // find the total sizes of signals and state variables
     for (const auto* signal: signals)
     {
         if (!signal->as_value()) continue;
         auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
         _total_size += size;
-        if (signal->as_value()->is_state())
-            states_size += size;
+        if (signal->as_value()->is_state_variable())
+            state_variables_size += size;
     }
 
     _values.resize(_total_size);
 
-    double* state_start = _values.data();
-    double* other_start = state_start + states_size;
+    double* state_variables_start = _values.data();
+    double* other_start = state_variables_start + state_variables_size;
 
     for (const auto* signal: signals)
     {
         if (!signal->as_value()) continue;
-        auto& start = signal->as_value()->is_state() ? state_start : other_start;
+        auto& start = signal->as_value()->is_state_variable() ? state_variables_start : other_start;
         auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
         if (signal->as_int())
             _value_infos.push_back({*signal->as_int(), start});
@@ -142,20 +142,20 @@ Values::Values(const pooya::Model& model)
         start += std::max<std::size_t>(size, 1);
     }
 
-    assert(state_start == _values.data() + states_size);
+    assert(state_variables_start == _values.data() + state_variables_size);
     assert(other_start == _values.data() + _total_size);
 
-    new (&_states) decltype(_states)(_values.data(), states_size);
+    new (&_state_variables) decltype(_state_variables)(_values.data(), state_variables_size);
 
-    _derivs.resize(states_size);
+    _derivs.resize(state_variables_size);
     double* deriv_start = _derivs.data();
 
-    // state-specific steps
+    // state-variable-specific steps
 
     for (const auto* signal: signals)
     {
         if (!signal->as_value()) continue;
-        if (!signal->as_value()->is_state())
+        if (!signal->as_value()->is_state_variable())
             continue;
 
         auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
@@ -169,13 +169,13 @@ Values::Values(const pooya::Model& model)
 }
 
 #ifndef POOYA_NDEBUG
-const decltype(Values::_states)& Values::states() const
+const decltype(Values::_state_variables)& Values::state_variables() const
 {
     for (const auto& vi: _value_infos)
     {
-        verify(!vi._si->is_state() || vi.is_assigned(), "unassigned state");
+        verify(!vi._si->is_state_variable() || vi.is_assigned(), "unassigned state variable");
     }
-    return _states;
+    return _state_variables;
 }
 #endif // !definded(POOYA_NDEBUG)
 
@@ -191,17 +191,17 @@ void Values::invalidate()
     }
 }
 
-void Values::reset_with_states(const Eigen::ArrayXd& states)
+void Values::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
 {
     pooya_trace0;
 #ifndef POOYA_NDEBUG
     _values.setZero();
     _derivs.setZero();
 #endif // !defined(POOYA_NDEBUG)
-    _states = states;
+    _state_variables = state_variables;
     for (auto& vi: _value_infos)
     {
-        vi._assigned = vi._si->is_state();
+        vi._assigned = vi._si->is_state_variable();
         if (!vi._assigned)
             continue;
 

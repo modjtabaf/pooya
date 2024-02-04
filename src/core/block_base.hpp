@@ -63,8 +63,8 @@ protected:
 public:
     virtual ~Block() = default;
 
-    virtual void pre_step(double /*t*/, Values& /*states*/) {}
-    virtual void post_step(double /*t*/, const Values& /*states*/) {}
+    virtual void pre_step(double /*t*/, Values& /*state_variables*/) {}
+    virtual void post_step(double /*t*/, const Values& /*state_variables*/) {}
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
     virtual Model* model();
 
@@ -376,7 +376,7 @@ public:
 
     const SignalInfos& signals() const {return _signal_infos;}
 
-    void register_state(SignalId sig, SignalId deriv_sig);
+    void register_state_variable(SignalId sig, SignalId deriv_sig);
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
 };
 

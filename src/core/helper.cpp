@@ -219,7 +219,7 @@ void Simulator::init(double t0)
 
     _t_prev = t0;
 
-    if (_values.num_states() > 0)
+    if (_values.num_state_variables() > 0)
     {
         if (_reuse_order)
         {
@@ -275,7 +275,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         return;
     }
 
-    if (_values.num_states() > 0)
+    if (_values.num_state_variables() > 0)
     {
         assert(_stepper);
 
@@ -292,9 +292,9 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             _values.invalidate();
             _model.pre_step(t1, _values);
             _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
-            _states_orig = _values.states();
+            _state_variables_orig = _values.state_variables();
 
-            _stepper->step(stepper_callback, t1, _states_orig, t2, _states, new_h);
+            _stepper->step(stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
 
             double h = t2 - t1;
             if (force_accept || (new_h >= h) || (h <= min_time_step))
@@ -307,7 +307,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
                 if (t1 < t)
                 {
-                    _values.reset_with_states(_states);
+                    _values.reset_with_state_variables(_state_variables);
                     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
                     _process(t1, _values);
                     _model.post_step(t1, _values);
@@ -323,7 +323,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         }
     }
 
-    _values.reset_with_states(_states);
+    _values.reset_with_state_variables(_state_variables);
     _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
     _process(t, _values);
     _model.post_step(t, _values);

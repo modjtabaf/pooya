@@ -12,6 +12,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <cstddef>
 #include <iostream>
 #include <math.h>
 #include <vector>
@@ -35,17 +36,58 @@ public:
 
 TEST_F(TestGain, ScalarGain)
 {
-    constexpr double x = 3.7;
+    // test parameters
+    double x = 3.7;
+
+    // model setup
     pooya::Model model;
     pooya::Gain gain("gain", 2.0);
-    pooya::ScalarSignal s_x = model.create_scalar_signal("x");
-    pooya::ScalarSignal s_y = model.create_scalar_signal("y");
+    pooya::ScalarSignalId s_x = model.create_scalar_signal("x");
+    pooya::ScalarSignalId s_y = model.create_scalar_signal("y");
     model.add_block(gain, s_x, s_y);
+
+    // simulator setup
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set(s_x, 3.7);
+            values.set(s_x, x);
         });
+
+    // do one step
     sim.init(0.0);
+
+    // verify the results
     EXPECT_NEAR(gain.gain() * x, sim.values().get(s_y), 1e-10);
+}
+
+TEST_F(TestGain, ArrayGain)
+{
+    // test parameters
+    constexpr std::size_t N = 4;
+    pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
+
+    // model setup
+    pooya::Model model;
+    pooya::GainA gain("gain", -5.89);
+    pooya::ArraySignalId s_x = model.create_array_signal("x", N);
+    pooya::ArraySignalId s_y = model.create_array_signal("y", N);
+    model.add_block(gain, s_x, s_y);
+
+    // simulator setup
+    pooya::Simulator sim(model,
+        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        {
+            values.set(s_x, x);
+        });
+
+    // do one step
+    sim.init(0.0);
+
+    // verify the results
+    auto des_y = gain.gain() * x;
+    auto y = sim.values().get(s_y);
+    for (std::size_t k=0; k < N; k++)
+    {
+        EXPECT_NEAR(des_y[k], y[k], 1e-10);
+    }
 }

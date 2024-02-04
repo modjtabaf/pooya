@@ -1,8 +1,8 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
-    name = "test00",
-    srcs = ["tests/test00_gain.cpp"],
+    name = "gain_block",
+    srcs = ["samples/gain_block.cpp"],
     copts = [
         "-pedantic-errors",
         "-Wall",

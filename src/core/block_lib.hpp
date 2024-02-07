@@ -134,7 +134,7 @@ public:
     void activation_function(double t, Values &values) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, _act_func(t, values.get<T>(SingleInputOutputT<T>::_s_in)));
+        values.set(SingleInputOutputT<T>::_s_out, _act_func(t, values.get(SingleInputOutputT<T>::_s_in)));
     }
 };
 
@@ -261,7 +261,7 @@ public:
                 assert(false);
             p++;
         }
-        values.set<T>(SingleOutputT<T>::_s_out, _ret);
+        values.set(SingleOutputT<T>::_s_out, _ret);
     }
 };
 

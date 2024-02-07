@@ -14,14 +14,16 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <cassert>
 #include <iostream>
+#include <memory>
 
 #include "block_base.hpp"
+#include "signal.hpp"
 #include "util.hpp"
 
 namespace pooya
 {
 
-bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
+bool Block::init(Parent& parent, BusId ibus, BusId obus)
 {
     pooya_trace(_given_name);
     assert(_parent == nullptr);
@@ -34,29 +36,27 @@ bool Block::init(Parent& parent, const LabelSignals& iports, const LabelSignals&
     if (_full_name.empty())
         _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
 
-    verify((_num_iports == NoIOLimit) || (iports.size() == _num_iports),
+    verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
             _full_name + " cannot take any input." :
             _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
-    verify((_num_oports == NoIOLimit) || (oports.size() == _num_oports),
+    verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
         _num_oports == 0 ?
             _full_name + " cannot generate any output." :
             _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
     
-    _iports.reserve(iports.size());
-    _dependencies.reserve(iports.size());
-    for (const auto& ls: iports)
+    if (ibus && ibus->size() > 0)
     {
-        _iports.push_back(ls);
-        _add_dependecny(ls.second);
+        _dependencies.reserve(ibus->size());
+        for (const auto& ls: *ibus)
+            _add_dependecny(ls.second);
+        _dependencies.shrink_to_fit();
     }
-    _dependencies.shrink_to_fit();
 
-    _oports.reserve(oports.size());
-    for (auto& ls: oports)
-        _oports.push_back(ls);
-    
+    _ibus = ibus;
+    _obus = obus;
+
     _initialized = true;
     return true;
 }
@@ -284,7 +284,7 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Ite
     std::vector<LabelSignalId> label_signals;
     label_signals.reserve(size);
     for (const auto& wi: spec._wires)
-        label_signals.push_back({wi._label, nullptr});
+        label_signals.push_back({wi.label(), nullptr});
     for (auto it=begin_; it != end_; it++)
     {
         auto index = spec.index_of(it->first);
@@ -296,9 +296,19 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Ite
     {
         if (!ls.second)
         {
-            std::string name = given_name + "." + wit->_label;
-            ls.second = wit->_scalar ? create_scalar_signal(name) : (wit->_array_size > 0 ? SignalId(create_array_signal(name, wit->_array_size)) :
-                create_bus(name, *wit->_bus));
+            std::string name = given_name + "." + wit->label();
+            if (wit->_bus)
+                ls.second = create_bus(name, *wit->_bus);
+            else if (wit->_array_size > 0)
+                ls.second = create_array_signal(name, wit->_array_size);
+            else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
+                ls.second = create_scalar_signal(name);
+            else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
+                ls.second = create_int_signal(name);
+            else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
+                ls.second = create_bool_signal(name);
+            else
+                verify(false, name + ": unknown wire type!");
         }
         wit++;
     }
@@ -318,13 +328,15 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, con
     pooya_trace("block: " + full_name());
     verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-    LabelSignals label_signals;
+    // LabelSignals label_signals;
+    LabelSignalIdList label_signals;
     label_signals.reserve(l.size());
 
     auto wit = spec._wires.begin();
     for (const auto& sig: l)
     {
-        label_signals.push_back({wit->_label, sig});
+        label_signals.push_back({wit->label(), sig});
+        wit++;
     }
 
     return create_bus(given_name, spec, label_signals.begin(), label_signals.end());
@@ -358,6 +370,44 @@ SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
     }
 }
 
+bool Parent::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
+{
+    pooya_trace("block: " + full_name());
+
+    auto make_bus = [&](const LabelSignals& ports) -> BusId
+    {
+        std::vector<BusSpec::WireInfo> wire_infos;
+        LabelSignalIdList wires;
+        for (const auto& ls: ports)
+        {
+            verify_valid_signal(ls.second);
+            if (ls.second->as_scalar())
+                wire_infos.emplace_back(ls.first);
+            else if (ls.second->as_int())
+                wire_infos.emplace_back("i:" + ls.first);
+            else if (ls.second->as_bool())
+                wire_infos.emplace_back("b:" + ls.first);
+            else if (ls.second->as_array())
+                wire_infos.emplace_back(ls.first, ls.second->as_array()->_size);
+            else if (ls.second->as_bus())
+                wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);
+            else
+                verify(false, "unknown signal type!");
+            
+            wires.emplace_back(ls.first, ls.second);
+        }
+        _interface_bus_specs.emplace_back(std::make_unique<BusSpec>(wire_infos.begin(), wire_infos.end()));
+        return create_bus("", *_interface_bus_specs.back(), wires.begin(), wires.end());
+    };
+
+    if (!component.init(*this, make_bus(iports), make_bus(oports)))
+        return false;
+
+    _components.push_back(&component);
+    component.post_init();
+    return true;
+}
+
 Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 {
     pooya_trace("block: " + full_name());
@@ -366,7 +416,7 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
     _initialized = true;
 }
 
-bool Model::init(Parent& parent, const LabelSignals& iports, const LabelSignals& oports)
+bool Model::init(Parent& parent, BusId ibus, BusId obus)
 {
     return true;
 }

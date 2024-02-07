@@ -35,10 +35,10 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
+    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
-        if (!pooya::Submodel::init(parent))
+        if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
         // create signals
@@ -55,8 +55,8 @@ public:
         auto g = model_.scalar_signal("g");
         auto l = model_.scalar_signal("l");
 
-        auto tau = iports[0];
-        auto phi = oports[0];
+        auto tau = ibus->scalar_at(0);
+        auto phi = obus->scalar_at(0);
 
         // setup the submodel
         add_block(_muldiv1, {tau, m, l, l}, s10);
@@ -88,10 +88,10 @@ public:
         _gain_i("Ki", Ki),
         _gain_d("Kd", Kd) {}
 
-    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
+    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
-        if (!pooya::Submodel::init(parent))
+        if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
         // choose random names for these internal signals
@@ -101,8 +101,8 @@ public:
         auto s40 = scalar_signal();
         auto s50 = scalar_signal();
 
-        auto x = iports[0];
-        auto y = oports[0];
+        auto x = ibus->scalar_at(0);
+        auto y = obus->scalar_at(0);
 
         // blocks
         add_block(_gain_p, x, s10);
@@ -126,7 +126,7 @@ protected:
 public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
 
-    bool init(pooya::Parent& parent, const pooya::LabelSignals&, const pooya::LabelSignals&) override
+    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
         if (!pooya::Submodel::init(parent))

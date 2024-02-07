@@ -13,6 +13,7 @@
 * introduce create_signal()
 * introduce integer signals
 * Deprecate the initial values for states
+* template classes for single-input and single-output blocks
 
 - enclose the methods that only contain verify macros within #if...#endif blocks
 - Make _assigned a debug-only flag

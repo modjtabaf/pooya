@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 #include "block_lib.hpp"
+#include "signal.hpp"
 
 namespace pooya {
 
@@ -30,13 +31,13 @@ template <>
 void SinT<double>::activation_function(double /*t*/, Values &values)
 {
     pooya_trace("block: " + full_name());
-    values.set<double>(_oports[0], std::sin(values.get<double>(_iports[0])));
+    values.set(_s_out, std::sin(values.get(_s_in)));
 }
 
-bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports)
+bool BusBlockBuilder::init(Parent &parent, BusId ibus, BusId obus)
 {
     pooya_trace("block: " + full_name());
-    if (!SingleInputOutputT<BusSpec>::init(parent, iports, oports))
+    if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus))
         return false;
 
     verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
@@ -62,10 +63,10 @@ void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec&
     for (const auto &wi : bus_spec._wires)
     {
         if (wi._bus)
-          traverse_bus(full_label + wi._label + ".", *wi._bus);
+          traverse_bus(full_label + wi.label() + ".", *wi._bus);
         else
         {
-            auto label = full_label + wi._label;
+            auto label = full_label + wi.label();
             if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
                 block_builder(label, wi, _s_in->at(label), _s_out->at(label));
         }
@@ -86,11 +87,23 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
     auto it = _init_values.find(full_label);
 
     std::unique_ptr<Block> block;
-    if (wi._scalar)
+    if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {
         block = (it == _init_values.end())
             ? std::make_unique<Memory>("memory")
             : std::make_unique<Memory>("memory", it->second.as_scalar());
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    {
+        block = (it == _init_values.end())
+            ? std::make_unique<MemoryI>("memory")
+            : std::make_unique<MemoryI>("memory", std::round(it->second.as_scalar()));
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    {
+        block = (it == _init_values.end())
+            ? std::make_unique<MemoryB>("memory")
+            : std::make_unique<MemoryB>("memory", it->second.as_scalar() == 0);
     }
     else if (wi._array_size > 0)
     {
@@ -117,8 +130,17 @@ void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::W
 {
     pooya_trace("block: " + full_name());
     std::unique_ptr<Block> block;
-    if (wi._scalar) {
+    if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
+    {
         block = std::make_unique<Pipe>("pipe");
+    }
+    if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    {
+        block = std::make_unique<PipeI>("pipe");
+    }
+    if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    {
+        block = std::make_unique<PipeB>("pipe");
     }
     else if (wi._array_size > 0)
     {

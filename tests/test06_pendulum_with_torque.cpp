@@ -40,7 +40,7 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    bool init(pooya::Parent& parent, const pooya::LabelSignals&, const pooya::LabelSignals&) override
+    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
         if (!pooya::Submodel::init(parent))

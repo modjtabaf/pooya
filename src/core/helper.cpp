@@ -202,10 +202,12 @@ uint Simulator::_process(double t, Values& values)
         for (const auto& c: unprocessed)
         {
             std::cout << "- " << c->full_name() << "\n";
-            for (const auto& ls: c->iports())
-                std::cout << "  - i: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
-            for (const auto& ls: c->oports())
-                std::cout << "  - o: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
+            if (c->ibus())
+                for (const auto& ls: *c->ibus())
+                    std::cout << "  - i: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
+            if (c->obus())
+                for (const auto& ls: *c->obus())
+                    std::cout << "  - o: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
         }
     }
     return n_processed;

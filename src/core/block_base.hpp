@@ -93,6 +93,53 @@ public:
     }
 }; // class Block
 
+template<typename T>
+class SingleInputT : public Block
+{
+protected:
+    typename Types<T>::SignalId _s_in{nullptr};
+
+    SingleInputT(std::string given_name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
+        Block(given_name, num_iports, num_oports)
+    {
+        verify(num_iports == 1, "One and only one input expected!");
+    }
+
+public:
+    bool init(Parent& parent, const LabelSignals& iports, const LabelSignals& oprots) override
+    {
+        if (!Block::init(parent, iports, oprots))
+            return false;
+        _iports.bind(_s_in);
+        return true;
+    }
+};
+
+template<typename T, class Base=Block>
+class SingleOutputT : public Base
+{
+protected:
+    typename Types<T>::SignalId _s_out{nullptr};
+
+    SingleOutputT(std::string given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
+        Base(given_name, num_iports, num_oports)
+    {
+        verify(num_oports == 1, "One and only one output expected!");
+    }
+
+public:
+    bool init(Parent& parent, const LabelSignals& iports, const LabelSignals& oprots) override
+    {
+        if (!Base::init(parent, iports, oprots))
+            return false;
+        Base::_oports.bind(_s_out);
+        return true;
+    }
+};
+
+template<typename T_in, typename T_out=T_in>
+using SingleInputOutputT = SingleOutputT<T_out, SingleInputT<T_in>>;
+
 class Parent : public Block
 {
 protected:

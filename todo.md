@@ -14,6 +14,7 @@
 * introduce integer signals
 * Deprecate the initial values for states
 
+- enclose the methods that only contain verify macros within #if...#endif blocks
 - Make _assigned a debug-only flag
 - Use DOT to generate a graph presentation of the model
 - Doxygen

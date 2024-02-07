@@ -34,25 +34,25 @@ namespace pooya
 {
 
 template <typename T>
-class InitialValueT : public Block
+class InitialValueT : public SingleInputOutputT<T>
 {
 protected:
     T _value;
     bool _init{true};
 
 public:
-    InitialValueT(std::string given_name) : Block(given_name, 1, 1) {}
+    InitialValueT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (_init)
         {
-            _value = values.get<T>(_iports[0]);
-            _iports.clear();
+            _value = values.get(SingleInputOutputT<T>::_s_in);
+            SingleInputOutputT<T>::_iports.clear();
             _init = false;
         }
-        values.set<T>(_oports[0], _value);
+        values.set(SingleInputOutputT<T>::_s_out, _value);
     }
 };
 
@@ -60,19 +60,19 @@ using InitialValue = InitialValueT<double>;
 using InitialValueA = InitialValueT<Array>;
 
 template <typename T>
-class ConstT : public Block
+class ConstT : public SingleOutputT<T>
 {
 protected:
     T _value;
 
 public:
     ConstT(std::string given_name, const T &value)
-            : Block(given_name, 0, 1), _value(value) {}
+            : SingleOutputT<T>(given_name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        values.set<T>(_oports[0], _value);
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        values.set(SingleOutputT<T>::_s_out, _value);
     }
 };
 
@@ -80,18 +80,18 @@ using Const = ConstT<double>;
 using ConstA = ConstT<Array>;
 
 template <typename T, typename GainType>
-class GainT : public Block
+class GainT : public SingleInputOutputT<T>
 {
 protected:
     GainType _k;
 
 public:
-    GainT(std::string given_name, GainType k) : Block(given_name, 1, 1), _k(k) {}
+    GainT(std::string given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        values.set<T>(_oports[0], _k * values.get<T>(_iports[0]));
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
     }
 };
 
@@ -100,15 +100,15 @@ using GainI = GainT<int, int>;
 using GainA = GainT<Array, double>;
 
 template <typename T>
-class SinT : public Block
+class SinT : public SingleInputOutputT<T>
 {
 public:
-    SinT(std::string given_name) : Block(given_name, 1, 1) {}
+    SinT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        values.set<T>(_oports[0], values.get<T>(_iports[0]).sin());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        values.set(SingleInputOutputT<T>::_s_out, values.get(SingleInputOutputT<T>::_s_in).sin());
     }
 };
 
@@ -119,7 +119,7 @@ using Sin = SinT<double>;
 using SinA = SinT<Array>;
 
 template <typename T>
-class FunctionT : public Block
+class FunctionT : public SingleInputOutputT<T>
 {
 public:
     using ActFunction = std::function<T(double, const T &)>;
@@ -129,12 +129,12 @@ protected:
 
 public:
     FunctionT(std::string given_name, ActFunction act_func)
-            : Block(given_name, 1, 1), _act_func(act_func) {}
+            : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        values.set<T>(_oports[0], _act_func(t, values.get<T>(_iports[0])));
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        values.set(SingleInputOutputT<T>::_s_out, _act_func(t, values.get<T>(SingleInputOutputT<T>::_s_in)));
     }
 };
 
@@ -142,7 +142,7 @@ using Function = FunctionT<double>;
 using FunctionA = FunctionT<Array>;
 
 template <typename T>
-class AddSubT : public Block
+class AddSubT : public SingleOutputT<T>
 {
 protected:
     std::string _operators;
@@ -151,28 +151,28 @@ protected:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace("block: " + full_name());
-        if (!Block::init(parent, iports, oports))
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        if (!SingleOutputT<T>::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1,
-                     _full_name + " requires 1 or more input signals.");
+                     SingleOutputT<T>::full_name() + " requires 1 or more input signals.");
         verify(_operators.size() == iports.size(),
-                     _full_name + ": mismatch between input signals and operators.");
+                     SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;
     }
 
 public:
     AddSubT(std::string given_name, const char *operators, const T &initial = 0.0)
-            : Block(given_name, NoIOLimit, 1), _operators(operators), _initial(initial) {}
+            : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
-        for (const auto &ls: _iports)
+        for (const auto &ls: SingleOutputT<T>::_iports)
         {
             const auto &v = values.get<T>(ls.second);
             if (*p == '+')
@@ -183,7 +183,7 @@ public:
                 assert(false);
             p++;
         }
-        values.set<T>(_oports[0], _ret);
+        values.set(SingleOutputT<T>::_s_out, _ret);
     }
 };
 
@@ -221,7 +221,7 @@ using Subtract = SubtractT<double>;
 using SubtractA = SubtractT<Array>;
 
 template <typename T>
-class MulDivT : public Block
+class MulDivT : public SingleOutputT<T>
 {
 protected:
     std::string _operators;
@@ -230,27 +230,27 @@ protected:
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace("block: " + full_name());
-        if (!Block::init(parent, iports, oports))
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        if (!SingleOutputT<T>::init(parent, iports, oports))
             return false;
 
         verify(iports.size() >= 1, "MulDivT requires 1 or more input signals.");
         verify(_operators.size() == iports.size(),
-                     _full_name + ": mismatch between input signals and operators.");
+                     SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;
     }
 
 public:
     MulDivT(std::string given_name, const char *operators, const T &initial = 1.0)
-            : Block(given_name, NoIOLimit, 1), _operators(operators), _initial(initial) {}
+            : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
-        for (const auto &ls: _iports)
+        for (const auto &ls: SingleOutputT<T>::_iports)
         {
             const auto &v = values.get<T>(ls.second);
             if (*p == '*')
@@ -261,7 +261,7 @@ public:
                 assert(false);
             p++;
         }
-        values.set<T>(_oports[0], _ret);
+        values.set<T>(SingleOutputT<T>::_s_out, _ret);
     }
 };
 
@@ -299,48 +299,48 @@ using Divide = DivideT<double>;
 using DivideA = DivideT<Array>;
 
 template <typename T>
-class IntegratorBaseT : public Block
+class IntegratorBaseT : public SingleOutputT<T>
 {
 protected:
     T _value;
 
 public:
-    IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
-            : Block(given_name, num_iports, num_oports), _value(ic) {}
+    IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
+            : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace("block: " + full_name());
-        if (!Block::init(parent, iports, oports))
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        if (!SingleOutputT<T>::init(parent, iports, oports))
             return false;
 
-        model_ref().register_state(_oports[0], _iports[0]);
+        SingleOutputT<T>::model_ref().register_state(SingleOutputT<T>::_s_out, SingleOutputT<T>::_iports[0]);
 
         return true;
     }
 
     void pre_step(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        assert(!values.valid(_oports[0]));
-        values.set<T>(_oports[0], _value);
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        assert(!values.valid(SingleOutputT<T>::_s_out));
+        values.set(SingleOutputT<T>::_s_out, _value);
     }
 
     void post_step(double /*t*/, const Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        assert(values.valid(_oports[0]));
-        _value = values.get<T>(_oports[0]);
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        assert(values.valid(SingleOutputT<T>::_s_out));
+        _value = values.get(SingleOutputT<T>::_s_out);
     }
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/ = true) override
     {
-        pooya_trace("block: " + full_name());
-        if (_processed)
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        if (SingleOutputT<T>::_processed)
             return 0;
 
-        _processed = values.valid(_iports[0]);
-        return _processed ? 1 : 0; // is it safe to simply return _processed?
+        SingleOutputT<T>::_processed = values.valid(SingleOutputT<T>::_s_out);
+        return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?
     }
 };
 
@@ -406,7 +406,8 @@ using TriggeredIntegrator = TriggeredIntegratorT<double>;
 using TriggeredIntegratorA = TriggeredIntegratorT<Array>;
 
 template <typename T>
-class DelayT : public Block {
+class DelayT : public SingleOutputT<T>
+{
 protected:
     double _lifespan;
     std::vector<double> _t;
@@ -417,33 +418,27 @@ protected:
     ScalarSignalId _s_delay;                // delay
     typename Types<T>::SignalId _s_initial; // initial
 
-    // output signal
-    typename Types<T>::SignalId _s_y; // [0]
-
 public:
     DelayT(std::string given_name, double lifespan = 10.0)
-            : Block(given_name, 3, 1), _lifespan(lifespan) {}
+            : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
     {
-        pooya_trace("block: " + full_name());
-        if (!Block::init(parent, iports, oports))
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        if (!SingleOutputT<T>::init(parent, iports, oports))
             return false;
 
         // input signals
-        _iports.bind("in", _s_x);
-        _iports.bind("delay", _s_delay);
-        _iports.bind("initial", _s_initial);
-
-        // output signal
-        _oports.bind(_s_y);
+        SingleOutputT<T>::_iports.bind("in", _s_x);
+        SingleOutputT<T>::_iports.bind("delay", _s_delay);
+        SingleOutputT<T>::_iports.bind("initial", _s_initial);
 
         return true;
     }
 
     void post_step(double t, const Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!_t.empty())
         {
             double t1 = t - _lifespan;
@@ -465,10 +460,10 @@ public:
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (_t.empty())
         {
-            values.set(_s_y, values.get(_s_initial));
+            values.set(SingleOutputT<T>::_s_out, values.get(_s_initial));
             return;
         }
 
@@ -476,11 +471,11 @@ public:
         t -= delay;
         if (t <= _t[0])
         {
-            values.set(_s_y, values.get(_s_initial));
+            values.set(SingleOutputT<T>::_s_out, values.get(_s_initial));
         }
         else if (t >= _t.back())
         {
-            values.set(_s_y, _x.back());
+            values.set(SingleOutputT<T>::_s_out, _x.back());
         }
         else
         {
@@ -492,7 +487,7 @@ public:
                 k++;
             }
 
-            values.set(_s_y, (_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
+            values.set(SingleOutputT<T>::_s_out, (_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
@@ -501,19 +496,19 @@ using Delay = DelayT<double>;
 using DelayA = DelayT<Array>;
 
 template <typename T>
-class MemoryT : public Block
+class MemoryT : public SingleInputOutputT<T>
 {
 protected:
     T _value;
 
 public:
     MemoryT(std::string given_name, const T &ic = 0)
-            : Block(given_name, 1, 1), _value(ic) {}
+            : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
 
     void post_step(double /*t*/, const Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        _value = values.get<T>(_iports[0]);
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        _value = values.get(SingleInputOutputT<T>::_s_in);
     }
 
     // # Memory can be implemented either by defining the following activation
@@ -527,12 +522,12 @@ public:
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/) override
     {
-        pooya_trace("block: " + full_name());
-        if (_processed)
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        if (SingleInputOutputT<T>::_processed)
             return 0;
 
-        values.set<T>(_oports[0], _value);
-        _processed = true;
+        values.set(SingleInputOutputT<T>::_s_out, _value);
+        SingleInputOutputT<T>::_processed = true;
         return 1;
     }
 };
@@ -541,7 +536,7 @@ using Memory = MemoryT<double>;
 using MemoryA = MemoryT<Array>;
 
 template <typename T>
-class DerivativeT : public Block
+class DerivativeT : public SingleInputOutputT<T>
 {
 protected:
     bool _first_step{true};
@@ -551,33 +546,33 @@ protected:
 
 public:
     DerivativeT(std::string given_name, const T &y0 = 0)
-            : Block(given_name, 1, 1), _y(y0) {}
+            : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
 
     void post_step(double t, const Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         _t = t;
-        _x = values.get<T>(_iports[0]);
+        _x = values.get(SingleInputOutputT<T>::_s_in);
         _y = _x;
         _first_step = false;
     }
 
     void activation_function(double t, Values &values) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (_first_step)
         {
             _t = t;
-            _x = values.get<T>(_iports[0]);
-            values.set<T>(_oports[0], _y);
+            _x = values.get(SingleInputOutputT<T>::_s_in);
+            values.set(SingleInputOutputT<T>::_s_out, _y);
         }
         else if (_t == t)
         {
-            values.set<T>(_oports[0], _y);
+            values.set(SingleInputOutputT<T>::_s_out, _y);
         }
         else
         {
-            values.set<T>(_oports[0], (values.get<T>(_iports[0]) - _x) / (t - _t));
+            values.set(SingleInputOutputT<T>::_s_out, (values.get(SingleInputOutputT<T>::_s_in) - _x) / (t - _t));
         }
     }
 };
@@ -586,15 +581,15 @@ using Derivative = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
 
 template <typename T>
-class PipeT : public Block
+class PipeT : public SingleInputOutputT<T>
 {
 public:
-    explicit PipeT(std::string given_name) : Block(given_name, 1, 1) {}
+    explicit PipeT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + full_name());
-        values.set<T>(_oports[0], values.get<T>(_iports[0]));
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        values.set(SingleInputOutputT<T>::_s_out, values.get(SingleInputOutputT<T>::_s_in));
     }
 };
 
@@ -602,12 +597,9 @@ using Pipe = PipeT<double>;
 using PipeI = PipeT<int>;
 using PipeA = PipeT<Array>;
 
-class BusBlockBuilder : public Block
+class BusBlockBuilder : public SingleInputOutputT<BusSpec>
 {
 protected:
-    BusId _x;
-    BusId _y;
-
     std::vector<std::unique_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
 
@@ -618,7 +610,7 @@ protected:
 
 public:
     BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
-        : Block(given_name, 1, 1), _excluded_labels(excluded_labels) {}
+        : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
 
     bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override;
     void post_init() override;

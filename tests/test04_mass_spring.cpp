@@ -32,10 +32,10 @@ protected:
 public:
     MyModel() : pooya::Submodel("MyModel") {}
 
-    bool init(pooya::Parent& parent, const pooya::LabelSignals& iports, const pooya::LabelSignals& oports) override
+    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
-        if (!pooya::Submodel::init(parent, iports, oports))
+        if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
         // create signals

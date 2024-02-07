@@ -16,6 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_BLOCK_BASE_HPP__
 
 #include <functional>
+#include <memory>
 
 #include "util.hpp"
 #include "signal.hpp"
@@ -38,8 +39,8 @@ public:
 
 protected:
     bool _initialized{false};
-    LabelSignals _iports;
-    LabelSignals _oports;
+    BusId _ibus{nullptr};
+    BusId _obus{nullptr};
     std::vector<SignalId> _dependencies;
     Parent* _parent{nullptr};
     std::string _given_name;
@@ -56,7 +57,7 @@ protected:
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent& parent, const LabelSignals& iports=LabelSignals(), const LabelSignals& oports=LabelSignals());
+    virtual bool init(Parent& parent, BusId ibus=nullptr, BusId obus=nullptr);
     virtual void post_init() {}
 
 public:
@@ -80,8 +81,8 @@ public:
     bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;}
-    const LabelSignals& iports() const {return _iports;}
-    const LabelSignals& oports() const {return _oports;}
+    BusId ibus() const {return _ibus;}
+    BusId obus() const {return _obus;}
 
     virtual void _mark_unprocessed();
     virtual uint _process(double t, Values& values, bool go_deep = true);
@@ -106,11 +107,11 @@ protected:
     }
 
 public:
-    bool init(Parent& parent, const LabelSignals& iports, const LabelSignals& oprots) override
+    bool init(Parent& parent, BusId ibus, BusId obus) override
     {
-        if (!Block::init(parent, iports, oprots))
+        if (!Block::init(parent, ibus, obus))
             return false;
-        _iports.bind(_s_in);
+        _s_in = Types<T>::as_type(_ibus->at(0).second);
         return true;
     }
 };
@@ -128,11 +129,11 @@ protected:
     }
 
 public:
-    bool init(Parent& parent, const LabelSignals& iports, const LabelSignals& oprots) override
+    bool init(Parent& parent, BusId ibus, BusId obus) override
     {
-        if (!Base::init(parent, iports, oprots))
+        if (!Base::init(parent, ibus, obus))
             return false;
-        Base::_oports.bind(_s_out);
+        _s_out = Types<T>::as_type(Base::_obus->at(0).second);
         return true;
     }
 };
@@ -144,6 +145,7 @@ class Parent : public Block
 {
 protected:
     std::vector<Block*> _components;
+    std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports) {}
@@ -152,16 +154,7 @@ protected:
     BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
-    bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={})
-    {
-        pooya_trace("block: " + full_name());
-        if (!component.init(*this, iports, oports))
-            return false;
-
-        _components.push_back(&component);
-        component.post_init();
-        return true;
-    }
+    bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
 
     void pre_step(double t, Values& values) override
     {
@@ -326,7 +319,7 @@ protected:
     SignalInfos _signal_infos;
     std::size_t _vi_index{0};
 
-    bool init(Parent&, const LabelSignals&, const LabelSignals&) override;
+    bool init(Parent&, BusId, BusId) override;
 
     template<typename T, typename... Ts>
     typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)

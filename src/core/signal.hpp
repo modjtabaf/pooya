@@ -15,6 +15,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_HPP__
 #define __POOYA_SIGNAL_HPP__
 
+#include <cstddef>
 #include <initializer_list>
 #include <map>
 #include <string>
@@ -120,111 +121,16 @@ public:
     LabelSignals(const std::initializer_list<SignalId>& il);
     LabelSignals(const std::initializer_list<LabelSignalId>& il);
 
-    // explicit binding by label
-    void bind(const std::string& label, ScalarSignalId& sig) const
-    {
-        pooya_trace("label: " + label);
-        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
-        verify_scalar_signal(_label_signals_map.at(label));
-        sig = _label_signals_map.at(label)->as_scalar();
-    }
-
-    void bind(const std::string& label, IntSignalId& sig) const
-    {
-        pooya_trace("label: " + label);
-        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
-        verify_int_signal(_label_signals_map.at(label));
-        sig = _label_signals_map.at(label)->as_int();
-    }
-
-    void bind(const std::string& label, BoolSignalId& sig) const
-    {
-        pooya_trace("label: " + label);
-        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
-        verify_bool_signal(_label_signals_map.at(label));
-        sig = _label_signals_map.at(label)->as_bool();
-    }
-
-    void bind(const std::string& label, ArraySignalId& sig) const
-    {
-        pooya_trace("label: " + label);
-        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
-        verify_array_signal(_label_signals_map.at(label));
-        sig = _label_signals_map.at(label)->as_array();
-    }
-
-    void bind(const std::string& label, BusId& sig) const
-    {
-        pooya_trace("label: " + label);
-        verify(_label_signals_map.find(label) != _label_signals_map.end(), "no signal labeled " + label + "!");
-        verify_bus_signal(_label_signals_map.at(label));
-        sig = _label_signals_map.at(label)->as_bus();
-    }
-
-    // explicit binding by index
-    void bind(std::size_t index, ScalarSignalId& sig) const
-    {
-        pooya_trace("index: " + std::to_string(index));
-        verify_scalar_signal(_label_signals_list.at(index).second);
-        sig = _label_signals_list.at(index).second->as_scalar();
-    }
-
-    void bind(std::size_t index, IntSignalId& sig) const
-    {
-        pooya_trace("index: " + std::to_string(index));
-        verify_int_signal(_label_signals_list.at(index).second);
-        sig = _label_signals_list.at(index).second->as_int();
-    }
-
-    void bind(std::size_t index, BoolSignalId& sig) const
-    {
-        pooya_trace("index: " + std::to_string(index));
-        verify_bool_signal(_label_signals_list.at(index).second);
-        sig = _label_signals_list.at(index).second->as_bool();
-    }
-
-    void bind(std::size_t index, ArraySignalId& sig) const
-    {
-        pooya_trace("index: " + std::to_string(index));
-        verify_array_signal(_label_signals_list.at(index).second);
-        sig = _label_signals_list.at(index).second->as_array();
-    }
-
-    void bind(std::size_t index, BusId& sig) const
-    {
-        pooya_trace("index: " + std::to_string(index));
-        verify_bus_signal(_label_signals_list.at(index).second);
-        sig = _label_signals_list.at(index).second->as_bus();
-    }
-
-    // implicit binding by index
-    template<typename SignalType>
-    void bind(SignalType& sig) const
-    {
-        pooya_trace0;
-        verify(_label_signals_list.size() == 1, "Implicit binding is allowed only if there is one and only one signal.");
-        bind(0, sig);
-    }
-
     using const_iterator = LabelSignalIdList::const_iterator;
 
     SignalId operator[](std::size_t index) const {return _label_signals_list[index].second;}
     SignalId operator[](const std::string& label) const {return _label_signals_map.at(label);}
-    void clear() noexcept
-    {
-        _label_signals_map.clear();
-        _label_signals_list.clear();
-    }
     std::size_t size() const noexcept
     {
         return _label_signals_list.size();
     }
     const_iterator begin() const noexcept {return _label_signals_list.begin();}
     const_iterator end() const noexcept {return _label_signals_list.end();}
-    void reserve(std::size_t new_cap)
-    {
-        _label_signals_list.reserve(new_cap);
-    }
     bool push_back(const LabelSignalId& ls)
     {
         pooya_trace0;
@@ -242,7 +148,6 @@ public:
         _label_signals_list.push_back(ls);
         return true;
     }
-    void shrink_to_fit() {_label_signals_list.shrink_to_fit();}
 };
 
 class ValueSignalInfo : public SignalInfo
@@ -329,15 +234,30 @@ class BusSpec
     friend class BusInfo;
 
 public:
+    enum class SingleValueType
+    {
+        None,
+        Scalar,
+        Int,
+        Bool,
+    };
+
     struct WireInfo
     {
-        const std::string _label;
+    protected:
+        std::string _label;
+        SingleValueType _single_value_type{SingleValueType::None};
+
+    public:
         const BusSpec* _bus{nullptr};
-        const bool _scalar{false};
         const std::size_t _array_size{0};
 
-        // scalar
-        WireInfo(const std::string& label) : _label(label), _scalar(true) {}
+        // single-valued, coded_label defines the type and label:
+        //   "i:label" -> int wire labeled "label"
+        //   "b:label" -> bool wire labeled "label"
+        //   "f:label" -> scalar wire labeled "label"
+        //   "label"   -> scalar wire labeled "label"
+        WireInfo(const std::string& coded_label);
 
         // array
         WireInfo(const std::string& label, std::size_t array_size) : _label(label), _array_size(array_size)
@@ -347,6 +267,9 @@ public:
 
         // bus
         WireInfo(const std::string& label, const BusSpec& bus) : _label(label), _bus(&bus) {}
+
+        const std::string& label() const {return _label;}
+        SingleValueType single_value_type() const {return _single_value_type;};
     };
 
     const std::vector<WireInfo> _wires;
@@ -376,7 +299,7 @@ public:
             std::find_if(_wires.begin(), _wires.end(),
                 [&](const WireInfo& wi)
                 {
-                    return wi._label == label;
+                    return wi.label() == label;
                 }
             ));
     }
@@ -404,7 +327,7 @@ protected:
         verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
-            _signals.push_back({wi._label, nullptr});
+            _signals.push_back({wi.label(), nullptr});
         for (auto& it = begin_; it != end_; it++)
             _set(_spec.index_of(it->first), it->second);
 #if !defined(NDEBUG)
@@ -419,6 +342,8 @@ protected:
 public:
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
+    LabelSignalIdList::const_iterator begin() const noexcept {return _signals.begin();}
+    LabelSignalIdList::const_iterator end() const noexcept {return _signals.end();}
 
     const LabelSignalId& operator[](std::size_t index) const
     {
@@ -456,7 +381,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_int_signal(sig);
+        verify_bool_signal(sig);
         return sig->as_bool();
     }
 
@@ -472,6 +397,46 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
+        verify_bus_signal(sig);
+        return sig->as_bus();
+    }
+
+    ScalarSignalId scalar_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
+        verify_scalar_signal(sig);
+        return sig->as_scalar();
+    }
+
+    IntSignalId int_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
+        verify_int_signal(sig);
+        return sig->as_int();
+    }
+
+    BoolSignalId bool_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
+        verify_int_signal(sig);
+        return sig->as_bool();
+    }
+
+    ArraySignalId array_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
+        verify_array_signal(sig);
+        return sig->as_array();
+    }
+
+    BusId bus_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
         verify_bus_signal(sig);
         return sig->as_bus();
     }

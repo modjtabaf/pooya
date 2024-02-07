@@ -55,13 +55,37 @@ LabelSignals::LabelSignals(const std::initializer_list<LabelSignalId>& il)
     _init(lsl.begin(), lsl.end());
 }
 
-std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
+// std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
+// {
+//     pooya_trace0;
+//     os << "signals:\n";
+//     for (const auto& ls: signals)
+//         os << "- " << ls.first << ": " << ls.second << "\n";
+//     return os;
+// }
+
+BusSpec::WireInfo::WireInfo(const std::string& coded_label)
 {
-    pooya_trace0;
-    os << "signals:\n";
-    for (const auto& ls: signals)
-        os << "- " << ls.first << ": " << ls.second << "\n";
-    return os;
+    if (coded_label.find("i:") == 0)
+    {
+        _label = coded_label.substr(2);
+        _single_value_type = BusSpec::SingleValueType::Int;
+    }
+    else if (coded_label.find("b:") == 0)
+    {
+        _label = coded_label.substr(2);
+        _single_value_type = BusSpec::SingleValueType::Bool;
+    }
+    else if (coded_label.find("f:") == 0)
+    {
+        _label = coded_label.substr(2);
+        _single_value_type = BusSpec::SingleValueType::Scalar;
+    }
+    else
+    {
+        _label = coded_label;
+        _single_value_type = BusSpec::SingleValueType::Scalar;
+    }
 }
 
 SignalId BusInfo::operator[](const std::string& label) const
@@ -221,9 +245,17 @@ void BusInfo::_set(std::size_t index, SignalId sig)
     {
         verify_bus_signal_spec(sig, *wi._bus);
     }
-    else if (wi._scalar)
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {
         verify_scalar_signal(sig);
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    {
+        verify_int_signal(sig);
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    {
+        verify_bool_signal(sig);
     }
     else
     {

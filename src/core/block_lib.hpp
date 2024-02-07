@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define __POOYA_BLOCK_LIB_HPP__
 
 #include <cassert>
+#include <cstddef>
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -49,7 +50,7 @@ public:
         if (_init)
         {
             _value = values.get(SingleInputOutputT<T>::_s_in);
-            SingleInputOutputT<T>::_iports.clear();
+            SingleInputOutputT<T>::_ibus = nullptr;
             _init = false;
         }
         values.set(SingleInputOutputT<T>::_s_out, _value);
@@ -149,15 +150,17 @@ protected:
     T _initial;
     T _ret;
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, iports, oports))
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        verify(iports.size() >= 1,
+        verify_valid_signal(ibus);
+        verify_valid_signal(obus);
+        verify(ibus->size() >= 1,
                      SingleOutputT<T>::full_name() + " requires 1 or more input signals.");
-        verify(_operators.size() == iports.size(),
+        verify(_operators.size() == ibus->size(),
                      SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;
@@ -172,7 +175,7 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
-        for (const auto &ls: SingleOutputT<T>::_iports)
+        for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
             const auto &v = values.get<T>(ls.second);
             if (*p == '+')
@@ -194,11 +197,11 @@ template <typename T>
 class AddT : public AddSubT<T>
 {
 protected:
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + AddSubT<T>::full_name());
-        AddSubT<T>::_operators = std::string(iports.size(), '+');
-        return AddSubT<T>::init(parent, iports, oports);
+        AddSubT<T>::_operators = std::string(ibus->size(), '+');
+        return AddSubT<T>::init(parent, ibus, obus);
     }
 
 public:
@@ -228,14 +231,14 @@ protected:
     T _initial;
     T _ret;
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, iports, oports))
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        verify(iports.size() >= 1, "MulDivT requires 1 or more input signals.");
-        verify(_operators.size() == iports.size(),
+        verify(ibus->size() >= 1, "MulDivT requires 1 or more input signals.");
+        verify(_operators.size() == ibus->size(),
                      SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;
@@ -250,7 +253,7 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
-        for (const auto &ls: SingleOutputT<T>::_iports)
+        for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
             const auto &v = values.get<T>(ls.second);
             if (*p == '*')
@@ -272,11 +275,11 @@ template <typename T>
 class MultiplyT : public MulDivT<T>
 {
 protected:
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + MulDivT<T>::full_name());
-        MulDivT<T>::_operators = std::string(iports.size(), '*');
-        return MulDivT<T>::init(parent, iports, oports);
+        MulDivT<T>::_operators = std::string(ibus->size(), '*');
+        return MulDivT<T>::init(parent, ibus, obus);
     }
 
 public:
@@ -308,13 +311,13 @@ public:
     IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
             : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, iports, oports))
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        SingleOutputT<T>::model_ref().register_state(SingleOutputT<T>::_s_out, SingleOutputT<T>::_iports[0]);
+        SingleOutputT<T>::model_ref().register_state(SingleOutputT<T>::_s_out, Types<T>::as_type(SingleOutputT<T>::_ibus->at(0).second));
 
         return true;
     }
@@ -364,13 +367,13 @@ protected:
 public:
     TriggeredIntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (!IntegratorBaseT<T>::init(parent, iports, oports))
+        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
             return false;
 
-        iports.bind("trigger", _trigger);
+        _trigger = ibus->bool_at("trigger");
 
         return true;
     }
@@ -422,16 +425,16 @@ public:
     DelayT(std::string given_name, double lifespan = 10.0)
             : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override
+    bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, iports, oports))
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
         // input signals
-        SingleOutputT<T>::_iports.bind("in", _s_x);
-        SingleOutputT<T>::_iports.bind("delay", _s_delay);
-        SingleOutputT<T>::_iports.bind("initial", _s_initial);
+        _s_x = Types<T>::as_type(SingleOutputT<T>::_ibus->at("in"));
+        _s_delay = SingleOutputT<T>::_ibus->scalar_at("delay");
+        _s_initial = Types<T>::as_type(SingleOutputT<T>::_ibus->at("initial"));
 
         return true;
     }
@@ -533,6 +536,8 @@ public:
 };
 
 using Memory = MemoryT<double>;
+using MemoryI = MemoryT<int>;
+using MemoryB = MemoryT<bool>;
 using MemoryA = MemoryT<Array>;
 
 template <typename T>
@@ -595,6 +600,7 @@ public:
 
 using Pipe = PipeT<double>;
 using PipeI = PipeT<int>;
+using PipeB = PipeT<bool>;
 using PipeA = PipeT<Array>;
 
 class BusBlockBuilder : public SingleInputOutputT<BusSpec>
@@ -612,7 +618,7 @@ public:
     BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
         : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
 
-    bool init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports) override;
+    bool init(Parent &parent, BusId ibus, BusId obus) override;
     void post_init() override;
 };
 

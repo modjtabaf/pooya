@@ -36,13 +36,10 @@ void SinT<double>::activation_function(double /*t*/, Values &values)
 bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports, const LabelSignals& oports)
 {
     pooya_trace("block: " + full_name());
-    if (!Block::init(parent, iports, oports))
+    if (!SingleInputOutputT<BusSpec>::init(parent, iports, oports))
         return false;
 
-    _iports.bind(_x);
-    _oports.bind(_y);
-
-    verify(_x->spec() == _y->spec(), "Bus specs don't match!");
+    verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
 
     return true;
 }
@@ -50,7 +47,7 @@ bool BusBlockBuilder::init(Parent &parent, const LabelSignals& iports, const Lab
 void BusBlockBuilder::post_init()
 {
     pooya_trace("block: " + full_name());
-    const auto &bus_spec = _x->spec();
+    const auto &bus_spec = _s_in->spec();
     _blocks.reserve(bus_spec.total_size());
     traverse_bus("", bus_spec);
 }
@@ -70,7 +67,7 @@ void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec&
         {
             auto label = full_label + wi._label;
             if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
-                block_builder(label, wi, _x->at(label), _y->at(label));
+                block_builder(label, wi, _s_in->at(label), _s_out->at(label));
         }
     }
 }

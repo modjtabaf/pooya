@@ -134,11 +134,11 @@ void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::W
     {
         block = std::make_unique<Pipe>("pipe");
     }
-    if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
     {
         block = std::make_unique<PipeI>("pipe");
     }
-    if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
     {
         block = std::make_unique<PipeB>("pipe");
     }

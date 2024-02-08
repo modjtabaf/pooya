@@ -421,7 +421,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_int_signal(sig);
+        verify_bool_signal(sig);
         return sig->as_bool();
     }
 

@@ -55,15 +55,6 @@ LabelSignals::LabelSignals(const std::initializer_list<LabelSignalId>& il)
     _init(lsl.begin(), lsl.end());
 }
 
-// std::ostream& operator<<(std::ostream& os, const LabelSignals& signals)
-// {
-//     pooya_trace0;
-//     os << "signals:\n";
-//     for (const auto& ls: signals)
-//         os << "- " << ls.first << ": " << ls.second << "\n";
-//     return os;
-// }
-
 BusSpec::WireInfo::WireInfo(const std::string& coded_label)
 {
     if (coded_label.find("i:") == 0)

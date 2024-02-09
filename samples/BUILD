@@ -239,3 +239,78 @@ cc_binary(
         "//src:misc",
     ],
 )
+
+cc_binary(
+    name = "strsys",
+    srcs = ["Steering_System.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+        "//tests/data:data",
+    ],
+)
+
+cc_binary(
+    name = "stm_old",
+    srcs = ["simple_truck_model_oldpt1.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O3",
+        "-fno-math-errno",
+        "-ffast-math",
+        ],
+    defines = [
+        "NDEBUG",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+        "//tests/data:data",
+    ],
+)
+
+cc_binary(
+    name = "stm_new",
+    srcs = ["simple_truck_model_newpt1.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-O3",
+        "-fno-math-errno",
+        "-ffast-math",
+        ],
+    defines = [
+        "NDEBUG",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+        "//tests/data:data",
+    ],
+)

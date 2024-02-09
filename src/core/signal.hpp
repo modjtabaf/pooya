@@ -29,14 +29,16 @@ namespace pooya
 class Model;
 class Parent;
 
-template <int N=Eigen::Dynamic>
+template <int N>
 class ArrayN : public Eigen::Array<double, N, 1>
 {
 public:
     using _Parent = Eigen::Array<double, N, 1>;
     using _Parent::Array;
 
-    ArrayN(double v=0) : _Parent()
+    ArrayN() = default;
+    explicit ArrayN(const ArrayN&) = default;
+    explicit ArrayN(double v) : _Parent()
     {
         pooya_trace0;
         verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
@@ -46,7 +48,7 @@ public:
     }
 };
 
-using Array  = ArrayN<>;
+using Array  = ArrayN<Eigen::Dynamic>;
 using Array1 = ArrayN<1>; // use a scalar instead
 using Array2 = ArrayN<2>;
 using Array3 = ArrayN<3>;

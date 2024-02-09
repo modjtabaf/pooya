@@ -94,6 +94,8 @@ public:
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
     }
+
+    typename Types<GainType>::GetValue gain() const {return _k;}
 };
 
 using Gain = GainT<double, double>;
@@ -505,7 +507,7 @@ protected:
     T _value;
 
 public:
-    MemoryT(std::string given_name, const T &ic = 0)
+    MemoryT(std::string given_name, const T &ic = T(0))
             : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
 
     void post_step(double /*t*/, const Values &values) override

@@ -43,7 +43,7 @@ protected:
     }
 
 public:
-    StepperBase(const Model& model) : _model(model), _X(model) {}
+    StepperBase(const Model& model) : _model(model), _X(model) {pooya_trace0;}
 
     virtual void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) = 0;
 };
@@ -51,7 +51,7 @@ public:
 class Euler : public StepperBase
 {
 public:
-    Euler(const Model& model) : StepperBase(model) {}
+    Euler(const Model& model) : StepperBase(model) {pooya_trace0;}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -65,7 +65,7 @@ protected:
     Array _K4;
 
 public:
-    Rk4(const Model& model) : StepperBase(model) {}
+    Rk4(const Model& model) : StepperBase(model) {pooya_trace0;}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -82,7 +82,7 @@ protected:
     Array _ZT;
 
 public:
-    Rkf45(const Model& model) : StepperBase(model) {}
+    Rkf45(const Model& model) : StepperBase(model) {pooya_trace0;}
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };

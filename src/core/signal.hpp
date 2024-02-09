@@ -187,7 +187,11 @@ protected:
     }
 
 public:
-    double iv() const {return _iv;}
+    double iv() const
+    {
+        verify(is_deriv(), _full_name + ": attempting to retrieve initial value for a non-state variable!");
+        return _iv;
+    }
 };
 
 class IntSignalInfo : public ValueSignalInfo
@@ -228,7 +232,12 @@ protected:
 public:
     const std::size_t _size;
 
-    const Array& iv() const {return _iv;}
+    const Array& iv() const
+    {
+        verify(is_state(), _full_name + ": attempting to retrieve initial value for a non-state variable!");
+        verify(std::size_t(_iv.size()) == _size, _full_name + ": initial value size mismatch!");
+        return _iv;
+    }
 };
 
 class BusSpec

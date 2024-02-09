@@ -20,6 +20,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "signal.hpp"
 #include "pooya.hpp"
+#include "util.hpp"
 
 namespace pooya
 {
@@ -95,10 +96,12 @@ SignalId BusInfo::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
+    auto index = _spec.index_of(pos == std::string::npos ? label : label.substr(0, pos));
+    verify(index < _spec._wires.size(), label + ": label not found in bus!");
+    auto sig = at(index).second;
     if (pos == std::string::npos)
-        return at(_spec.index_of(label)).second;
+        return sig;
 
-    auto sig = at(_spec.index_of(label.substr(0, pos))).second;
     verify_bus_signal(sig);
     return sig->as_bus()->at(label.substr(pos + 1));
 }
@@ -164,17 +167,18 @@ Values::Values(const pooya::Model& model)
         deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }
 
-    for (const auto* signal: signals)
-    {
-        if (!signal->as_value()) continue;
-        if (!signal->as_value()->is_state())
-            continue;
+    // for (const auto* signal: signals)
+    // {
+    //     if (!signal->as_value()) continue;
+    //     if (!signal->as_value()->is_state())
+    //         continue;
 
-        if (signal->as_scalar())
-            set<double>(signal, signal->as_scalar()->iv());
-        else
-            set<Array>(signal, signal->as_array()->iv());
-    }
+    //     if (signal->as_scalar())
+    //         set<double>(signal, signal->as_scalar()->iv());
+    //     else
+    //         set<Array>(signal, signal->as_array()->iv());
+    //     pooya_here0;
+    // }
 }
 
 #ifndef POOYA_NDEBUG

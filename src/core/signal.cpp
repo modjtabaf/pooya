@@ -166,19 +166,6 @@ Values::Values(const pooya::Model& model)
 
         deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }
-
-    // for (const auto* signal: signals)
-    // {
-    //     if (!signal->as_value()) continue;
-    //     if (!signal->as_value()->is_state())
-    //         continue;
-
-    //     if (signal->as_scalar())
-    //         set<double>(signal, signal->as_scalar()->iv());
-    //     else
-    //         set<Array>(signal, signal->as_array()->iv());
-    //     pooya_here0;
-    // }
 }
 
 #ifndef POOYA_NDEBUG

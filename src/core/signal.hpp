@@ -179,18 +179,9 @@ class ScalarSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    double _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
-
     ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _scalar = this;
-    }
-
-public:
-    double iv() const
-    {
-        verify(is_deriv(), _full_name + ": attempting to retrieve initial value for a non-state variable!");
-        return _iv;
     }
 };
 
@@ -221,8 +212,6 @@ class ArraySignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    Array _iv; // the initial value, only valid for states, i.e. if _deriv_sig != nullptr
-
     ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
         ValueSignalInfo(full_name, index, vi_index), _size(size)
     {
@@ -231,13 +220,6 @@ protected:
 
 public:
     const std::size_t _size;
-
-    const Array& iv() const
-    {
-        verify(is_state(), _full_name + ": attempting to retrieve initial value for a non-state variable!");
-        verify(std::size_t(_iv.size()) == _size, _full_name + ": initial value size mismatch!");
-        return _iv;
-    }
 };
 
 class BusSpec

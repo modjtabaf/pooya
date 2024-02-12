@@ -37,7 +37,7 @@ protected:
     auto f(double t, const T& v) -> const auto&
     {
         pooya_trace0;
-        _X.reset_with_states(v);
+        _X.reset_with_state_variables(v);
         _callback(t, _X);
         return _X.derivs();
     }

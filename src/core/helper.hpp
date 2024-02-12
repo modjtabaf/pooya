@@ -51,8 +51,8 @@ protected:
     double _t_prev{0};
     InputCallback _inputs_cb;
     Values _values;
-    Array _states;
-    Array _states_orig;
+    Array _state_variables;
+    Array _state_variables_orig;
     StepperBase* _stepper{nullptr};
     bool _initialized{false};
 

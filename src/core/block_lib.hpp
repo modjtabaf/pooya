@@ -319,7 +319,7 @@ public:
         if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        SingleOutputT<T>::model_ref().register_state(SingleOutputT<T>::_s_out, Types<T>::as_type(SingleOutputT<T>::_ibus->at(0).second));
+        SingleOutputT<T>::model_ref().register_state_variable(SingleOutputT<T>::_s_out, Types<T>::as_type(SingleOutputT<T>::_ibus->at(0).second));
 
         return true;
     }

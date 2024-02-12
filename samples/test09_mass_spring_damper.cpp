@@ -53,10 +53,10 @@ public:
         _s_xdd = parent.scalar_signal("xdd");
 
         auto& model_ = model_ref();
-        model_.register_state(_s_x, _s_xd);
-        model_.register_state(_s_xd, _s_xdd);
+        model_.register_state_variable(_s_x, _s_xd);
+        model_.register_state_variable(_s_xd, _s_xdd);
 
-        // it is not necessary to add these dependencies since both _x and _xd are states and so, are known always
+        // it is not necessary to add these dependencies since both _x and _xd are state variables and so, are known always
         _add_dependecny(_s_x);
         _add_dependecny(_s_xd);
 
@@ -66,7 +66,7 @@ public:
     void activation_function(double /*t*/, pooya::Values& values) override
     {
         pooya_trace0;
-        // get states and input
+        // get state variables and input
         double x = values.get(_s_x);
         double xd = values.get(_s_xd);
         double tau = values.get(_s_tau);

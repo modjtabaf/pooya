@@ -169,7 +169,7 @@ protected:
 public:
     const std::size_t _vi_index{0};   // the index of associated ValueInfo
 
-    bool is_state() const {return _deriv_sig;}
+    bool is_state_variable() const {return _deriv_sig;}
     bool is_deriv() const {return _is_deriv;}
     ValueSignalId deriv_info() const {return _deriv_sig;}
 };
@@ -668,7 +668,7 @@ protected:
     std::vector<ValueInfo> _value_infos;
     std::size_t             _total_size{0};
     Eigen::ArrayXd              _values;
-    Eigen::Map<Eigen::ArrayXd>  _states{nullptr, 0};
+    Eigen::Map<Eigen::ArrayXd>  _state_variables{nullptr, 0};
     Eigen::ArrayXd              _derivs;
 
     inline ValueInfo& get_value_info(SignalId sig)
@@ -695,13 +695,13 @@ public:
         return get_value_info(sig).is_assigned();
     }
 
-    std::size_t num_states() const {return _states.size();}
+    std::size_t num_state_variables() const {return _state_variables.size();}
     const decltype(_value_infos)& value_infos() const {return _value_infos;}
     const decltype(_values)& values() const {return _values;}
 #ifdef POOYA_NDEBUG
-    const decltype(_states)& states() const {return _states;}
+    const decltype(_state_variables)& state_variables() const {return _state_variables;}
 #else
-    const decltype(_states)& states() const;
+    const decltype(_state_variables)& state_variables() const;
 #endif // definded(POOYA_NDEBUG)
     const decltype(_derivs)& derivs() const {return _derivs;}
 
@@ -730,7 +730,7 @@ public:
     void set(ArraySignalId sig, const Array& value) {set<Array>(sig, value);}
 
     void invalidate();
-    void reset_with_states(const Eigen::ArrayXd& states);
+    void reset_with_state_variables(const Eigen::ArrayXd& state_variables);
 
     void stream(std::ostream& os) const
     {

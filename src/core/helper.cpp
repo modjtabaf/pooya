@@ -199,19 +199,14 @@ uint Simulator::_process(double t, Values& values)
     _model.traverse(find_unprocessed_cb, 0);
     if (unprocessed.size())
     {
-        std::cout << "-- unprocessed blocks detected:\n";
+        std::cout << "\n-- unprocessed blocks detected:\n";
         for (const auto& c: unprocessed)
         {
-            bool first = true;
+            std::cout << "- " << c->full_name() << "\n";
             for (auto sig: c->dependencies())
             {
                 if (values.valid(sig))
                     continue;
-                if (first)
-                {
-                    std::cout << "- " << c->full_name() << "\n";
-                    first = false;
-                }
                 std::cout << "  - " << sig->_full_name << "\n";
             }
         }

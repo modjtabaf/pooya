@@ -57,8 +57,8 @@ public:
         model_.register_state_variable(_s_xd, _s_xdd);
 
         // it is not necessary to add these dependencies since both _x and _xd are state variables and so, are known always
-        _add_dependecny(_s_x);
-        _add_dependecny(_s_xd);
+        add_dependency(_s_x);
+        add_dependency(_s_xd);
 
         return true;
     }

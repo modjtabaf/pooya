@@ -41,7 +41,7 @@ protected:
     bool _initialized{false};
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
-    std::vector<SignalId> _dependencies;
+    std::vector<ValueSignalId> _dependencies;
     Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
@@ -51,8 +51,8 @@ protected:
 
     bool _processed{false};
     void _assign_valid_given_name(std::string given_name);
-    bool _add_dependecny(SignalId sig);
-    bool _remove_dependecny(SignalId sig);
+    bool add_dependency(ValueSignalId sig);
+    bool remove_dependency(ValueSignalId sig);
 
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -83,6 +83,7 @@ public:
     const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}
     BusId obus() const {return _obus;}
+    const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
 
     virtual void _mark_unprocessed();
     virtual uint _process(double t, Values& values, bool go_deep = true);

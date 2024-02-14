@@ -49,8 +49,9 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     if (ibus && ibus->size() > 0)
     {
         _dependencies.reserve(ibus->size());
-        for (const auto& ls: *ibus)
-            _add_dependecny(ls.second);
+        for (auto sig: *ibus)
+            if (sig.second->as_value())
+                add_dependency(sig.second->as_value());
         _dependencies.shrink_to_fit();
     }
 
@@ -61,7 +62,7 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     return true;
 }
 
-bool Block::_add_dependecny(SignalId sig)
+bool Block::add_dependency(ValueSignalId sig)
 {
     pooya_trace("block: " + full_name());
     verify_valid_signal(sig);
@@ -74,7 +75,7 @@ bool Block::_add_dependecny(SignalId sig)
     return false;
 }
 
-bool Block::_remove_dependecny(SignalId sig)
+bool Block::remove_dependency(ValueSignalId sig)
 {
     pooya_trace("block: " + full_name());
     verify_valid_signal(sig);

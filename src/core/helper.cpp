@@ -186,6 +186,7 @@ uint Simulator::_process(double t, Values& values)
         } while(n);
     }
 
+#if !defined(POOYA_NDEBUG)
     std::vector<const Block*> unprocessed;
 
     auto find_unprocessed_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
@@ -201,15 +202,22 @@ uint Simulator::_process(double t, Values& values)
         std::cout << "-- unprocessed blocks detected:\n";
         for (const auto& c: unprocessed)
         {
-            std::cout << "- " << c->full_name() << "\n";
-            if (c->ibus())
-                for (const auto& ls: *c->ibus())
-                    std::cout << "  - i: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
-            if (c->obus())
-                for (const auto& ls: *c->obus())
-                    std::cout << "  - o: " << (values.valid(ls.second) ? " " : "*") <<  ls.second->_full_name << "\n";
+            bool first = true;
+            for (auto sig: c->dependencies())
+            {
+                if (values.valid(sig))
+                    continue;
+                if (first)
+                {
+                    std::cout << "- " << c->full_name() << "\n";
+                    first = false;
+                }
+                std::cout << "  - " << sig->_full_name << "\n";
+            }
         }
     }
+#endif // !defined(POOYA_NDEBUG)
+
     return n_processed;
 }
 

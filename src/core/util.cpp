@@ -40,13 +40,14 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
 
 double Deriv::operator()(double t, double u)
 {
-    if (_first_step)
-    {
-        step(t, u);
-        _first_step = false;
-    }
     double dt = t - _t0;
     return dt == 0 ? 0 : (u - _u0)/dt;
+}
+
+void Deriv::init(double t, double u)
+{
+    _t0 = t;
+    _u0 = u;
 }
 
 void Deriv::step(double t, double u)
@@ -55,10 +56,22 @@ void Deriv::step(double t, double u)
     _u0 = u;
 }
 
+void PT1::init(double t0, double u0, double y0)
+{
+    Deriv::init(t0, u0);
+    _y0 = y0;
+}
+
+void PT1::step(double t, double u)
+{
+    _y0 = operator()(t, u);
+    Deriv::step(t, u);
+}
+
 double PT1::operator()(double t, double u)
 {
     double dudt = Deriv::operator()(t, u);
-    return _k*_tau*dudt*(std::exp((_t0 - t)/_tau) - 1) + _k*u;
+    return std::exp((_t0 - t)/_tau)*(_y0 - _k*_u0 + _k*_tau*dudt) + _k*(u - _tau*dudt);
 }
 
 }

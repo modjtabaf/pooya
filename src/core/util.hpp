@@ -134,27 +134,29 @@ public:
 class Deriv
 {
 protected:
-    bool _first_step{true};
-
-public:
     double _t0{0.0};
     double _u0{0.0};
 
 public:
+    void init(double t0, double u0);
     double operator()(double t, double u);
-    void step(double t, double u);
+    virtual void step(double t, double u);
 };
 
 // closed-form solution to the first order ode "tau*dx/dt + x = k*u" given u is linear
 class PT1 : public Deriv
 {
-public:
+protected:
     double _tau{1.0};
     double _k{1.0};
+    double _y0{0.0};
 
+public:
     PT1(double tau=1.0, double k=1.0) : _tau(tau), _k(k) {}
 
+    void init(double t0, double u0, double y0);
     double operator()(double t, double u);
+    void step(double t, double u) override;
 };
 
 }

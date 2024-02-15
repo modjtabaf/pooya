@@ -357,7 +357,7 @@ SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
     }
     else
     {
-        verify_bus_signal(sig);
+        verify_bus(sig);
         BusId bus = sig->as_bus();
         std::size_t n = bus->spec()._wires.size();
         std::vector<LabelSignalId> sigs;

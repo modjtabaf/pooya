@@ -35,13 +35,14 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
         // create signals
-        auto x = scalar_signal("x");
-        auto xd = scalar_signal("xd");
-        auto xdd = scalar_signal("xdd");
+        auto x   = create_scalar_signal("x");
+        auto xd  = create_scalar_signal("xd");
+        auto xdd = create_scalar_signal("xdd");
 
         // setup the submodel
         add_block(_integ1, xdd, xd);
@@ -55,6 +56,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 

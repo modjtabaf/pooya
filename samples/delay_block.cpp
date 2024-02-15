@@ -34,15 +34,16 @@ public:
     pooya::ScalarSignalId _s_y;
 
 public:
-    MyModel() : pooya::Model("test02")
+    MyModel() : pooya::Model("delay_block")
     {
         pooya_trace0;
-        // create signals
-        auto time_delay = scalar_signal("time_delay");
-        auto initial = scalar_signal("initial");
 
-        _s_x = scalar_signal("x");
-        _s_y = scalar_signal("y");
+        // create signals
+        auto time_delay = create_scalar_signal("time_delay");
+        auto initial = create_scalar_signal("initial");
+
+        _s_x = create_scalar_signal("x");
+        _s_y = create_scalar_signal("y");
 
         // setup the submodel
         add_block(_const1, {}, time_delay);
@@ -63,6 +64,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto start  = std::chrono::high_resolution_clock::now();
 

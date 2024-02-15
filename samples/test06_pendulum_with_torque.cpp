@@ -43,12 +43,13 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent))
             return false;
 
         // create signals
-        auto phi = scalar_signal("phi");
-        auto dphi = scalar_signal("dphi");
+        auto phi   = scalar_signal("phi");
+        auto dphi  = scalar_signal("dphi");
         auto d2phi = scalar_signal("d2phi");
 
         // choose random names for these internal signals
@@ -78,6 +79,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 

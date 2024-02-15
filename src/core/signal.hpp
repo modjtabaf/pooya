@@ -390,7 +390,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_bus_signal(sig);
+        verify_bus(sig);
         return sig->as_bus();
     }
 
@@ -430,7 +430,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_bus_signal(sig);
+        verify_bus(sig);
         return sig->as_bus();
     }
 };
@@ -447,6 +447,7 @@ struct Types<Array>
     using SignalId = ArraySignalId;
     using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
     using SetValue = const Array&;
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_array_signal(sig);}
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {verify_array_signal_size(sig, size);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_array();}
 };
@@ -489,7 +490,7 @@ struct Types<BusSpec>
 {
     using SignalInfo = BusInfo;
     using SignalId = BusId;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {verify_bus_signal_spec(sig, spec);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {verify_bus_spec(sig, spec);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_bus();}
 };
 

@@ -25,6 +25,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
@@ -33,8 +34,8 @@ int main()
     pooya::GainI gain("gain", 2);
 
     // create signals
-    auto x = model.int_signal("x");
-    auto y = model.int_signal("y");
+    auto x = model.create_int_signal("x");
+    auto y = model.create_int_signal("y");
 
     // setup the model
     model.add_block(gain, x, y);

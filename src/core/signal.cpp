@@ -88,7 +88,7 @@ SignalId BusInfo::operator[](const std::string& label) const
         return operator[](_spec.index_of(label)).second;
 
     auto sig = operator[](_spec.index_of(label.substr(0, pos))).second;
-    verify_bus_signal(sig);
+    verify_bus(sig);
     return sig->as_bus()->operator[](label.substr(pos + 1));
 }
 
@@ -102,7 +102,7 @@ SignalId BusInfo::at(const std::string& label) const
     if (pos == std::string::npos)
         return sig;
 
-    verify_bus_signal(sig);
+    verify_bus(sig);
     return sig->as_bus()->at(label.substr(pos + 1));
 }
 
@@ -225,7 +225,7 @@ void BusInfo::_set(std::size_t index, SignalId sig)
     auto& wi = _spec._wires[index];
     if (wi._bus)
     {
-        verify_bus_signal_spec(sig, *wi._bus);
+        verify_bus_spec(sig, *wi._bus);
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {

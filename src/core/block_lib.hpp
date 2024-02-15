@@ -375,7 +375,7 @@ public:
         if (!IntegratorBaseT<T>::init(parent, ibus, obus))
             return false;
 
-        _trigger = ibus->bool_at("trigger");
+        _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
 
         return true;
     }
@@ -435,7 +435,7 @@ public:
 
         // input signals
         _s_x = Types<T>::as_type(SingleOutputT<T>::_ibus->at("in"));
-        _s_delay = SingleOutputT<T>::_ibus->scalar_at("delay");
+        _s_delay = SingleOutputT<T>::scalar_input_at("delay");
         _s_initial = Types<T>::as_type(SingleOutputT<T>::_ibus->at("initial"));
 
         return true;

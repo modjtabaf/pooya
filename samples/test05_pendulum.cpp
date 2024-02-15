@@ -26,14 +26,14 @@ class Pendulum : public pooya::Submodel
 {
 protected:
     pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{ "phi", M_PI_4};
+    pooya::Integrator _integ2{"phi", M_PI_4};
     // pooya::Function     _func{"sin(phi)",
     //     [](double /*t*/, const pooya::Array& x) -> Array
     //     {
     //         return x.sin();
     //     }},
-    pooya::Sin           _sin{"sin(phi)"};
-    pooya::MulDiv     _muldiv{   "-g\\l", "**/", -1};
+    pooya::Sin _sin{"sin(phi)"};
+    pooya::MulDiv _muldiv{"-g\\l", "**/", -1};
 
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
@@ -41,15 +41,16 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent))
             return false;
 
         // create signals
-        auto phi = scalar_signal("phi");
-        auto dphi = scalar_signal("dphi");
-        auto d2phi = scalar_signal("d2phi");
+        auto phi   = create_scalar_signal("phi");
+        auto dphi  = create_scalar_signal("dphi");
+        auto d2phi = create_scalar_signal("d2phi");
 
-        auto s10 = scalar_signal(); // choose a random name for this internal signal
+        auto s10 = create_scalar_signal(); // choose a random name for this internal signal
 
         auto& model_ = model_ref();
         auto g = model_.scalar_signal("g");
@@ -69,6 +70,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 

@@ -109,12 +109,12 @@ public:
     verify_array_signal(sig); \
     verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
 
-#define verify_bus_signal(sig) \
+#define verify_bus(sig) \
     verify_valid_signal(sig); \
     verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
 
-#define verify_bus_signal_spec(sig, spec_) \
-    verify_bus_signal(sig); \
+#define verify_bus_spec(sig, spec_) \
+    verify_bus(sig); \
     verify((sig)->as_bus()->spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
 
 // utility functions

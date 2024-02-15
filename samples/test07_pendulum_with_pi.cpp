@@ -38,6 +38,7 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
@@ -55,8 +56,8 @@ public:
         auto g = model_.scalar_signal("g");
         auto l = model_.scalar_signal("l");
 
-        auto tau = ibus->scalar_at(0);
-        auto phi = obus->scalar_at(0);
+        auto tau = scalar_input_at(0);
+        auto phi = scalar_output_at(0);
 
         // setup the submodel
         add_block(_muldiv1, {tau, m, l, l},  s10);
@@ -89,6 +90,7 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
@@ -97,8 +99,8 @@ public:
         auto s20 = scalar_signal();
         auto s30 = scalar_signal();
 
-        auto x = ibus->scalar_at(0);
-        auto y = obus->scalar_at(0);
+        auto x = scalar_input_at(0);
+        auto y = scalar_output_at(0);
 
         // blocks
         add_block(_gain_p, x, s10);
@@ -123,6 +125,7 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
+
         if (!pooya::Submodel::init(parent))
             return false;
 
@@ -145,6 +148,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 

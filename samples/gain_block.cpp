@@ -25,16 +25,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create raw blocks
-    pooya::Model model("test00");
+    pooya::Model model("gain_block");
     pooya::Gain gain("gain", 2.0);
 
     // create signals
-    auto x = model.scalar_signal("x");
-    auto y = model.scalar_signal("y");
+    auto x = model.create_scalar_signal("x");
+    auto y = model.create_scalar_signal("y");
 
     // setup the model
     model.add_block(gain, x, y);

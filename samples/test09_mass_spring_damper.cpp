@@ -43,10 +43,11 @@ public:
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId) override
     {
         pooya_trace0;
+
         if (!pooya::Block::init(parent, ibus))
             return false;
 
-        _s_tau = _ibus->scalar_at(0);
+        _s_tau = scalar_input_at(0);
 
         _s_x = parent.scalar_signal("x");
         _s_xd = parent.scalar_signal("xd");
@@ -66,6 +67,7 @@ public:
     void activation_function(double /*t*/, pooya::Values& values) override
     {
         pooya_trace0;
+
         // get state variables and input
         double x = values.get(_s_x);
         double xd = values.get(_s_xd);
@@ -94,6 +96,7 @@ public:
 int main()
 {
     pooya_trace0;
+
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 

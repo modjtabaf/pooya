@@ -72,7 +72,7 @@ public:
     }
 };
 
-#define pooya_trace(msg) pooya::util::PooyaTracer __pooya_tracer_##__LINE__##__(__FILE__, __LINE__, msg)
+#define pooya_trace(msg) const pooya::util::PooyaTracer __pooya_tracer_##__LINE__##__(__FILE__, __LINE__, msg)
 
 #endif // defined(NDEBUG)
 

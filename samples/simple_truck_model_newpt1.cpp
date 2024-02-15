@@ -98,13 +98,13 @@ public:
       return false;
 
     // input signals
-    _s_delta_rq = ibus->scalar_at("delta_rq");
-    _s_engine_torque = ibus->scalar_at("engine_torque");
-    _s_q = ibus->array_at("q");
-    _s_dq = ibus->array_at("dq");
+    _s_delta_rq = scalar_input_at("delta_rq");
+    _s_engine_torque = scalar_input_at("engine_torque");
+    _s_q = array_input_at("q");
+    _s_dq = array_input_at("dq");
 
     // output signal
-    _s_d2q = obus->array_at("d2q");
+    _s_d2q = array_output_at("d2q");
 
     // internal signal of interest
     _s_delta = parent.create_scalar_signal("front_wheel_angle");
@@ -250,8 +250,8 @@ public:
 
     add_block(_eom,
       {
-        {"delta_rq", ibus->scalar_at("delta_rq")},
-        {"engine_torque", ibus->scalar_at("engine_torque")},
+        {"delta_rq", scalar_input_at("delta_rq")},
+        {"engine_torque", scalar_input_at("engine_torque")},
         {"q", s_q},
         {"dq", s_dq},
       }, {{"d2q", s_d2q}});

@@ -89,13 +89,13 @@ public:
       return false;
 
     // input signals
-    _s_delta = ibus->scalar_at(0);
-    _s_engine_torque = ibus->scalar_at(1);
-    _s_dq = ibus->array_at(2);
+    _s_delta = scalar_input_at(0);
+    _s_engine_torque = scalar_input_at(1);
+    _s_dq = array_input_at(2);
 
     // output signals
-    _s_F_lon = obus->scalar_at(0);
-    _s_F_lat = obus->array_at(1);
+    _s_F_lon = scalar_output_at(0);
+    _s_F_lat = array_output_at(1);
 
     return true;
   }
@@ -146,14 +146,14 @@ public:
       return false;
 
     // input signals
-    _s_delta = ibus->scalar_at(0);
-    _s_F_lon = ibus->scalar_at(1);
-    _s_F_lat = ibus->array_at(2);
-    _s_q = ibus->array_at(3);
-    _s_dq = ibus->array_at(4);
+    _s_delta = scalar_input_at(0);
+    _s_F_lon = scalar_input_at(1);
+    _s_F_lat = array_input_at(2);
+    _s_q = array_input_at(3);
+    _s_dq = array_input_at(4);
 
     // output signal
-    _s_d2q = obus->array_at(0);
+    _s_d2q = array_output_at(0);
 
     return true;
   }
@@ -283,9 +283,9 @@ public:
     auto s30 = create_scalar_signal();
     auto s40 = create_scalar_signal();
 
-    auto y_in = ibus->scalar_at(0);
-    auto y0 = ibus->scalar_at(1);
-    auto y_out = obus->scalar_at(0);
+    auto y_in = scalar_input_at(0);
+    auto y0 = scalar_input_at(1);
+    auto y_out = scalar_output_at(0);
 
     // blocks
     add_block(_sub, {y_in, y_out}, s10);
@@ -324,8 +324,8 @@ public:
     auto s_F_lon = create_scalar_signal("F_lon");
     auto s_F_lat = create_array_signal("F_lat", 3);
 
-    auto s_delta_Rq = ibus->scalar_at(0);
-    auto s_engine_torque = ibus->scalar_at(1);
+    auto s_delta_Rq = scalar_input_at(0);
+    auto s_engine_torque = scalar_input_at(1);
 
     add_block(_pt, {s_delta_Rq, s_delta_Rq}, s_delta);
     add_block(_forces, {s_delta, s_engine_torque, s_dq}, {s_F_lon, s_F_lat});

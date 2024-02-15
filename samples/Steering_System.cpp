@@ -51,9 +51,9 @@ public:
         auto s30 = create_scalar_signal();
         auto s40 = create_scalar_signal();
 
-        auto  y_in = ibus->scalar_at("in");
-        auto    y0 = ibus->scalar_at("initial");
-        auto y_out = obus->scalar_at("out");
+        auto  y_in = scalar_input_at("in");
+        auto    y0 = scalar_input_at("initial");
+        auto y_out = scalar_output_at("out");
 
         // blocks
         add_block(  _sub, {y_in, y_out},   s10);
@@ -99,10 +99,10 @@ public:
         auto s30 = create_scalar_signal();
         auto s40 = create_scalar_signal();
 
-        _s_front_wheel_angle = ibus->scalar_at("front_wheel_angle");
+        _s_front_wheel_angle = scalar_input_at("front_wheel_angle");
 
-        _s_front_wheel_angle_right = obus->scalar_at("front_wheel_angle_right");
-        _s_front_wheel_angle_left = obus->scalar_at("front_wheel_angle_left");
+        _s_front_wheel_angle_right = scalar_output_at("front_wheel_angle_right");
+        _s_front_wheel_angle_left = scalar_output_at("front_wheel_angle_left");
 
         // blocks
         add_block(_div1, {tractor_wheelbase, _s_front_wheel_angle}, s10);
@@ -141,14 +141,14 @@ public:
             return false;
 
         // signals
-        auto s_ad_DsrdFtWhlAngl_Rq_VD = ibus->scalar_at(0);
+        auto s_ad_DsrdFtWhlAngl_Rq_VD = scalar_input_at(0);
 
-        auto          s_front_wheel_angle = obus->scalar_at("steering_info.front_wheel_angle");
-        auto     s_front_wheel_angle_rate = obus->scalar_at("steering_info.front_wheel_angle_rate");
-        auto      s_front_wheel_angle_neg = obus->scalar_at("steering_info.front_wheel_angle_neg");
-        auto s_front_wheel_angle_rate_neg = obus->scalar_at("steering_info.front_wheel_angle_rate_neg");
-        auto           s_AxFr_front_right = obus->scalar_at("steering_info.AxFr_front_right");
-        auto            s_AxFr_front_left = obus->scalar_at("steering_info.AxFr_front_left");
+        auto          s_front_wheel_angle = scalar_output_at("steering_info.front_wheel_angle");
+        auto     s_front_wheel_angle_rate = scalar_output_at("steering_info.front_wheel_angle_rate");
+        auto      s_front_wheel_angle_neg = scalar_output_at("steering_info.front_wheel_angle_neg");
+        auto s_front_wheel_angle_rate_neg = scalar_output_at("steering_info.front_wheel_angle_rate_neg");
+        auto           s_AxFr_front_right = scalar_output_at("steering_info.AxFr_front_right");
+        auto            s_AxFr_front_left = scalar_output_at("steering_info.AxFr_front_left");
     
         auto& model_ = model_ref();
         auto       front_wheel_ang_gain = model_.get_scalar_signal("front_wheel_ang_gain");

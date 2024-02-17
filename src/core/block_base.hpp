@@ -86,14 +86,14 @@ public:
     const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
 
     template<typename T, typename Key>
-    typename Types<T>::SignalId input_at(Key key, bool is_dependency=true)
+    typename Types<T>::SignalId io_at(BusId bus, Key key, bool is_dependency)
     {
-        verify_bus(_ibus);
+        verify_bus(bus);
         SignalId sig;
         if constexpr (std::is_same_v<Key, std::size_t>)
-            sig = _ibus->at(key).second;
+            sig = bus->at(key).second;
         else
-            sig = _ibus->at(key);
+            sig = bus->at(key);
         Types<T>::verify_signal_type(sig);
         if (is_dependency)
         {
@@ -105,81 +105,67 @@ public:
 
     ScalarSignalId scalar_input_at(const std::string& label, bool is_dependency=true)
     {
-        return input_at<double, const std::string&>(label, is_dependency);
+        return io_at<double, const std::string&>(_ibus, label, is_dependency);
     }
     IntSignalId int_input_at(const std::string& label, bool is_dependency=true)
     {
-        return input_at<int, const std::string&>(label, is_dependency);
+        return io_at<int, const std::string&>(_ibus, label, is_dependency);
     }
     BoolSignalId bool_input_at(const std::string& label, bool is_dependency=true)
     {
-        return input_at<bool, const std::string&>(label, is_dependency);
+        return io_at<bool, const std::string&>(_ibus, label, is_dependency);
     }
     ArraySignalId array_input_at(const std::string& label, bool is_dependency=true)
     {
-        return input_at<Array, const std::string&>(label, is_dependency);
+        return io_at<Array, const std::string&>(_ibus, label, is_dependency);
     }
     ScalarSignalId scalar_input_at(std::size_t index, bool is_dependency=true)
     {
-        return input_at<double, std::size_t>(index, is_dependency);
+        return io_at<double, std::size_t>(_ibus, index, is_dependency);
     }
     IntSignalId int_input_at(std::size_t index, bool is_dependency=true)
     {
-        return input_at<int, std::size_t>(index, is_dependency);
+        return io_at<int, std::size_t>(_ibus, index, is_dependency);
     }
     BoolSignalId bool_input_at(std::size_t index, bool is_dependency=true)
     {
-        return input_at<bool, std::size_t>(index, is_dependency);
+        return io_at<bool, std::size_t>(_ibus, index, is_dependency);
     }
     ArraySignalId array_input_at(std::size_t index, bool is_dependency=true)
     {
-        return input_at<Array, std::size_t>(index, is_dependency);
+        return io_at<Array, std::size_t>(_ibus, index, is_dependency);
     }
-
-    template<typename T, typename Key>
-    typename Types<T>::SignalId output_at(Key key) const
+    ScalarSignalId scalar_output_at(const std::string& label, bool is_dependency=false)
     {
-        verify_bus(_obus);
-        SignalId sig;
-        if constexpr (std::is_same_v<Key, std::size_t>)
-            sig = _obus->at(key).second;
-        else
-            sig = _obus->at(key);
-        Types<T>::verify_signal_type(sig);
-        return Types<T>::as_type(sig);
+        return io_at<double, const std::string&>(_obus, label, is_dependency);
     }
-
-    ScalarSignalId scalar_output_at(const std::string& label) const
+    IntSignalId int_output_at(const std::string& label, bool is_dependency=false)
     {
-        return output_at<double, const std::string&>(label);
+        return io_at<int, const std::string&>(_obus, label, is_dependency);
     }
-    IntSignalId int_output_at(const std::string& label) const
+    BoolSignalId bool_output_at(const std::string& label, bool is_dependency=false)
     {
-        return output_at<int, const std::string&>(label);
+        return io_at<bool, const std::string&>(_obus, label, is_dependency);
     }
-    BoolSignalId bool_output_at(const std::string& label) const
+    ArraySignalId array_output_at(const std::string& label, bool is_dependency=false)
     {
-        return output_at<bool, const std::string&>(label);
+        return io_at<Array, const std::string&>(_obus, label, is_dependency);
     }
-    ArraySignalId array_output_at(const std::string& label) const
+    ScalarSignalId scalar_output_at(std::size_t index, bool is_dependency=false)
     {
-        return output_at<Array, const std::string&>(label);
+        return io_at<double, std::size_t>(_obus, index, is_dependency);
     }
-    ScalarSignalId scalar_output_at(std::size_t index) const
+    IntSignalId int_output_at(std::size_t index, bool is_dependency=false)
     {
-        return output_at<double, std::size_t>(index);
+        return io_at<int, std::size_t>(_obus, index, is_dependency);
     }
-    IntSignalId int_output_at(std::size_t index) const
+    BoolSignalId bool_output_at(std::size_t index, bool is_dependency=false)
     {
-        return output_at<int, std::size_t>(index);
+        return io_at<bool, std::size_t>(_obus, index, is_dependency);
     }
-    BoolSignalId bool_output_at(std::size_t index) const
+    ArraySignalId array_output_at(std::size_t index, bool is_dependency=false)
     {
-        return output_at<bool, std::size_t>(index);
-    }
-    ArraySignalId array_output_at(std::size_t index) const
-    {
-        return output_at<Array, std::size_t>(index);
+        return io_at<Array, std::size_t>(_obus, index, is_dependency);
     }
 
     virtual void _mark_unprocessed();

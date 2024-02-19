@@ -531,6 +531,7 @@ public:
         if (SingleInputOutputT<T>::_processed)
             return 0;
 
+        pooya_trace_update0;
         values.set(SingleInputOutputT<T>::_s_out, _value);
         SingleInputOutputT<T>::_processed = true;
         return 1;

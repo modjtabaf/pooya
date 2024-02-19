@@ -108,7 +108,7 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
     else if (wi._array_size > 0)
     {
         block = (it == _init_values.end())
-            ? std::make_unique<MemoryA>("memory")
+            ? std::make_unique<MemoryA>("memory", Array::Zero(wi._array_size))
             : std::make_unique<MemoryA>("memory", it->second.as_array());
     }
     else

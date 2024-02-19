@@ -40,6 +40,7 @@ namespace pooya::util
 #if defined(POOYA_NDEBUG)
 #define verify(cond, msg)
 #define pooya_trace(msg)
+#define pooya_trace_update(msg)
 #else
 
 std::string pooya_trace_info_string();
@@ -50,10 +51,8 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
 struct PooyaTraceInfo
 {
     std::string _file;
-    int _line;
+    int _line{-1};
     std::string _msg;
-    PooyaTraceInfo(const std::string& file, int line, const std::string& msg) :
-        _file(file), _line(line), _msg(msg) {}
 };
 
 extern std::vector<PooyaTraceInfo> pooya_trace_info;
@@ -61,9 +60,18 @@ extern std::vector<PooyaTraceInfo> pooya_trace_info;
 class PooyaTracer
 {
 public:
-    PooyaTracer(const std::string& file, int line, const std::string& msg)
+    PooyaTracer()
     {
-        pooya_trace_info.emplace_back(file, line, msg);
+        pooya_trace_info.emplace_back();
+    }
+
+    static void update(const std::string& file, int line, const std::string& msg)
+    {
+        auto& pt = pooya_trace_info.back();
+        pt._file = file;
+        pt._line = line;
+        if (!msg.empty())
+            pt._msg = msg;
     }
 
     ~PooyaTracer()
@@ -72,11 +80,13 @@ public:
     }
 };
 
-#define pooya_trace(msg) const pooya::util::PooyaTracer __pooya_tracer_##__LINE__##__(__FILE__, __LINE__, msg)
+#define pooya_trace(msg) const pooya::util::PooyaTracer __pooya_tracer__; pooya_trace_update(msg);
+#define pooya_trace_update(msg) __pooya_tracer__.update(__FILE__, __LINE__, msg);
 
-#endif // defined(NDEBUG)
+#endif // defined(POOYA_NDEBUG)
 
 #define pooya_trace0 pooya_trace("")
+#define pooya_trace_update0 pooya_trace_update("")
 
 #define  verify_valid_signal(sig) \
     verify(sig, "invalid signal!")

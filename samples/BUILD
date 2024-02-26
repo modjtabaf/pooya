@@ -177,7 +177,7 @@ cc_binary(
     deps = [
         "//src:core",
         "//src:misc",
-    ],
+        ],
 )
 
 cc_binary(

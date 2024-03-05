@@ -40,7 +40,7 @@ bool BusBlockBuilder::init(Parent &parent, BusId ibus, BusId obus)
     if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus))
         return false;
 
-    verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
+    pooya_verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
 
     return true;
 }
@@ -77,7 +77,7 @@ void BusMemory::post_init()
 {
     pooya_trace("block: " + full_name());
     BusBlockBuilder::post_init();
-    verify(_init_values.empty(), full_name() + ": Some initial values of bus memory block were not used!");
+    pooya_verify(_init_values.empty(), full_name() + ": Some initial values of bus memory block were not used!");
 }
 
 void BusMemory::block_builder(const std::string &full_label, const BusSpec::WireInfo &wi,
@@ -113,7 +113,7 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
     }
     else
     {
-        verify(false, "cannot create a memory block for a non-value signal.");
+        pooya_verify(false, "cannot create a memory block for a non-value signal.");
     }
 
     if (it != _init_values.end())
@@ -148,7 +148,7 @@ void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::W
     }
     else
     {
-        verify(false, "cannot create a pipe block for a non-value signal.");
+        pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
     _parent->add_block(*block, sig_in, sig_out);

@@ -38,7 +38,7 @@ namespace pooya::util
 #define pooya_here0 pooya_here("")
 
 #if defined(POOYA_NDEBUG)
-#define verify(cond, msg)
+#define pooya_verify(cond, msg)
 #define pooya_trace(msg)
 #define pooya_trace_update(msg)
 #else
@@ -46,7 +46,7 @@ namespace pooya::util
 std::string pooya_trace_info_string();
 void pooya_throw_exception(const std::string& file, int line, const std::string& msg);
 
-#define verify(cond, msg) if (!(cond)) {pooya::util::pooya_throw_exception(__FILE__, __LINE__, msg);}
+#define pooya_verify(cond, msg) if (!(cond)) {pooya::util::pooya_throw_exception(__FILE__, __LINE__, msg);}
 
 struct PooyaTraceInfo
 {
@@ -88,44 +88,44 @@ public:
 #define pooya_trace0 pooya_trace("")
 #define pooya_trace_update0 pooya_trace_update("")
 
-#define  verify_valid_signal(sig) \
-    verify(sig, "invalid signal!")
+#define  pooya_verify_valid_signal(sig) \
+    pooya_verify(sig, "invalid signal!")
 
-#define  verify_value_signal(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_value(), (sig)->_full_name + ": value signal expected!");
+#define  pooya_verify_value_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_value(), (sig)->_full_name + ": value signal expected!");
 
-#define verify_scalar_signal(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_scalar(), (sig)->_full_name + ": scalar signal expected!");
+#define pooya_verify_scalar_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_scalar(), (sig)->_full_name + ": scalar signal expected!");
 
-#define verify_array_signal(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
+#define pooya_verify_array_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
-#define verify_float_signal(sig) \
-    verify_valid_signal(sig); \
-    verify(!(sig)->as_int() && !(sig)->as_bool(), (sig)->_full_name + ": float signal expected!");
+#define pooya_verify_float_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify(!(sig)->as_int() && !(sig)->as_bool(), (sig)->_full_name + ": float signal expected!");
 
-#define verify_int_signal(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_int(), (sig)->_full_name + ": int signal expected!");
+#define pooya_verify_int_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_int(), (sig)->_full_name + ": int signal expected!");
 
-#define verify_bool_signal(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_bool(), (sig)->_full_name + ": bool signal expected!");
+#define pooya_verify_bool_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_bool(), (sig)->_full_name + ": bool signal expected!");
 
-#define verify_array_signal_size(sig, size_) \
-    verify_array_signal(sig); \
-    verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
+#define pooya_verify_array_signal_size(sig, size_) \
+    pooya_verify_array_signal(sig); \
+    pooya_verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
 
-#define verify_bus(sig) \
-    verify_valid_signal(sig); \
-    verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
+#define pooya_verify_bus(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
 
-#define verify_bus_spec(sig, spec_) \
-    verify_bus(sig); \
-    verify((sig)->as_bus()->spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
+#define pooya_verify_bus_spec(sig, spec_) \
+    pooya_verify_bus(sig); \
+    pooya_verify((sig)->as_bus()->spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
 
 // utility functions
 

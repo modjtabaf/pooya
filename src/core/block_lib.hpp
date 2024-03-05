@@ -158,11 +158,11 @@ protected:
         if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        verify_valid_signal(ibus);
-        verify_valid_signal(obus);
-        verify(ibus->size() >= 1,
+        pooya_verify_valid_signal(ibus);
+        pooya_verify_valid_signal(obus);
+        pooya_verify(ibus->size() >= 1,
                      SingleOutputT<T>::full_name() + " requires 1 or more input signals.");
-        verify(_operators.size() == ibus->size(),
+        pooya_verify(_operators.size() == ibus->size(),
                      SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;
@@ -239,8 +239,8 @@ protected:
         if (!SingleOutputT<T>::init(parent, ibus, obus))
             return false;
 
-        verify(ibus->size() >= 1, "MulDivT requires 1 or more input signals.");
-        verify(_operators.size() == ibus->size(),
+        pooya_verify(ibus->size() >= 1, "MulDivT requires 1 or more input signals.");
+        pooya_verify(_operators.size() == ibus->size(),
                      SingleOutputT<T>::full_name() + ": mismatch between input signals and operators.");
 
         return true;

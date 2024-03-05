@@ -72,7 +72,7 @@ public:
     {
         pooya_trace("block: " + full_name());
         auto* mdl = model();
-        verify(mdl, _full_name + ": a model is necessary but none is defined!");
+        pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
         return *mdl;
     }
 
@@ -88,7 +88,7 @@ public:
     template<typename T, typename Key>
     typename Types<T>::SignalId io_at(BusId bus, Key key, bool is_dependency)
     {
-        verify_bus(bus);
+        pooya_verify_bus(bus);
         SignalId sig;
         if constexpr (std::is_same_v<Key, std::size_t>)
             sig = bus->at(key).second;
@@ -97,7 +97,7 @@ public:
         Types<T>::verify_signal_type(sig);
         if (is_dependency)
         {
-            verify_value_signal(sig);
+            pooya_verify_value_signal(sig);
             add_dependency(sig->as_value());
         }
         return Types<T>::as_type(sig);
@@ -187,7 +187,7 @@ protected:
     SingleInputT(std::string given_name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports)
     {
-        verify(num_iports == 1, "One and only one input expected!");
+        pooya_verify(num_iports == 1, "One and only one input expected!");
     }
 
 public:
@@ -209,7 +209,7 @@ protected:
     SingleOutputT(std::string given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
         Base(given_name, num_iports, num_oports)
     {
-        verify(num_oports == 1, "One and only one output expected!");
+        pooya_verify(num_oports == 1, "One and only one output expected!");
     }
 
 public:
@@ -411,7 +411,7 @@ protected:
         pooya_trace("block: " + full_name() + ", given name: " + name);
         if (name.empty()) return nullptr;
 
-        verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+        pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
         auto index = _signal_infos.size();
         typename Types<T>::SignalId sig;

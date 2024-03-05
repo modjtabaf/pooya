@@ -41,7 +41,7 @@ public:
     explicit ArrayN(double v) : _Parent()
     {
         pooya_trace0;
-        verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
+        pooya_verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
         if constexpr (N == Eigen::Dynamic)
             _Parent::resize(1);
         (*this)[0] = v;
@@ -136,13 +136,13 @@ public:
     bool push_back(const LabelSignalId& ls)
     {
         pooya_trace0;
-        verify(!ls.first.empty(), "SignalId label can not be empty!");
-        verify(ls.second, ls.first + ": invalid signal!");
+        pooya_verify(!ls.first.empty(), "SignalId label can not be empty!");
+        pooya_verify(ls.second, ls.first + ": invalid signal!");
         if (ls.first.empty() || (ls.second == nullptr))
             return false;
 
         auto it = _label_signals_map.find(ls.first);
-        verify(it == _label_signals_map.end(), ls.first + ": label already exists!");
+        pooya_verify(it == _label_signals_map.end(), ls.first + ": label already exists!");
         if (it != _label_signals_map.end())
             return false;
 
@@ -255,7 +255,7 @@ public:
         // array
         WireInfo(const std::string& label, std::size_t array_size) : _label(label), _array_size(array_size)
         {
-            verify(array_size > 0, "array size cannot be zero!");
+            pooya_verify(array_size > 0, "array size cannot be zero!");
         }
 
         // bus
@@ -317,7 +317,7 @@ protected:
         SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
-        verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
+        pooya_verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(_spec._wires.size());
         for(const auto& wi: _spec._wires)
             _signals.push_back({wi.label(), nullptr});
@@ -326,7 +326,7 @@ protected:
 #if !defined(NDEBUG)
         for (const auto& ls: _signals)
         {
-            verify(ls.second, "Unassigned wire detected: " + ls.first);
+            pooya_verify(ls.second, "Unassigned wire detected: " + ls.first);
         }
 #endif // !defined(NDEBUG)
         _bus = this;
@@ -341,7 +341,7 @@ public:
     const LabelSignalId& operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
-        verify(index < _signals.size(), "index out of range!");
+        pooya_verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
@@ -358,7 +358,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_scalar_signal(sig);
+        pooya_verify_scalar_signal(sig);
         return sig->as_scalar();
     }
 
@@ -366,7 +366,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_int_signal(sig);
+        pooya_verify_int_signal(sig);
         return sig->as_int();
     }
 
@@ -374,7 +374,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_bool_signal(sig);
+        pooya_verify_bool_signal(sig);
         return sig->as_bool();
     }
 
@@ -382,7 +382,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_array_signal(sig);
+        pooya_verify_array_signal(sig);
         return sig->as_array();
     }
 
@@ -390,7 +390,7 @@ public:
     {
         pooya_trace("label: " + label);
         SignalId sig = at(label);
-        verify_bus(sig);
+        pooya_verify_bus(sig);
         return sig->as_bus();
     }
 
@@ -398,7 +398,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_scalar_signal(sig);
+        pooya_verify_scalar_signal(sig);
         return sig->as_scalar();
     }
 
@@ -406,7 +406,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_int_signal(sig);
+        pooya_verify_int_signal(sig);
         return sig->as_int();
     }
 
@@ -414,7 +414,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_bool_signal(sig);
+        pooya_verify_bool_signal(sig);
         return sig->as_bool();
     }
 
@@ -422,7 +422,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_array_signal(sig);
+        pooya_verify_array_signal(sig);
         return sig->as_array();
     }
 
@@ -430,7 +430,7 @@ public:
     {
         pooya_trace("index: " + index);
         SignalId sig = at(index).second;
-        verify_bus(sig);
+        pooya_verify_bus(sig);
         return sig->as_bus();
     }
 };
@@ -447,8 +447,8 @@ struct Types<Array>
     using SignalId = ArraySignalId;
     using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
     using SetValue = const Array&;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_array_signal(sig);}
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {verify_array_signal_size(sig, size);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_array_signal(sig);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {pooya_verify_array_signal_size(sig, size);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_array();}
 };
 
@@ -459,7 +459,7 @@ struct Types<double>
     using SignalId = ScalarSignalId;
     using GetValue = double;
     using SetValue = double;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_scalar_signal(sig);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_scalar_signal(sig);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_scalar();}
 };
 
@@ -470,7 +470,7 @@ struct Types<int>
     using SignalId = IntSignalId;
     using GetValue = int;
     using SetValue = int;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_int_signal(sig);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_int_signal(sig);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_int();}
 };
 
@@ -481,7 +481,7 @@ struct Types<bool>
     using SignalId = BoolSignalId;
     using GetValue = bool;
     using SetValue = bool;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {verify_bool_signal(sig);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_bool_signal(sig);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_bool();}
 };
 
@@ -490,7 +490,7 @@ struct Types<BusSpec>
 {
     using SignalInfo = BusInfo;
     using SignalId = BusId;
-    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {verify_bus_spec(sig, spec);}
+    static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {pooya_verify_bus_spec(sig, spec);}
     static SignalId as_type(pooya::SignalId sig) {return sig->as_bus();}
 };
 
@@ -512,14 +512,14 @@ public:
     double as_scalar() const
     {
         pooya_trace0;
-        verify(_is_scalar, "attempting to retrieve an array as a scalar!");
+        pooya_verify(_is_scalar, "attempting to retrieve an array as a scalar!");
         return _scalar;
     }
 
     const Array& as_array() const
     {
         pooya_trace0;
-        verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
+        pooya_verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
         return _array;
     }
 };
@@ -559,8 +559,8 @@ public:
     typename Types<T>::GetValue get() const
     {
         pooya_trace0;
-        verify(_scalar == nullptr, _si->_full_name + ": attempting to retrieve a scalar as an array!");
-        verify(_assigned, _si->_full_name + ": attempting to access an unassigned value!");
+        pooya_verify(_scalar == nullptr, _si->_full_name + ": attempting to retrieve a scalar as an array!");
+        pooya_verify(_assigned, _si->_full_name + ": attempting to access an unassigned value!");
         return _array;
     }
 
@@ -568,9 +568,9 @@ public:
     void set(typename Types<T>::SetValue value)
     {
         pooya_trace0;
-        verify(_scalar == nullptr, _si->_full_name + ": cannot assign non-scalar to scalar!");
-        verify(!_assigned, _si->_full_name + ": re-assignment is prohibited!");
-        verify(_array.rows() == value.rows(),
+        pooya_verify(_scalar == nullptr, _si->_full_name + ": cannot assign non-scalar to scalar!");
+        pooya_verify(!_assigned, _si->_full_name + ": re-assignment is prohibited!");
+        pooya_verify(_array.rows() == value.rows(),
             std::string("size mismatch (id=") + _si->_full_name + ")(" + std::to_string(_array.rows()) +
             " vs " + std::to_string(value.rows()) + ")!");
         _array = value;
@@ -593,8 +593,8 @@ template<>
 inline typename Types<double>::GetValue ValueInfo::get<double>() const
 {
     pooya_trace0;
-    verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a scalar!");
-    verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
+    pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a scalar!");
+    pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
     return *_scalar;
 }
 
@@ -602,9 +602,9 @@ template<>
 inline typename Types<int>::GetValue ValueInfo::get<int>() const
 {
     pooya_trace0;
-    verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as an int!");
-    verify(is_int(), _si->_full_name + ": attempting to retrieve a non-int as an int!");
-    verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
+    pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as an int!");
+    pooya_verify(is_int(), _si->_full_name + ": attempting to retrieve a non-int as an int!");
+    pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
     return std::round(*_scalar);
 }
 
@@ -612,9 +612,9 @@ template<>
 inline typename Types<bool>::GetValue ValueInfo::get<bool>() const
 {
     pooya_trace0;
-    verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a bool!");
-    verify(is_bool(), _si->_full_name + ": attempting to retrieve a non-bool as a bool!");
-    verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
+    pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a bool!");
+    pooya_verify(is_bool(), _si->_full_name + ": attempting to retrieve a non-bool as a bool!");
+    pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
     return *_scalar != 0;
 }
 
@@ -622,9 +622,9 @@ template<>
 inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
 {
     pooya_trace("value: " + std::to_string(value));
-    verify(is_scalar(), _si->_full_name + ": cannot assign an int to a non-scalar!");
-    verify(is_int(), _si->_full_name + ": cannot assign an int to a non-int!");
-    verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
+    pooya_verify(is_scalar(), _si->_full_name + ": cannot assign an int to a non-scalar!");
+    pooya_verify(is_int(), _si->_full_name + ": cannot assign an int to a non-int!");
+    pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
     *_scalar = value;
     _assigned = true;
 }
@@ -633,9 +633,9 @@ template<>
 inline void ValueInfo::set<bool>(typename Types<bool>::SetValue value)
 {
     pooya_trace("value: " + std::to_string(value));
-    verify(is_scalar(), _si->_full_name + ": cannot assign a bool to a non-scalar!");
-    verify(is_bool(), _si->_full_name + ": cannot assign a bool to a non-bool!");
-    verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
+    pooya_verify(is_scalar(), _si->_full_name + ": cannot assign a bool to a non-scalar!");
+    pooya_verify(is_bool(), _si->_full_name + ": cannot assign a bool to a non-bool!");
+    pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
     *_scalar = value;
     _assigned = true;
 }
@@ -655,8 +655,8 @@ inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
         return;
     }
 
-    verify(is_scalar(), _si->_full_name + ": cannot assign a scalar to a non-scalar!");
-    verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
+    pooya_verify(is_scalar(), _si->_full_name + ": cannot assign a scalar to a non-scalar!");
+    pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
     *_scalar = value;
     if (_si->is_deriv())
         *_deriv_scalar = value;
@@ -675,7 +675,7 @@ protected:
     inline ValueInfo& get_value_info(SignalId sig)
     {
         pooya_trace0;
-        verify_value_signal(sig);
+        pooya_verify_value_signal(sig);
         return _value_infos[sig->as_value()->_vi_index];
     }
 
@@ -685,8 +685,8 @@ public:
     inline const ValueInfo& get_value_info(SignalId sig) const
     {
         pooya_trace0;
-        verify(sig, "invalid signal!");
-        verify(sig->as_value(), sig->_full_name + ": value signal needed!");
+        pooya_verify(sig, "invalid signal!");
+        pooya_verify(sig->as_value(), sig->_full_name + ": value signal needed!");
         return _value_infos[sig->as_value()->_vi_index];
     }
 

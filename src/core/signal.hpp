@@ -354,6 +354,14 @@ public:
     SignalId operator[](const std::string& label) const;
     SignalId at(const std::string& label) const;
 
+    ValueSignalId value_at(const std::string& label) const
+    {
+        pooya_trace("label: " + label);
+        SignalId sig = at(label);
+        pooya_verify_value_signal(sig);
+        return sig->as_value();
+    }
+
     ScalarSignalId scalar_at(const std::string& label) const
     {
         pooya_trace("label: " + label);
@@ -392,6 +400,14 @@ public:
         SignalId sig = at(label);
         pooya_verify_bus(sig);
         return sig->as_bus();
+    }
+
+    ValueSignalId value_at(std::size_t index) const
+    {
+        pooya_trace("index: " + index);
+        SignalId sig = at(index).second;
+        pooya_verify_value_signal(sig);
+        return sig->as_value();
     }
 
     ScalarSignalId scalar_at(std::size_t index) const

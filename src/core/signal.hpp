@@ -718,6 +718,8 @@ public:
     typename Types<bool  >::GetValue get(BoolSignalId   sig) const {return get<bool  >(sig);}
     typename Types<Array >::GetValue get(ArraySignalId  sig) const {return get<Array >(sig);}
 
+    typename Types<double>::GetValue get_as_scalar(SignalId sig) const;
+
     template<typename T>
     void set(SignalId sig, typename Types<T>::SetValue value)
     {

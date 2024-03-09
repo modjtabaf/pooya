@@ -215,6 +215,17 @@ void Values::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
     }
 }
 
+typename Types<double>::GetValue Values::get_as_scalar(SignalId sig) const
+{
+    pooya_verify_value_signal(sig);
+    if (sig->as_scalar())
+        return get(sig->as_scalar());
+    else if (sig->as_int())
+        return static_cast<typename Types<double>::GetValue>(get(sig->as_int()));
+    pooya_verify_bool_signal(sig);
+    return static_cast<typename Types<double>::GetValue>(get(sig->as_bool()));
+}
+
 void BusInfo::_set(std::size_t index, SignalId sig)
 {
     pooya_trace("index: " + std::to_string(index));

@@ -48,8 +48,8 @@ int main()
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
             pooya_trace0;
-            values.set(xd, t < 3 or t > 7 ? 1.0 : 0.0);
-            values.set(trigger, t >= 4.9 && t <= 5.1);
+            values[xd] = t < 3 or t > 7 ? 1.0 : 0.0;
+            values[trigger] = t >= 4.9 && t <= 5.1;
         },
         &stepper);
 

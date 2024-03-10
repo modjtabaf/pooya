@@ -31,7 +31,7 @@ template <>
 void SinT<double>::activation_function(double /*t*/, Values &values)
 {
     pooya_trace("block: " + full_name());
-    values.set(_s_out, std::sin(values.get(_s_in)));
+    values[_s_out] = std::sin(values[_s_in]);
 }
 
 bool BusBlockBuilder::init(Parent &parent, BusId ibus, BusId obus)

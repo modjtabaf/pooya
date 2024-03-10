@@ -87,10 +87,10 @@ int main()
         model, [&](pooya::Model &, double t, pooya::Values &values) -> void
         {
             pooya_trace0;
-            values.set(x_x0, std::sin(M_PI * t / 3));
-            values.set(x_x1, std::sin(M_PI * t / 5));
-            values.set(x_x2, std::sin(M_PI * t / 7));
-            values.set(x_z3, std::sin(M_PI * t / 9));
+            values[x_x0] = std::sin(M_PI * t / 3);
+            values[x_x1] = std::sin(M_PI * t / 5);
+            values[x_x2] = std::sin(M_PI * t / 7);
+            values[x_z3] = std::sin(M_PI * t / 9);
         });
 
     pooya::History history(model);

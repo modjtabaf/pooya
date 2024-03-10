@@ -57,7 +57,7 @@ public:
     void input_cb(double t, pooya::Values& values) override
     {
         pooya_trace0;
-        values.set(_s_x, std::sin(M_PI * t / 5));
+        values[_s_x] = std::sin(M_PI * t / 5);
     }
 };
 

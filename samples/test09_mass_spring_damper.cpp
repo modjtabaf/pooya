@@ -69,27 +69,27 @@ public:
         pooya_trace0;
 
         // get state variables and input
-        double x = values.get(_s_x);
-        double xd = values.get(_s_xd);
-        double tau = values.get(_s_tau);
+        double x   = values[_s_x];
+        double xd  = values[_s_xd];
+        double tau = values[_s_tau];
 
         // calculate acceleration
         double xdd = tau/_m - _c/_m * xd - _k/_m * x;
 
         // assign acceleration
-        values.set(_s_xdd, xdd);
+        values[_s_xdd] = xdd;
     }
 
     void pre_step(double /*t*/, pooya::Values& values) override
     {
-        values.set(_s_x, _x);
-        values.set(_s_xd, _xd);
+        values[_s_x]  = _x;
+        values[_s_xd] = _xd;
     }
 
     void post_step(double /*t*/, const pooya::Values& values) override
     {
-        _x = values.get(_s_x);
-        _xd = values.get(_s_xd);
+        _x  = values[_s_x];
+        _xd = values[_s_xd];
     }
 };
 
@@ -115,7 +115,7 @@ int main()
     [&](pooya::Model&, double t, pooya::Values& values) -> void
     {
         pooya_trace0;
-        values.set(tau, 0.01 * std::sin(t));
+        values[tau] = 0.01 * std::sin(t);
     }, &stepper);
 
     pooya::History history(model);

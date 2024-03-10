@@ -50,7 +50,7 @@ TEST_F(TestGain, ScalarGain)
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set(s_x, x);
+            values[s_x] = x;
         });
 
     // do one step
@@ -77,7 +77,7 @@ TEST_F(TestGain, ArrayGain)
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
-            values.set(s_x, x);
+            values[s_x] = x;
         });
 
     // do one step

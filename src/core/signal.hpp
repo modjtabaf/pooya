@@ -736,6 +736,11 @@ public:
 
     typename Types<double>::GetValue get_as_scalar(SignalId sig) const;
 
+    typename Types<double>::GetValue operator[](ScalarSignalId sig) const {return get<double>(sig);}
+    typename Types<int   >::GetValue operator[](IntSignalId    sig) const {return get<int   >(sig);}
+    typename Types<bool  >::GetValue operator[](BoolSignalId   sig) const {return get<bool  >(sig);}
+    typename Types<Array >::GetValue operator[](ArraySignalId  sig) const {return get<Array >(sig);}
+
     template<typename T>
     void set(SignalId sig, typename Types<T>::SetValue value)
     {
@@ -747,6 +752,30 @@ public:
     void set(IntSignalId sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
     void set(BoolSignalId sig, bool value) {set<bool>(sig, value);}
     void set(ArraySignalId sig, const Array& value) {set<Array>(sig, value);}
+
+    template<typename T, typename GetValue = typename Types<T>::GetValue, typename SetValue = typename Types<T>::SetValue>
+    class ValueInfoWrapper
+    {
+        friend class Values;
+        ValueInfo& _vi;
+        ValueInfoWrapper(ValueInfo& vi) : _vi(vi) {}
+    public:
+        void operator=(SetValue value)
+        {
+            pooya_trace0;
+            _vi.set<T>(value);
+        }
+        operator GetValue() const
+        {
+            pooya_trace0;
+            return _vi.get<T>();
+        }
+    };
+
+    ValueInfoWrapper<double> operator[](ScalarSignalId sig) {return Values::ValueInfoWrapper<double>(get_value_info(sig));}
+    ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue> operator[](IntSignalId sig) {return Values::ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue>(get_value_info(sig));}
+    ValueInfoWrapper<bool> operator[](BoolSignalId   sig) {return Values::ValueInfoWrapper<bool>  (get_value_info(sig));}
+    ValueInfoWrapper<Array> operator[](ArraySignalId  sig) {return Values::ValueInfoWrapper<Array> (get_value_info(sig));}
 
     void invalidate();
     void reset_with_state_variables(const Eigen::ArrayXd& state_variables);
@@ -763,6 +792,13 @@ public:
         os << "\n";
     }
 };
+
+template<>
+inline void Values::ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue>::operator=(typename Types<double>::SetValue value)
+{
+    pooya_trace0;
+    _vi.set<int>(std::round(value));
+}
 
 inline std::ostream& operator<<(std::ostream& os, const Values& values)
 {

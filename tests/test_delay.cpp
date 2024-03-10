@@ -62,9 +62,9 @@ TEST_F(TestDelay, ScalarDelay)
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set(s_time_delay, time_delay);
-            values.set(s_initial, initial);
-            values.set(s_x, func(t));
+            values[s_time_delay] = time_delay;
+            values[s_initial] = initial;
+            values[s_x] = func(t);
         });
 
     double t;
@@ -116,9 +116,9 @@ TEST_F(TestDelay, ArrayDelay)
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
-            values.set(s_time_delay, time_delay);
-            values.set(s_initial, initial);
-            values.set(s_x, func(t));
+            values[s_time_delay] = time_delay;
+            values[s_initial] = initial;
+            values[s_x] = func(t);
         });
 
     double t;

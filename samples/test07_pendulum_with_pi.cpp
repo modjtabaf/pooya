@@ -169,10 +169,10 @@ int main()
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             pooya_trace0;
-            values.set(m, 0.2);
-            values.set(l, 0.1);
-            values.set(g, 9.81);
-            values.set(des_phi, M_PI_4);
+            values[m] = 0.2;
+            values[l] = 0.1;
+            values[g] = 9.81;
+            values[des_phi] = M_PI_4;
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference
 

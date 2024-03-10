@@ -89,8 +89,8 @@ int main()
         [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
         {
             pooya_trace0;
-            values.set(l, 0.1);
-            values.set(g, 9.81);
+            values[l] = 0.1;
+            values[g] = 9.81;
         },
         &stepper);
 

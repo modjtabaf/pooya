@@ -44,7 +44,7 @@ int main()
         [&](pooya::Model&, double t, pooya::Values& values) -> void
         {
             pooya_trace0;
-            values.set(x, std::sin(M_PI * t / 5));
+            values[x] = std::sin(M_PI * t / 5);
         });
 
     pooya::History history(model);

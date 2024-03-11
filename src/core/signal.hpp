@@ -59,6 +59,8 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
+using ConstArrayRef = const Eigen::Map<Eigen::ArrayXd>&;
+
 class       SignalInfo;
 class  ValueSignalInfo;
 class ScalarSignalInfo;
@@ -461,7 +463,7 @@ struct Types<Array>
 {
     using SignalInfo = ArraySignalInfo;
     using SignalId = ArraySignalId;
-    using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
+    using GetValue = ConstArrayRef;
     using SetValue = const Array&;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_array_signal(sig);}
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {pooya_verify_array_signal_size(sig, size);}

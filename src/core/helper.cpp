@@ -280,48 +280,59 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
     if (_values.num_state_variables() > 0)
     {
-        assert(_stepper);
-
         assert(t >= _t_prev);
-        assert(min_time_step > 0);
-        assert(max_time_step > min_time_step);
 
-        double new_h;
-        double t1 = _t_prev;
-        double t2 = t;
-        bool force_accept = false;
-        while (t1 < t)
+        if (t == _t_prev)
         {
             _values.invalidate();
-            _model.pre_step(t1, _values);
-            _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
-            _state_variables_orig = _values.state_variables();
+            _model.pre_step(t, _values);
+            _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+            _state_variables = _values.state_variables();
+        }
+        else
+        {
+            assert(_stepper);
 
-            _stepper->step(stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
+            assert(min_time_step > 0);
+            assert(max_time_step > min_time_step);
 
-            double h = t2 - t1;
-            if (force_accept || (new_h >= h) || (h <= min_time_step))
+            double new_h;
+            double t1 = _t_prev;
+            double t2 = t;
+            bool force_accept = false;
+            while (t1 < t)
             {
-                // accept this step
-                force_accept = false;
-                new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                t1 = t2;
-                t2 = std::min(t1 + new_h, t);
+                _values.invalidate();
+                _model.pre_step(t1, _values);
+                _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
+                _state_variables_orig = _values.state_variables();
 
-                if (t1 < t)
+                _stepper->step(stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
+
+                double h = t2 - t1;
+                if (force_accept || (new_h >= h) || (h <= min_time_step))
                 {
-                    _values.reset_with_state_variables(_state_variables);
-                    _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
-                    _process(t1, _values);
-                    _model.post_step(t1, _values);
+                    // accept this step
+                    force_accept = false;
+                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                    t1 = t2;
+                    t2 = std::min(t1 + new_h, t);
+
+                    if (t1 < t)
+                    {
+                        _values.reset_with_state_variables(_state_variables);
+                        _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+                        _process(t1, _values);
+                        _model.post_step(t1, _values);
+                    }
                 }
-            }
-            else
-            {
-                // redo this step
-                force_accept = new_h <= min_time_step;
-                new_h = std::max(min_time_step, std::min(new_h, max_time_step));
-                t2 = t1 + new_h;
+                else
+                {
+                    // redo this step
+                    force_accept = new_h <= min_time_step;
+                    new_h = std::max(min_time_step, std::min(new_h, max_time_step));
+                    t2 = t1 + new_h;
+                }
             }
         }
     }

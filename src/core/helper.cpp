@@ -280,10 +280,18 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
     if (_values.num_state_variables() > 0)
     {
-        assert(t >= _t_prev);
+        if (t <_t_prev)
+            util::pooya_throw_exception(__FILE__, __LINE__,
+                "Simulation cannot go back in time. Aborting!\n  "
+                "- current time  = " + std::to_string(t) + "\n  "
+                "- previous time = " + std::to_string(_t_prev) + "\n");
 
         if (t == _t_prev)
         {
+            util::pooya_show_warning(__FILE__, __LINE__, 
+                "Repeated simulation step:\n  "
+                "- time = " + std::to_string(t) + "\n");
+
             _values.invalidate();
             _model.pre_step(t, _values);
             _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);

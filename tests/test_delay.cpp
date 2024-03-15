@@ -75,14 +75,14 @@ TEST_F(TestDelay, ScalarDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ(initial, sim.values().get(s_y));
+    EXPECT_EQ(initial, sim.values()[s_y]);
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR(func(t_end - time_delay), sim.values().get(s_y), 1e-10);
+    EXPECT_NEAR(func(t_end - time_delay), sim.values()[s_y], 1e-10);
 }
 
 TEST_F(TestDelay, ArrayDelay)
@@ -129,12 +129,12 @@ TEST_F(TestDelay, ArrayDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ((initial - sim.values().get(s_y)).abs().maxCoeff(), 0);
+    EXPECT_EQ((initial - sim.values()[s_y]).abs().maxCoeff(), 0);
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR((func(t_end - time_delay) - sim.values().get(s_y)).abs().maxCoeff(), 0, 1e-10);
+    EXPECT_NEAR((func(t_end - time_delay) - sim.values()[s_y]).abs().maxCoeff(), 0, 1e-10);
 }

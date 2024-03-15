@@ -58,7 +58,7 @@ TEST_F(TestMemory, ScalarMemory)
     sim.init(0.0);
 
     // verify the results
-    EXPECT_EQ(x0, sim.values().get(s_y));
+    EXPECT_EQ(x0, sim.values()[s_y]);
 }
 
 TEST_F(TestMemory, ArrayMemory)
@@ -86,7 +86,7 @@ TEST_F(TestMemory, ArrayMemory)
     sim.init(0.0);
 
     // verify the results
-    auto y = sim.values().get(s_y);
+    auto y = sim.values()[s_y];
     for (std::size_t k=0; k < N; k++)
     {
         EXPECT_EQ(y[k], x0[k]);

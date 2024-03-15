@@ -59,8 +59,6 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
-using ConstArrayRef = const Eigen::Map<Eigen::ArrayXd>&;
-
 class       SignalInfo;
 class  ValueSignalInfo;
 class ScalarSignalInfo;
@@ -463,7 +461,7 @@ struct Types<Array>
 {
     using SignalInfo = ArraySignalInfo;
     using SignalId = ArraySignalId;
-    using GetValue = ConstArrayRef;
+    using GetValue = const Eigen::Map<Eigen::ArrayXd>&;
     using SetValue = const Array&;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_array_signal(sig);}
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {pooya_verify_array_signal_size(sig, size);}
@@ -760,14 +758,14 @@ public:
     {
         friend class Values;
         ValueInfo& _vi;
-        ValueInfoWrapper(ValueInfo& vi) : _vi(vi) {}
+        constexpr ValueInfoWrapper(ValueInfo& vi) : _vi(vi) {}
     public:
-        void operator=(SetValue value)
+        constexpr void operator=(SetValue value)
         {
             pooya_trace0;
             _vi.set<T>(value);
         }
-        operator GetValue() const
+        constexpr operator GetValue() const
         {
             pooya_trace0;
             return _vi.get<T>();

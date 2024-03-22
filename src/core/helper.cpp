@@ -253,8 +253,8 @@ void Simulator::init(double t0)
     }
 
     _values.invalidate();
-    _model.pre_step(t0, _values);
     _inputs_cb ? _inputs_cb(_model, t0, _values) : _model.input_cb(t0, _values);
+    _model.pre_step(t0, _values);
     _process(t0, _values);
     _model.post_step(t0, _values);
 
@@ -293,8 +293,8 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 "- time = " + std::to_string(t) + "\n");
 
             _values.invalidate();
-            _model.pre_step(t, _values);
             _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+            _model.pre_step(t, _values);
             _state_variables = _values.state_variables();
         }
         else
@@ -311,8 +311,8 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             while (t1 < t)
             {
                 _values.invalidate();
-                _model.pre_step(t1, _values);
                 _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
+                _model.pre_step(t1, _values);
                 _state_variables_orig = _values.state_variables();
 
                 _stepper->step(stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);

@@ -15,8 +15,9 @@
 * Deprecate the initial values for states
 * template classes for single-input and single-output blocks
 
+- support auto state variables
+- define pooya::ArrayN<N> as an alias to public Eigen::Array<double, N, 1>
 - enclose the methods that only contain pooya_verify macros within #if...#endif blocks
-- Make _assigned a debug-only flag
 - Use DOT to generate a graph presentation of the model
 - Doxygen
 - logging (spdlog)
@@ -26,8 +27,9 @@
 - move BusBlockBuilder::traverse_bus to BusSpec
 - pass std::string as const ref
 - In BusSignalInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
-- 
+
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->
 <!-- - A (virtual ?) method for verifying the number and types of input and output signals of a block -->
 <!-- - light weight Signal wrapper so it supports operator[] -->
+<!-- - Make _assigned a debug-only flag (No. It is essential.) -->

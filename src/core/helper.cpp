@@ -22,39 +22,66 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
+void History::track_all(const Values& values)
+{
+    pooya_verify(empty(), "track_all should be called before the history is updated!");
+    _signals.clear();
+    const auto& vis = values.value_infos();
+    _signals.reserve(vis.size());
+    for (const auto& vi: vis)
+        _signals.push_back(vi._si);
+}
+
+void History::track(SignalId sig)
+{
+    pooya_verify(empty(), "track should be called before the history is updated!");
+    pooya_verify_value_signal(sig);
+    if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
+        _signals.push_back(sig);
+}
+
+void History::untrack(SignalId sig)
+{
+    pooya_verify(empty(), "untrack should be called before the history is updated!");
+    pooya_verify_value_signal(sig);
+    _signals.erase(std::find(_signals.begin(), _signals.end(), sig));
+}
+
 void History::update(uint k, double t, const Values& values)
 {
     pooya_trace("k = " + std::to_string(k));
     if (empty())
     {
-        for (const auto& vi: values.value_infos())
+        if (_signals.empty())
+            track_all(values);
+        for (auto sig: _signals)
         {
-            if (vi.is_scalar())
-                insert_or_assign(vi._si, Array(_nrows_grow));
+            if (sig->as_scalar() || sig->as_int() || sig->as_bool())
+                insert_or_assign(sig, Array(_nrows_grow));
             else
-                insert_or_assign(vi._si, Eigen::MatrixXd(_nrows_grow, vi.size()));
+                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->_size));
         }
     }
 
     if (k >= _time.rows())
         _time.conservativeResize(k + _nrows_grow, Eigen::NoChange);
     _time(k, 0) = t;
-    for (const auto& vi: values.value_infos())
+    for (auto sig: _signals)
     {
-        auto& h = at(vi._si);
+        auto& h = at(sig);
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
-        bool valid = values.valid(vi._si);
-        if (vi.is_int())
-            h(k, 0) = valid ? values.get<int>(vi._si) : 0;
-        if (vi.is_bool())
-            h(k, 0) = valid ? values.get<bool>(vi._si) : 0;
-        else if (vi.is_scalar())
-            h(k, 0) = valid ? values.get<double>(vi._si) : 0;
+        bool valid = values.valid(sig);
+        if (sig->as_int())
+            h(k, 0) = valid ? values.get<int>(sig) : 0;
+        else if (sig->as_bool())
+            h(k, 0) = valid ? values.get<bool>(sig) : 0;
+        else if (sig->as_scalar())
+            h(k, 0) = valid ? values.get<double>(sig) : 0;
         else
         {
             if (valid)
-                h.row(k) = values.get<Array>(vi._si);
+                h.row(k) = values.get<Array>(sig);
             else
                 h.row(k).setZero();
         }
@@ -91,14 +118,14 @@ void History::export_csv(std::string filename)
     {
         if (h.first)
         {
-            if (h.first->as_scalar())
-                ofs << "," << h.first->_full_name;
-            else
+            if (h.first->as_array())
             {
                 auto sig = h.first->as_array();
                 for (std::size_t k=0; k < sig->_size; k++)
                     ofs << "," << h.first->_full_name << "[" << k << "]";
             }
+            else
+                ofs << "," << h.first->_full_name;
         }
     }
     ofs << "\n";
@@ -111,14 +138,14 @@ void History::export_csv(std::string filename)
         for (const auto& h: *this)
         if (h.first)
         {
-            if (h.first->as_scalar())
-                ofs << "," << h.second(k);
-            else
+            if (h.first->as_array())
             {
                 auto sig = h.first->as_array();
                 for (std::size_t j=0; j < sig->_size; j++)
                     ofs << "," << h.second(k, j);
             }
+            else
+                ofs << "," << h.second(k);
         }
         ofs << "\n";
     }

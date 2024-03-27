@@ -30,11 +30,15 @@ protected:
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
     Eigen::ArrayXd _time;
+    std::vector<SignalId> _signals;
 
 public:
     History(const Model& model, uint nrows_grow = 1000) :
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
+    void track_all(const Values& values);
+    void track(SignalId sig);
+    void untrack(SignalId sig);
     void update(uint k, double t, const Values& values);
     void export_csv(std::string filename);
     void shrink_to_fit();

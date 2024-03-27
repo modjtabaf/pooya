@@ -14,6 +14,7 @@
 * introduce integer signals
 * Deprecate the initial values for states
 * template classes for single-input and single-output blocks
+* selective history
 
 - support auto state variables
 - define pooya::ArrayN<N> as an alias to public Eigen::Array<double, N, 1>
@@ -22,7 +23,6 @@
 - Doxygen
 - logging (spdlog)
 - use gtest and cc_test
-- selective history
 - parallel processing
 - move BusBlockBuilder::traverse_bus to BusSpec
 - pass std::string as const ref

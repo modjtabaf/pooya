@@ -27,12 +27,22 @@ class Pendulum : public pooya::Submodel
 protected:
     pooya::Integrator _integ1{"dphi", M_PI_4};
     pooya::Integrator _integ2{"phi"};
-    pooya::Function _func{"sin_phi",
+    pooya::SISOFunction _sin{"sin_phi",
         [](double /*t*/, double x) -> double
         {
             return std::sin(x);
         }};
-    // Sin _sin{"sin(phi)"};
+    // pooya::SOFunction _sin{"sin_phi",
+    //     [](double /*t*/, pooya::BusId ibus, const pooya::Values& values) -> double
+    //     {
+    //         return std::sin(values[ibus->scalar_at(0)]);
+    //     }};
+    // pooya::Function _sin{"sin_phi",
+    //     [](double /*t*/, pooya::BusId ibus, pooya::BusId obus, pooya::Values& values) -> void
+    //     {
+    //         values[obus->scalar_at(0)] = std::sin(values[ibus->scalar_at(0)]);
+    //     }};
+    // pooya::Sin _sin{"sin(phi)"};
     pooya::MulDiv _muldiv1{"g_l", "**/"};
     pooya::MulDiv _muldiv2{"tau_ml2", "*///"};
     pooya::Subtract _sub{"d2phi"};
@@ -66,8 +76,7 @@ public:
         // setup the submodel
         add_block(_integ1, d2phi, dphi);
         add_block(_integ2, dphi, phi);
-        add_block(_func, phi, s10);
-        // add_block(_sin, phi, s10);
+        add_block(_sin, phi, s10);
         add_block(_muldiv1, {s10, g, l}, s20);
         add_block(_muldiv2, {tau, m, l, l}, s30);
         add_block(_sub, {s30, s20}, d2phi);

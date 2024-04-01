@@ -122,16 +122,16 @@ using Sin = SinT<double>;
 using SinA = SinT<Array>;
 
 template <typename T>
-class FunctionT : public SingleInputOutputT<T>
+class SISOFunctionT : public SingleInputOutputT<T>
 {
 public:
-    using ActFunction = std::function<T(double, const T &)>;
+    using ActFunction = std::function<typename Types<T>::SetValue(double, typename Types<T>::GetValue)>;
 
 protected:
     ActFunction _act_func;
 
 public:
-    FunctionT(std::string given_name, ActFunction act_func)
+    SISOFunctionT(std::string given_name, ActFunction act_func)
             : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values &values) override
@@ -141,8 +141,50 @@ public:
     }
 };
 
-using Function = FunctionT<double>;
-using FunctionA = FunctionT<Array>;
+using SISOFunction = SISOFunctionT<double>;
+using SISOFunctionA = SISOFunctionT<Array>;
+
+template <typename T>
+class SOFunctionT : public SingleOutputT<T>
+{
+public:
+    using ActFunction = std::function<typename Types<T>::SetValue(double, BusId ibus, const Values&)>;
+
+protected:
+    ActFunction _act_func;
+
+public:
+    SOFunctionT(std::string given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
+            : SingleOutputT<T>(given_name, num_iports, 1), _act_func(act_func) {}
+
+    void activation_function(double t, Values &values) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        values.set(SingleOutputT<T>::_s_out, _act_func(t, SingleOutputT<T>::_ibus, values));
+    }
+};
+
+using SOFunction = SOFunctionT<double>;
+using SOFunctionA = SOFunctionT<Array>;
+
+class Function : public Block
+{
+public:
+    using ActFunction = std::function<void(double, BusId ibus, BusId obus, Values&)>;
+
+protected:
+    ActFunction _act_func;
+
+public:
+    Function(std::string given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
+        : Block(given_name, num_iports, num_oports), _act_func(act_func) {}
+
+    void activation_function(double t, Values &values) override
+    {
+        pooya_trace("block: " + full_name());
+        _act_func(t, _ibus, _obus, values);
+    }
+};
 
 template <typename T>
 class SourceT : public SingleOutputT<T>

@@ -42,7 +42,7 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // create signals
+        // create pooya signals
         auto dphi = scalar_signal("dphi");
 
         // choose random names for these internal signals
@@ -158,7 +158,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test08");
     PendulumWithPID pendulum_with_pid;
 

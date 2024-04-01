@@ -16,7 +16,7 @@
 * template classes for single-input and single-output blocks
 * selective history
 
-- support auto state variables
+- Make model mandatory
 - define pooya::ArrayN<N> as an alias to public Eigen::Array<double, N, 1>
 - enclose the methods that only contain pooya_verify macros within #if...#endif blocks
 - Use DOT to generate a graph presentation of the model
@@ -33,3 +33,4 @@
 <!-- - A (virtual ?) method for verifying the number and types of input and output signals of a block -->
 <!-- - light weight Signal wrapper so it supports operator[] -->
 <!-- - Make _assigned a debug-only flag (No. It is essential.) -->
+<!-- - support auto state variables (not necessary, use pooya::Integrator instead) -->

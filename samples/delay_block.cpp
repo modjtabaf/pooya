@@ -25,6 +25,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class MyModel : public pooya::Model
 {
 protected:
+    pooya::Source _source{"Source",
+        [](double t) -> double
+        {
+            pooya_trace0;
+            return std::sin(M_PI * t / 5);
+        }};
     pooya::Const _const1{"TimeDelay", 2.7435};
     pooya::Const _const2{"Initial", 0.0};
     pooya::Delay _delay{"Delay"};
@@ -38,7 +44,7 @@ public:
     {
         pooya_trace0;
 
-        // create signals
+        // create pooya signals
         auto time_delay = create_scalar_signal("time_delay");
         auto initial = create_scalar_signal("initial");
 
@@ -46,18 +52,13 @@ public:
         _s_y = create_scalar_signal("y");
 
         // setup the submodel
+        add_block(_source, {}, _s_x);
         add_block(_const1, {}, time_delay);
         add_block(_const2, {}, initial);
         add_block(_delay, {
             {"delay", time_delay},
             {"in", _s_x},
             {"initial", initial}}, _s_y);
-    }
-
-    void input_cb(double t, pooya::Values& values) override
-    {
-        pooya_trace0;
-        values[_s_x] = std::sin(M_PI * t / 5);
     }
 };
 
@@ -72,7 +73,6 @@ int main()
     MyModel model;
 
     pooya::Simulator sim(model);
-
     pooya::History history(model);
 
     uint k = 0;

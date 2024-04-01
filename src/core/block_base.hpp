@@ -455,9 +455,6 @@ public:
     ~Model();
 
     Model* model() override {return this;}
-
-    virtual void input_cb(double /*t*/, Values& /*values*/) {}
-
     const SignalInfos& signals() const {return _signal_infos;}
 
     void register_state_variable(SignalId sig, SignalId deriv_sig);

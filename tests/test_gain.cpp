@@ -37,7 +37,7 @@ public:
 TEST_F(TestGain, ScalarGain)
 {
     // test parameters
-    double x = 3.7;
+    const double x = 3.7;
 
     // model setup
     pooya::Model model;
@@ -64,7 +64,7 @@ TEST_F(TestGain, ArrayGain)
 {
     // test parameters
     constexpr std::size_t N = 4;
-    pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
+    const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
 
     // model setup
     pooya::Model model;

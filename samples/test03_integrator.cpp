@@ -29,11 +29,11 @@ int main()
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test03");
     pooya::TriggeredIntegrator integ("integ", 1.0);
 
-    // create signals
+    // create pooya signals
     auto x       = model.create_scalar_signal("x");
     auto xd      = model.create_scalar_signal("xd");
     auto trigger = model.create_bool_signal("trigger");

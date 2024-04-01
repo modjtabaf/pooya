@@ -29,11 +29,11 @@ int main()
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("gain_block");
     pooya::Gain gain("gain", 2.0);
 
-    // create signals
+    // create pooya signals
     auto x = model.create_scalar_signal("x");
     auto y = model.create_scalar_signal("y");
 

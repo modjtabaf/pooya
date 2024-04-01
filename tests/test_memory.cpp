@@ -37,8 +37,8 @@ public:
 TEST_F(TestMemory, ScalarMemory)
 {
     // test parameters
-    double x = 3.7;
-    double x0 = -4.8;
+    const double x = 3.7;
+    const double x0 = -4.8;
 
     // model setup
     pooya::Model model;
@@ -65,8 +65,8 @@ TEST_F(TestMemory, ArrayMemory)
 {
     // test parameters
     constexpr std::size_t N = 4;
-    pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
-    pooya::ArrayN<N> x0{-10.56, 0.18, 7.24, -3.67};
+    const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
+    const pooya::ArrayN<N> x0{-10.56, 0.18, 7.24, -3.67};
 
     // model setup
     pooya::Model model;

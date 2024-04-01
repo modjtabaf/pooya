@@ -100,11 +100,11 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test10");
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
-    // create signals
+    // create pooya signals
     auto tau = model.scalar_signal("tau");
 
     // setup the model

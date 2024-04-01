@@ -280,7 +280,7 @@ void Simulator::init(double t0)
     }
 
     _values.invalidate();
-    _inputs_cb ? _inputs_cb(_model, t0, _values) : _model.input_cb(t0, _values);
+    if (_inputs_cb) _inputs_cb(_model, t0, _values);
     _model.pre_step(t0, _values);
     _process(t0, _values);
     _model.post_step(t0, _values);
@@ -294,7 +294,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     auto stepper_callback = [&](double t, Values& values) -> void
     {
         pooya_trace("t: " + std::to_string(t));
-        _inputs_cb ? _inputs_cb(_model, t, values) : _model.input_cb(t, values);
+        if (_inputs_cb) _inputs_cb(_model, t, _values);
         _process(t, values);
     };
 
@@ -320,7 +320,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 "- time = " + std::to_string(t) + "\n");
 
             _values.invalidate();
-            _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+            if (_inputs_cb) _inputs_cb(_model, t, _values);
             _model.pre_step(t, _values);
             _state_variables = _values.state_variables();
         }
@@ -338,7 +338,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             while (t1 < t)
             {
                 _values.invalidate();
-                _inputs_cb ? _inputs_cb(_model, t1, _values) : _model.input_cb(t1, _values);
+                if (_inputs_cb) _inputs_cb(_model, t1, _values);
                 _model.pre_step(t1, _values);
                 _state_variables_orig = _values.state_variables();
 
@@ -356,7 +356,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     if (t1 < t)
                     {
                         _values.reset_with_state_variables(_state_variables);
-                        _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+                        if (_inputs_cb) _inputs_cb(_model, t, _values);
                         _process(t1, _values);
                         _model.post_step(t1, _values);
                     }
@@ -373,7 +373,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     }
 
     _values.reset_with_state_variables(_state_variables);
-    _inputs_cb ? _inputs_cb(_model, t, _values) : _model.input_cb(t, _values);
+    if (_inputs_cb) _inputs_cb(_model, t, _values);
     _process(t, _values);
     _model.post_step(t, _values);
 

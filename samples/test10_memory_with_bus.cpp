@@ -36,7 +36,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test10");
     pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
 

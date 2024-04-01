@@ -37,10 +37,10 @@ public:
 TEST_F(TestDelay, ScalarDelay)
 {
     // test parameters
-    double time_delay = 2.78;
-    double t_end = 7.32;
-    double dt = 0.01;
-    double initial = 0.0;
+    const double time_delay = 2.78;
+    const double t_end = 7.32;
+    const double dt = 0.01;
+    const double initial = 0.0;
     auto func = [](double t) -> double
     {
         return -1.3*t + 4.92;
@@ -89,10 +89,10 @@ TEST_F(TestDelay, ArrayDelay)
 {
     // test parameters
     constexpr std::size_t N = 5;
-    double time_delay = 2.78;
-    double t_end = 7.32;
-    double dt = 0.01;
-    pooya::ArrayN<N> initial = pooya::ArrayN<N>::Zero();
+    const double time_delay = 2.78;
+    const double t_end = 7.32;
+    const double dt = 0.01;
+    const pooya::ArrayN<N> initial = pooya::ArrayN<N>::Zero();
     auto func = [](double t) -> pooya::ArrayN<N>
     {
         static const pooya::ArrayN<N> A{3.7, -2.5, 10.45, 0.0, -0.02};

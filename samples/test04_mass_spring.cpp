@@ -39,7 +39,7 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // create signals
+        // create pooya signals
         auto x   = create_scalar_signal("x");
         auto xd  = create_scalar_signal("xd");
         auto xdd = create_scalar_signal("xdd");
@@ -60,7 +60,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto  start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test04");
     MyModel mymodel;
 

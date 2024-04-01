@@ -45,7 +45,7 @@ public:
         if (!pooya::Submodel::init(parent))
             return false;
 
-        // create signals
+        // create pooya signals
         auto phi   = create_scalar_signal("phi");
         auto dphi  = create_scalar_signal("dphi");
         auto d2phi = create_scalar_signal("d2phi");
@@ -74,7 +74,7 @@ int main()
     using milli = std::chrono::milliseconds;
     auto start = std::chrono::high_resolution_clock::now();
 
-    // create raw blocks
+    // create pooya blocks
     pooya::Model model("test05");
     Pendulum pendulum;
 

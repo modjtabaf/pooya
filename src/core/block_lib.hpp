@@ -145,6 +145,49 @@ using Function = FunctionT<double>;
 using FunctionA = FunctionT<Array>;
 
 template <typename T>
+class SourceT : public SingleOutputT<T>
+{
+public:
+    using SourceFunction = std::function<T(double)>;
+
+protected:
+    SourceFunction _src_func;
+
+public:
+    SourceT(std::string given_name, SourceFunction src_func) :
+        SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _src_func(src_func) {}
+
+    void activation_function(double t, Values &values) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        values.set(SingleOutputT<T>::_s_out, _src_func(t));
+    }
+};
+
+using Source = SourceT<double>;
+using SourceI = SourceT<int>;
+using SourceA = SourceT<Array>;
+
+class Sources : public Block
+{
+public:
+    using SourcesFunction = std::function<void(BusId, double, Values&)>;
+
+protected:
+    SourcesFunction _src_func;
+
+public:
+    Sources(std::string given_name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
+        Block(given_name, 0, num_oports), _src_func(src_func) {}
+
+    void activation_function(double t, Values &values) override
+    {
+        pooya_trace("block: " + full_name());
+        _src_func(_obus, t, values);
+    }
+};
+
+template <typename T>
 class AddSubT : public SingleOutputT<T>
 {
 protected:

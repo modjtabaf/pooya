@@ -294,7 +294,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     auto stepper_callback = [&](double t, Values& values) -> void
     {
         pooya_trace("t: " + std::to_string(t));
-        if (_inputs_cb) _inputs_cb(_model, t, _values);
+        if (_inputs_cb) _inputs_cb(_model, t, values);
         _process(t, values);
     };
 

@@ -454,6 +454,8 @@ public:
     Model(std::string given_name="model");
     ~Model();
 
+    virtual void input_cb(double /*t*/, Values& /*values*/) {}
+
     Model* model() override {return this;}
     const SignalInfos& signals() const {return _signal_infos;}
 

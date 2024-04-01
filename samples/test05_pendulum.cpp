@@ -27,11 +27,11 @@ class Pendulum : public pooya::Submodel
 protected:
     pooya::Integrator _integ1{"dphi"};
     pooya::Integrator _integ2{"phi", M_PI_4};
-    // pooya::Function     _func{"sin(phi)",
-    //     [](double /*t*/, const pooya::Array& x) -> Array
+    // pooya::SISOFunction _sin{"sin(phi)",
+    //     [](double /*t*/, double x) -> double
     //     {
-    //         return x.sin();
-    //     }},
+    //         return std::sin(x);
+    //     }};
     pooya::Sin _sin{"sin(phi)"};
     pooya::MulDiv _muldiv{"-g\\l", "**/", -1};
 
@@ -59,7 +59,6 @@ public:
         // setup the submodel
         add_block(_integ1, d2phi, dphi);
         add_block(_integ2, dphi, phi);
-        // add_block(_func, phi, s10);
         add_block(_sin, phi, s10);
         add_block(_muldiv, {s10, g, l}, d2phi);
 

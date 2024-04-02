@@ -153,8 +153,8 @@ void History::export_csv(std::string filename)
 
 bool arange(uint k, double& t, double t_init, double t_end, double dt)
 {
-    t = t_init + k * dt;
-    return t <= t_end;
+    t_init += k * dt;
+    return (t_init <= t_end) && (t = t_init, true);
 }
 
 Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :

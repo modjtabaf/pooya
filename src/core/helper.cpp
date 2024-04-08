@@ -380,6 +380,8 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     _values.reset_with_state_variables(_state_variables);
     if (_inputs_cb) _inputs_cb(_model, t, _values);
     _model.input_cb(t, _values);
+    if (_values.num_state_variables() == 0)
+        _model.pre_step(t, _values);
     _process(t, _values);
     _model.post_step(t, _values);
 

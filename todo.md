@@ -16,6 +16,7 @@
 * template classes for single-input and single-output blocks
 * selective history
 
+- Call pre_step and post_step for minor steps too
 - Make model mandatory
 - define pooya::ArrayN<N> as an alias to public Eigen::Array<double, N, 1>
 - enclose the methods that only contain pooya_verify macros within #if...#endif blocks

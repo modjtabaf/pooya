@@ -278,6 +278,12 @@ void Simulator::init(double t0)
             _new_po = &_processing_order2;
         }
     }
+    else
+    {
+        if (_stepper)
+            util::pooya_show_warning(__FILE__, __LINE__,
+                "A stepper is provided but no state variable is defined! The stepper will be ignored.");
+    }
 
     _values.invalidate();
     if (_inputs_cb) _inputs_cb(_model, t0, _values);

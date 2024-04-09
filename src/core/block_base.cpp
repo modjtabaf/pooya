@@ -397,8 +397,8 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
             
             wires.emplace_back(ls.first, ls.second);
         }
-        _interface_bus_specs.emplace_back(std::make_unique<BusSpec>(wire_infos.begin(), wire_infos.end()));
-        return create_bus("", *_interface_bus_specs.back(), wires.begin(), wires.end());
+        _interface_bus_specs.emplace_back(wire_infos.begin(), wire_infos.end());
+        return create_bus("", _interface_bus_specs.back(), wires.begin(), wires.end());
     };
 
     if (!component.init(*this, make_bus(iports), make_bus(oports)))

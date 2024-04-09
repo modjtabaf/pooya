@@ -229,7 +229,7 @@ class Parent : public Block
 {
 protected:
     std::vector<std::reference_wrapper<Block>> _components;
-    std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
+    std::vector<BusSpec> _interface_bus_specs;
 
     Parent(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports) {}

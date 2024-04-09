@@ -26,15 +26,15 @@ namespace pooya
 bool Block::init(Parent& parent, BusId ibus, BusId obus)
 {
     pooya_trace(_given_name);
-    assert(_parent == nullptr);
+    assert(!_parent);
     if (_parent) return false;
 
-    _parent = &parent;
-    pooya_verify(_parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
+    _parent = parent;
+    pooya_verify(_parent->get().is_initialized(), _given_name + ": parent block is not initialized yet!");
 
     _assign_valid_given_name(_given_name);
     if (_full_name.empty())
-        _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+        _full_name = _parent ? (_parent->get().full_name() + "/" + _given_name) : ("/" + _given_name);
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
@@ -110,7 +110,7 @@ void Block::_assign_valid_given_name(std::string given_name)
     if (_parent)
     {
         uint n = 0;
-        while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
+        while (!_parent->get().traverse(pooya_verify_unique_name_cb, 0, 1))
             given_name = _given_name + "_" + std::to_string(n++);
 
         _given_name = given_name;
@@ -143,7 +143,7 @@ uint Block::_process(double t, Values& values, bool /*go_deep*/)
 Model* Block::model()
 {
     pooya_trace("block: " + full_name());
-    return _parent ? _parent->model() : nullptr;
+    return _parent ? _parent->get().model() : nullptr;
 }
 
 Model::~Model()

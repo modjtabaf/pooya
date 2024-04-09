@@ -42,7 +42,7 @@ protected:
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<ValueSignalId> _dependencies;
-    Parent* _parent{nullptr};
+    std::optional<std::reference_wrapper<Parent>> _parent;
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -76,7 +76,7 @@ public:
         return *mdl;
     }
 
-    Parent* parent() {return _parent;}
+    Parent* parent() {return _parent ? &_parent->get() : nullptr;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}

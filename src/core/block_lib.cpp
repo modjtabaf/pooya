@@ -121,7 +121,7 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
         _init_values.erase(it);
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+    _parent->get().add_block(*block, sig_in, sig_out);
     _blocks.push_back(std::move(block));
 }
 
@@ -151,7 +151,7 @@ void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::W
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+    _parent->get().add_block(*block, sig_in, sig_out);
     _blocks.push_back(std::move(block));
 }
 

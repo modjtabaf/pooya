@@ -228,7 +228,7 @@ using SingleInputOutputT = SingleOutputT<T_out, SingleInputT<T_in>>;
 class Parent : public Block
 {
 protected:
-    std::vector<Block*> _components;
+    std::vector<std::reference_wrapper<Block>> _components;
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
@@ -243,15 +243,15 @@ public:
     void pre_step(double t, Values& values) override
     {
         pooya_trace("block: " + full_name());
-        for (auto* component: _components)
-            component->pre_step(t, values);
+        for (auto& component: _components)
+            component.get().pre_step(t, values);
     }
 
     void post_step(double t, const Values& values) override
     {
         pooya_trace("block: " + full_name());
-        for (auto* component: _components)
-            component->post_step(t, values);
+        for (auto& component: _components)
+            component.get().post_step(t, values);
     }
 
     // retrieve an existing signal

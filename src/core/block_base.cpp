@@ -223,9 +223,9 @@ void Parent::_mark_unprocessed()
     pooya_trace("block: " + full_name());
     Block::_mark_unprocessed();
 
-    for (auto component: _components)
+    for (auto& component: _components)
     {
-        component->_mark_unprocessed();
+        component.get()._mark_unprocessed();
     }
 }
 
@@ -237,10 +237,10 @@ uint Parent::_process(double t, Values& values, bool go_deep)
     {
         _processed = true;
         if (go_deep)
-            for (auto* component: _components)
+            for (auto& component: _components)
             {
-                n_processed += component->_process(t, values);
-                if (not component->processed())
+                n_processed += component.get()._process(t, values);
+                if (!component.get().processed())
                     _processed = false;
             }
     }
@@ -261,7 +261,7 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     {
         for (auto& c: _components)
         {
-            if (!c->traverse(cb, level + 1, max_level))
+            if (!c.get().traverse(cb, level + 1, max_level))
                 return false;
         }
     }
@@ -404,7 +404,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
     if (!component.init(*this, make_bus(iports), make_bus(oports)))
         return false;
 
-    _components.push_back(&component);
+    _components.push_back(component);
     component.post_init();
     return true;
 }

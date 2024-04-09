@@ -42,7 +42,7 @@ protected:
     bool _init{true};
 
 public:
-    InitialValueT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    InitialValueT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
@@ -67,7 +67,7 @@ protected:
     T _value;
 
 public:
-    ConstT(std::string given_name, const T &value)
+    ConstT(const std::string& given_name, const T &value)
             : SingleOutputT<T>(given_name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/, Values &values) override
@@ -87,7 +87,7 @@ protected:
     GainType _k;
 
 public:
-    GainT(std::string given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
+    GainT(const std::string& given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
@@ -106,7 +106,7 @@ template <typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    SinT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    SinT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
@@ -131,7 +131,7 @@ protected:
     ActFunction _act_func;
 
 public:
-    SISOFunctionT(std::string given_name, ActFunction act_func)
+    SISOFunctionT(const std::string& given_name, ActFunction act_func)
             : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values &values) override
@@ -154,7 +154,7 @@ protected:
     ActFunction _act_func;
 
 public:
-    SOFunctionT(std::string given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
+    SOFunctionT(const std::string& given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
             : SingleOutputT<T>(given_name, num_iports, 1), _act_func(act_func) {}
 
     void activation_function(double t, Values &values) override
@@ -176,7 +176,7 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(std::string given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
+    Function(const std::string& given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
         : Block(given_name, num_iports, num_oports), _act_func(act_func) {}
 
     void activation_function(double t, Values &values) override
@@ -196,7 +196,7 @@ protected:
     SourceFunction _src_func;
 
 public:
-    SourceT(std::string given_name, SourceFunction src_func) :
+    SourceT(const std::string& given_name, SourceFunction src_func) :
         SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _src_func(src_func) {}
 
     void activation_function(double t, Values &values) override
@@ -219,7 +219,7 @@ protected:
     SourcesFunction _src_func;
 
 public:
-    Sources(std::string given_name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
+    Sources(const std::string& given_name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
         Block(given_name, 0, num_oports), _src_func(src_func) {}
 
     void activation_function(double t, Values &values) override
@@ -254,7 +254,7 @@ protected:
     }
 
 public:
-    AddSubT(std::string given_name, const char *operators, const T &initial = 0.0)
+    AddSubT(const std::string& given_name, const char *operators, const T &initial = 0.0)
             : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values &values) override
@@ -292,7 +292,7 @@ protected:
     }
 
 public:
-    AddT(std::string given_name, const T &initial = 0.0)
+    AddT(const std::string& given_name, const T &initial = 0.0)
             : AddSubT<T>(given_name, "", initial) {}
 };
 
@@ -303,7 +303,7 @@ template <typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
-    SubtractT(std::string given_name, const T &initial = 0.0)
+    SubtractT(const std::string& given_name, const T &initial = 0.0)
             : AddSubT<T>(given_name, "+-", initial) {}
 };
 
@@ -332,7 +332,7 @@ protected:
     }
 
 public:
-    MulDivT(std::string given_name, const char *operators, const T &initial = 1.0)
+    MulDivT(const std::string& given_name, const char *operators, const T &initial = 1.0)
             : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/, Values &values) override
@@ -370,7 +370,7 @@ protected:
     }
 
 public:
-    MultiplyT(std::string given_name, const T &initial = 1.0)
+    MultiplyT(const std::string& given_name, const T &initial = 1.0)
             : MulDivT<T>(given_name, "", initial) {}
 };
 
@@ -381,7 +381,7 @@ template <typename T>
 class DivideT : public MulDivT<T>
 {
 public:
-    DivideT(std::string given_name, const T &initial = 1.0)
+    DivideT(const std::string& given_name, const T &initial = 1.0)
             : MulDivT<T>(given_name, "*/", initial) {}
 };
 
@@ -395,7 +395,7 @@ protected:
     T _value;
 
 public:
-    IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
+    IntegratorBaseT(const std::string& given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
             : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
 
     bool init(Parent &parent, BusId ibus, BusId obus) override
@@ -438,7 +438,7 @@ template <typename T>
 class IntegratorT : public IntegratorBaseT<T>
 {
 public:
-    IntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
+    IntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
 };
 
 using Integrator = IntegratorT<double>;
@@ -452,7 +452,7 @@ protected:
     bool _triggered{false};
 
 public:
-    TriggeredIntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
+    TriggeredIntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
 
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
@@ -509,7 +509,7 @@ protected:
     typename Types<T>::SignalId _s_initial; // initial
 
 public:
-    DelayT(std::string given_name, double lifespan = 10.0)
+    DelayT(const std::string& given_name, double lifespan = 10.0)
             : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
 
     bool init(Parent &parent, BusId ibus, BusId obus) override
@@ -592,7 +592,7 @@ protected:
     T _value;
 
 public:
-    MemoryT(std::string given_name, const T &ic = T(0))
+    MemoryT(const std::string& given_name, const T &ic = T(0))
             : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
 
     void post_step(double /*t*/, const Values &values) override
@@ -638,7 +638,7 @@ protected:
     T _y;
 
 public:
-    DerivativeT(std::string given_name, const T &y0 = 0)
+    DerivativeT(const std::string& given_name, const T &y0 = 0)
             : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
 
     void post_step(double t, const Values &values) override
@@ -677,7 +677,7 @@ template <typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    explicit PipeT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    explicit PipeT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
     void activation_function(double /*t*/, Values &values) override
     {

@@ -37,7 +37,7 @@ protected:
     pooya::ScalarSignalId _s_xdd;
 
 public:
-    MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
+    MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
         pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
 
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId) override

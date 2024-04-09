@@ -409,7 +409,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
     return true;
 }
 
-Model::Model(std::string given_name) : Parent(given_name, 0, 0)
+Model::Model(const std::string& given_name) : Parent(given_name, 0, 0)
 {
     pooya_trace("block: " + full_name());
     _assign_valid_given_name(_given_name);

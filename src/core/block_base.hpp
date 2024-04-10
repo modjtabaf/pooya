@@ -397,7 +397,7 @@ class Model : public Parent
     friend class Parent;
 
 public:
-    using SignalInfos = std::vector<SignalId>;
+    using SignalInfos = std::vector<std::shared_ptr<SignalInfo>>;
 
 protected:
     SignalInfos _signal_infos;
@@ -414,14 +414,14 @@ protected:
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
         auto index = _signal_infos.size();
-        typename Types<T>::SignalId sig;
+        std::shared_ptr<typename Types<T>::SignalInfo> sig;
         if constexpr (std::is_base_of_v<ValueSignalInfo, typename Types<T>::SignalInfo>)
-            sig = new typename Types<T>::SignalInfo(name, index, _vi_index++, args...);
+            sig = Types<T>::SignalInfo::create(name, index, _vi_index++, args...);
         else
-            sig = new typename Types<T>::SignalInfo(name, index, args...);
+            sig = Types<T>::SignalInfo::create(name, index, args...);
         _signal_infos.push_back(sig);
 
-        return sig;
+        return sig.get();
     }
 
     ScalarSignalId register_scalar_signal(const std::string& name)
@@ -452,7 +452,6 @@ protected:
 
 public:
     Model(const std::string& given_name="model");
-    ~Model();
 
     virtual void input_cb(double /*t*/, Values& /*values*/) {}
 

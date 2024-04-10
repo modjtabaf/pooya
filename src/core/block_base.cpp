@@ -146,13 +146,6 @@ Model* Block::model()
     return _parent ? _parent->get().model() : nullptr;
 }
 
-Model::~Model()
-{
-    pooya_trace("block: " + full_name());
-    for (auto* si: _signal_infos)
-        delete si;
-}
-
 SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
 {
     pooya_trace("block: " + full_name());
@@ -162,7 +155,7 @@ SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
     auto name_len = name.length();
 
     auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
-        [&] (SignalId sig) -> bool
+        [&] (const std::shared_ptr<SignalInfo>& sig) -> bool
         {
             if (exact_match)
                 return sig->_full_name == name;
@@ -171,7 +164,7 @@ SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
             return (str_len >= name_len) && (sig->_full_name.substr(str_len - name_len) == name);
         });
 
-    return it == _signal_infos.end() ? nullptr : *it;
+    return it == _signal_infos.end() ? nullptr : it->get();
 }
 
 void Model::register_state_variable(SignalId sig, SignalId deriv_sig)

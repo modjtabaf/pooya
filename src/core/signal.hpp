@@ -18,6 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <cstddef>
 #include <initializer_list>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "Eigen/Core"
@@ -85,12 +86,14 @@ class SignalInfo
 {
     friend class Model;
 
+protected:
+    struct Protected{};
+
 public:
     const std::string _full_name; // full name of the signal
     const std::size_t _index{0};  // the signal index
 
 protected:
-
     ValueSignalInfo*   _value{nullptr};
     ScalarSignalInfo* _scalar{nullptr};
     ArraySignalInfo*   _array{nullptr};
@@ -181,7 +184,13 @@ class ScalarSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
+    static std::shared_ptr<ScalarSignalInfo> create(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+        return std::make_shared<ScalarSignalInfo>(Protected(), full_name, index, vi_index);
+    } 
+
+public:
+    ScalarSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _scalar = this;
     }
@@ -192,7 +201,13 @@ class IntSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    IntSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
+    static std::shared_ptr<IntSignalInfo> create(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+        return std::make_shared<IntSignalInfo>(Protected(), full_name, index, vi_index);
+    } 
+
+public:
+    IntSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _int = this;
     }
@@ -203,7 +218,13 @@ class BoolSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    BoolSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
+    static std::shared_ptr<BoolSignalInfo> create(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+        return std::make_shared<BoolSignalInfo>(Protected(), full_name, index, vi_index);
+    } 
+
+public:
+    BoolSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
     {
         _bool = this;
     }
@@ -214,7 +235,13 @@ class ArraySignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
+    static std::shared_ptr<ArraySignalInfo> create(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size)
+    {
+        return std::make_shared<ArraySignalInfo>(Protected(), full_name, index, vi_index, size);
+    } 
+
+public:
+    ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
         ValueSignalInfo(full_name, index, vi_index), _size(size)
     {
         _array = this;
@@ -313,9 +340,15 @@ protected:
     LabelSignalIdList _signals;
 
 protected:
+    static std::shared_ptr<BusInfo> create(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+    {
+        return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
+    } 
+
     void _set(std::size_t index, SignalId sig);
 
-    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_) :
+public:
+    BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_) :
         SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);

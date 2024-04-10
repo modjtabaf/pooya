@@ -114,7 +114,7 @@ Values::Values(const pooya::Model& model)
     std::size_t state_variables_size{0};
 
     // find the total sizes of signals and state variables
-    for (const auto* signal: signals)
+    for (const auto& signal: signals)
     {
         if (!signal->as_value()) continue;
         auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
@@ -128,7 +128,7 @@ Values::Values(const pooya::Model& model)
     double* state_variables_start = _values.data();
     double* other_start = state_variables_start + state_variables_size;
 
-    for (const auto* signal: signals)
+    for (const auto& signal: signals)
     {
         if (!signal->as_value()) continue;
         auto& start = signal->as_value()->is_state_variable() ? state_variables_start : other_start;
@@ -152,7 +152,7 @@ Values::Values(const pooya::Model& model)
 
     // state-variable-specific steps
 
-    for (const auto* signal: signals)
+    for (const auto& signal: signals)
     {
         if (!signal->as_value()) continue;
         if (!signal->as_value()->is_state_variable())

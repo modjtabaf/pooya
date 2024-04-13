@@ -239,3 +239,23 @@ cc_binary(
         "//src:misc",
     ],
 )
+
+cc_binary(
+    name = "tutorial01",
+    srcs = ["tut01_mass_spring_damper.cpp"],
+    copts = [
+        "-pedantic-errors",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
+    deps = [
+        "//src:core",
+        "//src:misc",
+    ],
+)

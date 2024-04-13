@@ -99,7 +99,7 @@ history.export_csv("pooya_tutorial_01_mass_spring_damper.csv");
 The complete source file is located at *samples/tut01_mass_spring_damper.cpp*. If you have **bazel** installed, you may execute this command in a terminal to build and run this sample:
 
 ```bash
-bazel run //samples:tut01
+bazel run //samples:tutorial01
 ```
 
 If **gnuplot** is installed in your system, a plot of the simulation results will be shown:

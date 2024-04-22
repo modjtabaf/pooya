@@ -80,22 +80,58 @@ public:
 using Const = ConstT<double>;
 using ConstA = ConstT<Array>;
 
-template <typename T, typename GainType>
-class GainT : public SingleInputOutputT<T>
+// template <typename T, typename GainType>
+// class GainT : public SingleInputOutputT<T>
+// {
+// protected:
+//     GainType _k;
+
+// public:
+//     GainT(std::string given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
+
+//     void activation_function(double /*t*/, Values &values) override
+//     {
+//         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+//         values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
+//     }
+
+//     typename Types<GainType>::GetValue gain() const {return _k;}
+// };
+
+template <class Base, typename T, typename GainType>
+class GainImplT : public Base
 {
 protected:
     GainType _k;
 
 public:
-    GainT(std::string given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
+    GainImplT(std::string given_name, GainType k) : Base(given_name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
+        pooya_trace("block: " + Base::full_name());
+        values.set(Base::_s_out, _k * values.get(Base::_s_in));
     }
 
     typename Types<GainType>::GetValue gain() const {return _k;}
+};
+
+template <typename T, typename GainType>
+class GainT : public GainImplT<SingleInputOutputT<T>, T, GainType>
+{
+// protected:
+//     GainType _k;
+
+public:
+    GainT(std::string given_name, GainType k) : GainImplT<SingleInputOutputT<T>, T, GainType>(given_name, k) {}
+
+//     void activation_function(double /*t*/, Values &values) override
+//     {
+//         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+//         values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
+//     }
+
+//     typename Types<GainType>::GetValue gain() const {return _k;}
 };
 
 using Gain = GainT<double, double>;
@@ -388,107 +424,109 @@ public:
 using Divide = DivideT<double>;
 using DivideA = DivideT<Array>;
 
-template <typename T>
-class IntegratorBaseT : public SingleOutputT<T>
+// template <typename T>
+// class IntegratorBaseT : public SingleOutputT<T>
+template <class Base, typename T>
+class IntegratorBaseImplT : public Base
 {
 protected:
     T _value;
 
 public:
-    IntegratorBaseT(std::string given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
-            : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
+    IntegratorBaseImplT(std::string given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
+            : Base(given_name, num_iports, num_oports), _value(ic) {}
 
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        pooya_trace("block: " + Base::full_name());
+        if (!Base::init(parent, ibus, obus))
             return false;
 
-        SingleOutputT<T>::model_ref().register_state_variable(SingleOutputT<T>::_s_out, Types<T>::as_type(SingleOutputT<T>::_ibus->at(0).second));
+        Base::model_ref().register_state_variable(Base::_s_out, Types<T>::as_type(Base::_ibus->at(0).second));
 
         return true;
     }
 
     void pre_step(double /*t*/, Values &values) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
-        assert(!values.valid(SingleOutputT<T>::_s_out));
-        values.set(SingleOutputT<T>::_s_out, _value);
+        pooya_trace("block: " + Base::full_name());
+        assert(!values.valid(Base::_s_out));
+        values.set(Base::_s_out, _value);
     }
 
     void post_step(double /*t*/, const Values &values) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
-        assert(values.valid(SingleOutputT<T>::_s_out));
-        _value = values.get(SingleOutputT<T>::_s_out);
+        pooya_trace("block: " + Base::full_name());
+        assert(values.valid(Base::_s_out));
+        _value = values.get(Base::_s_out);
     }
 
     uint _process(double /*t*/, Values &values, bool /*go_deep*/ = true) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (SingleOutputT<T>::_processed)
+        pooya_trace("block: " + Base::full_name());
+        if (Base::_processed)
             return 0;
 
-        SingleOutputT<T>::_processed = values.valid(SingleOutputT<T>::_s_out);
-        return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?
+        Base::_processed = values.valid(Base::_s_out);
+        return Base::_processed ? 1 : 0; // is it safe to simply return _processed?
     }
 };
 
 template <typename T>
-class IntegratorT : public IntegratorBaseT<T>
+class IntegratorT : public IntegratorBaseImplT<SingleOutputT<T>, T>
 {
 public:
-    IntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
+    IntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseImplT<SingleOutputT<T>, T>(given_name, ic, 1, 1) {}
 };
 
 using Integrator = IntegratorT<double>;
 using IntegratorA = IntegratorT<Array>;
 
 template <typename T>
-class TriggeredIntegratorT : public IntegratorBaseT<T>
+class TriggeredIntegratorT : public IntegratorBaseImplT<SingleOutputT<T>, T>
 {
 protected:
     BoolSignalId _trigger;
     bool _triggered{false};
 
 public:
-    TriggeredIntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
+    TriggeredIntegratorT(std::string given_name, T ic = T(0.0)) : IntegratorBaseImplT<SingleOutputT<T>, T>(given_name, ic, 2, 1) {}
 
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
+        pooya_trace("block: " + IntegratorBaseImplT<SingleOutputT<T>, T>::full_name());
+        if (!IntegratorBaseImplT<SingleOutputT<T>, T>::init(parent, ibus, obus))
             return false;
 
-        _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
+        _trigger = IntegratorBaseImplT<SingleOutputT<T>, T>::bool_input_at("trigger");
 
         return true;
     }
 
     void pre_step(double t, Values &values) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        pooya_trace("block: " + IntegratorBaseImplT<SingleOutputT<T>, T>::full_name());
         if (_triggered)
         {
             if constexpr (std::is_same_v<T, Array>)
-                IntegratorBaseT<T>::_value.setZero();
+                IntegratorBaseImplT<SingleOutputT<T>, T>::_value.setZero();
             else
-                IntegratorBaseT<T>::_value = 0;
+                IntegratorBaseImplT<SingleOutputT<T>, T>::_value = 0;
             _triggered = false;
         }
-        IntegratorBaseT<T>::pre_step(t, values);
+        IntegratorBaseImplT<SingleOutputT<T>, T>::pre_step(t, values);
     }
 
     uint _process(double t, Values &values, bool go_deep=true) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (IntegratorBaseT<T>::_processed || !values.valid(_trigger))
+        pooya_trace("block: " + IntegratorBaseImplT<SingleOutputT<T>, T>::full_name());
+        if (IntegratorBaseImplT<SingleOutputT<T>, T>::_processed || !values.valid(_trigger))
             return 0;
 
         if (!_triggered)
             _triggered = values.get(_trigger);
 
-        return IntegratorBaseT<T>::_process(t, values, go_deep);
+        return IntegratorBaseImplT<SingleOutputT<T>, T>::_process(t, values, go_deep);
     }
 };
 

@@ -22,74 +22,53 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/core/solver.hpp"
 #include "src/misc/gp-ios.hpp"
 
-class MassSpringDamper : public pooya::Block
+class MassSpringDamper : public pooya::IntegratorBaseImplT<pooya::IntegratorBaseImplT<pooya::SingleInputT<double>, double>, double, double>
 {
+    using BaseX = pooya::IntegratorBaseImplT<pooya::SingleInputT<double>, double>;
+    using BaseXd = pooya::IntegratorBaseImplT<BaseX, double, double>;
+
 protected:
     double _m;
     double _k;
     double _c;
-    double _x;
-    double _xd;
 
     pooya::ScalarSignalId _s_tau;
-    pooya::ScalarSignalId _s_x;
-    pooya::ScalarSignalId _s_xd;
-    pooya::ScalarSignalId _s_xdd;
 
 public:
-    MassSpringDamper(std::string given_name, double m, double k, double c, double x0, double xd0) :
-        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
+    MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
+        BaseXd(given_name, 1, 0, x0, xd0), _m(m), _k(k), _c(c) {}
 
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId) override
     {
         pooya_trace0;
 
-        if (!pooya::Block::init(parent, ibus))
+        BaseX::_s_x = parent.create_scalar_signal("x");
+        BaseX::_s_xd = parent.create_scalar_signal("xd");
+        BaseXd::_s_x = BaseX::_s_xd;
+        BaseXd::_s_xd = parent.create_scalar_signal("xdd");
+
+        if (!BaseXd::init(parent, ibus, {}))
             return false;
 
         _s_tau = scalar_input_at(0);
 
-        _s_x = parent.scalar_signal("x");
-        _s_xd = parent.scalar_signal("xd");
-        _s_xdd = parent.scalar_signal("xdd");
-
-        auto& model_ = model_ref();
-        model_.register_state_variable(_s_x, _s_xd);
-        model_.register_state_variable(_s_xd, _s_xdd);
-
-        // it is not necessary to add these dependencies since both _x and _xd are state variables and so, are known always
-        add_dependency(_s_x);
-        add_dependency(_s_xd);
-
         return true;
     }
 
-    void activation_function(double /*t*/, pooya::Values& values) override
+    void activation_function(double /*t*/, pooya::Values &values) override
     {
-        pooya_trace0;
+        pooya_trace("block: " + BaseXd::full_name());
 
         // get state variables and input
-        double x   = values[_s_x];
-        double xd  = values[_s_xd];
+        double x   = values[BaseX::_s_x];
+        double xd  = values[BaseX::_s_xd];
         double tau = values[_s_tau];
 
         // calculate acceleration
         double xdd = tau/_m - _c/_m * xd - _k/_m * x;
 
         // assign acceleration
-        values[_s_xdd] = xdd;
-    }
-
-    void pre_step(double /*t*/, pooya::Values& values) override
-    {
-        values[_s_x]  = _x;
-        values[_s_xd] = _xd;
-    }
-
-    void post_step(double /*t*/, const pooya::Values& values) override
-    {
-        _x  = values[_s_x];
-        _xd = values[_s_xd];
+        values[BaseXd::_s_xd] = xdd;
     }
 };
 
@@ -101,11 +80,11 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test10");
+    pooya::Model model("test09");
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
-    auto tau = model.scalar_signal("tau");
+    auto tau = model.create_scalar_signal("tau");
 
     // setup the model
     model.add_block(msd, tau);

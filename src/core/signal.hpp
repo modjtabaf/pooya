@@ -699,6 +699,9 @@ protected:
 
 public:
     Values(const pooya::Model& model);
+    Values(const Values&) = delete; // forbid copy constructor
+
+    Values& operator=(const Values&) = delete; // forbid assignment
 
     inline const ValueInfo& get_value_info(SignalId sig) const
     {

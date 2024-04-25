@@ -698,7 +698,7 @@ protected:
     }
 
 public:
-    Values(const pooya::Model& model);
+    explicit Values(const pooya::Model& model);
     Values(const Values&) = delete; // forbid copy constructor
 
     Values& operator=(const Values&) = delete; // forbid assignment

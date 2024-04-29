@@ -106,10 +106,10 @@ SignalId BusInfo::at(const std::string& label) const
     return sig->as_bus()->at(label.substr(pos + 1));
 }
 
-Values::Values(const pooya::Model& model)
+Values::Values(const pooya::SignalRegistry& sig_reg)
 {
-    pooya_trace("model: " + model.full_name());
-    const auto& signals = model.signals();
+    // pooya_trace("model: " + model.full_name());
+    const auto& signals = sig_reg.signals();
 
     std::size_t state_variables_size{0};
 

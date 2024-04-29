@@ -26,8 +26,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class Model;
-class Parent;
+class SignalRegistry;
+// class Parent;
 
 template <int N>
 class ArrayN : public Eigen::Array<double, N, 1>
@@ -83,7 +83,7 @@ using LabelSignalIdMap = std::map<LabelSignalId::first_type, LabelSignalId::seco
 
 class SignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 public:
     const std::string _full_name; // full name of the signal
@@ -156,7 +156,7 @@ public:
 
 class ValueSignalInfo : public SignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 protected:
     ValueSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
@@ -178,7 +178,7 @@ public:
 
 class ScalarSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 protected:
     ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
@@ -189,7 +189,7 @@ protected:
 
 class IntSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 protected:
     IntSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
@@ -200,7 +200,7 @@ protected:
 
 class BoolSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 protected:
     BoolSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
@@ -211,7 +211,7 @@ protected:
 
 class ArraySignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 protected:
     ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
@@ -304,7 +304,7 @@ public:
 
 class BusInfo : public SignalInfo
 {
-    friend class Model;
+    friend class SignalRegistry;
 
 public:
     const BusSpec& _spec;
@@ -698,7 +698,7 @@ protected:
     }
 
 public:
-    explicit Values(const pooya::Model& model);
+    explicit Values(const pooya::SignalRegistry& sig_reg);
     Values(const Values&) = delete; // forbid copy constructor
 
     Values& operator=(const Values&) = delete; // forbid assignment

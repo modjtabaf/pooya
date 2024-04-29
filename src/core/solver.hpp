@@ -23,6 +23,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
+template<class Model>
 class StepperBase
 {
 public:
@@ -48,15 +49,24 @@ public:
     virtual void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) = 0;
 };
 
-class Euler : public StepperBase
+template<class Model>
+class Euler : public StepperBase<Model>
 {
 public:
-    Euler(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Euler(const Model& model) : StepperBase<Model>(model) {pooya_trace0;}
 
-    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+    void step(typename StepperBase<Model>::StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override
+    {
+        pooya_trace0;
+        StepperBase<Model>::_callback = callback;
+        double h = new_h = t1 - t0;
+
+        v1 = v0 + h * StepperBase<Model>::f(t0, v0);
+    }
 };
 
-class Rk4 : public StepperBase
+template<class Model>
+class Rk4 : public StepperBase<Model>
 {
 protected:
     Array _K1;
@@ -65,12 +75,26 @@ protected:
     Array _K4;
 
 public:
-    Rk4(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Rk4(const Model& model) : StepperBase<Model>(model) {pooya_trace0;}
 
-    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+    void step(typename StepperBase<Model>::StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override
+    {
+        pooya_trace0;
+        StepperBase<Model>::_callback = callback;
+        double h = new_h = t1 - t0;
+        double h_2 = h / 2;
+
+        _K1 = h_2 * StepperBase<Model>::f(t0      , v0      );
+        _K2 = h_2 * StepperBase<Model>::f(t0 + h_2, v0 + _K1);
+        _K3 = h   * StepperBase<Model>::f(t0 + h_2, v0 + _K2);
+        _K4 = h   * StepperBase<Model>::f(t0 + h  , v0 + _K3);
+
+        v1 = v0 + (1./3) * _K1 + (2./3) * _K2 + (1./3) * _K3 + (1./6) * _K4;
+    }
 };
 
-class Rkf45 : public StepperBase
+template<class Model>
+class Rkf45 : public StepperBase<Model>
 {
 protected:
     Array _K1;
@@ -82,9 +106,36 @@ protected:
     Array _ZT;
 
 public:
-    Rkf45(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Rkf45(const Model& model) : StepperBase<Model>(model) {pooya_trace0;}
 
-    void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
+    // source: https://ece.uwaterloo.ca/~dwharder/NumericalAnalysis/14IVPs/rkf45/complete.html
+    void step(typename StepperBase<Model>::StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override
+    {
+        pooya_trace0;
+        StepperBase<Model>::_callback = callback;
+        double h = t1 - t0;
+        static const double eps_abs = 0.001;
+
+        _K1 = h * StepperBase<Model>::f(t0, v0);
+        _K2 = h * StepperBase<Model>::f(t0 +  1./4  * h, v0 + 1./4 * _K1);
+        _K3 = h * StepperBase<Model>::f(t0 +  3./8  * h, v0 + (3./8 * 1./4) * _K1 + (3./8 * 3./4) * _K2);
+        _K4 = h * StepperBase<Model>::f(t0 + 12./13 * h, v0 + (12./13 * 161./169) * _K1 - (12./13 * 600./169) * _K2 + (12./13 * 608./169) * _K3);
+        _K5 = h * StepperBase<Model>::f(t1             , v0 + (8341./4104) * _K1 - (32832./4104) * _K2 + (29440./4104) * _K3 - (845./4104) * _K4);
+        _K6 = h * StepperBase<Model>::f(t0 +  1./2  * h, v0 - (1./2 * 6080./10260) * _K1 + (1./2 * 41040./10260) * _K2 - (1./2 * 28352./10260) * _K3 + (1./2 * 9295./10260) * _K4 - (1./2 * 5643./10260) * _K5);
+
+        v1  = v0 + (2375./20520) * _K1 + (11264./20520) * _K3 + (10985./20520) * _K4 - (4104./20520) * _K5;
+        _ZT = v0 + (33440./282150) * _K1 + (146432./282150) * _K3 + (142805./282150) * _K4 - (50787./282150) * _K5 + (10260./282150) * _K6;
+
+        double max_abs = (v1 - _ZT).abs().max(0)(0, 0);
+        double s4 = max_abs > 0 ? (eps_abs * h) / (2 * max_abs) : 1;
+
+        if (s4 < 0.31640625) // 0.31640625 == 0.75 ^ 4
+            new_h = h / 2;
+        else if (s4 > 5.0625) // 5.0625 == 1.5 ^ 4
+            new_h = 2 * h;
+        else
+            new_h = h;
+    }
 };
 
 }

@@ -25,14 +25,16 @@ namespace pooya
 {
 
 class Block;
-class Parent;
-class Model;
+// class Parent;
+// class Model;
 
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 
+enum class DecentMode
+
 class Block
 {
-    friend class Parent;
+    // friend class Parent;
 
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
@@ -42,7 +44,7 @@ protected:
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<ValueSignalId> _dependencies;
-    Parent* _parent{nullptr};
+    // Parent* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -57,26 +59,65 @@ protected:
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent& parent, BusId ibus=nullptr, BusId obus=nullptr);
-    virtual void post_init() {}
+    template<typename ParentType>
+    bool init(ParentType& parent, BusId ibus=nullptr, BusId obus=nullptr)
+    {
+        pooya_trace(_given_name);
+        // assert(_parent == nullptr);
+        // if (_parent) return false;
+
+        // _parent = &parent;
+        // pooya_verify(_parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
+
+        _assign_valid_given_name(_given_name);
+        if (_full_name.empty())
+            // _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+            _full_name = "/" + _given_name;
+
+        pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
+            _num_iports == 0 ?
+                _full_name + " cannot take any input." :
+                _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+
+        pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
+            _num_oports == 0 ?
+                _full_name + " cannot generate any output." :
+                _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+        
+        if (ibus && ibus->size() > 0)
+        {
+            _dependencies.reserve(ibus->size());
+            for (auto sig: *ibus)
+                if (sig.second->as_value())
+                    add_dependency(sig.second->as_value());
+            _dependencies.shrink_to_fit();
+        }
+
+        _ibus = ibus;
+        _obus = obus;
+
+        _initialized = true;
+        return true;
+    }
+    // virtual void post_init() {}
 
 public:
     virtual ~Block() = default;
 
-    virtual void pre_step(double /*t*/, Values& /*state_variables*/) {}
-    virtual void post_step(double /*t*/, const Values& /*state_variables*/) {}
+    // virtual void pre_step(double /*t*/, Values& /*state_variables*/) {}
+    // virtual void post_step(double /*t*/, const Values& /*state_variables*/) {}
     virtual void activation_function(double /*t*/, Values& /*x*/) {}
-    virtual Model* model();
+    // virtual Model* model();
 
-    Model& model_ref()
-    {
-        pooya_trace("block: " + full_name());
-        auto* mdl = model();
-        pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
-        return *mdl;
-    }
+    // Model& model_ref()
+    // {
+    //     pooya_trace("block: " + Base::full_name());
+    //     auto* mdl = model();
+    //     pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
+    //     return *mdl;
+    // }
 
-    Parent* parent() {return _parent;}
+    // Parent* parent() {return _parent;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}
@@ -191,9 +232,10 @@ protected:
     }
 
 public:
-    bool init(Parent& parent, BusId ibus, BusId obus) override
+    template<typename ParentType>
+    bool init(ParentType& parent, BusId ibus=nullptr, BusId obus=nullptr)
     {
-        if (!Block::init(parent, ibus, obus))
+        if (!Block::init<ParentType>(parent, ibus, obus))
             return false;
         _s_in = Types<T>::as_type(_ibus->at(0).second);
         return true;
@@ -213,7 +255,8 @@ protected:
     }
 
 public:
-    bool init(Parent& parent, BusId ibus, BusId obus) override
+    template<typename ParentType>
+    bool init(ParentType& parent, BusId ibus=nullptr, BusId obus=nullptr)
     {
         if (!Base::init(parent, ibus, obus))
             return false;
@@ -225,10 +268,13 @@ public:
 template<typename T_in, typename T_out=T_in>
 using SingleInputOutputT = SingleOutputT<T_out, SingleInputT<T_in>>;
 
+template<typename Child, typename Sibling>
 class Parent : public Block
 {
+    using Base = Block;
+
 protected:
-    std::vector<Block*> _components;
+    // std::vector<Block*> _components;
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
@@ -238,28 +284,28 @@ protected:
     BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
-    bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
+    // bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
 
-    void pre_step(double t, Values& values) override
-    {
-        pooya_trace("block: " + full_name());
-        for (auto* component: _components)
-            component->pre_step(t, values);
-    }
+    // void pre_step(double t, Values& values) override
+    // {
+    //     pooya_trace("block: " + Base::full_name());
+    //     for (auto* component: _components)
+    //         component->pre_step(t, values);
+    // }
 
-    void post_step(double t, const Values& values) override
-    {
-        pooya_trace("block: " + full_name());
-        for (auto* component: _components)
-            component->post_step(t, values);
-    }
+    // void post_step(double t, const Values& values) override
+    // {
+    //     pooya_trace("block: " + Base::full_name());
+    //     for (auto* component: _components)
+    //         component->post_step(t, values);
+    // }
 
     // retrieve an existing signal
     SignalId get_generic_signal(const std::string& given_name);
     template<typename T, typename... Ts>
     typename Types<T>::SignalId get_signal(const std::string& given_name, Ts... args)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         SignalId sig = get_generic_signal(given_name);
         if (!sig)
             return nullptr;
@@ -269,27 +315,27 @@ public:
 
     ScalarSignalId get_scalar_signal(const std::string& given_name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return get_signal<double>(given_name);
     }
     IntSignalId get_int_signal(const std::string& given_name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return get_signal<int>(given_name);
     }
     BoolSignalId get_bool_signal(const std::string& given_name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return get_signal<bool>(given_name);
     }
     ArraySignalId get_array_signal(const std::string& given_name, std::size_t size)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return get_signal<Array>(given_name, size);
     }
     BusId get_bus(const std::string& given_name, const BusSpec& spec)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return get_signal<BusSpec>(given_name, spec);
     }
 
@@ -297,29 +343,29 @@ public:
     template<typename T, typename... Ts>
     typename Types<T>::SignalId signal(const std::string& given_name="", Ts... args)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         auto sig = get_signal<T, Ts...>(given_name, args...);
         return sig ? sig : create_signal<T, Ts...>(given_name, args...);
     }
 
     ScalarSignalId scalar_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return signal<double>(given_name);
     }
     IntSignalId int_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return signal<int>(given_name);
     }
     BoolSignalId bool_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return signal<bool>(given_name);
     }
     BusId bus(const std::string& given_name, const BusSpec& spec)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         auto sig = get_bus(given_name, spec);
         return sig ? sig : create_bus(given_name, spec);
     }
@@ -332,22 +378,22 @@ public:
 
     ScalarSignalId create_scalar_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return create_signal<double>(given_name);
     }
     IntSignalId create_int_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return create_signal<int>(given_name);
     }
     BoolSignalId create_bool_signal(const std::string& given_name="")
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return create_signal<bool>(given_name);
     }
     ArraySignalId create_array_signal(const std::string& given_name, std::size_t size)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
+        pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
         return create_signal<Array, std::size_t>(given_name, size);
     }
 
@@ -355,47 +401,78 @@ public:
     SignalId clone_signal(const std::string& given_name, SignalId sig);
     ScalarSignalId clone_signal(const std::string& given_name, ScalarSignalId sig)
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + Base::full_name());
         return clone_signal(given_name, SignalId(sig))->as_scalar();
     }
     IntSignalId clone_signal(const std::string& given_name, IntSignalId sig)
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + Base::full_name());
         return clone_signal(given_name, SignalId(sig))->as_int();
     }
     BoolSignalId clone_signal(const std::string& given_name, BoolSignalId sig)
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + Base::full_name());
         return clone_signal(given_name, SignalId(sig))->as_bool();
     }
     ArraySignalId clone_signal(const std::string& given_name, ArraySignalId sig)
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + Base::full_name());
         return clone_signal(given_name, SignalId(sig))->as_array();
     }
     BusId clone_bus(const std::string& given_name, BusId sig)
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + Base::full_name());
         return clone_signal(given_name, SignalId(sig))->as_bus();
     }
 
     std::string make_signal_name(const std::string& given_name, bool make_new=false);
-    void _mark_unprocessed() override;
-    uint _process(double t, Values& values, bool go_deep = true) override;
+    // void _mark_unprocessed() override;
+    void _mark_unprocessed()
+    {
+        pooya_trace("block: " + full_name());
+        Block::_mark_unprocessed();
+
+        // for (auto component: _components)
+        // {
+        //     component->_mark_unprocessed();
+        // }
+        Child::_mark_unprocessed();
+    }
+    uint _process(double t, Values& values, bool go_deep=true)
+    {
+        pooya_trace("block: " + full_name());
+        uint n_processed = 0;
+        if (!_processed)
+        {
+            _processed = true;
+            if (go_deep)
+            {
+                // for (auto* component: _components)
+                // {
+                //     n_processed += component->_process(t, values);
+                //     if (not component->processed())
+                //         _processed = false;
+                // }
+                n_processed += Child::_process(t, values);
+                if (not component->processed())
+                    _processed = false;
+            }
+        }
+
+        return n_processed;
+    }
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
 }; // class Parent
 
-class Submodel : public Parent
+// class Submodel : public Parent
+// {
+// public:
+//     Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
+
+// }; // class Submodel
+
+class SignalRegistry
 {
-public:
-    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
-
-}; // class Submodel
-
-class Model : public Parent
-{
-    friend class Parent;
-
 public:
     using SignalInfos = std::vector<SignalId>;
 
@@ -403,12 +480,10 @@ protected:
     SignalInfos _signal_infos;
     std::size_t _vi_index{0};
 
-    bool init(Parent&, BusId, BusId) override;
-
     template<typename T, typename... Ts>
     typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         if (name.empty()) return nullptr;
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -426,49 +501,121 @@ protected:
 
     ScalarSignalId register_scalar_signal(const std::string& name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         return register_signal<double>(name);
     }
     IntSignalId register_int_signal(const std::string& name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         return register_signal<int>(name);
     }
     BoolSignalId register_bool_signal(const std::string& name)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         return register_signal<bool>(name);
     }
     ArraySignalId register_array_signal(const std::string& name, std::size_t size)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         return register_signal<Array, std::size_t>(name, size);
     }
     BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
     {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_trace("signal registry, given name: " + name);
         return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
     }
 
 public:
-    Model(std::string given_name="model");
-    ~Model();
+    SignalRegistry();
+    ~SignalRegistry();
 
-    virtual void input_cb(double /*t*/, Values& /*values*/) {}
+    // virtual void input_cb(double /*t*/, Values& /*values*/) {}
 
-    Model* model() override {return this;}
+    // Model* model() override {return this;}
     const SignalInfos& signals() const {return _signal_infos;}
 
     void register_state_variable(SignalId sig, SignalId deriv_sig);
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
 };
 
-template<typename T, typename... Ts>
-typename Types<T>::SignalId Parent::create_signal(const std::string& given_name, Ts... args)
-{
-    pooya_trace("block: " + full_name() + ", given name: " + given_name);
-    return Types<T>::as_type(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));
-}
+// template<typename Child>
+// class Model : public Parent
+// {
+//     // friend class Parent;
+
+// public:
+//     using SignalInfos = std::vector<SignalId>;
+
+// protected:
+//     SignalInfos _signal_infos;
+//     std::size_t _vi_index{0};
+
+//     // bool init(Parent&, BusId, BusId) override;
+
+//     template<typename T, typename... Ts>
+//     typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         if (name.empty()) return nullptr;
+
+//         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+
+//         auto index = _signal_infos.size();
+//         typename Types<T>::SignalId sig;
+//         if constexpr (std::is_base_of_v<ValueSignalInfo, typename Types<T>::SignalInfo>)
+//             sig = new typename Types<T>::SignalInfo(name, index, _vi_index++, args...);
+//         else
+//             sig = new typename Types<T>::SignalInfo(name, index, args...);
+//         _signal_infos.push_back(sig);
+
+//         return sig;
+//     }
+
+//     ScalarSignalId register_scalar_signal(const std::string& name)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         return register_signal<double>(name);
+//     }
+//     IntSignalId register_int_signal(const std::string& name)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         return register_signal<int>(name);
+//     }
+//     BoolSignalId register_bool_signal(const std::string& name)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         return register_signal<bool>(name);
+//     }
+//     ArraySignalId register_array_signal(const std::string& name, std::size_t size)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         return register_signal<Array, std::size_t>(name, size);
+//     }
+//     BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
+//     {
+//         pooya_trace("signal registry, given name: " + name);
+//         return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
+//     }
+
+// public:
+//     Model();
+//     ~Model();
+
+//     // virtual void input_cb(double /*t*/, Values& /*values*/) {}
+
+//     // Model* model() override {return this;}
+//     const SignalInfos& signals() const {return _signal_infos;}
+
+//     void register_state_variable(SignalId sig, SignalId deriv_sig);
+//     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
+// };
+
+// template<typename T, typename... Ts>
+// typename Types<T>::SignalId Parent::create_signal(const std::string& given_name, Ts... args)
+// {
+//     pooya_trace("block: " + Base::full_name() + ", given name: " + given_name);
+//     return Types<T>::as_type(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));
+// }
 
 }
 

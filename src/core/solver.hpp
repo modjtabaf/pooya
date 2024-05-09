@@ -26,24 +26,25 @@ namespace pooya
 class StepperBase
 {
 public:
-    using StepperCallback = std::function<void(double, Values&)>;
+    using StepperCallback = std::function<const ValuesArray::StateVariableDerivs&(double, const Array&)>;
 
 protected:
-    const Model& _model;
-    Values _X;
+    // const Model& _model;
+    // ValuesArray _X;
     StepperCallback _callback;
 
-    template<typename T>
-    auto f(double t, const T& v) -> const auto&
+    // template<typename T>
+    // auto f(double t, const T& v) -> const auto&
+    auto f(double t, const Array& v) -> const ValuesArray::StateVariableDerivs&
     {
         pooya_trace0;
-        _X.reset_with_state_variables(v);
-        _callback(t, _X);
-        return _X.derivs();
+        // _model.reset_with_state_variables(v);
+        return _callback(t, v);
+        // return _model.derivs();
     }
 
 public:
-    StepperBase(const Model& model) : _model(model), _X(model) {pooya_trace0;}
+    StepperBase() = default;
 
     virtual void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) = 0;
 };
@@ -51,7 +52,7 @@ public:
 class Euler : public StepperBase
 {
 public:
-    Euler(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Euler() = default;
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -65,7 +66,7 @@ protected:
     Array _K4;
 
 public:
-    Rk4(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Rk4() = default;
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };
@@ -82,7 +83,7 @@ protected:
     Array _ZT;
 
 public:
-    Rkf45(const Model& model) : StepperBase(model) {pooya_trace0;}
+    Rkf45() = default;
 
     void step(StepperCallback callback, double t0, const Array& v0, double t1, Array& v1, double& new_h) override;
 };

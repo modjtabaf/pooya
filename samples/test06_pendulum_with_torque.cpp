@@ -104,15 +104,19 @@ int main()
     auto g = model.scalar_signal("g");
     auto tau = model.scalar_signal("tau");
 
-    pooya::Rkf45 stepper(model);
+    pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            values[m] = 0.2;
-            values[l] = 0.1;
-            values[g] = 9.81;
-            values[tau] = 0.13;
+            // values[m] = 0.2;
+            m->set(0.2);
+            // values[l] = 0.1;
+            l->set(0.1);
+            // values[g] = 9.81;
+            g->set(9.81);
+            // values[tau] = 0.13;
+            tau->set(0.13);
         },
         &stepper, true);
 
@@ -123,7 +127,7 @@ int main()
     while (pooya::arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

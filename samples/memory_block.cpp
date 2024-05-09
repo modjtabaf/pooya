@@ -41,10 +41,11 @@ int main()
     model.add_block(memory, x, y);
 
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t, pooya::Values& values) -> void
+        [&](pooya::Model&, double t) -> void
         {
             pooya_trace0;
-            values[x] = std::sin(M_PI * t / 5);
+            // values[x] = std::sin(M_PI * t / 5);
+            x->set(std::sin(M_PI * t / 5));
         });
 
     pooya::History history(model);
@@ -54,7 +55,7 @@ int main()
     while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

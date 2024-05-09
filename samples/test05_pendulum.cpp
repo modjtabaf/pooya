@@ -83,13 +83,15 @@ int main()
     auto l = model.scalar_signal("l");
     auto g = model.scalar_signal("g");
 
-    pooya::Rk4 stepper(model);
+    pooya::Rk4 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            values[l] = 0.1;
-            values[g] = 9.81;
+            // values[l] = 0.1;
+            l->set(0.1);
+            // values[g] = 9.81;
+            g->set(9.81);
         },
         &stepper);
 
@@ -100,7 +102,7 @@ int main()
     while (pooya::arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

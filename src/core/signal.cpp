@@ -106,125 +106,131 @@ SignalId BusInfo::at(const std::string& label) const
     return sig->as_bus()->at(label.substr(pos + 1));
 }
 
-Values::Values(const pooya::Model& model)
+void ValuesArray::init(std::size_t num_values, std::size_t num_state_variables)
 {
-    pooya_trace("model: " + model.full_name());
-    const auto& signals = model.signals();
+    pooya_trace("ValuesArray: " + std::to_string(num_values) + " values, " + std::to_string(num_state_variables) + " states");
+    pooya_verify(num_state_variables <= num_values, "Number of state variables (" + std::to_string(num_state_variables)
+        + " cannot be more than the number of values (" + std::to_string(num_values) + ").");
+    // const auto& signals = model.signals();
 
-    std::size_t state_variables_size{0};
+    _values.resize(num_values);
+    new (&_state_variables) StateVariables(_values.data(), num_state_variables);
+    _state_variable_derivs.resize(num_state_variables);
 
-    // find the total sizes of signals and state variables
-    for (const auto* signal: signals)
-    {
-        if (!signal->as_value()) continue;
-        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
-        _total_size += size;
-        if (signal->as_value()->is_state_variable())
-            state_variables_size += size;
-    }
+    // std::size_t state_variables_size{0};
 
-    _values.resize(_total_size);
+    // // find the total sizes of signals and state variables
+    // for (const auto* signal: signals)
+    // {
+    //     if (!signal->as_value()) continue;
+    //     auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
+    //     _total_size += size;
+    //     if (signal->as_value()->is_state_variable())
+    //         state_variables_size += size;
+    // }
 
-    double* state_variables_start = _values.data();
-    double* other_start = state_variables_start + state_variables_size;
+    // _values.resize(_total_size);
 
-    for (const auto* signal: signals)
-    {
-        if (!signal->as_value()) continue;
-        auto& start = signal->as_value()->is_state_variable() ? state_variables_start : other_start;
-        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
-        if (signal->as_int())
-            _value_infos.push_back({*signal->as_int(), start});
-        else if (signal->as_bool())
-            _value_infos.push_back({*signal->as_bool(), start});
-        else
-            _value_infos.push_back({*signal->as_value(), start, size});
-        start += std::max<std::size_t>(size, 1);
-    }
+    // double* state_variables_start = _values.data();
+    // double* other_start = state_variables_start + state_variables_size;
 
-    assert(state_variables_start == _values.data() + state_variables_size);
-    assert(other_start == _values.data() + _total_size);
+    // for (const auto* signal: signals)
+    // {
+    //     if (!signal->as_value()) continue;
+    //     auto& start = signal->as_value()->is_state_variable() ? state_variables_start : other_start;
+    //     auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
+    //     if (signal->as_int())
+    //         _value_infos.push_back({*signal->as_int(), start});
+    //     else if (signal->as_bool())
+    //         _value_infos.push_back({*signal->as_bool(), start});
+    //     else
+    //         _value_infos.push_back({*signal->as_value(), start, size});
+    //     start += std::max<std::size_t>(size, 1);
+    // }
 
-    new (&_state_variables) decltype(_state_variables)(_values.data(), state_variables_size);
+    // assert(state_variables_start == _values.data() + state_variables_size);
+    // assert(other_start == _values.data() + _total_size);
 
-    _derivs.resize(state_variables_size);
-    double* deriv_start = _derivs.data();
+    // new (&_state_variables) decltype(_state_variables)(_values.data(), state_variables_size);
+
+    // _derivs.resize(state_variables_size);
+    // double* deriv_start = _derivs.data();
 
     // state-variable-specific steps
 
-    for (const auto* signal: signals)
-    {
-        if (!signal->as_value()) continue;
-        if (!signal->as_value()->is_state_variable())
-            continue;
+    // for (const auto* signal: signals)
+    // {
+    //     if (!signal->as_value()) continue;
+    //     if (!signal->as_value()->is_state_variable())
+    //         continue;
 
-        auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
-        if (signal->as_scalar())
-            deriv_vi._deriv_scalar = deriv_start;
-        else
-            new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->as_array()->_size);
+    //     auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
+    //     if (signal->as_scalar())
+    //         deriv_vi._deriv_scalar = deriv_start;
+    //     else
+    //         new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->as_array()->_size);
 
-        deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
-    }
+    //     deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
+    // }
 }
 
-#ifndef POOYA_NDEBUG
-const decltype(Values::_state_variables)& Values::state_variables() const
-{
-    for (const auto& vi: _value_infos)
-    {
-        pooya_verify(!vi._si->is_state_variable() || vi.is_assigned(), "unassigned state variable");
-    }
-    return _state_variables;
-}
-#endif // !definded(POOYA_NDEBUG)
+// #ifndef POOYA_NDEBUG
+// const decltype(Values::_state_variables)& Values::state_variables() const
+// {
+//     for (const auto& vi: _value_infos)
+//     {
+//         pooya_verify(!vi._si->is_state_variable() || vi.is_assigned(), "unassigned state variable");
+//     }
+//     return _state_variables;
+// }
+// #endif // !definded(POOYA_NDEBUG)
 
-void Values::invalidate()
-{
-#ifndef POOYA_NDEBUG
-    _values.setZero();
-    _derivs.setZero();
-#endif // !defined(POOYA_NDEBUG)
-    for (auto& vi: _value_infos)
-    {
-        vi._assigned = false;
-    }
-}
+// void Values::invalidate()
+// {
+// #ifndef POOYA_NDEBUG
+//     _values.setZero();
+//     _derivs.setZero();
+// #endif // !defined(POOYA_NDEBUG)
+//     for (auto& vi: _value_infos)
+//     {
+//         vi._assigned = false;
+//     }
+// }
 
-void Values::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
-{
-    pooya_trace0;
-#ifndef POOYA_NDEBUG
-    _values.setZero();
-    _derivs.setZero();
-#endif // !defined(POOYA_NDEBUG)
-    _state_variables = state_variables;
-    for (auto& vi: _value_infos)
-    {
-        vi._assigned = vi._si->is_state_variable();
-        if (!vi._assigned)
-            continue;
+// void Values::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
+// {
+//     pooya_trace0;
+// #ifndef POOYA_NDEBUG
+//     _values.setZero();
+//     _derivs.setZero();
+// #endif // !defined(POOYA_NDEBUG)
+//     _state_variables = state_variables;
+//     for (auto& vi: _value_infos)
+//     {
+//         vi._assigned = vi._si->is_state_variable();
+//         if (!vi._assigned)
+//             continue;
 
-        if (vi._si->is_deriv())
-        {
-            if (vi._deriv_scalar)
-                *vi._deriv_scalar = *vi._scalar;
-            else
-                vi._deriv_array = vi._array;
-        }
-    }
-}
+//         if (vi._si->is_deriv())
+//         {
+//             if (vi._deriv_scalar)
+//                 *vi._deriv_scalar = *vi._scalar;
+//             else
+//                 vi._deriv_array = vi._array;
+//         }
+//     }
+// }
 
-typename Types<double>::GetValue Values::get_as_scalar(SignalId sig) const
-{
-    pooya_verify_value_signal(sig);
-    if (sig->as_scalar())
-        return get(sig->as_scalar());
-    else if (sig->as_int())
-        return static_cast<typename Types<double>::GetValue>(get(sig->as_int()));
-    pooya_verify_bool_signal(sig);
-    return static_cast<typename Types<double>::GetValue>(get(sig->as_bool()));
-}
+// typename Types<double>::GetValue Values::get_as_scalar(SignalId sig) const
+// {
+//     pooya_verify_value_signal(sig);
+//     if (sig->as_scalar())
+//         return get(sig->as_scalar());
+//     else if (sig->as_int())
+//         return static_cast<typename Types<double>::GetValue>(get(sig->as_int()));
+//     pooya_verify_bool_signal(sig);
+//     return static_cast<typename Types<double>::GetValue>(get(sig->as_bool()));
+// }
 
 void BusInfo::_set(std::size_t index, SignalId sig)
 {

@@ -80,7 +80,7 @@ int main()
     while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

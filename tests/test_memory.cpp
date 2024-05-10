@@ -49,16 +49,16 @@ TEST_F(TestMemory, ScalarMemory)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
-            values[s_x] = x;
+            s_x->set(x);
         });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    EXPECT_EQ(x0, sim.values().get(s_y));
+    EXPECT_EQ(x0, *s_y);
 }
 
 TEST_F(TestMemory, ArrayMemory)
@@ -77,16 +77,16 @@ TEST_F(TestMemory, ArrayMemory)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
-            values[s_x] = x;
+            s_x->set(x);
         });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    auto y = sim.values().get(s_y);
+    auto y = s_y->get();
     for (std::size_t k=0; k < N; k++)
     {
         EXPECT_EQ(y[k], x0[k]);

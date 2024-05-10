@@ -354,7 +354,7 @@ SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
     }
     else if (sig->as_array())
     {
-        return create_array_signal(given_name, sig->as_array()->_size);
+        return create_array_signal(given_name, sig->as_array()->size());
     }
     else
     {
@@ -390,7 +390,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
             else if (ls.second->as_bool())
                 wire_infos.emplace_back("b:" + ls.first);
             else if (ls.second->as_array())
-                wire_infos.emplace_back(ls.first, ls.second->as_array()->_size);
+                wire_infos.emplace_back(ls.first, ls.second->as_array()->size());
             else if (ls.second->as_bus())
                 wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);
             else
@@ -458,12 +458,12 @@ void Model::lock_signals()
         auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
         if (signal->as_scalar())
             signal->_scalar->_scalar_value = start;
-        // else if (signal->as_int())
-        //     _value_infos.push_back({*signal->as_int(), start}); // TODO
+        else if (signal->as_int())
+            signal->_int->_int_value = start;
         else if (signal->as_bool())
             signal->_bool->_bool_value = start;
-        // else
-        //     _value_infos.push_back({*signal->as_value(), start, size}); // TODO
+        else
+            new (&signal->_array->_array_value) decltype(signal->_array->_array_value)(start, size);
         start += std::max<std::size_t>(size, 1);
     }
     pooya_here0;
@@ -486,8 +486,8 @@ void Model::lock_signals()
         // auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
         if (signal->as_scalar())
             signal->_scalar->_deriv_sig->_scalar->_deriv_scalar_value = deriv_start;
-        // else
-        //     new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->as_array()->_size); // TODO
+        else
+            new (&signal->_array->_deriv_array_value) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->_array->_size);
 
         deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }
@@ -520,8 +520,8 @@ void Model::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
             {
                 if (sig->_scalar)
                     *sig->_scalar->_deriv_scalar_value = *sig->_scalar->_scalar_value;
-                // else
-                //     *sig->_scalar->_deriv_scalar_value = *sig->_scalar->_scalar_value; // TODO
+                else
+                    sig->_array->_deriv_array_value = sig->_array->_array_value;
             }
         }
         else

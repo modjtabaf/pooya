@@ -60,11 +60,11 @@ TEST_F(TestDelay, ScalarDelay)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t, pooya::Values& values) -> void
+        [&](pooya::Model&, double t) -> void
         {
-            values[s_time_delay] = time_delay;
-            values[s_initial] = initial;
-            values[s_x] = func(t);
+            s_time_delay->set(time_delay);
+            s_initial->set(initial);
+            s_x->set(func(t));
         });
 
     double t;
@@ -75,14 +75,14 @@ TEST_F(TestDelay, ScalarDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ(initial, sim.values().get(s_y));
+    EXPECT_EQ(initial, s_y->get());
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR(func(t_end - time_delay), sim.values().get(s_y), 1e-10);
+    EXPECT_NEAR(func(t_end - time_delay), s_y->get(), 1e-10);
 }
 
 TEST_F(TestDelay, ArrayDelay)
@@ -114,11 +114,11 @@ TEST_F(TestDelay, ArrayDelay)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t, pooya::Values& values) -> void
+        [&](pooya::Model&, double t) -> void
         {
-            values[s_time_delay] = time_delay;
-            values[s_initial] = initial;
-            values[s_x] = func(t);
+            s_time_delay->set(time_delay);
+            s_initial->set(initial);
+            s_x->set(func(t));
         });
 
     double t;
@@ -129,12 +129,12 @@ TEST_F(TestDelay, ArrayDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ((initial - sim.values().get(s_y)).abs().maxCoeff(), 0);
+    EXPECT_EQ((initial - s_y->get()).abs().maxCoeff(), 0);
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR((func(t_end - time_delay) - sim.values().get(s_y)).abs().maxCoeff(), 0, 1e-10);
+    EXPECT_NEAR((func(t_end - time_delay) - s_y->get()).abs().maxCoeff(), 0, 1e-10);
 }

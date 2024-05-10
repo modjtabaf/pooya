@@ -79,7 +79,7 @@ public:
 };
 
 using Const = ConstT<double>;
-// using ConstA = ConstT<Array>;
+using ConstA = ConstT<Array>;
 
 template <typename T, typename GainType>
 class GainT : public SingleInputOutputT<T>
@@ -101,8 +101,8 @@ public:
 };
 
 using Gain = GainT<double, double>;
-// using GainI = GainT<int, int>;
-// using GainA = GainT<Array, double>;
+using GainI = GainT<int, int>;
+using GainA = GainT<Array, double>;
 
 template <typename T>
 class SinT : public SingleInputOutputT<T>
@@ -122,7 +122,7 @@ template<>
 void SinT<double>::activation_function(double);
 
 using Sin = SinT<double>;
-// using SinA = SinT<Array>;
+using SinA = SinT<Array>;
 
 template <typename T>
 class SISOFunctionT : public SingleInputOutputT<T>
@@ -146,7 +146,7 @@ public:
 };
 
 using SISOFunction = SISOFunctionT<double>;
-// using SISOFunctionA = SISOFunctionT<Array>;
+using SISOFunctionA = SISOFunctionT<Array>;
 
 // template <typename T>
 // class SOFunctionT : public SingleOutputT<T>
@@ -212,8 +212,8 @@ public:
 };
 
 using Source = SourceT<double>;
-// using SourceI = SourceT<int>;
-// using SourceA = SourceT<Array>;
+using SourceI = SourceT<int>;
+using SourceA = SourceT<Array>;
 
 // class Sources : public Block
 // {
@@ -284,8 +284,8 @@ public:
     }
 };
 
-// using AddSub = AddSubT<double>;
-// using AddSubA = AddSubT<Array>;
+using AddSub = AddSubT<double>;
+using AddSubA = AddSubT<Array>;
 
 template <typename T>
 class AddT : public AddSubT<T>
@@ -304,7 +304,7 @@ public:
 };
 
 using Add = AddT<double>;
-// using AddA = AddT<Array>;
+using AddA = AddT<Array>;
 
 template <typename T>
 class SubtractT : public AddSubT<T>
@@ -315,7 +315,7 @@ public:
 };
 
 using Subtract = SubtractT<double>;
-// using SubtractA = SubtractT<Array>;
+using SubtractA = SubtractT<Array>;
 
 template <typename T>
 class MulDivT : public SingleOutputT<T>
@@ -365,7 +365,7 @@ public:
 };
 
 using MulDiv = MulDivT<double>;
-// using MulDivA = MulDivT<Array>;
+using MulDivA = MulDivT<Array>;
 
 // template <typename T>
 // class MultiplyT : public MulDivT<T>
@@ -456,7 +456,7 @@ public:
 };
 
 using Integrator = IntegratorT<double>;
-// using IntegratorA = IntegratorT<Array>;
+using IntegratorA = IntegratorT<Array>;
 
 template <typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
@@ -508,7 +508,7 @@ public:
 };
 
 using TriggeredIntegrator = TriggeredIntegratorT<double>;
-// using TriggeredIntegratorA = TriggeredIntegratorT<Array>;
+using TriggeredIntegratorA = TriggeredIntegratorT<Array>;
 
 template <typename T>
 class DelayT : public SingleOutputT<T>
@@ -603,7 +603,7 @@ public:
 };
 
 using Delay = DelayT<double>;
-// using DelayA = DelayT<Array>;
+using DelayA = DelayT<Array>;
 
 template <typename T>
 class MemoryT : public SingleInputOutputT<T>
@@ -646,54 +646,54 @@ public:
 };
 
 using Memory = MemoryT<double>;
-// using MemoryI = MemoryT<int>;
-// using MemoryB = MemoryT<bool>;
-// using MemoryA = MemoryT<Array>;
+using MemoryI = MemoryT<int>;
+using MemoryB = MemoryT<bool>;
+using MemoryA = MemoryT<Array>;
 
-// template <typename T>
-// class DerivativeT : public SingleInputOutputT<T>
-// {
-// protected:
-//     bool _first_step{true};
-//     double _t;
-//     T _x;
-//     T _y;
+template <typename T>
+class DerivativeT : public SingleInputOutputT<T>
+{
+protected:
+    bool _first_step{true};
+    double _t;
+    T _x;
+    T _y;
 
-// public:
-//     DerivativeT(std::string given_name, const T &y0 = 0)
-//             : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
+public:
+    DerivativeT(std::string given_name, const T &y0 = 0)
+            : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
 
-//     void post_step(double t, const Values &values) override
-//     {
-//         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-//         _t = t;
-//         _x = values.get(SingleInputOutputT<T>::_s_in);
-//         _y = _x;
-//         _first_step = false;
-//     }
+    void post_step(double t) override
+    {
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        _t = t;
+        _x = *SingleInputOutputT<T>::_s_in;
+        _y = _x;
+        _first_step = false;
+    }
 
-//     void activation_function(double t, Values &values) override
-//     {
-//         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-//         if (_first_step)
-//         {
-//             _t = t;
-//             _x = values.get(SingleInputOutputT<T>::_s_in);
-//             values.set(SingleInputOutputT<T>::_s_out, _y);
-//         }
-//         else if (_t == t)
-//         {
-//             values.set(SingleInputOutputT<T>::_s_out, _y);
-//         }
-//         else
-//         {
-//             values.set(SingleInputOutputT<T>::_s_out, (values.get(SingleInputOutputT<T>::_s_in) - _x) / (t - _t));
-//         }
-//     }
-// };
+    void activation_function(double t) override
+    {
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        if (_first_step)
+        {
+            _t = t;
+            _x = *SingleInputOutputT<T>::_s_in;
+            SingleInputOutputT<T>::_s_out->set(_y);
+        }
+        else if (_t == t)
+        {
+            SingleInputOutputT<T>::_s_out->set(_y);
+        }
+        else
+        {
+            SingleInputOutputT<T>::_s_out->set((*SingleInputOutputT<T>::_s_in - _x) / (t - _t));
+        }
+    }
+};
 
-// using Derivative = DerivativeT<double>;
-// using DerivativeA = DerivativeT<Array>;
+using Derivative = DerivativeT<double>;
+using DerivativeA = DerivativeT<Array>;
 
 // template <typename T>
 // class PipeT : public SingleInputOutputT<T>
@@ -713,42 +713,42 @@ using Memory = MemoryT<double>;
 // using PipeB = PipeT<bool>;
 // using PipeA = PipeT<Array>;
 
-// class BusBlockBuilder : public SingleInputOutputT<BusSpec>
-// {
-// protected:
-//     std::vector<std::unique_ptr<Block>> _blocks;
-//     std::vector<std::string> _excluded_labels;
+class BusBlockBuilder : public SingleInputOutputT<BusSpec>
+{
+protected:
+    std::vector<std::unique_ptr<Block>> _blocks;
+    std::vector<std::string> _excluded_labels;
 
-//     void traverse_bus(const std::string &path_name, const BusSpec &bus_spec);
+    void traverse_bus(const std::string &path_name, const BusSpec &bus_spec);
 
-//     virtual void block_builder(const std::string &path_name, const BusSpec::WireInfo &wi,
-//         SignalId sig_in, SignalId sig_out) = 0;
+    virtual void block_builder(const std::string &path_name, const BusSpec::WireInfo &wi,
+        SignalId sig_in, SignalId sig_out) = 0;
 
-// public:
-//     BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
-//         : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
+public:
+    BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
+        : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
 
-//     bool init(Parent &parent, BusId ibus, BusId obus) override;
-//     void post_init() override;
-// };
+    bool init(Parent &parent, BusId ibus, BusId obus) override;
+    void post_init() override;
+};
 
-// class BusMemory : public BusBlockBuilder
-// {
-// public:
-//     using LabelValueMap = std::map<std::string, Value>;
-//     using LabelValue = LabelValueMap::value_type;
+class BusMemory : public BusBlockBuilder
+{
+public:
+    using LabelValueMap = std::map<std::string, Value>;
+    using LabelValue = LabelValueMap::value_type;
 
-// protected:
-//     LabelValueMap _init_values;
+protected:
+    LabelValueMap _init_values;
 
-// public:
-//     BusMemory(const std::string& given_name, const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
-//             : BusBlockBuilder(given_name, excluded_labels), _init_values(l) {}
+public:
+    BusMemory(const std::string& given_name, const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
+            : BusBlockBuilder(given_name, excluded_labels), _init_values(l) {}
 
-// protected:
-//     void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi, SignalId sig_in, SignalId sig_out) override;
-//     void post_init() override;
-// };
+protected:
+    void block_builder(const std::string &full_label, const BusSpec::WireInfo &wi, SignalId sig_in, SignalId sig_out) override;
+    void post_init() override;
+};
 
 // class BusPipe : public BusBlockBuilder
 // {

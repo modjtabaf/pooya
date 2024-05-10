@@ -249,6 +249,28 @@ protected:
     {
         _int = this;
     }
+
+    double* _int_value{nullptr};
+
+public:
+    int get() const
+    {
+        pooya_trace0;
+        pooya_verify(_int_value, _full_name + ": attempting to retrieve the value of an uninitialized int signal!");
+        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        return std::round(*_int_value);
+    }
+
+    void set(double value)
+    {
+        pooya_trace("value: " + std::to_string(value));
+        pooya_verify(_int_value, _full_name + ": attempting to assign the value of an uninitialized int signal!");
+        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        *_int_value = std::round(value);
+        _assigned = true;
+    }
+
+    operator int() const {return get();}
 };
 
 class BoolSignalInfo : public ValueSignalInfo
@@ -295,6 +317,7 @@ protected:
         _array = this;
     }
 
+    const std::size_t _size;
     Eigen::Map<Eigen::ArrayXd> _array_value{nullptr, 0};
     Eigen::Map<Eigen::ArrayXd> _deriv_array_value{nullptr, 0};
     // ArraySignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
@@ -302,7 +325,32 @@ protected:
     // bool is_state_variable() const {return _deriv_sig;}
 
 public:
-    const std::size_t _size;
+    const Eigen::Map<Eigen::ArrayXd>& get() const
+    {
+        pooya_trace0;
+        pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to retrieve the value of an uninitialized array signal!");
+        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        return _array_value;
+    }
+
+    void set(const Array& value)
+    {
+        pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to assign the value of an uninitialized array signal!");
+        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        pooya_verify(value.rows() == int(_size),
+            std::string("size mismatch (id=") + _full_name + ")(" + std::to_string(_size) +
+            " vs " + std::to_string(value.rows()) + ")!");
+        _array_value = value;
+        if (_deriv_array_value.size() == int(_size))
+        {
+            _deriv_array_value = value;
+        }
+        _assigned = true;
+    }
+
+    std::size_t size() const {return _size;}
+
+    // operator const Eigen::Map<Eigen::ArrayXd>&() const {return get();}
 };
 
 class BusSpec

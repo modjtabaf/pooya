@@ -115,7 +115,7 @@ public:
 
 #define pooya_verify_array_signal_size(sig, size_) \
     pooya_verify_array_signal(sig); \
-    pooya_verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
+    pooya_verify((sig)->as_array()->size() == size_, (sig)->_full_name + ": array size mismatch!");
 
 #define pooya_verify_bus(sig) \
     pooya_verify_valid_signal(sig); \

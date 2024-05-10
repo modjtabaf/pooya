@@ -37,15 +37,15 @@ void History::track_all()
         if (sig->as_value()) _signals.push_back(sig->as_value());
 }
 
-void History::track(ValueSignalId sig)
+void History::track(SignalId sig)
 {
     pooya_verify(empty(), "track should be called before the history is updated!");
     pooya_verify_value_signal(sig);
     if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
-        _signals.push_back(sig);
+        _signals.push_back(sig->as_value());
 }
 
-void History::untrack(ValueSignalId sig)
+void History::untrack(SignalId sig)
 {
     pooya_verify(empty(), "untrack should be called before the history is updated!");
     pooya_verify_value_signal(sig);
@@ -64,7 +64,7 @@ void History::update(uint k, double t)
             if (sig->as_scalar() || sig->as_int() || sig->as_bool())
                 insert_or_assign(sig, Array(_nrows_grow));
             else
-                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->_size));
+                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));
         }
     }
 
@@ -78,16 +78,16 @@ void History::update(uint k, double t)
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         bool valid = sig->is_assigned();
         if (sig->as_int())
-            continue; // h(k, 0) = valid ? sig->as_int()->_value : 0; // TODO
+            h(k, 0) = valid ? sig->as_int()->get() : 0;
         else if (sig->as_bool())
             h(k, 0) = valid ? sig->as_bool()->get() : 0;
         else if (sig->as_scalar())
             h(k, 0) = valid ? sig->as_scalar()->get() : 0;
         else
         {
-            // if (valid)
-            //     h.row(k) = values.get<Array>(sig);
-            // else // TODO
+            if (valid)
+                h.row(k) = sig->as_array()->get();
+            else
                 h.row(k).setZero();
         }
     }
@@ -126,7 +126,7 @@ void History::export_csv(std::string filename)
             if (h.first->as_array())
             {
                 auto sig = h.first->as_array();
-                for (std::size_t k=0; k < sig->_size; k++)
+                for (std::size_t k=0; k < sig->size(); k++)
                     ofs << "," << h.first->_full_name << "[" << k << "]";
             }
             else
@@ -146,7 +146,7 @@ void History::export_csv(std::string filename)
             if (h.first->as_array())
             {
                 auto sig = h.first->as_array();
-                for (std::size_t j=0; j < sig->_size; j++)
+                for (std::size_t j=0; j < sig->size(); j++)
                     ofs << "," << h.second(k, j);
             }
             else

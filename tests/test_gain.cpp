@@ -48,16 +48,16 @@ TEST_F(TestGain, ScalarGain)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
-            values[s_x] = x;
+            s_x->set(x);
         });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    EXPECT_NEAR(gain.gain() * x, sim.values().get(s_y), 1e-10);
+    EXPECT_NEAR(gain.gain() * x, *s_y, 1e-10);
 }
 
 TEST_F(TestGain, ArrayGain)
@@ -75,9 +75,9 @@ TEST_F(TestGain, ArrayGain)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
-            values[s_x] = x;
+            s_x->set(x);
         });
 
     // do one step
@@ -85,7 +85,7 @@ TEST_F(TestGain, ArrayGain)
 
     // verify the results
     auto des_y = gain.gain() * x;
-    auto y = sim.values().get(s_y);
+    auto y = s_y->get();
     for (std::size_t k=0; k < N; k++)
     {
         EXPECT_NEAR(des_y[k], y[k], 1e-10);

@@ -37,8 +37,8 @@ public:
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
     void track_all();
-    void track(ValueSignalId sig);
-    void untrack(ValueSignalId sig);
+    void track(SignalId sig);
+    void untrack(SignalId sig);
     void update(uint k, double t);
     void export_csv(std::string filename);
     void shrink_to_fit();

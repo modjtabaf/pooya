@@ -64,32 +64,24 @@ public:
         return true;
     }
 
-    void activation_function(double /*t*/, pooya::Values& values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace0;
 
-        // get state variables and input
-        double x   = values[_s_x];
-        double xd  = values[_s_xd];
-        double tau = values[_s_tau];
-
         // calculate acceleration
-        double xdd = tau/_m - _c/_m * xd - _k/_m * x;
-
-        // assign acceleration
-        values[_s_xdd] = xdd;
+        _s_xdd->set(*_s_tau/_m - _c/_m * *_s_xd - _k/_m * *_s_x);
     }
 
-    void pre_step(double /*t*/, pooya::Values& values) override
+    void pre_step(double /*t*/) override
     {
-        values[_s_x]  = _x;
-        values[_s_xd] = _xd;
+        _s_x->set(_x);
+        _s_xd->set(_xd);
     }
 
-    void post_step(double /*t*/, const pooya::Values& values) override
+    void post_step(double /*t*/) override
     {
-        _x  = values[_s_x];
-        _xd = values[_s_xd];
+        _x = *_s_x;
+        _xd = *_s_xd;
     }
 };
 
@@ -110,12 +102,12 @@ int main()
     // setup the model
     model.add_block(msd, tau);
 
-    pooya::Euler stepper(model);
+    pooya::Euler stepper;
     pooya::Simulator sim(model,
-    [&](pooya::Model&, double t, pooya::Values& values) -> void
+    [&](pooya::Model&, double t) -> void
     {
         pooya_trace0;
-        values[tau] = 0.01 * std::sin(t);
+        tau->set(0.01 * std::sin(t));
     }, &stepper);
 
     pooya::History history(model);
@@ -125,7 +117,7 @@ int main()
     while (pooya::arange(k, t, 0, 50, 0.01))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

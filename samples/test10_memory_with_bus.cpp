@@ -84,13 +84,13 @@ int main()
     auto x_z3 = x->scalar_at("Z.z3");
 
     pooya::Simulator sim(
-        model, [&](pooya::Model &, double t, pooya::Values &values) -> void
+        model, [&](pooya::Model &, double t) -> void
         {
             pooya_trace0;
-            values[x_x0] = std::sin(M_PI * t / 3);
-            values[x_x1] = std::sin(M_PI * t / 5);
-            values[x_x2] = std::sin(M_PI * t / 7);
-            values[x_z3] = std::sin(M_PI * t / 9);
+            x_x0->set(std::sin(M_PI * t / 3));
+            x_x1->set(std::sin(M_PI * t / 5));
+            x_x2->set(std::sin(M_PI * t / 7));
+            x_z3->set(std::sin(M_PI * t / 9));
         });
 
     pooya::History history(model);
@@ -100,7 +100,7 @@ int main()
     while (pooya::arange(k, t, 0, 10, 0.5))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

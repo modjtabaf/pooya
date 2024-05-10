@@ -29,24 +29,7 @@ namespace pooya
 class Model;
 class Parent;
 
-template <int N>
-class ArrayN : public Eigen::Array<double, N, 1>
-{
-public:
-    using _Parent = Eigen::Array<double, N, 1>;
-    using _Parent::Array;
-
-    ArrayN() = default;
-    explicit ArrayN(const ArrayN&) = default;
-    explicit ArrayN(double v) : _Parent()
-    {
-        pooya_trace0;
-        pooya_verify((N == 1) || (N == Eigen::Dynamic), "cannot initiaize an array with a scalar!");
-        if constexpr (N == Eigen::Dynamic)
-            _Parent::resize(1);
-        (*this)[0] = v;
-    }
-};
+template<int N> using ArrayN = Eigen::Array<double, N, 1>;
 
 using Array  = ArrayN<Eigen::Dynamic>;
 using Array1 = ArrayN<1>; // use a scalar instead
@@ -59,7 +42,7 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
-using ConstArrayRef = const Eigen::Map<Eigen::ArrayXd>&;
+using MappedArray = Eigen::Map<Array>;
 
 class       SignalInfo;
 class  ValueSignalInfo;
@@ -318,14 +301,14 @@ protected:
     }
 
     const std::size_t _size;
-    Eigen::Map<Eigen::ArrayXd> _array_value{nullptr, 0};
-    Eigen::Map<Eigen::ArrayXd> _deriv_array_value{nullptr, 0};
+    MappedArray _array_value{nullptr, 0};
+    MappedArray _deriv_array_value{nullptr, 0};
     // ArraySignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
 
     // bool is_state_variable() const {return _deriv_sig;}
 
 public:
-    const Eigen::Map<Eigen::ArrayXd>& get() const
+    const MappedArray& get() const
     {
         pooya_trace0;
         pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to retrieve the value of an uninitialized array signal!");
@@ -350,7 +333,7 @@ public:
 
     std::size_t size() const {return _size;}
 
-    // operator const Eigen::Map<Eigen::ArrayXd>&() const {return get();}
+    // operator const MappedArray&() const {return get();}
 };
 
 class BusSpec
@@ -592,7 +575,7 @@ struct Types<Array>
 {
     using SignalInfo = ArraySignalInfo;
     using SignalId = ArraySignalId;
-    using GetValue = ConstArrayRef;
+    using GetValue = const MappedArray&;
     using SetValue = const Array&;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_array_signal(sig);}
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {pooya_verify_array_signal_size(sig, size);}
@@ -684,10 +667,10 @@ public:
 //     // double* _scalar{nullptr};                            // valid if this is a scalar signal (bool, int, double), nullptr otherwise
 //     bool _int{false};                                    // used only if this is a scalar signal, false otherwise
 //     bool _bool{false};                                   // used only if this is a scalar signal, false otherwise
-//     Eigen::Map<Eigen::ArrayXd> _array{nullptr, 0};       // used only if this is an array signal, empty otherwise
+//     MappedArray _array{nullptr, 0};       // used only if this is an array signal, empty otherwise
 
 //     // double* _deriv_scalar{nullptr};                      // only valid if _is_deriv member of the signal info is true and this is a float scalar signal, nullptr otherwise
-//     Eigen::Map<Eigen::ArrayXd> _deriv_array{nullptr, 0}; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
+//     MappedArray _deriv_array{nullptr, 0}; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
 
 //     // float scalar or array
 //     ValueInfo(const ValueSignalInfo& si, double* data, std::size_t float_size) :
@@ -815,9 +798,9 @@ class ValuesArray
     friend class Model;
 
 public:
-    using Values = Eigen::ArrayXd;
-    using StateVariables = Eigen::Map<Eigen::ArrayXd>;
-    using StateVariableDerivs = Eigen::ArrayXd;
+    using Values = Array;
+    using StateVariables = MappedArray;
+    using StateVariableDerivs = Array;
 
 protected:
     // std::vector<ValueInfo> _value_infos;

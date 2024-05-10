@@ -425,14 +425,12 @@ bool Model::init(Parent& parent, BusId ibus, BusId obus)
 
 void Model::lock_signals()
 {
-    pooya_here0;
     pooya_trace("model: " + full_name());
     pooya_verify_signals_not_locked();
 
     std::size_t state_variables_size{0};
     std::size_t total_size{0};
 
-    pooya_here0;
     // find the total sizes of signals and state variables
     for (const auto* signal: _signal_infos)
     {
@@ -442,14 +440,11 @@ void Model::lock_signals()
         if (signal->as_float() && signal->as_float()->is_state_variable())
             state_variables_size += size;
     }
-    pooya_here0;
 
     _values.init(total_size, state_variables_size);
-    pooya_here0;
 
     double* state_variables_start = _values.values().data();
     double* other_start = state_variables_start + state_variables_size;
-    pooya_here0;
 
     for (auto* signal: _signal_infos)
     {
@@ -466,7 +461,6 @@ void Model::lock_signals()
             new (&signal->_array->_array_value) decltype(signal->_array->_array_value)(start, size);
         start += std::max<std::size_t>(size, 1);
     }
-    pooya_here0;
 
     assert(state_variables_start == _values.values().data() + state_variables_size);
     assert(other_start == _values.values().data() + total_size);
@@ -487,16 +481,15 @@ void Model::lock_signals()
         if (signal->as_scalar())
             signal->_scalar->_deriv_sig->_scalar->_deriv_scalar_value = deriv_start;
         else
-            new (&signal->_array->_deriv_array_value) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->_array->_size);
+            new (&signal->_array->_deriv_array_value) MappedArray(deriv_start, signal->_array->_size);
 
         deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }
 
     _signals_locked = true;
-    pooya_here0;
 }
 
-void Model::reset_with_state_variables(const Eigen::ArrayXd& state_variables)
+void Model::reset_with_state_variables(const Array& state_variables)
 {
     pooya_trace0;
 #ifndef POOYA_NDEBUG

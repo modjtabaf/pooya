@@ -29,7 +29,7 @@ protected:
     const Model& _model;
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
-    Eigen::ArrayXd _time;
+    Array _time;
     std::vector<ValueSignalId> _signals;
 
 public:
@@ -43,7 +43,7 @@ public:
     void export_csv(std::string filename);
     void shrink_to_fit();
     uint nrows() const {return _bottom_row + 1;}
-    const Eigen::ArrayXd& time() const {return _time;}
+    const Array& time() const {return _time;}
 };
 
 using InputCallback = std::function<void(Model&, double)>;

@@ -480,7 +480,7 @@ public:
     }
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
     void lock_signals();
-    void reset_with_state_variables(const Eigen::ArrayXd& state_variables);
+    void reset_with_state_variables(const Array& state_variables);
     void invalidate();
 };
 

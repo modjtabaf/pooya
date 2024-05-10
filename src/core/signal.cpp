@@ -168,7 +168,7 @@ void ValuesArray::init(std::size_t num_values, std::size_t num_state_variables)
     //     if (signal->as_scalar())
     //         deriv_vi._deriv_scalar = deriv_start;
     //     else
-    //         new (&deriv_vi._deriv_array) Eigen::Map<Eigen::ArrayXd>(deriv_start, signal->as_array()->_size);
+    //         new (&deriv_vi._deriv_array) MappedArray(deriv_start, signal->as_array()->_size);
 
     //     deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     // }

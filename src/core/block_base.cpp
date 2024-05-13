@@ -426,7 +426,9 @@ bool Model::init(Parent& parent, BusId ibus, BusId obus)
 void Model::lock_signals()
 {
     pooya_trace("model: " + full_name());
-    pooya_verify_signals_not_locked();
+
+    if (_signals_locked) // nothing to do!
+        return;
 
     std::size_t state_variables_size{0};
     std::size_t total_size{0};
@@ -458,7 +460,7 @@ void Model::lock_signals()
         else if (signal->as_bool())
             signal->_bool->_bool_value = start;
         else
-            new (&signal->_array->_array_value) decltype(signal->_array->_array_value)(start, size);
+            new (&signal->_array->_array_value) MappedArray(start, size);
         start += std::max<std::size_t>(size, 1);
     }
 
@@ -481,7 +483,7 @@ void Model::lock_signals()
         if (signal->as_scalar())
             signal->_scalar->_deriv_sig->_scalar->_deriv_scalar_value = deriv_start;
         else
-            new (&signal->_array->_deriv_array_value) MappedArray(deriv_start, signal->_array->_size);
+            new (&signal->_array->_deriv_sig->_array->_deriv_array_value) MappedArray(deriv_start, signal->_array->_size);
 
         deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
     }

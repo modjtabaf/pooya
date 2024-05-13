@@ -108,7 +108,7 @@ SignalId BusInfo::at(const std::string& label) const
 
 void ValuesArray::init(std::size_t num_values, std::size_t num_state_variables)
 {
-    pooya_trace("ValuesArray: " + std::to_string(num_values) + " values, " + std::to_string(num_state_variables) + " states");
+    pooya_trace("ValuesArray: " + std::to_string(num_values) + " " + std::to_string(num_state_variables) + " states");
     pooya_verify(num_state_variables <= num_values, "Number of state variables (" + std::to_string(num_state_variables)
         + " cannot be more than the number of values (" + std::to_string(num_values) + ").");
     // const auto& signals = model.signals();

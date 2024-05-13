@@ -94,24 +94,24 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
             ? std::make_unique<Memory>("memory")
             : std::make_unique<Memory>("memory", it->second.as_scalar());
     }
-    // else if (wi.single_value_type() == BusSpec::SingleValueType::Int) // TODO
-    // {
-    //     block = (it == _init_values.end())
-    //         ? std::make_unique<MemoryI>("memory")
-    //         : std::make_unique<MemoryI>("memory", std::round(it->second.as_scalar()));
-    // }
-    // else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
-    // {
-    //     block = (it == _init_values.end())
-    //         ? std::make_unique<MemoryB>("memory")
-    //         : std::make_unique<MemoryB>("memory", it->second.as_scalar() != 0);
-    // }
-    // else if (wi._array_size > 0)
-    // {
-    //     block = (it == _init_values.end())
-    //         ? std::make_unique<MemoryA>("memory", Array::Zero(wi._array_size))
-    //         : std::make_unique<MemoryA>("memory", it->second.as_array());
-    // }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    {
+        block = (it == _init_values.end())
+            ? std::make_unique<MemoryI>("memory")
+            : std::make_unique<MemoryI>("memory", std::round(it->second.as_scalar()));
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    {
+        block = (it == _init_values.end())
+            ? std::make_unique<MemoryB>("memory")
+            : std::make_unique<MemoryB>("memory", it->second.as_scalar() != 0);
+    }
+    else if (wi._array_size > 0)
+    {
+        block = (it == _init_values.end())
+            ? std::make_unique<MemoryA>("memory", Array::Zero(wi._array_size))
+            : std::make_unique<MemoryA>("memory", it->second.as_array());
+    }
     else
     {
         pooya_verify(false, "cannot create a memory block for a non-value signal.");
@@ -126,34 +126,34 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
     _blocks.push_back(std::move(block));
 }
 
-// void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
-//     SignalId sig_in, SignalId sig_out)
-// {
-//     pooya_trace("block: " + full_name());
-//     std::unique_ptr<Block> block;
-//     if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
-//     {
-//         block = std::make_unique<Pipe>("pipe");
-//     }
-//     else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
-//     {
-//         block = std::make_unique<PipeI>("pipe");
-//     }
-//     else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
-//     {
-//         block = std::make_unique<PipeB>("pipe");
-//     }
-//     else if (wi._array_size > 0)
-//     {
-//         block = std::make_unique<PipeA>("pipe");
-//     }
-//     else
-//     {
-//         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
-//     }
+void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
+    SignalId sig_in, SignalId sig_out)
+{
+    pooya_trace("block: " + full_name());
+    std::unique_ptr<Block> block;
+    if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
+    {
+        block = std::make_unique<Pipe>("pipe");
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    {
+        block = std::make_unique<PipeI>("pipe");
+    }
+    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    {
+        block = std::make_unique<PipeB>("pipe");
+    }
+    else if (wi._array_size > 0)
+    {
+        block = std::make_unique<PipeA>("pipe");
+    }
+    else
+    {
+        pooya_verify(false, "cannot create a pipe block for a non-value signal.");
+    }
 
-//     _parent->add_block(*block, sig_in, sig_out);
-//     _blocks.push_back(std::move(block));
-// }
+    _parent->add_block(*block, sig_in, sig_out);
+    _blocks.push_back(std::move(block));
+}
 
 } // namespace pooya

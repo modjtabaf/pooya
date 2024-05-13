@@ -695,23 +695,23 @@ public:
 using Derivative = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
 
-// template <typename T>
-// class PipeT : public SingleInputOutputT<T>
-// {
-// public:
-//     explicit PipeT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+template <typename T>
+class PipeT : public SingleInputOutputT<T>
+{
+public:
+    explicit PipeT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
-//     void activation_function(double /*t*/, Values &values) override
-//     {
-//         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-//         values.set(SingleInputOutputT<T>::_s_out, values.get(SingleInputOutputT<T>::_s_in));
-//     }
-// };
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get());
+    }
+};
 
-// using Pipe = PipeT<double>;
-// using PipeI = PipeT<int>;
-// using PipeB = PipeT<bool>;
-// using PipeA = PipeT<Array>;
+using Pipe = PipeT<double>;
+using PipeI = PipeT<int>;
+using PipeB = PipeT<bool>;
+using PipeA = PipeT<Array>;
 
 class BusBlockBuilder : public SingleInputOutputT<BusSpec>
 {
@@ -750,16 +750,16 @@ protected:
     void post_init() override;
 };
 
-// class BusPipe : public BusBlockBuilder
-// {
-// public:
-//     explicit BusPipe(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
-//             : BusBlockBuilder(given_name, excluded_labels) {}
+class BusPipe : public BusBlockBuilder
+{
+public:
+    explicit BusPipe(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
+            : BusBlockBuilder(given_name, excluded_labels) {}
 
-// protected:
-//     void block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
-//         SignalId sig_in, SignalId sig_out) override;
-// };
+protected:
+    void block_builder(const std::string & /*full_label*/, const BusSpec::WireInfo &wi,
+        SignalId sig_in, SignalId sig_out) override;
+};
 
 } // namespace pooya
 

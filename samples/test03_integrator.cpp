@@ -64,8 +64,6 @@ int main()
         history.update(k, t);
         k++;
     }
-    pooya_here0;
-
 
     auto finish = std::chrono::high_resolution_clock::now();
     std::cout << "It took "

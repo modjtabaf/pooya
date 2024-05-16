@@ -464,20 +464,7 @@ public:
     const SignalInfos& signals() const {return _signal_infos;}
     const ValuesArray& values() const {return _values;}
 
-    void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig)
-    {
-        pooya_trace("block: " + full_name());
-        pooya_verify_signals_not_locked();
-        pooya_verify_valid_signal(sig);
-        pooya_verify_valid_signal(deriv_sig);
-        pooya_verify(!sig->is_state_variable(), sig->_full_name + ": signal is already registered as a state variable!");
-        pooya_verify(!deriv_sig->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state variable derivative!");
-        pooya_verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
-            sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
-
-        _signal_infos[sig->_index]->_float->_deriv_sig = deriv_sig->_float;
-        _signal_infos[deriv_sig->_index]->_float->_is_deriv = true;
-    }
+    void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
     void lock_signals();
     void reset_with_state_variables(const Array& state_variables);

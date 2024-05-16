@@ -28,7 +28,6 @@ template <>
 void SinT<double>::activation_function(double /*t*/)
 {
     pooya_trace("block: " + full_name());
-    // values[_s_out] = std::sin(values[_s_in]);
     _s_out->set(std::sin(_s_in->get()));
 }
 

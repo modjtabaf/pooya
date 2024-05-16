@@ -348,7 +348,6 @@ public:
                 assert(false);
             p++;
         }
-        // values.set(SingleOutputT<T>::_s_out, _ret);
         SingleOutputT<T>::_s_out->set(_ret);
     }
 };

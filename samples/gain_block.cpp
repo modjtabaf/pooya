@@ -14,7 +14,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -44,7 +43,6 @@ int main()
         [&](pooya::Model&, double t) -> void
         {
             pooya_trace0;
-            // values[x] = std::sin(M_PI * t / 5);
             x->set(std::sin(M_PI * t / 5));
         });
 

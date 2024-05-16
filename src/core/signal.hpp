@@ -175,8 +175,6 @@ protected:
 
 public:
     bool is_state_variable() const {return _deriv_sig;}
-    // bool is_deriv() const {return _is_deriv;}
-    // ValueSignalId deriv_info() const {return _deriv_sig;}
 };
 
 class ScalarSignalInfo : public FloatSignalInfo
@@ -191,12 +189,6 @@ protected:
 
     double* _scalar_value{nullptr};
     double* _deriv_scalar_value{nullptr};    // only valid if _is_deriv is true, nullptr otherwise
-    // ScalarSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
-
-    // bool is_state_variable() const {return _deriv_sig;}
-    // bool is_deriv() const {return _deriv_scalar_value;}
-
-    // ScalarSignalId deriv_info() const {return _deriv_sig;}
 
 public:
     double get() const
@@ -303,9 +295,6 @@ protected:
     const std::size_t _size;
     MappedArray _array_value{nullptr, 0};
     MappedArray _deriv_array_value{nullptr, 0};
-    // ArraySignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
-
-    // bool is_state_variable() const {return _deriv_sig;}
 
 public:
     const MappedArray& get() const
@@ -332,8 +321,6 @@ public:
     }
 
     std::size_t size() const {return _size;}
-
-    // operator const MappedArray&() const {return get();}
 };
 
 class BusSpec
@@ -654,145 +641,6 @@ public:
     }
 };
 
-// struct ValueInfo
-// {
-//     friend class Values;
-
-// public:
-//     const ValueSignalInfo* _si;                          // corresponding signal info
-
-// protected:
-//     // bool _assigned{false};                               // has the value been assigned?
-
-//     // double* _scalar{nullptr};                            // valid if this is a scalar signal (bool, int, double), nullptr otherwise
-//     bool _int{false};                                    // used only if this is a scalar signal, false otherwise
-//     bool _bool{false};                                   // used only if this is a scalar signal, false otherwise
-//     MappedArray _array{nullptr, 0};       // used only if this is an array signal, empty otherwise
-
-//     // double* _deriv_scalar{nullptr};                      // only valid if _is_deriv member of the signal info is true and this is a float scalar signal, nullptr otherwise
-//     MappedArray _deriv_array{nullptr, 0}; // used only if _is_deriv member of the signal info is true and this is an array signal, empty and unused otherwise
-
-//     // float scalar or array
-//     ValueInfo(const ValueSignalInfo& si, double* data, std::size_t float_size) :
-//         _si(&si)/*, _scalar(float_size == 0 ? data : nullptr)*/, _array(float_size == 0 ? nullptr : data, float_size) {}
-
-//     // int scalar
-//     ValueInfo(const IntSignalInfo& si, double* data) :
-//         _si(&si)/*, _scalar(data)*/, _int(true) {}
-
-//     // bool scalar
-//     ValueInfo(const BoolSignalInfo& si, double* data) :
-//         _si(&si)/*, _scalar(data)*/, _bool(true) {}
-
-// public:
-//     // template<typename T>
-//     // typename Types<T>::GetValue get() const
-//     // {
-//     //     pooya_trace0;
-//     //     pooya_verify(_scalar == nullptr, _si->_full_name + ": attempting to retrieve a scalar as an array!");
-//     //     pooya_verify(_assigned, _si->_full_name + ": attempting to access an unassigned value!");
-//     //     return _array;
-//     // }
-
-//     // template<typename T>
-//     // void set(typename Types<T>::SetValue value)
-//     // {
-//     //     pooya_trace0;
-//     //     pooya_verify(_scalar == nullptr, _si->_full_name + ": cannot assign non-scalar to scalar!");
-//     //     pooya_verify(!_assigned, _si->_full_name + ": re-assignment is prohibited!");
-//     //     pooya_verify(_array.rows() == value.rows(),
-//     //         std::string("size mismatch (id=") + _si->_full_name + ")(" + std::to_string(_array.rows()) +
-//     //         " vs " + std::to_string(value.rows()) + ")!");
-//     //     _array = value;
-//     //     if (_si->is_deriv())
-//     //         _deriv_array = value;
-//     //     _assigned = true;
-//     // }
-
-//     // bool is_assigned() const {return _assigned;}
-//     // bool is_scalar() const {return _scalar != nullptr;}
-//     // bool is_int() const {return _int && is_scalar();}
-//     // bool is_bool() const {return _bool && is_scalar();}
-//     // std::size_t size() const
-//     // {
-//     //     return _scalar == nullptr ? _array.size() : 0;
-//     // }
-// };
-
-// template<>
-// inline typename Types<double>::GetValue ValueInfo::get<double>() const
-// {
-//     pooya_trace0;
-//     pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a scalar!");
-//     pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
-//     return *_scalar;
-// }
-
-// template<>
-// inline typename Types<int>::GetValue ValueInfo::get<int>() const
-// {
-//     pooya_trace0;
-//     pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as an int!");
-//     pooya_verify(is_int(), _si->_full_name + ": attempting to retrieve a non-int as an int!");
-//     pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
-//     return std::round(*_scalar);
-// }
-
-// template<>
-// inline typename Types<bool>::GetValue ValueInfo::get<bool>() const
-// {
-//     pooya_trace0;
-//     pooya_verify(is_scalar(), _si->_full_name + ": attempting to retrieve an array as a bool!");
-//     pooya_verify(is_bool(), _si->_full_name + ": attempting to retrieve a non-bool as a bool!");
-//     pooya_verify(is_assigned(), _si->_full_name + ": attempting to access an unassigned value!");
-//     return *_scalar != 0;
-// }
-
-// template<>
-// inline void ValueInfo::set<int>(typename Types<int>::SetValue value)
-// {
-//     pooya_trace("value: " + std::to_string(value));
-//     pooya_verify(is_scalar(), _si->_full_name + ": cannot assign an int to a non-scalar!");
-//     pooya_verify(is_int(), _si->_full_name + ": cannot assign an int to a non-int!");
-//     pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
-//     *_scalar = value;
-//     _assigned = true;
-// }
-
-// template<>
-// inline void ValueInfo::set<bool>(typename Types<bool>::SetValue value)
-// {
-//     pooya_trace("value: " + std::to_string(value));
-//     pooya_verify(is_scalar(), _si->_full_name + ": cannot assign a bool to a non-scalar!");
-//     pooya_verify(is_bool(), _si->_full_name + ": cannot assign a bool to a non-bool!");
-//     pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
-//     *_scalar = value;
-//     _assigned = true;
-// }
-
-// template<>
-// inline void ValueInfo::set<double>(typename Types<double>::SetValue value)
-// {
-//     pooya_trace("value: " + std::to_string(value));
-//     if (is_int())
-//     {
-//         set<int>(std::round(value));
-//         return;
-//     }
-//     else if (is_bool())
-//     {
-//         set<bool>(value != 0);
-//         return;
-//     }
-
-//     pooya_verify(is_scalar(), _si->_full_name + ": cannot assign a scalar to a non-scalar!");
-//     pooya_verify(!is_assigned(), _si->_full_name + ": re-assignment is prohibited!");
-//     *_scalar = value;
-//     if (_si->is_deriv())
-//         *_deriv_scalar = value;
-//     _assigned = true;
-// }
-
 class ValuesArray
 {
     friend class Model;
@@ -803,137 +651,22 @@ public:
     using StateVariableDerivs = Array;
 
 protected:
-    // std::vector<ValueInfo> _value_infos;
-    // std::size_t             _total_size{0};
     Values _values;
     StateVariables _state_variables{nullptr, 0};
     StateVariableDerivs _state_variable_derivs;
 
-    // inline ValueInfo& get_value_info(SignalId sig)
-    // {
-    //     pooya_trace0;
-    //     pooya_verify_value_signal(sig);
-    //     return _value_infos[sig->as_value()->_vi_index];
-    // }
-
 public:
     ValuesArray() {}
-    // Values(const Values&) = delete; // forbid copy constructor
-
-    // Values& operator=(const Values&) = delete; // forbid assignment
-
-    // inline const ValueInfo& get_value_info(SignalId sig) const
-    // {
-    //     pooya_trace0;
-    //     pooya_verify(sig, "invalid signal!");
-    //     pooya_verify(sig->as_value(), sig->_full_name + ": value signal needed!");
-    //     return _value_infos[sig->as_value()->_vi_index];
-    // }
-
-    // bool valid(SignalId sig) const
-    // {
-    //     pooya_trace0;
-    //     return get_value_info(sig).is_assigned();
-    // }
 
     void init(std::size_t num_values, std::size_t num_state_variables);
 
     std::size_t num_state_variables() const {return _state_variables.size();}
-    // const decltype(_value_infos)& value_infos() const {return _value_infos;}
     Values& values() {return _values;}
     const Values& values() const {return _values;}
-// #ifdef POOYA_NDEBUG
     const StateVariables& state_variables() const {return _state_variables;}
-// #else
-//     const decltype(_state_variables)& state_variables() const;
-// #endif // definded(POOYA_NDEBUG)
     StateVariableDerivs& state_variable_derivs() {return _state_variable_derivs;}
     const StateVariableDerivs& state_variable_derivs() const {return _state_variable_derivs;}
-
-    // template<typename T>
-    // typename Types<T>::GetValue get(SignalId sig) const
-    // {
-    //     pooya_trace0;
-    //     return get_value_info(sig).get<T>();
-    // }
-
-    // typename Types<double>::GetValue get(ScalarSignalId sig) const {return get<double>(sig);}
-    // typename Types<int   >::GetValue get(IntSignalId    sig) const {return get<int   >(sig);}
-    // typename Types<bool  >::GetValue get(BoolSignalId   sig) const {return get<bool  >(sig);}
-    // typename Types<Array >::GetValue get(ArraySignalId  sig) const {return get<Array >(sig);}
-
-    // typename Types<double>::GetValue get_as_scalar(SignalId sig) const;
-
-    // typename Types<double>::GetValue operator[](ScalarSignalId sig) const {return get<double>(sig);}
-    // typename Types<int   >::GetValue operator[](IntSignalId    sig) const {return get<int   >(sig);}
-    // typename Types<bool  >::GetValue operator[](BoolSignalId   sig) const {return get<bool  >(sig);}
-    // typename Types<Array >::GetValue operator[](ArraySignalId  sig) const {return get<Array >(sig);}
-
-    // template<typename T>
-    // void set(SignalId sig, typename Types<T>::SetValue value)
-    // {
-    //     pooya_trace0;
-    //     get_value_info(sig).set<T>(value);
-    // }
-
-    // void set(ScalarSignalId sig, double value) {set<double>(sig, value);}
-    // void set(IntSignalId sig, double value) {set<int>(sig, std::round(value));} // avoid the default implicit double-to-int conversion
-    // void set(BoolSignalId sig, bool value) {set<bool>(sig, value);}
-    // void set(ArraySignalId sig, const Array& value) {set<Array>(sig, value);}
-
-    // template<typename T, typename GetValue = typename Types<T>::GetValue, typename SetValue = typename Types<T>::SetValue>
-    // class ValueInfoWrapper
-    // {
-    //     friend class Values;
-    //     ValueInfo& _vi;
-    //     ValueInfoWrapper(ValueInfo& vi) : _vi(vi) {}
-    // public:
-    //     void operator=(SetValue value)
-    //     {
-    //         pooya_trace0;
-    //         _vi.set<T>(value);
-    //     }
-    //     operator GetValue() const
-    //     {
-    //         pooya_trace0;
-    //         return _vi.get<T>();
-    //     }
-    // };
-
-    // ValueInfoWrapper<double> operator[](ScalarSignalId sig) {return Values::ValueInfoWrapper<double>(get_value_info(sig));}
-    // ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue> operator[](IntSignalId sig) {return Values::ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue>(get_value_info(sig));}
-    // ValueInfoWrapper<bool> operator[](BoolSignalId   sig) {return Values::ValueInfoWrapper<bool>  (get_value_info(sig));}
-    // ValueInfoWrapper<Array> operator[](ArraySignalId  sig) {return Values::ValueInfoWrapper<Array> (get_value_info(sig));}
-
-    // void invalidate();
-    // void reset_with_state_variables(const Eigen::ArrayXd& state_variables);
-
-    // void stream(std::ostream& os) const
-    // {
-    //     pooya_trace0;
-    //     int k = 0;
-    //     for (const auto& vi: _value_infos)
-    //     {
-    //         os << "- [" << k++ << "]: ";
-    //         (vi.is_assigned() ? (vi._scalar ? os << *vi._scalar : os << vi._array) : os << "*") << "\n";
-    //     }
-    //     os << "\n";
-    // }
 };
-
-// template<>
-// inline void Values::ValueInfoWrapper<int, typename Types<int>::GetValue, typename Types<double>::SetValue>::operator=(typename Types<double>::SetValue value)
-// {
-//     pooya_trace0;
-//     _vi.set<int>(std::round(value));
-// }
-
-// inline std::ostream& operator<<(std::ostream& os, const Values& values)
-// {
-//     pooya_trace0;
-//     values.stream(os);
-//     return os;
-// }
 
 }
 

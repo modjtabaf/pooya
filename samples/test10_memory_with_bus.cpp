@@ -22,7 +22,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <chrono>
 #include <iostream>
 #include <math.h>
-#include <vector>
 
 #include "src/core/helper.hpp"
 #include "src/core/pooya.hpp"

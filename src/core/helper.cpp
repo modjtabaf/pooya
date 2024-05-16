@@ -14,9 +14,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <fstream>
-#include <iterator>
 #include <string>
-#include "pooya.hpp"
+
 #include "signal.hpp"
 #include "util.hpp"
 #include "helper.hpp"

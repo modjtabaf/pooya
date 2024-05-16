@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <cassert>
-#include <iostream>
-#include <memory>
 
 #include "block_base.hpp"
 #include "signal.hpp"
@@ -174,21 +172,6 @@ SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-// void Model::register_state_variable(SignalId sig, SignalId deriv_sig)
-// {
-//     pooya_trace("block: " + full_name());
-//     pooya_verify_signals_not_locked();
-//     pooya_verify_float_signal(sig);
-//     pooya_verify_float_signal(deriv_sig);
-//     pooya_verify(!(sig->_scalar && sig->_scalar->is_state_variable()) && !(sig->_array && sig->_array->is_state_variable()), sig->_full_name + ": signal is already registered as a state variable!");
-//     pooya_verify(!deriv_sig->_value->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state variable derivative!");
-//     pooya_verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
-//         sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
-
-//     _signal_infos[sig->_index]->_value->_deriv_sig = deriv_sig->_value;
-//     _signal_infos[deriv_sig->_index]->_value->_is_deriv = true;
-// }
-
 std::string Parent::make_signal_name(const std::string& given_name, bool make_new)
 {
     pooya_trace("block: " + full_name());
@@ -330,7 +313,6 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, con
     pooya_trace("block: " + full_name());
     pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-    // LabelSignals label_signals;
     LabelSignalIdList label_signals;
     label_signals.reserve(l.size());
 
@@ -467,9 +449,6 @@ void Model::lock_signals()
     assert(state_variables_start == _values.values().data() + state_variables_size);
     assert(other_start == _values.values().data() + total_size);
 
-    // new (&_state_variables) decltype(_state_variables)(_values.values().data(), state_variables_size);
-
-    // _derivs.resize(state_variables_size);
     double* deriv_start = _values.state_variable_derivs().data();
 
     // state-variable-specific steps
@@ -479,7 +458,6 @@ void Model::lock_signals()
         if (!signal->as_float() || !signal->as_float()->is_state_variable())
             continue;
 
-        // auto& deriv_vi = get_value_info(signal->as_value()->deriv_info());
         if (signal->as_scalar())
             signal->_scalar->_deriv_sig->_scalar->_deriv_scalar_value = deriv_start;
         else

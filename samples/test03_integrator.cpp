@@ -14,7 +14,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <cmath>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -38,47 +37,29 @@ int main()
     auto xd      = model.create_scalar_signal("xd");
     auto trigger = model.create_bool_signal("trigger");
 
-    pooya_here0;
-
     pooya::BusSpec spec{{"z"}};
-
-    pooya_here0;
 
     // setup the model
     model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);
 
-    pooya_here0;
-
     pooya::Euler stepper;
-    pooya_here0;
 
     pooya::Simulator sim(model,
         [&](pooya::Model&, double t) -> void
         {
-    pooya_here0;
-
             pooya_trace0;
-            // values[xd] = t < 3 or t > 7 ? 1.0 : 0.0;
             xd->set(t < 3 or t > 7 ? 1.0 : 0.0);
-            // values[trigger] = t >= 4.9 && t <= 5.1;
             trigger->set(t >= 4.9 && t <= 5.1);
-    pooya_here0;
 
         },
         &stepper);
 
-    pooya_here0;
-
     pooya::History history(model);
-
-    pooya_here0;
 
     uint k = 0;
     double t;
     while (pooya::arange(k, t, 0, 10, 0.1))
     {
-    pooya_here0;
-
         sim.run(t);
         history.update(k, t);
         k++;

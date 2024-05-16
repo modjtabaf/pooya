@@ -15,8 +15,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SOLVER_HPP__
 #define __POOYA_SOLVER_HPP__
 
-#include <functional>
-
 #include "signal.hpp"
 #include "util.hpp"
 
@@ -29,18 +27,12 @@ public:
     using StepperCallback = std::function<const ValuesArray::StateVariableDerivs&(double, const Array&)>;
 
 protected:
-    // const Model& _model;
-    // ValuesArray _X;
     StepperCallback _callback;
 
-    // template<typename T>
-    // auto f(double t, const T& v) -> const auto&
     auto f(double t, const Array& v) -> const ValuesArray::StateVariableDerivs&
     {
         pooya_trace0;
-        // _model.reset_with_state_variables(v);
         return _callback(t, v);
-        // return _model.derivs();
     }
 
 public:

@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -88,9 +86,7 @@ int main()
         [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            // values[l] = 0.1;
             l->set(0.1);
-            // values[g] = 9.81;
             g->set(9.81);
         },
         &stepper);

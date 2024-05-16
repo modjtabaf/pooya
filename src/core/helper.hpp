@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_HELPER_HPP__
 
 #include <vector>
-#include <fstream>
+
 #include "pooya.hpp"
 #include "solver.hpp"
 
@@ -54,7 +54,6 @@ protected:
     Model& _model;
     double _t_prev{0};
     InputCallback _inputs_cb;
-    // Values _values;
     Array _state_variables;
     Array _state_variables_orig;
     StepperBase* _stepper{nullptr};
@@ -74,8 +73,6 @@ public:
 
     void init(double t0=0.0);
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
-
-    // const Values& values() const {return _values;}
 };
 
 bool arange(uint k, double& t, double t_init, double t_end, double dt);

@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_HELPER_HPP__
 
 #include <vector>
-#include <fstream>
+
 #include "pooya.hpp"
 #include "solver.hpp"
 
@@ -29,24 +29,24 @@ protected:
     const Model& _model;
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
-    Eigen::ArrayXd _time;
-    std::vector<SignalId> _signals;
+    Array _time;
+    std::vector<ValueSignalId> _signals;
 
 public:
     History(const Model& model, uint nrows_grow = 1000) :
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
-    void track_all(const Values& values);
+    void track_all();
     void track(SignalId sig);
     void untrack(SignalId sig);
-    void update(uint k, double t, const Values& values);
+    void update(uint k, double t);
     void export_csv(std::string filename);
     void shrink_to_fit();
     uint nrows() const {return _bottom_row + 1;}
-    const Eigen::ArrayXd& time() const {return _time;}
+    const Array& time() const {return _time;}
 };
 
-using InputCallback = std::function<void(Model&, double, Values&)>;
+using InputCallback = std::function<void(Model&, double)>;
 
 class Simulator
 {
@@ -54,7 +54,6 @@ protected:
     Model& _model;
     double _t_prev{0};
     InputCallback _inputs_cb;
-    Values _values;
     Array _state_variables;
     Array _state_variables_orig;
     StepperBase* _stepper{nullptr};
@@ -67,15 +66,13 @@ protected:
     ProcessingOrder* _current_po{nullptr};
     ProcessingOrder* _new_po{nullptr};
 
-    uint _process(double t, Values& values);
+    uint _process(double t);
 
 public:
     Simulator(Model& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr, bool reuse_order = false);
 
     void init(double t0=0.0);
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
-
-    const Values& values() const {return _values;}
 };
 
 bool arange(uint k, double& t, double t_init, double t_end, double dt);

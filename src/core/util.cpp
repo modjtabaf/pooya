@@ -11,7 +11,9 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
         "\nPooya Exception:\n" <<
         "  " << file << ":" << std::to_string(line) << "\n"
         "  " << msg << "\n\n";
+#if !defined(POOYA_NDEBUG)
     full_msg << pooya_trace_info_string();
+#endif // !defined(POOYA_NDEBUG)
     throw std::runtime_error(full_msg.str());
 }
 

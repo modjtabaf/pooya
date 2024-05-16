@@ -14,7 +14,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -67,7 +66,7 @@ int main()
     // setup the model
     model.add_block(mymodel);
 
-    pooya::Rk4 stepper(model);
+    pooya::Rk4 stepper;
     pooya::Simulator sim(model, nullptr, &stepper);
 
     pooya::History history(model);
@@ -77,7 +76,7 @@ int main()
     while (pooya::arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

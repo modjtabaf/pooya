@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -170,14 +168,14 @@ int main()
     auto g = model.scalar_signal("g");
     auto des_phi = model.scalar_signal("des_phi");
 
-    pooya::Rkf45 stepper(model);
+    pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
-            values[m] = 0.2;
-            values[l] = 0.1;
-            values[g] = 9.81;
-            values[des_phi] = M_PI_4;
+            m->set(0.2);
+            l->set(0.1);
+            g->set(9.81);
+            des_phi->set(M_PI_4);
         },
         &stepper);
 
@@ -195,7 +193,7 @@ int main()
     while (pooya::arange(k, t, 0, 5, 0.02))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

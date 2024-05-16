@@ -19,19 +19,16 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <algorithm>
-#include <iostream>
-
 #include "block_lib.hpp"
 #include "signal.hpp"
 
 namespace pooya {
 
 template <>
-void SinT<double>::activation_function(double /*t*/, Values &values)
+void SinT<double>::activation_function(double /*t*/)
 {
     pooya_trace("block: " + full_name());
-    values[_s_out] = std::sin(values[_s_in]);
+    _s_out->set(std::sin(_s_in->get()));
 }
 
 bool BusBlockBuilder::init(Parent &parent, BusId ibus, BusId obus)

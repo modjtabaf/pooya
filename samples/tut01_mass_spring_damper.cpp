@@ -55,7 +55,7 @@ int main()
     model.add_block(gain_k_m, s_x, s_kx_m);
 
     // set up the simulator
-    pooya::Rk4 solver(model);
+    pooya::Rk4 solver;
     pooya::Simulator sim(model, nullptr, &solver);
     pooya::History history(model);
 
@@ -64,7 +64,7 @@ int main()
     for (uint k=0; pooya::arange(k, t, 0, 10, 0.1); k++)
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
     }
 
     // post-processing

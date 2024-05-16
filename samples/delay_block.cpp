@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -80,7 +78,7 @@ int main()
     while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

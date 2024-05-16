@@ -23,10 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define __POOYA_BLOCK_LIB_HPP__
 
 #include <cassert>
-#include <cstddef>
 #include <initializer_list>
-#include <map>
-#include <memory>
 
 #include "block_base.hpp"
 #include "util.hpp"
@@ -44,16 +41,16 @@ protected:
 public:
     InitialValueT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (_init)
         {
-            _value = values.get(SingleInputOutputT<T>::_s_in);
+            _value = SingleInputOutputT<T>::_s_in->get();
             SingleInputOutputT<T>::_ibus = nullptr;
             _init = false;
         }
-        values.set(SingleInputOutputT<T>::_s_out, _value);
+        SingleInputOutputT<T>::_s_out->set(_value);
     }
 };
 
@@ -70,10 +67,10 @@ public:
     ConstT(std::string given_name, const T &value)
             : SingleOutputT<T>(given_name, 0, 1), _value(value) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        values.set(SingleOutputT<T>::_s_out, _value);
+        SingleOutputT<T>::_s_out->set(_value);
     }
 };
 
@@ -89,10 +86,10 @@ protected:
 public:
     GainT(std::string given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, _k * values.get(SingleInputOutputT<T>::_s_in));
+        SingleInputOutputT<T>::_s_out->set(_k * SingleInputOutputT<T>::_s_in->get());
     }
 
     typename Types<GainType>::GetValue gain() const {return _k;}
@@ -108,15 +105,15 @@ class SinT : public SingleInputOutputT<T>
 public:
     SinT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, values.get(SingleInputOutputT<T>::_s_in).sin());
+        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get().sin());
     }
 };
 
 template<>
-void SinT<double>::activation_function(double, Values &);
+void SinT<double>::activation_function(double);
 
 using Sin = SinT<double>;
 using SinA = SinT<Array>;
@@ -134,10 +131,10 @@ public:
     SISOFunctionT(std::string given_name, ActFunction act_func)
             : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, _act_func(t, values.get(SingleInputOutputT<T>::_s_in)));
+        SingleInputOutputT<T>::_s_out->set(_act_func(t, SingleInputOutputT<T>::_s_in->get()));
     }
 };
 
@@ -148,7 +145,7 @@ template <typename T>
 class SOFunctionT : public SingleOutputT<T>
 {
 public:
-    using ActFunction = std::function<typename Types<T>::SetValue(double, BusId ibus, const Values&)>;
+    using ActFunction = std::function<typename Types<T>::SetValue(double, BusId ibus)>;
 
 protected:
     ActFunction _act_func;
@@ -157,10 +154,10 @@ public:
     SOFunctionT(std::string given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
             : SingleOutputT<T>(given_name, num_iports, 1), _act_func(act_func) {}
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        values.set(SingleOutputT<T>::_s_out, _act_func(t, SingleOutputT<T>::_ibus, values));
+        SingleOutputT<T>::_s_out->set(_act_func(t, SingleOutputT<T>::_ibus));
     }
 };
 
@@ -170,7 +167,7 @@ using SOFunctionA = SOFunctionT<Array>;
 class Function : public Block
 {
 public:
-    using ActFunction = std::function<void(double, BusId ibus, BusId obus, Values&)>;
+    using ActFunction = std::function<void(double, BusId ibus, BusId obus)>;
 
 protected:
     ActFunction _act_func;
@@ -179,10 +176,10 @@ public:
     Function(std::string given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
         : Block(given_name, num_iports, num_oports), _act_func(act_func) {}
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + full_name());
-        _act_func(t, _ibus, _obus, values);
+        _act_func(t, _ibus, _obus);
     }
 };
 
@@ -199,10 +196,10 @@ public:
     SourceT(std::string given_name, SourceFunction src_func) :
         SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _src_func(src_func) {}
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        values.set(SingleOutputT<T>::_s_out, _src_func(t));
+        SingleOutputT<T>::_s_out->set(_src_func(t));
     }
 };
 
@@ -213,7 +210,7 @@ using SourceA = SourceT<Array>;
 class Sources : public Block
 {
 public:
-    using SourcesFunction = std::function<void(BusId, double, Values&)>;
+    using SourcesFunction = std::function<void(BusId, double)>;
 
 protected:
     SourcesFunction _src_func;
@@ -222,10 +219,10 @@ public:
     Sources(std::string given_name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
         Block(given_name, 0, num_oports), _src_func(src_func) {}
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + full_name());
-        _src_func(_obus, t, values);
+        _src_func(_obus, t);
     }
 };
 
@@ -257,14 +254,14 @@ public:
     AddSubT(std::string given_name, const char *operators, const T &initial = 0.0)
             : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
         for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
-            const auto &v = values.get<T>(ls.second);
+            const auto &v = Types<T>::as_type(ls.second)->get();
             if (*p == '+')
                 _ret += v;
             else if (*p == '-')
@@ -273,7 +270,7 @@ public:
                 assert(false);
             p++;
         }
-        values.set(SingleOutputT<T>::_s_out, _ret);
+        SingleOutputT<T>::_s_out->set(_ret);
     }
 };
 
@@ -335,14 +332,14 @@ public:
     MulDivT(std::string given_name, const char *operators, const T &initial = 1.0)
             : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         _ret = _initial;
         const char *p = _operators.c_str();
         for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
-            const auto &v = values.get<T>(ls.second);
+            const auto &v = Types<T>::as_type(ls.second)->get();
             if (*p == '*')
                 _ret *= v;
             else if (*p == '/')
@@ -351,7 +348,7 @@ public:
                 assert(false);
             p++;
         }
-        values.set(SingleOutputT<T>::_s_out, _ret);
+        SingleOutputT<T>::_s_out->set(_ret);
     }
 };
 
@@ -409,27 +406,27 @@ public:
         return true;
     }
 
-    void pre_step(double /*t*/, Values &values) override
+    void pre_step(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        assert(!values.valid(SingleOutputT<T>::_s_out));
-        values.set(SingleOutputT<T>::_s_out, _value);
+        assert(!SingleOutputT<T>::_s_out->is_assigned());
+        SingleOutputT<T>::_s_out->set(_value);
     }
 
-    void post_step(double /*t*/, const Values &values) override
+    void post_step(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        assert(values.valid(SingleOutputT<T>::_s_out));
-        _value = values.get(SingleOutputT<T>::_s_out);
+        assert(SingleOutputT<T>::_s_out->is_assigned());
+        _value = SingleOutputT<T>::_s_out->get();
     }
 
-    uint _process(double /*t*/, Values &values, bool /*go_deep*/ = true) override
+    uint _process(double /*t*/, bool /*go_deep*/ = true) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (SingleOutputT<T>::_processed)
             return 0;
 
-        SingleOutputT<T>::_processed = values.valid(SingleOutputT<T>::_s_out);
+        SingleOutputT<T>::_processed = SingleOutputT<T>::_s_out->is_assigned();
         return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?
     }
 };
@@ -465,7 +462,7 @@ public:
         return true;
     }
 
-    void pre_step(double t, Values &values) override
+    void pre_step(double t) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
         if (_triggered)
@@ -476,19 +473,19 @@ public:
                 IntegratorBaseT<T>::_value = 0;
             _triggered = false;
         }
-        IntegratorBaseT<T>::pre_step(t, values);
+        IntegratorBaseT<T>::pre_step(t);
     }
 
-    uint _process(double t, Values &values, bool go_deep=true) override
+    uint _process(double t, bool go_deep=true) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (IntegratorBaseT<T>::_processed || !values.valid(_trigger))
+        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned())
             return 0;
 
         if (!_triggered)
-            _triggered = values.get(_trigger);
+            _triggered = _trigger->get();
 
-        return IntegratorBaseT<T>::_process(t, values, go_deep);
+        return IntegratorBaseT<T>::_process(t, go_deep);
     }
 };
 
@@ -526,7 +523,7 @@ public:
         return true;
     }
 
-    void post_step(double t, const Values &values) override
+    void post_step(double t) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!_t.empty())
@@ -545,27 +542,26 @@ public:
 
         assert(_t.empty() || (t > _t.back()));
         _t.push_back(t);
-        _x.push_back(values.get(_s_x));
+        _x.push_back(_s_x->get());
     }
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (_t.empty())
         {
-            values.set(SingleOutputT<T>::_s_out, values.get(_s_initial));
+            SingleOutputT<T>::_s_out->set(_s_initial->get());
             return;
         }
 
-        double delay = values.get(_s_delay);
-        t -= delay;
+        t -= _s_delay->get();
         if (t <= _t[0])
         {
-            values.set(SingleOutputT<T>::_s_out, values.get(_s_initial));
+            SingleOutputT<T>::_s_out->set(_s_initial->get());
         }
         else if (t >= _t.back())
         {
-            values.set(SingleOutputT<T>::_s_out, _x.back());
+            SingleOutputT<T>::_s_out->set(_x.back());
         }
         else
         {
@@ -577,7 +573,7 @@ public:
                 k++;
             }
 
-            values.set(SingleOutputT<T>::_s_out, (_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
+            SingleOutputT<T>::_s_out->set((_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };
@@ -595,10 +591,10 @@ public:
     MemoryT(std::string given_name, const T &ic = T(0))
             : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
 
-    void post_step(double /*t*/, const Values &values) override
+    void post_step(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        _value = values.get(SingleInputOutputT<T>::_s_in);
+        _value = SingleInputOutputT<T>::_s_in->get();
     }
 
     // # Memory can be implemented either by defining the following activation
@@ -610,14 +606,14 @@ public:
     // # def activation_function(self, t, x):
     // #     return [self._value]
 
-    uint _process(double /*t*/, Values &values, bool /*go_deep*/) override
+    uint _process(double /*t*/, bool /*go_deep*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (SingleInputOutputT<T>::_processed)
             return 0;
 
         pooya_trace_update0;
-        values.set(SingleInputOutputT<T>::_s_out, _value);
+        SingleInputOutputT<T>::_s_out->set(_value);
         SingleInputOutputT<T>::_processed = true;
         return 1;
     }
@@ -641,31 +637,31 @@ public:
     DerivativeT(std::string given_name, const T &y0 = 0)
             : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
 
-    void post_step(double t, const Values &values) override
+    void post_step(double t) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         _t = t;
-        _x = values.get(SingleInputOutputT<T>::_s_in);
+        _x = *SingleInputOutputT<T>::_s_in;
         _y = _x;
         _first_step = false;
     }
 
-    void activation_function(double t, Values &values) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (_first_step)
         {
             _t = t;
-            _x = values.get(SingleInputOutputT<T>::_s_in);
-            values.set(SingleInputOutputT<T>::_s_out, _y);
+            _x = *SingleInputOutputT<T>::_s_in;
+            SingleInputOutputT<T>::_s_out->set(_y);
         }
         else if (_t == t)
         {
-            values.set(SingleInputOutputT<T>::_s_out, _y);
+            SingleInputOutputT<T>::_s_out->set(_y);
         }
         else
         {
-            values.set(SingleInputOutputT<T>::_s_out, (values.get(SingleInputOutputT<T>::_s_in) - _x) / (t - _t));
+            SingleInputOutputT<T>::_s_out->set((*SingleInputOutputT<T>::_s_in - _x) / (t - _t));
         }
     }
 };
@@ -679,10 +675,10 @@ class PipeT : public SingleInputOutputT<T>
 public:
     explicit PipeT(std::string given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
 
-    void activation_function(double /*t*/, Values &values) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        values.set(SingleInputOutputT<T>::_s_out, values.get(SingleInputOutputT<T>::_s_in));
+        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get());
     }
 };
 

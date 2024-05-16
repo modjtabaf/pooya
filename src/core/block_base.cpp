@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <cassert>
-#include <iostream>
-#include <memory>
 
 #include "block_base.hpp"
 #include "signal.hpp"
@@ -122,7 +120,7 @@ void Block::_mark_unprocessed()
     _processed = false;
 }
 
-uint Block::_process(double t, Values& values, bool /*go_deep*/)
+uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name());
     if (_processed)
@@ -130,11 +128,11 @@ uint Block::_process(double t, Values& values, bool /*go_deep*/)
 
     for (auto& sig: _dependencies)
     {
-        if (!sig->as_bus() && !values.valid(sig))
+        if (sig->as_value() && !sig->as_value()->is_assigned())
             return 0;
     }
 
-    activation_function(t, values);
+    activation_function(t);
 
     _processed = true;
     return 1;
@@ -174,18 +172,19 @@ SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
     return it == _signal_infos.end() ? nullptr : *it;
 }
 
-void Model::register_state_variable(SignalId sig, SignalId deriv_sig)
+void Model::register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig)
 {
     pooya_trace("block: " + full_name());
-    pooya_verify_float_signal(sig);
-    pooya_verify_float_signal(deriv_sig);
-    pooya_verify(!sig->_value->is_state_variable(), sig->_full_name + ": signal is already registered as a state variable!");
-    pooya_verify(!deriv_sig->_value->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state variable derivative!");
+    pooya_verify_signals_not_locked();
+    pooya_verify_valid_signal(sig);
+    pooya_verify_valid_signal(deriv_sig);
+    pooya_verify(!sig->is_state_variable(), sig->_full_name + ": signal is already registered as a state variable!");
+    pooya_verify(!deriv_sig->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state variable derivative!");
     pooya_verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->_array->_size == deriv_sig->_array->_size),
         sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
 
-    _signal_infos[sig->_index]->_value->_deriv_sig = deriv_sig->_value;
-    _signal_infos[deriv_sig->_index]->_value->_is_deriv = true;
+    _signal_infos[sig->_index]->_float->_deriv_sig = deriv_sig->_float;
+    _signal_infos[deriv_sig->_index]->_float->_is_deriv = true;
 }
 
 std::string Parent::make_signal_name(const std::string& given_name, bool make_new)
@@ -229,7 +228,7 @@ void Parent::_mark_unprocessed()
     }
 }
 
-uint Parent::_process(double t, Values& values, bool go_deep)
+uint Parent::_process(double t, bool go_deep)
 {
     pooya_trace("block: " + full_name());
     uint n_processed = 0;
@@ -239,7 +238,7 @@ uint Parent::_process(double t, Values& values, bool go_deep)
         if (go_deep)
             for (auto* component: _components)
             {
-                n_processed += component->_process(t, values);
+                n_processed += component->_process(t);
                 if (not component->processed())
                     _processed = false;
             }
@@ -329,7 +328,6 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, con
     pooya_trace("block: " + full_name());
     pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-    // LabelSignals label_signals;
     LabelSignalIdList label_signals;
     label_signals.reserve(l.size());
 
@@ -353,7 +351,7 @@ SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
     }
     else if (sig->as_array())
     {
-        return create_array_signal(given_name, sig->as_array()->_size);
+        return create_array_signal(given_name, sig->as_array()->size());
     }
     else
     {
@@ -389,7 +387,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
             else if (ls.second->as_bool())
                 wire_infos.emplace_back("b:" + ls.first);
             else if (ls.second->as_array())
-                wire_infos.emplace_back(ls.first, ls.second->as_array()->_size);
+                wire_infos.emplace_back(ls.first, ls.second->as_array()->size());
             else if (ls.second->as_bus())
                 wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);
             else
@@ -420,6 +418,114 @@ Model::Model(std::string given_name) : Parent(given_name, 0, 0)
 bool Model::init(Parent& parent, BusId ibus, BusId obus)
 {
     return true;
+}
+
+void Model::lock_signals()
+{
+    pooya_trace("model: " + full_name());
+
+    if (_signals_locked) // nothing to do!
+        return;
+
+    std::size_t state_variables_size{0};
+    std::size_t total_size{0};
+
+    // find the total sizes of signals and state variables
+    for (const auto* signal: _signal_infos)
+    {
+        if (!signal->as_value()) continue;
+        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
+        total_size += size;
+        if (signal->as_float() && signal->as_float()->is_state_variable())
+            state_variables_size += size;
+    }
+
+    _values.init(total_size, state_variables_size);
+
+    double* state_variables_start = _values.values().data();
+    double* other_start = state_variables_start + state_variables_size;
+
+    for (auto* signal: _signal_infos)
+    {
+        if (!signal->as_value()) continue;
+        auto& start = signal->as_float() && signal->as_float()->is_state_variable() ? state_variables_start : other_start;
+        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 0 : signal->as_array()->_size;
+        if (signal->as_scalar())
+            signal->_scalar->_scalar_value = start;
+        else if (signal->as_int())
+            signal->_int->_int_value = start;
+        else if (signal->as_bool())
+            signal->_bool->_bool_value = start;
+        else
+            new (&signal->_array->_array_value) MappedArray(start, size);
+        start += std::max<std::size_t>(size, 1);
+    }
+
+    assert(state_variables_start == _values.values().data() + state_variables_size);
+    assert(other_start == _values.values().data() + total_size);
+
+    double* deriv_start = _values.state_variable_derivs().data();
+
+    // state-variable-specific steps
+
+    for (auto* signal: _signal_infos)
+    {
+        if (!signal->as_float() || !signal->as_float()->is_state_variable())
+            continue;
+
+        if (signal->as_scalar())
+            signal->_scalar->_deriv_sig->_scalar->_deriv_scalar_value = deriv_start;
+        else
+            new (&signal->_array->_deriv_sig->_array->_deriv_array_value) MappedArray(deriv_start, signal->_array->_size);
+
+        deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
+    }
+
+    _signals_locked = true;
+}
+
+void Model::reset_with_state_variables(const Array& state_variables)
+{
+    pooya_trace0;
+#ifndef POOYA_NDEBUG
+    _values._values.setZero();
+    _values._state_variable_derivs.setZero();
+#endif // !defined(POOYA_NDEBUG)
+    pooya_verify(_values._state_variables.size() == state_variables.size(), "State variables size mismatch!");
+    _values._state_variables = state_variables;
+    for (auto* sig: _signal_infos)
+    {
+        if (!sig->_value) // skip non-values
+            continue;
+
+        if (sig->_float) // skip non-floats
+        {
+            sig->_float->_assigned = sig->_float->_deriv_sig;
+            if (!sig->_float->_assigned) // skip non-state-variables
+                continue;
+
+            if (sig->_float->_is_deriv) // skip non-derivatives
+            {
+                if (sig->_scalar)
+                    *sig->_scalar->_deriv_scalar_value = *sig->_scalar->_scalar_value;
+                else
+                    sig->_array->_deriv_array_value = sig->_array->_array_value;
+            }
+        }
+        else
+            sig->_value->_assigned = false;
+    }
+}
+
+void Model::invalidate()
+{
+#ifndef POOYA_NDEBUG
+    _values._values.setZero();
+    _values._state_variable_derivs.setZero();
+#endif // !defined(POOYA_NDEBUG)
+    for (auto* sig: _signal_infos)
+        if (sig->_value)
+            sig->_value->_assigned = false;
 }
 
 }

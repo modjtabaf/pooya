@@ -105,10 +105,6 @@ public:
     pooya_verify_valid_signal(sig); \
     pooya_verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
 
-#define pooya_verify_float_signal(sig) \
-    pooya_verify_valid_signal(sig); \
-    pooya_verify(!(sig)->as_int() && !(sig)->as_bool(), (sig)->_full_name + ": float signal expected!");
-
 #define pooya_verify_int_signal(sig) \
     pooya_verify_valid_signal(sig); \
     pooya_verify((sig)->as_int(), (sig)->_full_name + ": int signal expected!");
@@ -119,7 +115,7 @@ public:
 
 #define pooya_verify_array_signal_size(sig, size_) \
     pooya_verify_array_signal(sig); \
-    pooya_verify((sig)->as_array()->_size == size_, (sig)->_full_name + ": array size mismatch!");
+    pooya_verify((sig)->as_array()->size() == size_, (sig)->_full_name + ": array size mismatch!");
 
 #define pooya_verify_bus(sig) \
     pooya_verify_valid_signal(sig); \
@@ -128,6 +124,12 @@ public:
 #define pooya_verify_bus_spec(sig, spec_) \
     pooya_verify_bus(sig); \
     pooya_verify((sig)->as_bus()->spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
+
+#define pooya_verify_signals_locked() \
+    pooya_verify(_signals_locked, "Signals are not locked!");
+
+#define pooya_verify_signals_not_locked() \
+    pooya_verify(!_signals_locked, "Attempting to modify the signals while they are locked!");
 
 // utility functions
 

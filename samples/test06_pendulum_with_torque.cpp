@@ -13,8 +13,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-#include <math.h>
-#include <vector>
 #include <chrono>
 
 #include "src/core/pooya.hpp"
@@ -33,14 +31,14 @@ protected:
             return std::sin(x);
         }};
     // pooya::SOFunction _sin{"sin_phi",
-    //     [](double /*t*/, pooya::BusId ibus, const pooya::Values& values) -> double
+    //     [](double /*t*/, pooya::BusId ibus) -> double
     //     {
-    //         return std::sin(values[ibus->scalar_at(0)]);
+    //         return std::sin(ibus->scalar_at(0)->get());
     //     }};
     // pooya::Function _sin{"sin_phi",
-    //     [](double /*t*/, pooya::BusId ibus, pooya::BusId obus, pooya::Values& values) -> void
+    //     [](double /*t*/, pooya::BusId ibus, pooya::BusId obus) -> void
     //     {
-    //         values[obus->scalar_at(0)] = std::sin(values[ibus->scalar_at(0)]);
+    //         obus->scalar_at(0)->set(std::sin(ibus->scalar_at(0)->get()));
     //     }};
     // pooya::Sin _sin{"sin(phi)"};
     pooya::MulDiv _muldiv1{"g_l", "**/"};
@@ -104,15 +102,15 @@ int main()
     auto g = model.scalar_signal("g");
     auto tau = model.scalar_signal("tau");
 
-    pooya::Rkf45 stepper(model);
+    pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/, pooya::Values& values) -> void
+        [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            values[m] = 0.2;
-            values[l] = 0.1;
-            values[g] = 9.81;
-            values[tau] = 0.13;
+            m->set(0.2);
+            l->set(0.1);
+            g->set(9.81);
+            tau->set(0.13);
         },
         &stepper, true);
 
@@ -123,7 +121,7 @@ int main()
     while (pooya::arange(k, t, 0, 5, 0.1))
     {
         sim.run(t);
-        history.update(k, t, sim.values());
+        history.update(k, t);
         k++;
     }
 

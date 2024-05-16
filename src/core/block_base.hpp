@@ -17,6 +17,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 
 #include "util.hpp"
 #include "signal.hpp"
@@ -63,9 +64,9 @@ protected:
 public:
     virtual ~Block() = default;
 
-    virtual void pre_step(double /*t*/, Values& /*state_variables*/) {}
-    virtual void post_step(double /*t*/, const Values& /*state_variables*/) {}
-    virtual void activation_function(double /*t*/, Values& /*x*/) {}
+    virtual void pre_step(double /*t*/) {}
+    virtual void post_step(double /*t*/) {}
+    virtual void activation_function(double /*t*/) {}
     virtual Model* model();
 
     Model& model_ref()
@@ -169,7 +170,7 @@ public:
     }
 
     virtual void _mark_unprocessed();
-    virtual uint _process(double t, Values& values, bool go_deep = true);
+    virtual uint _process(double t, bool go_deep = true);
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
     {
@@ -240,18 +241,18 @@ protected:
 public:
     bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
 
-    void pre_step(double t, Values& values) override
+    void pre_step(double t) override
     {
         pooya_trace("block: " + full_name());
         for (auto* component: _components)
-            component->pre_step(t, values);
+            component->pre_step(t);
     }
 
-    void post_step(double t, const Values& values) override
+    void post_step(double t) override
     {
         pooya_trace("block: " + full_name());
         for (auto* component: _components)
-            component->post_step(t, values);
+            component->post_step(t);
     }
 
     // retrieve an existing signal
@@ -381,7 +382,7 @@ public:
 
     std::string make_signal_name(const std::string& given_name, bool make_new=false);
     void _mark_unprocessed() override;
-    uint _process(double t, Values& values, bool go_deep = true) override;
+    uint _process(double t, bool go_deep = true) override;
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
 }; // class Parent
 
@@ -402,6 +403,8 @@ public:
 protected:
     SignalInfos _signal_infos;
     std::size_t _vi_index{0};
+    ValuesArray _values;
+    bool _signals_locked{false};
 
     bool init(Parent&, BusId, BusId) override;
 
@@ -409,6 +412,7 @@ protected:
     typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
+        pooya_verify_signals_not_locked();
         if (name.empty()) return nullptr;
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -454,13 +458,17 @@ public:
     Model(std::string given_name="model");
     ~Model();
 
-    virtual void input_cb(double /*t*/, Values& /*values*/) {}
+    virtual void input_cb(double /*t*/) {}
 
     Model* model() override {return this;}
     const SignalInfos& signals() const {return _signal_infos;}
+    const ValuesArray& values() const {return _values;}
 
-    void register_state_variable(SignalId sig, SignalId deriv_sig);
+    void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
+    void lock_signals();
+    void reset_with_state_variables(const Array& state_variables);
+    void invalidate();
 };
 
 template<typename T, typename... Ts>

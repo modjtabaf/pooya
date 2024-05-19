@@ -75,7 +75,7 @@ The model setup is complete and it is ready to use. The RK4 solver works well fo
 
 ```cpp
 // set up the simulator
-pooya::Rk4 solver(model);
+pooya::Rk4 solver;
 pooya::Simulator sim(model, nullptr, &solver);
 pooya::History history(model);
 
@@ -84,7 +84,7 @@ double t;
 for (uint k=0; pooya::arange(k, t, 0, 10, 0.1); k++)
 {
     sim.run(t);
-    history.update(k, t, sim.values());
+    history.update(k, t);
 }
 ```
 

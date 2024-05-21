@@ -19,6 +19,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <memory>
 #include <type_traits>
 
+#if defined(POOYA_USE_SMART_PTRS)
+#include <optional>
+#endif // defined(POOYA_USE_SMART_PTRS)
+
 #include "util.hpp"
 #include "signal.hpp"
 
@@ -32,6 +36,9 @@ class Model;
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 
 class Block
+#if defined(POOYA_USE_SMART_PTRS)
+    : public std::enable_shared_from_this<Block>
+#endif // defined(POOYA_USE_SMART_PTRS)
 {
     friend class Parent;
 
@@ -43,7 +50,11 @@ protected:
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<ValueSignalId> _dependencies;
+#if defined(POOYA_USE_SMART_PTRS)
+    std::optional<std::reference_wrapper<Parent>> _parent;
+#else // defined(POOYA_USE_SMART_PTRS)
     Parent* _parent{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -77,7 +88,7 @@ public:
         return *mdl;
     }
 
-    Parent* parent() {return _parent;}
+    auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
     const std::string& given_name() const {return _given_name;}

@@ -24,15 +24,21 @@ namespace pooya
 bool Block::init(Parent& parent, BusId ibus, BusId obus)
 {
     pooya_trace(_given_name);
-    assert(_parent == nullptr);
+
+    assert(!_parent);
     if (_parent) return false;
 
+#if defined(POOYA_USE_SMART_PTRS)
+    _parent = parent;
+#else // defined(POOYA_USE_SMART_PTRS)
     _parent = &parent;
-    pooya_verify(_parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
+#endif // defined(POOYA_USE_SMART_PTRS)
+
+    pooya_verify(parent.is_initialized(), _given_name + ": parent block is not initialized yet!");
 
     _assign_valid_given_name(_given_name);
     if (_full_name.empty())
-        _full_name = _parent ? (_parent->full_name() + "/" + _given_name) : ("/" + _given_name);
+        _full_name = parent.full_name() + "/" + _given_name;
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
@@ -108,7 +114,12 @@ void Block::_assign_valid_given_name(std::string given_name)
     if (_parent)
     {
         uint n = 0;
-        while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
+#if defined(POOYA_USE_SMART_PTRS)
+        auto& parent = _parent->get();
+#else // defined(POOYA_USE_SMART_PTRS)
+        auto& parent = *_parent;
+#endif // defined(POOYA_USE_SMART_PTRS)
+        while (!parent.traverse(pooya_verify_unique_name_cb, 0, 1))
             given_name = _given_name + "_" + std::to_string(n++);
 
         _given_name = given_name;
@@ -141,7 +152,17 @@ uint Block::_process(double t, bool /*go_deep*/)
 Model* Block::model()
 {
     pooya_trace("block: " + full_name());
-    return _parent ? _parent->model() : nullptr;
+
+    if (_parent)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return _parent->get().model();
+#else // defined(POOYA_USE_SMART_PTRS)
+        return _parent->model();
+#endif // defined(POOYA_USE_SMART_PTRS)
+    }
+
+    return nullptr;
 }
 
 Model::~Model()

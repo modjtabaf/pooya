@@ -83,30 +83,30 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
     pooya_trace("block: " + full_name());
     auto it = _init_values.find(full_label);
 
-    std::unique_ptr<Block> block;
+    std::shared_ptr<Block> block;
     if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {
         block = (it == _init_values.end())
-            ? std::make_unique<Memory>("memory")
-            : std::make_unique<Memory>("memory", it->second.as_scalar());
+            ? std::make_shared<Memory>("memory")
+            : std::make_shared<Memory>("memory", it->second.as_scalar());
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
     {
         block = (it == _init_values.end())
-            ? std::make_unique<MemoryI>("memory")
-            : std::make_unique<MemoryI>("memory", std::round(it->second.as_scalar()));
+            ? std::make_shared<MemoryI>("memory")
+            : std::make_shared<MemoryI>("memory", std::round(it->second.as_scalar()));
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
     {
         block = (it == _init_values.end())
-            ? std::make_unique<MemoryB>("memory")
-            : std::make_unique<MemoryB>("memory", it->second.as_scalar() != 0);
+            ? std::make_shared<MemoryB>("memory")
+            : std::make_shared<MemoryB>("memory", it->second.as_scalar() != 0);
     }
     else if (wi._array_size > 0)
     {
         block = (it == _init_values.end())
-            ? std::make_unique<MemoryA>("memory", Array::Zero(wi._array_size))
-            : std::make_unique<MemoryA>("memory", it->second.as_array());
+            ? std::make_shared<MemoryA>("memory", Array::Zero(wi._array_size))
+            : std::make_shared<MemoryA>("memory", it->second.as_array());
     }
     else
     {
@@ -118,7 +118,12 @@ void BusMemory::block_builder(const std::string &full_label, const BusSpec::Wire
         _init_values.erase(it);
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+#if defined(POOYA_USE_SMART_PTRS)
+    auto& parent = _parent->get();
+#else // defined(POOYA_USE_SMART_PTRS)
+    auto& parent = *_parent;
+#endif // defined(POOYA_USE_SMART_PTRS)
+    parent.add_block(*block, sig_in, sig_out);
     _blocks.push_back(std::move(block));
 }
 
@@ -126,29 +131,34 @@ void BusPipe::block_builder(const std::string & /*full_label*/, const BusSpec::W
     SignalId sig_in, SignalId sig_out)
 {
     pooya_trace("block: " + full_name());
-    std::unique_ptr<Block> block;
+    std::shared_ptr<Block> block;
     if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {
-        block = std::make_unique<Pipe>("pipe");
+        block = std::make_shared<Pipe>("pipe");
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
     {
-        block = std::make_unique<PipeI>("pipe");
+        block = std::make_shared<PipeI>("pipe");
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
     {
-        block = std::make_unique<PipeB>("pipe");
+        block = std::make_shared<PipeB>("pipe");
     }
     else if (wi._array_size > 0)
     {
-        block = std::make_unique<PipeA>("pipe");
+        block = std::make_shared<PipeA>("pipe");
     }
     else
     {
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+#if defined(POOYA_USE_SMART_PTRS)
+    auto& parent = _parent->get();
+#else // defined(POOYA_USE_SMART_PTRS)
+    auto& parent = *_parent;
+#endif // defined(POOYA_USE_SMART_PTRS)
+    parent.add_block(*block, sig_in, sig_out);
     _blocks.push_back(std::move(block));
 }
 

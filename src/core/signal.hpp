@@ -156,6 +156,8 @@ protected:
 public:
     const std::size_t _vi_index{0};   // the index of associated ValueInfo (REMOVE)
 
+    double get_as_scalar() const;
+
     bool is_assigned() const {return _assigned;}
 };
 
@@ -280,6 +282,19 @@ public:
 
     operator bool() const {return get();}
 };
+
+inline double ValueSignalInfo::get_as_scalar() const
+{
+    if (as_scalar())
+        return as_scalar()->get();
+    else if (as_int())
+        return static_cast<double>(as_int()->get());
+    else
+    {
+        pooya_verify(as_bool(), "boolean signal expected!");
+        return as_bool()->get() ? 1 : 0;
+    }
+}
 
 class ArraySignalInfo : public FloatSignalInfo
 {

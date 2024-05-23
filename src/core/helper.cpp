@@ -28,12 +28,19 @@ void History::track_all()
     pooya_verify(empty(), "track_all should be called before the history is updated!");
     _signals.clear();
     std::size_t n = 0;
+#if defined(POOYA_USE_SMART_PTRS)
+    for (auto& sig: _model.get().signals())
+#else // defined(POOYA_USE_SMART_PTRS)
     for (auto sig: _model.signals())
-        if (sig->as_value()) n++;
-    // const auto& vis = values.value_infos();
+#endif // defined(POOYA_USE_SMART_PTRS)
+        if (sig->is_value()) n++;
     _signals.reserve(n);
+#if defined(POOYA_USE_SMART_PTRS)
+    for (auto& sig: _model.get().signals())
+#else // defined(POOYA_USE_SMART_PTRS)
     for (auto sig: _model.signals())
-        if (sig->as_value()) _signals.push_back(sig->as_value());
+#endif // defined(POOYA_USE_SMART_PTRS)
+        if (sig->is_value()) _signals.push_back(sig->as_value());
 }
 
 void History::track(SignalId sig)
@@ -60,7 +67,7 @@ void History::update(uint k, double t)
             track_all();
         for (auto sig: _signals)
         {
-            if (sig->as_scalar() || sig->as_int() || sig->as_bool())
+            if (sig->is_scalar() || sig->is_int() || sig->is_bool())
                 insert_or_assign(sig, Array(_nrows_grow));
             else
                 insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));
@@ -76,11 +83,11 @@ void History::update(uint k, double t)
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         bool valid = sig->is_assigned();
-        if (sig->as_int())
+        if (sig->is_int())
             h(k, 0) = valid ? sig->as_int()->get() : 0;
-        else if (sig->as_bool())
+        else if (sig->is_bool())
             h(k, 0) = valid ? sig->as_bool()->get() : 0;
-        else if (sig->as_scalar())
+        else if (sig->is_scalar())
             h(k, 0) = valid ? sig->as_scalar()->get() : 0;
         else
         {
@@ -122,7 +129,7 @@ void History::export_csv(std::string filename)
     {
         if (h.first)
         {
-            if (h.first->as_array())
+            if (h.first->is_array())
             {
                 auto sig = h.first->as_array();
                 for (std::size_t k=0; k < sig->size(); k++)
@@ -142,7 +149,7 @@ void History::export_csv(std::string filename)
         for (const auto& h: *this)
         if (h.first)
         {
-            if (h.first->as_array())
+            if (h.first->is_array())
             {
                 auto sig = h.first->as_array();
                 for (std::size_t j=0; j < sig->size(); j++)
@@ -162,26 +169,53 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 }
 
 Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :
-    _model(model), _inputs_cb(inputs_cb), _stepper(stepper), _reuse_order(reuse_order)
+    _model(model), _inputs_cb(inputs_cb), _reuse_order(reuse_order)
 {
     pooya_trace("model: " + model.full_name());
+    if (stepper)
+#if defined(POOYA_USE_SMART_PTRS)
+        _stepper = *stepper;
+#else // defined(POOYA_USE_SMART_PTRS)
+        _stepper = stepper;
+#endif // defined(POOYA_USE_SMART_PTRS)
 }
 
 uint Simulator::_process(double t)
 {
     pooya_trace("t: " + std::to_string(t));
+#if defined(POOYA_USE_SMART_PTRS)
+    _model.get()._mark_unprocessed();
+#else // defined(POOYA_USE_SMART_PTRS)
     _model._mark_unprocessed();
+#endif // defined(POOYA_USE_SMART_PTRS)
 
     uint n_processed = 0;
 
     if (_reuse_order)
     {
+#if defined(POOYA_USE_SMART_PTRS)
+        _new_po.get().clear();
+#else // defined(POOYA_USE_SMART_PTRS)
         _new_po->clear();
+#endif // defined(POOYA_USE_SMART_PTRS)
 
         bool any_processed;
         do
         {
             any_processed = false;
+#if defined(POOYA_USE_SMART_PTRS)
+            for (auto& base: _current_po.get())
+            {
+                if (base.get().processed())
+                    continue;
+                n_processed += base.get()._process(t, false);
+                if (base.get().processed())
+                {
+                    _new_po.get().emplace_back(base);
+                    any_processed = true;
+                }
+            }
+#else // defined(POOYA_USE_SMART_PTRS)
             for (auto* base: *_current_po)
             {
                 if (base->processed())
@@ -189,21 +223,34 @@ uint Simulator::_process(double t)
                 n_processed += base->_process(t, false);
                 if (base->processed())
                 {
-                    _new_po->push_back(base);
+                    _new_po->emplace_back(base);
                     any_processed = true;
                 }
             }
+#endif // defined(POOYA_USE_SMART_PTRS)
         } while(any_processed);
 
+#if defined(POOYA_USE_SMART_PTRS)
+        for (auto& base: _current_po.get())
+        {
+            if (!base.get().processed())
+                _new_po.get().emplace_back(base);
+        }
+
+        assert(_current_po.get().size() == _new_po.get().size());
+        assert(_current_po.get().size() == _current_po.get().capacity());
+        assert(_new_po.get().size() == _new_po.get().capacity());
+#else // defined(POOYA_USE_SMART_PTRS)
         for (auto* base: *_current_po)
         {
             if (!base->processed())
-                _new_po->push_back(base);
+                _new_po->emplace_back(base);
         }
 
         assert(_current_po->size() == _new_po->size());
         assert(_current_po->size() == _current_po->capacity());
         assert(_new_po->size() == _new_po->capacity());
+#endif // defined(POOYA_USE_SMART_PTRS)
 
         std::swap(_current_po, _new_po);
     }
@@ -212,7 +259,11 @@ uint Simulator::_process(double t)
         uint n;
         do
         {
+#if defined(POOYA_USE_SMART_PTRS)
+            n = _model.get()._process(t);
+#else // defined(POOYA_USE_SMART_PTRS)
             n = _model._process(t);
+#endif // defined(POOYA_USE_SMART_PTRS)
             n_processed += n;
         } while(n);
     }
@@ -227,7 +278,11 @@ uint Simulator::_process(double t)
         return true;
     };
 
+#if defined(POOYA_USE_SMART_PTRS)
+    _model.get().traverse(find_unprocessed_cb, 0);
+#else // defined(POOYA_USE_SMART_PTRS)
     _model.traverse(find_unprocessed_cb, 0);
+#endif // defined(POOYA_USE_SMART_PTRS)
     if (unprocessed.size())
     {
         std::cout << "\n-- unprocessed blocks detected:\n";
@@ -251,11 +306,11 @@ void Simulator::init(double t0)
 {
     pooya_trace("t0: " + std::to_string(t0));
 
-    _model.lock_signals();
+    static_cast<Model&>(_model).lock_signals();
 
     _t_prev = t0;
 
-    if (_model.values().num_state_variables() > 0)
+    if (static_cast<Model&>(_model).values().num_state_variables() > 0)
     {
         if (_reuse_order)
         {
@@ -268,20 +323,29 @@ void Simulator::init(double t0)
                 num_blocks++;
                 return true;
             };
-            _model.traverse(enum_blocks_cb, 0);
+            static_cast<Model&>(_model).traverse(enum_blocks_cb, 0);
 
             _processing_order1.reserve(num_blocks);
             _processing_order2.reserve(num_blocks);
 
             auto add_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
             {
-                _processing_order1.push_back(&c);
+#if defined(POOYA_USE_SMART_PTRS)
+                _processing_order1.emplace_back(c);
+#else // defined(POOYA_USE_SMART_PTRS)
+                _processing_order1.emplace_back(&c);
+#endif // defined(POOYA_USE_SMART_PTRS)
                 return true;
             };
-            _model.traverse(add_blocks_cb, 0);
+            static_cast<Model&>(_model).traverse(add_blocks_cb, 0);
 
+#if defined(POOYA_USE_SMART_PTRS)
+            _current_po = _processing_order1;
+            _new_po = _processing_order2;
+#else // defined(POOYA_USE_SMART_PTRS)
             _current_po = &_processing_order1;
             _new_po = &_processing_order2;
+#endif // defined(POOYA_USE_SMART_PTRS)
         }
     }
     else
@@ -291,12 +355,12 @@ void Simulator::init(double t0)
                 "A stepper is provided but no state variable is defined! The stepper will be ignored.");
     }
 
-    _model.invalidate();
+    static_cast<Model&>(_model).invalidate();
     if (_inputs_cb) _inputs_cb(_model, t0);
-    _model.input_cb(t0);
-    _model.pre_step(t0);
+    static_cast<Model&>(_model).input_cb(t0);
+    static_cast<Model&>(_model).pre_step(t0);
     _process(t0);
-    _model.post_step(t0);
+    static_cast<Model&>(_model).post_step(t0);
 
     _initialized = true;
 }
@@ -307,11 +371,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     auto stepper_callback = [&](double t, const Array& state_variables) -> const ValuesArray::StateVariableDerivs&
     {
         pooya_trace("t: " + std::to_string(t));
-        _model.reset_with_state_variables(state_variables);
+        static_cast<Model&>(_model).reset_with_state_variables(state_variables);
         if (_inputs_cb) _inputs_cb(_model, t);
-        _model.input_cb(t);
+        static_cast<Model&>(_model).input_cb(t);
         _process(t);
-        return _model.values().state_variable_derivs();
+        return static_cast<Model&>(_model).values().state_variable_derivs();
     };
 
     if (!_initialized)
@@ -321,7 +385,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         return;
     }
 
-    if (_model.values().num_state_variables() > 0)
+    if (static_cast<Model&>(_model).values().num_state_variables() > 0)
     {
         if (t <_t_prev)
             util::pooya_throw_exception(__FILE__, __LINE__,
@@ -335,11 +399,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 "Repeated simulation step:\n  "
                 "- time = " + std::to_string(t) + "\n");
 
-            _model.invalidate();
+            static_cast<Model&>(_model).invalidate();
             if (_inputs_cb) _inputs_cb(_model, t);
-            _model.input_cb(t);
-            _model.pre_step(t);
-            _state_variables = _model.values().state_variables();
+            static_cast<Model&>(_model).input_cb(t);
+            static_cast<Model&>(_model).pre_step(t);
+            _state_variables = static_cast<Model&>(_model).values().state_variables();
         }
         else
         {
@@ -354,13 +418,18 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             bool force_accept = false;
             while (t1 < t)
             {
-                _model.invalidate();
+                static_cast<Model&>(_model).invalidate();
                 if (_inputs_cb) _inputs_cb(_model, t1);
-                _model.input_cb(t1);
-                _model.pre_step(t1);
-                _state_variables_orig = _model.values().state_variables();
+                static_cast<Model&>(_model).input_cb(t1);
+                static_cast<Model&>(_model).pre_step(t1);
+                _state_variables_orig = static_cast<Model&>(_model).values().state_variables();
 
-                _stepper->step(stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
+#if defined(POOYA_USE_SMART_PTRS)
+                _stepper.value().get().step
+#else // defined(POOYA_USE_SMART_PTRS)step
+                _stepper->step
+#endif // defined(POOYA_USE_SMART_PTRS)
+                    (stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))
@@ -373,11 +442,11 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
                     if (t1 < t)
                     {
-                        _model.reset_with_state_variables(_state_variables);
+                        static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
                         if (_inputs_cb) _inputs_cb(_model, t1);
-                        _model.input_cb(t1);
+                        static_cast<Model&>(_model).input_cb(t1);
                         _process(t1);
-                        _model.post_step(t1);
+                        static_cast<Model&>(_model).post_step(t1);
                     }
                 }
                 else
@@ -391,13 +460,13 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         }
     }
 
-    _model.reset_with_state_variables(_state_variables);
+    static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
     if (_inputs_cb) _inputs_cb(_model, t);
-    _model.input_cb(t);
-    if (_model.values().num_state_variables() == 0)
-        _model.pre_step(t);
+    static_cast<Model&>(_model).input_cb(t);
+    if (static_cast<Model&>(_model).values().num_state_variables() == 0)
+        static_cast<Model&>(_model).pre_step(t);
     _process(t);
-    _model.post_step(t);
+    static_cast<Model&>(_model).post_step(t);
 
     _t_prev = t;
 }

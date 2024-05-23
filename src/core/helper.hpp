@@ -26,7 +26,11 @@ namespace pooya
 class History : public std::unordered_map<SignalId, Eigen::MatrixXd>
 {
 protected:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::reference_wrapper<const Model> _model;
+#else // defined(POOYA_USE_SMART_PTRS)
     const Model& _model;
+#endif // defined(POOYA_USE_SMART_PTRS)
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
     Array _time;
@@ -51,20 +55,37 @@ using InputCallback = std::function<void(Model&, double)>;
 class Simulator
 {
 protected:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::reference_wrapper<Model> _model;
+#else // defined(POOYA_USE_SMART_PTRS)
     Model& _model;
+#endif // defined(POOYA_USE_SMART_PTRS)
     double _t_prev{0};
     InputCallback _inputs_cb;
     Array _state_variables;
     Array _state_variables_orig;
+#if defined(POOYA_USE_SMART_PTRS)
+    std::optional<std::reference_wrapper<StepperBase>> _stepper;
+#else // defined(POOYA_USE_SMART_PTRS)
     StepperBase* _stepper{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
     bool _initialized{false};
 
     const bool _reuse_order;
+#if defined(POOYA_USE_SMART_PTRS)
+    using ProcessingOrder = std::vector<std::reference_wrapper<Block>>;
+#else // defined(POOYA_USE_SMART_PTRS)
     using ProcessingOrder = std::vector<Block*>;
+#endif // defined(POOYA_USE_SMART_PTRS)
     ProcessingOrder _processing_order1;
     ProcessingOrder _processing_order2;
+#if defined(POOYA_USE_SMART_PTRS)
+    std::reference_wrapper<ProcessingOrder> _current_po{_processing_order1};
+    std::reference_wrapper<ProcessingOrder> _new_po{_processing_order2};
+#else // defined(POOYA_USE_SMART_PTRS)
     ProcessingOrder* _current_po{nullptr};
     ProcessingOrder* _new_po{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
 
     uint _process(double t);
 

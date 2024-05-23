@@ -690,7 +690,7 @@ using PipeA = PipeT<Array>;
 class BusBlockBuilder : public SingleInputOutputT<BusSpec>
 {
 protected:
-    std::vector<std::unique_ptr<Block>> _blocks;
+    std::vector<std::shared_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
 
     void traverse_bus(const std::string &path_name, const BusSpec &bus_spec);

@@ -20,6 +20,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <map>
 #include <string>
 
+#if defined(POOYA_USE_SMART_PTRS)
+#include <memory>
+#include <optional>
+#endif // defined(POOYA_USE_SMART_PTRS)
+
 #include "Eigen/Core"
 #include "util.hpp"
 
@@ -53,6 +58,28 @@ class   BoolSignalInfo;
 class  ArraySignalInfo;
 class          BusInfo;
 
+#if defined(POOYA_USE_SMART_PTRS)
+
+using       SignalId =       std::shared_ptr<SignalInfo>;
+using  ValueSignalId =  std::shared_ptr<ValueSignalInfo>;
+using  FloatSignalId =  std::shared_ptr<FloatSignalInfo>;
+using ScalarSignalId = std::shared_ptr<ScalarSignalInfo>;
+using    IntSignalId =    std::shared_ptr<IntSignalInfo>;
+using   BoolSignalId =   std::shared_ptr<BoolSignalInfo>;
+using  ArraySignalId =  std::shared_ptr<ArraySignalInfo>;
+using          BusId =          std::shared_ptr<BusInfo>;
+
+using       ReadOnlySignalId =       std::shared_ptr<const SignalInfo>;
+using  ReadOnlyValueSignalId =  std::shared_ptr<const ValueSignalInfo>;
+using  ReadOnlyFloatSignalId =  std::shared_ptr<const FloatSignalInfo>;
+using ReadOnlyScalarSignalId = std::shared_ptr<const ScalarSignalInfo>;
+using    ReadOnlyIntSignalId =    std::shared_ptr<const IntSignalInfo>;
+using   ReadOnlyBoolSignalId =   std::shared_ptr<const BoolSignalInfo>;
+using  ReadOnlyArraySignalId =  std::shared_ptr<const ArraySignalInfo>;
+using          ReadOnlyBusId =          std::shared_ptr<const BusInfo>;
+
+#else // defined(POOYA_USE_SMART_PTRS)
+
 using       SignalId =       SignalInfo*;
 using  ValueSignalId =  ValueSignalInfo*;
 using  FloatSignalId =  FloatSignalInfo*;
@@ -62,37 +89,72 @@ using   BoolSignalId =   BoolSignalInfo*;
 using  ArraySignalId =  ArraySignalInfo*;
 using          BusId =          BusInfo*;
 
+using       ReadOnlySignalId =       const SignalInfo*;
+using  ReadOnlyValueSignalId =  const ValueSignalInfo*;
+using  ReadOnlyFloatSignalId =  const FloatSignalInfo*;
+using ReadOnlyScalarSignalId = const ScalarSignalInfo*;
+using    ReadOnlyIntSignalId =    const IntSignalInfo*;
+using   ReadOnlyBoolSignalId =   const BoolSignalInfo*;
+using  ReadOnlyArraySignalId =  const ArraySignalInfo*;
+using          ReadOnlyBusId =          const BusInfo*;
+
+#endif // defined(POOYA_USE_SMART_PTRS)
+
 using LabelSignalId = std::pair<std::string, SignalId>;
 using LabelSignalIdList = std::vector<LabelSignalId>;
 using LabelSignalIdMap = std::map<LabelSignalId::first_type, LabelSignalId::second_type>;
 
 class SignalInfo
+#if defined(POOYA_USE_SMART_PTRS)
+    : public std::enable_shared_from_this<SignalInfo>
+#endif // defined(POOYA_USE_SMART_PTRS)
 {
     friend class Model;
+
+#if defined(POOYA_USE_SMART_PTRS)
+protected:
+    struct Protected {};
+#endif // defined(POOYA_USE_SMART_PTRS)
 
 public:
     const std::string _full_name; // full name of the signal
     const std::size_t _index{0};  // the signal index
 
 protected:
-    ValueSignalInfo*   _value{nullptr};
-    FloatSignalInfo*   _float{nullptr};
-    ScalarSignalInfo* _scalar{nullptr};
-    ArraySignalInfo*   _array{nullptr};
-    IntSignalInfo*      _int {nullptr};
-    BoolSignalInfo*     _bool{nullptr};
-    BusInfo*             _bus{nullptr};
+    bool  _value{false};
+    bool  _float{false};
+    bool _scalar{false};
+    bool  _array{false};
+    bool   _int {false};
+    bool   _bool{false};
+    bool    _bus{false};
 
     SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
 
 public:
-    ValueSignalId   as_value() const {return  _value;}
-    FloatSignalId   as_float() const {return  _float;}
-    ScalarSignalId as_scalar() const {return _scalar;}
-    IntSignalId       as_int() const {return    _int;}
-    BoolSignalId     as_bool() const {return   _bool;}
-    ArraySignalId   as_array() const {return  _array;}
-    BusId             as_bus() const {return    _bus;}
+    bool is_value() const {return _value;}
+    bool is_float() const {return _float;}
+    bool is_scalar() const {return _scalar;}
+    bool is_int() const {return _int;}
+    bool is_bool() const {return _bool;}
+    bool is_array() const {return _array;}
+    bool is_bus() const {return _bus;}
+
+    ValueSignalId   as_value();
+    FloatSignalId   as_float();
+    ScalarSignalId as_scalar();
+    IntSignalId       as_int();
+    BoolSignalId     as_bool();
+    ArraySignalId   as_array();
+    BusId             as_bus();
+
+    ReadOnlyValueSignalId   as_value() const;
+    ReadOnlyFloatSignalId   as_float() const;
+    ReadOnlyScalarSignalId as_scalar() const;
+    ReadOnlyIntSignalId       as_int() const;
+    ReadOnlyBoolSignalId     as_bool() const;
+    ReadOnlyArraySignalId   as_array() const;
+    ReadOnlyBusId             as_bus() const;
 };
 
 class LabelSignals
@@ -107,7 +169,17 @@ protected:
 
 public:
     LabelSignals() = default;
-    LabelSignals(SignalId signal);
+    template<typename T>
+    LabelSignals(const T& signal)
+    {
+        pooya_trace0;
+#if defined(POOYA_USE_SMART_PTRS)
+        LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
+#else // defined(POOYA_USE_SMART_PTRS)
+        LabelSignalIdList lsl({{_make_auto_label(0), signal}});
+#endif // defined(POOYA_USE_SMART_PTRS)
+        _init(lsl.begin(), lsl.end());
+    }
     LabelSignals(const std::initializer_list<SignalId>& il);
     LabelSignals(const std::initializer_list<LabelSignalId>& il);
 
@@ -150,7 +222,7 @@ protected:
     ValueSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) :
         SignalInfo(full_name, index), _vi_index(vi_index)
     {
-        _value = this;
+        _value = true;
     }
 
 public:
@@ -172,11 +244,11 @@ protected:
     FloatSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) :
         ValueSignalInfo(full_name, index, vi_index)
     {
-        _float = this;
+        _float = true;
     }
 
 public:
-    bool is_state_variable() const {return _deriv_sig;}
+    bool is_state_variable() const {return static_cast<bool>(_deriv_sig);}
 };
 
 class ScalarSignalInfo : public FloatSignalInfo
@@ -184,21 +256,44 @@ class ScalarSignalInfo : public FloatSignalInfo
     friend class Model;
 
 protected:
-    ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : FloatSignalInfo(full_name, index, vi_index)
-    {
-        _scalar = this;
-    }
-
+#if defined(POOYA_USE_SMART_PTRS)
+    std::optional<std::reference_wrapper<double>> _scalar_value;
+    std::optional<std::reference_wrapper<double>> _deriv_scalar_value;    // only valid if _is_deriv is true, nullptr otherwise
+#else // defined(POOYA_USE_SMART_PTRS)
     double* _scalar_value{nullptr};
     double* _deriv_scalar_value{nullptr};    // only valid if _is_deriv is true, nullptr otherwise
+#endif // defined(POOYA_USE_SMART_PTRS)
+
+    static ScalarSignalId create_new(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::make_shared<ScalarSignalInfo>(Protected(), full_name, index, vi_index);
+#else // defined(POOYA_USE_SMART_PTRS)
+        return new ScalarSignalInfo(full_name, index, vi_index);
+#endif // defined(POOYA_USE_SMART_PTRS)
+    } 
 
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    ScalarSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index)
+#else // defined(POOYA_USE_SMART_PTRS)
+    ScalarSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index)
+#endif // defined(POOYA_USE_SMART_PTRS)
+        : FloatSignalInfo(full_name, index, vi_index)
+    {
+        _scalar = true;
+    }
+
     double get() const
     {
         pooya_trace0;
         pooya_verify(_scalar_value, _full_name + ": attempting to retrieve the value of an uninitialized scalar signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+#if defined(POOYA_USE_SMART_PTRS)
+        return _scalar_value.value().get();
+#else // defined(POOYA_USE_SMART_PTRS)
         return *_scalar_value;
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void set(double value)
@@ -206,11 +301,19 @@ public:
         pooya_trace("value: " + std::to_string(value));
         pooya_verify(_scalar_value, _full_name + ": attempting to assign the value of an uninitialized scalar signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+#if defined(POOYA_USE_SMART_PTRS)
+        _scalar_value.value().get() = value;
+        if (_deriv_scalar_value)
+        {
+            _deriv_scalar_value.value().get() = value;
+        }
+#else // defined(POOYA_USE_SMART_PTRS)
         *_scalar_value = value;
         if (_deriv_scalar_value)
         {
             *_deriv_scalar_value = value;
         }
+#endif // defined(POOYA_USE_SMART_PTRS)
         _assigned = true;
     }
 
@@ -222,20 +325,42 @@ class IntSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    IntSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
-    {
-        _int = this;
-    }
-
+#if defined(POOYA_USE_SMART_PTRS)
+    std::optional<std::reference_wrapper<double>> _int_value;
+#else // defined(POOYA_USE_SMART_PTRS)
     double* _int_value{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
+
+    static IntSignalId create_new(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::make_shared<IntSignalInfo>(Protected(), full_name, index, vi_index);
+#else // defined(POOYA_USE_SMART_PTRS)
+        return new IntSignalInfo(full_name, index, vi_index);
+#endif // defined(POOYA_USE_SMART_PTRS)
+    } 
 
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    IntSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index)
+#else // defined(POOYA_USE_SMART_PTRS)
+    IntSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index)
+#endif // defined(POOYA_USE_SMART_PTRS)
+        : ValueSignalInfo(full_name, index, vi_index)
+    {
+        _int = true;
+    }
+
     int get() const
     {
         pooya_trace0;
         pooya_verify(_int_value, _full_name + ": attempting to retrieve the value of an uninitialized int signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::round(_int_value.value().get());
+#else // defined(POOYA_USE_SMART_PTRS)
         return std::round(*_int_value);
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void set(double value)
@@ -243,7 +368,11 @@ public:
         pooya_trace("value: " + std::to_string(value));
         pooya_verify(_int_value, _full_name + ": attempting to assign the value of an uninitialized int signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+#if defined(POOYA_USE_SMART_PTRS)
+        _int_value.value().get() = std::round(value);
+#else // defined(POOYA_USE_SMART_PTRS)
         *_int_value = std::round(value);
+#endif // defined(POOYA_USE_SMART_PTRS)
         _assigned = true;
     }
 
@@ -255,20 +384,42 @@ class BoolSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    BoolSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index) : ValueSignalInfo(full_name, index, vi_index)
-    {
-        _bool = this;
-    }
-
+#if defined(POOYA_USE_SMART_PTRS)
+    std::optional<std::reference_wrapper<double>> _bool_value;
+#else // defined(POOYA_USE_SMART_PTRS)
     double* _bool_value{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
+
+    static BoolSignalId create_new(const std::string& full_name, std::size_t index, std::size_t vi_index)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::make_shared<BoolSignalInfo>(Protected(), full_name, index, vi_index);
+#else // defined(POOYA_USE_SMART_PTRS)
+        return new BoolSignalInfo(full_name, index, vi_index);
+#endif // defined(POOYA_USE_SMART_PTRS)
+    } 
 
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    BoolSignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index)
+#else // defined(POOYA_USE_SMART_PTRS)
+    BoolSignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index)
+#endif // defined(POOYA_USE_SMART_PTRS)
+        : ValueSignalInfo(full_name, index, vi_index)
+    {
+        _bool = true;
+    }
+
     bool get() const
     {
         pooya_trace0;
         pooya_verify(_bool_value, _full_name + ": attempting to retrieve the value of an uninitialized bool signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+#if defined(POOYA_USE_SMART_PTRS)
+        return _bool_value.value().get() != 0;
+#else // defined(POOYA_USE_SMART_PTRS)
         return *_bool_value != 0;
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void set(bool value)
@@ -276,7 +427,11 @@ public:
         pooya_trace("value: " + std::to_string(value));
         pooya_verify(_bool_value, _full_name + ": attempting to assign the value of an uninitialized bool signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+#if defined(POOYA_USE_SMART_PTRS)
+        _bool_value.value().get() = value;
+#else // defined(POOYA_USE_SMART_PTRS)
         *_bool_value = value;
+#endif // defined(POOYA_USE_SMART_PTRS)
         _assigned = true;
     }
 
@@ -285,13 +440,13 @@ public:
 
 inline double ValueSignalInfo::get_as_scalar() const
 {
-    if (as_scalar())
+    if (_scalar)
         return as_scalar()->get();
-    else if (as_int())
+    else if (_int)
         return static_cast<double>(as_int()->get());
     else
     {
-        pooya_verify(as_bool(), "boolean signal expected!");
+        pooya_verify(_bool, "boolean signal expected!");
         return as_bool()->get() ? 1 : 0;
     }
 }
@@ -301,17 +456,30 @@ class ArraySignalInfo : public FloatSignalInfo
     friend class Model;
 
 protected:
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size) :
-        FloatSignalInfo(full_name, index, vi_index), _size(size)
-    {
-        _array = this;
-    }
-
     const std::size_t _size;
     MappedArray _array_value{nullptr, 0};
     MappedArray _deriv_array_value{nullptr, 0};
 
+    static ArraySignalId create_new(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::make_shared<ArraySignalInfo>(Protected(), full_name, index, vi_index, size);
+#else // defined(POOYA_USE_SMART_PTRS)
+        return new ArraySignalInfo(full_name, index, vi_index, size);
+#endif // defined(POOYA_USE_SMART_PTRS)
+    } 
+
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size)
+#else // defined(POOYA_USE_SMART_PTRS)
+    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t vi_index, std::size_t size)
+#endif // defined(POOYA_USE_SMART_PTRS)
+        : FloatSignalInfo(full_name, index, vi_index), _size(size)
+    {
+        _array = true;
+    }
+
     const MappedArray& get() const
     {
         pooya_trace0;
@@ -358,7 +526,11 @@ public:
         SingleValueType _single_value_type{SingleValueType::None};
 
     public:
+#if defined(POOYA_USE_SMART_PTRS)
+        std::optional<std::reference_wrapper<const BusSpec>> _bus;
+#else // defined(POOYA_USE_SMART_PTRS)
         const BusSpec* _bus{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
         const std::size_t _array_size{0};
 
         // single-valued, coded_label defines the type and label:
@@ -375,7 +547,12 @@ public:
         }
 
         // bus
-        WireInfo(const std::string& label, const BusSpec& bus) : _label(label), _bus(&bus) {}
+        WireInfo(const std::string& label, const BusSpec& bus) : _label(label)
+#if defined(POOYA_USE_SMART_PTRS)
+            , _bus(bus) {}
+#else // defined(POOYA_USE_SMART_PTRS)
+            , _bus(&bus) {}
+#endif // defined(POOYA_USE_SMART_PTRS)
 
         const std::string& label() const {return _label;}
         SingleValueType single_value_type() const {return _single_value_type;};
@@ -397,7 +574,11 @@ public:
         std::size_t ret = _wires.size();
         for (const auto& wi: _wires)
             if (wi._bus)
+#if defined(POOYA_USE_SMART_PTRS)
+                ret += wi._bus.value().get().total_size();
+#else // defined(POOYA_USE_SMART_PTRS)
                 ret += wi._bus->total_size();
+#endif // defined(POOYA_USE_SMART_PTRS)
         return ret;
     }
 
@@ -421,31 +602,50 @@ class BusInfo : public SignalInfo
     friend class Model;
 
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::reference_wrapper<const BusSpec> _spec;
+#else // defined(POOYA_USE_SMART_PTRS)
     const BusSpec& _spec;
+#endif // defined(POOYA_USE_SMART_PTRS)
 
 protected:
     LabelSignalIdList _signals;
 
 protected:
+    static BusId create_new(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+    {
+#if defined(POOYA_USE_SMART_PTRS)
+        return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
+#else // defined(POOYA_USE_SMART_PTRS)
+        return new BusInfo(full_name, index, spec, begin_, end_);
+#endif // defined(POOYA_USE_SMART_PTRS)
+    } 
+
     void _set(std::size_t index, SignalId sig);
 
-    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_) :
-        SignalInfo(full_name, index), _spec(spec)
+public:
+#if defined(POOYA_USE_SMART_PTRS)
+    BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+#else // defined(POOYA_USE_SMART_PTRS)
+    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+#endif // defined(POOYA_USE_SMART_PTRS)
+        : SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
-        pooya_verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
-        _signals.reserve(_spec._wires.size());
-        for(const auto& wi: _spec._wires)
-            _signals.push_back({wi.label(), nullptr});
+        pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
+        _signals.reserve(spec._wires.size());
+        for(const auto& wi: spec._wires)
+            _signals.push_back({wi.label(), SignalId()});
         for (auto& it = begin_; it != end_; it++)
-            _set(_spec.index_of(it->first), it->second);
+            _set(spec.index_of(it->first), it->second);
 #if !defined(NDEBUG)
         for (const auto& ls: _signals)
         {
             pooya_verify(ls.second, "Unassigned wire detected: " + ls.first);
         }
 #endif // !defined(NDEBUG)
-        _bus = this;
+
+        _bus = true;
     }
 
 public:
@@ -567,6 +767,44 @@ public:
     }
 };
 
+#if defined(POOYA_USE_SMART_PTRS)
+
+inline ValueSignalId   SignalInfo::as_value() {return  _value ? std::static_pointer_cast<ValueSignalInfo>(shared_from_this()) : ValueSignalId();}
+inline FloatSignalId   SignalInfo::as_float() {return  _float ? std::static_pointer_cast<FloatSignalInfo>(shared_from_this()) : FloatSignalId();}
+inline ScalarSignalId SignalInfo::as_scalar() {return _scalar ? std::static_pointer_cast<ScalarSignalInfo>(shared_from_this()) : ScalarSignalId();}
+inline IntSignalId       SignalInfo::as_int() {return    _int ? std::static_pointer_cast<IntSignalInfo>(shared_from_this()) : IntSignalId();}
+inline BoolSignalId     SignalInfo::as_bool() {return   _bool ? std::static_pointer_cast<BoolSignalInfo>(shared_from_this()) : BoolSignalId();}
+inline ArraySignalId   SignalInfo::as_array() {return  _array ? std::static_pointer_cast<ArraySignalInfo>(shared_from_this()) : ArraySignalId();}
+inline BusId             SignalInfo::as_bus() {return    _bus ? std::static_pointer_cast<BusInfo>(shared_from_this()) : BusId();}
+
+inline ReadOnlyValueSignalId   SignalInfo::as_value() const {return  _value ? std::static_pointer_cast<const ValueSignalInfo>(shared_from_this()) : ReadOnlyValueSignalId();}
+inline ReadOnlyFloatSignalId   SignalInfo::as_float() const {return  _float ? std::static_pointer_cast<const FloatSignalInfo>(shared_from_this()) : ReadOnlyFloatSignalId();}
+inline ReadOnlyScalarSignalId SignalInfo::as_scalar() const {return _scalar ? std::static_pointer_cast<const ScalarSignalInfo>(shared_from_this()) : ReadOnlyScalarSignalId();}
+inline ReadOnlyIntSignalId       SignalInfo::as_int() const {return    _int ? std::static_pointer_cast<const IntSignalInfo>(shared_from_this()) : ReadOnlyIntSignalId();}
+inline ReadOnlyBoolSignalId     SignalInfo::as_bool() const {return   _bool ? std::static_pointer_cast<const BoolSignalInfo>(shared_from_this()) : ReadOnlyBoolSignalId();}
+inline ReadOnlyArraySignalId   SignalInfo::as_array() const {return  _array ? std::static_pointer_cast<const ArraySignalInfo>(shared_from_this()) : ReadOnlyArraySignalId();}
+inline ReadOnlyBusId             SignalInfo::as_bus() const {return    _bus ? std::static_pointer_cast<const BusInfo>(shared_from_this()) : ReadOnlyBusId();}
+
+#else // defined(POOYA_USE_SMART_PTS)
+
+inline ValueSignalId   SignalInfo::as_value() {return  _value ? static_cast<ValueSignalId>(this) : nullptr;}
+inline FloatSignalId   SignalInfo::as_float() {return  _float ? static_cast<FloatSignalId>(this) : nullptr;}
+inline ScalarSignalId SignalInfo::as_scalar() {return _scalar ? static_cast<ScalarSignalId>(this) : nullptr;}
+inline IntSignalId       SignalInfo::as_int() {return    _int ? static_cast<IntSignalId>(this) : nullptr;}
+inline BoolSignalId     SignalInfo::as_bool() {return   _bool ? static_cast<BoolSignalId>(this) : nullptr;}
+inline ArraySignalId   SignalInfo::as_array() {return  _array ? static_cast<ArraySignalId>(this) : nullptr;}
+inline BusId             SignalInfo::as_bus() {return    _bus ? static_cast<BusId>(this) : nullptr;}
+
+inline ReadOnlyValueSignalId   SignalInfo::as_value() const {return  _value ? static_cast<ReadOnlyValueSignalId>(this) : nullptr;}
+inline ReadOnlyFloatSignalId   SignalInfo::as_float() const {return  _float ? static_cast<ReadOnlyFloatSignalId>(this) : nullptr;}
+inline ReadOnlyScalarSignalId SignalInfo::as_scalar() const {return _scalar ? static_cast<ReadOnlyScalarSignalId>(this) : nullptr;}
+inline ReadOnlyIntSignalId       SignalInfo::as_int() const {return    _int ? static_cast<ReadOnlyIntSignalId>(this) : nullptr;}
+inline ReadOnlyBoolSignalId     SignalInfo::as_bool() const {return   _bool ? static_cast<ReadOnlyBoolSignalId>(this) : nullptr;}
+inline ReadOnlyArraySignalId   SignalInfo::as_array() const {return  _array ? static_cast<ReadOnlyArraySignalId>(this) : nullptr;}
+inline ReadOnlyBusId             SignalInfo::as_bus() const {return    _bus ? static_cast<ReadOnlyBusId>(this) : nullptr;}
+
+#endif // defined(POOYA_USE_SMART_PTS)
+
 template<typename T>
 struct Types
 {
@@ -581,7 +819,7 @@ struct Types<Array>
     using SetValue = const Array&;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_array_signal(sig);}
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] std::size_t size) {pooya_verify_array_signal_size(sig, size);}
-    static SignalId as_type(pooya::SignalId sig) {return sig->as_array();}
+    template<typename T> static SignalId as_type(const T& sig) {return sig->as_array();}
 };
 
 template<>
@@ -592,7 +830,7 @@ struct Types<double>
     using GetValue = double;
     using SetValue = double;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_scalar_signal(sig);}
-    static SignalId as_type(pooya::SignalId sig) {return sig->as_scalar();}
+    template<typename T> static SignalId as_type(const T& sig) {return sig->as_scalar();}
 };
 
 template<>
@@ -603,7 +841,7 @@ struct Types<int>
     using GetValue = int;
     using SetValue = int;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_int_signal(sig);}
-    static SignalId as_type(pooya::SignalId sig) {return sig->as_int();}
+    template<typename T> static SignalId as_type(const T& sig) {return sig->as_int();}
 };
 
 template<>
@@ -614,7 +852,7 @@ struct Types<bool>
     using GetValue = bool;
     using SetValue = bool;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig) {pooya_verify_bool_signal(sig);}
-    static SignalId as_type(pooya::SignalId sig) {return sig->as_bool();}
+    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bool();}
 };
 
 template<>
@@ -623,7 +861,7 @@ struct Types<BusSpec>
     using SignalInfo = BusInfo;
     using SignalId = BusId;
     static void verify_signal_type([[maybe_unused]] pooya::SignalId sig, [[maybe_unused]] const BusSpec& spec) {pooya_verify_bus_spec(sig, spec);}
-    static SignalId as_type(pooya::SignalId sig) {return sig->as_bus();}
+    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bus();}
 };
 
 std::ostream& operator<<(std::ostream& os, const LabelSignals& signals);

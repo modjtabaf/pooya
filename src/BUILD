@@ -5,7 +5,7 @@ cc_library(
     srcs = glob(["core/*.cpp"]),
     hdrs = glob(["core/*.hpp"]),
     defines = [
-        "POOYA_USE_SMART_PTRS",
+        # "POOYA_USE_SMART_PTRS",
     ],
     deps = [
         "@eigen",

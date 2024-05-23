@@ -36,9 +36,6 @@ class Model;
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 
 class Block
-#if defined(POOYA_USE_SMART_PTRS)
-    : public std::enable_shared_from_this<Block>
-#endif // defined(POOYA_USE_SMART_PTRS)
 {
     friend class Parent;
 

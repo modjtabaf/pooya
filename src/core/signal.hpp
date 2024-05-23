@@ -526,7 +526,11 @@ public:
         SingleValueType _single_value_type{SingleValueType::None};
 
     public:
+#if defined(POOYA_USE_SMART_PTRS)
+        std::optional<std::reference_wrapper<const BusSpec>> _bus;
+#else // defined(POOYA_USE_SMART_PTRS)
         const BusSpec* _bus{nullptr};
+#endif // defined(POOYA_USE_SMART_PTRS)
         const std::size_t _array_size{0};
 
         // single-valued, coded_label defines the type and label:
@@ -543,7 +547,12 @@ public:
         }
 
         // bus
-        WireInfo(const std::string& label, const BusSpec& bus) : _label(label), _bus(&bus) {}
+        WireInfo(const std::string& label, const BusSpec& bus) : _label(label)
+#if defined(POOYA_USE_SMART_PTRS)
+            , _bus(bus) {}
+#else // defined(POOYA_USE_SMART_PTRS)
+            , _bus(&bus) {}
+#endif // defined(POOYA_USE_SMART_PTRS)
 
         const std::string& label() const {return _label;}
         SingleValueType single_value_type() const {return _single_value_type;};
@@ -565,7 +574,11 @@ public:
         std::size_t ret = _wires.size();
         for (const auto& wi: _wires)
             if (wi._bus)
+#if defined(POOYA_USE_SMART_PTRS)
+                ret += wi._bus.value().get().total_size();
+#else // defined(POOYA_USE_SMART_PTRS)
                 ret += wi._bus->total_size();
+#endif // defined(POOYA_USE_SMART_PTRS)
         return ret;
     }
 

@@ -28,13 +28,6 @@ void LabelSignals::_init(LabelSignalIdList::const_iterator begin_, LabelSignalId
         push_back(*it);
 }
 
-LabelSignals::LabelSignals(SignalId signal)
-{
-    pooya_trace0;
-    LabelSignalIdList lsl({{_make_auto_label(0), signal}});
-    _init(lsl.begin(), lsl.end());
-}
-
 LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
 {
     pooya_trace0;

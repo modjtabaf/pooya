@@ -69,7 +69,7 @@ protected:
     Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent& parent, BusId ibus=nullptr, BusId obus=nullptr);
+    virtual bool init(Parent& parent, BusId ibus=BusId(), BusId obus=BusId());
     virtual void post_init() {}
 
 public:
@@ -274,7 +274,7 @@ public:
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         SignalId sig = get_generic_signal(given_name);
         if (!sig)
-            return nullptr;
+            return typename Types<T>::SignalId();
         Types<T>::verify_signal_type(sig, args...);
         return Types<T>::as_type(sig);
     }
@@ -424,19 +424,19 @@ protected:
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         pooya_verify_signals_not_locked();
-        if (name.empty()) return nullptr;
+        if (name.empty()) return typename Types<T>::SignalId();
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
         auto index = _signal_infos.size();
         typename Types<T>::SignalId sig;
         if constexpr (std::is_base_of_v<ValueSignalInfo, typename Types<T>::SignalInfo>)
-            sig = new typename Types<T>::SignalInfo(name, index, _vi_index++, args...);
+            sig = Types<T>::SignalInfo::create_new(name, index, _vi_index++, args...);
         else
-            sig = new typename Types<T>::SignalInfo(name, index, args...);
-        _signal_infos.push_back(sig);
+            sig = Types<T>::SignalInfo::create_new(name, index, args...);
+        _signal_infos.emplace_back(sig);
 
-        return sig;
+        return Types<T>::as_type(_signal_infos.back());
     }
 
     ScalarSignalId register_scalar_signal(const std::string& name)

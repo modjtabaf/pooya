@@ -29,11 +29,11 @@ void History::track_all()
     _signals.clear();
     std::size_t n = 0;
     for (auto sig: _model.signals())
-        if (sig->as_value()) n++;
+        if (sig->is_value()) n++;
     // const auto& vis = values.value_infos();
     _signals.reserve(n);
     for (auto sig: _model.signals())
-        if (sig->as_value()) _signals.push_back(sig->as_value());
+        if (sig->is_value()) _signals.push_back(sig->as_value());
 }
 
 void History::track(SignalId sig)
@@ -60,7 +60,7 @@ void History::update(uint k, double t)
             track_all();
         for (auto sig: _signals)
         {
-            if (sig->as_scalar() || sig->as_int() || sig->as_bool())
+            if (sig->is_scalar() || sig->is_int() || sig->is_bool())
                 insert_or_assign(sig, Array(_nrows_grow));
             else
                 insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));
@@ -76,11 +76,11 @@ void History::update(uint k, double t)
         if (k >= h.rows())
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         bool valid = sig->is_assigned();
-        if (sig->as_int())
+        if (sig->is_int())
             h(k, 0) = valid ? sig->as_int()->get() : 0;
-        else if (sig->as_bool())
+        else if (sig->is_bool())
             h(k, 0) = valid ? sig->as_bool()->get() : 0;
-        else if (sig->as_scalar())
+        else if (sig->is_scalar())
             h(k, 0) = valid ? sig->as_scalar()->get() : 0;
         else
         {

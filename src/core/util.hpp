@@ -95,23 +95,23 @@ public:
 
 #define  pooya_verify_value_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_value(), (sig)->_full_name + ": value signal expected!");
+    pooya_verify((sig)->is_value(), (sig)->_full_name + ": value signal expected!");
 
 #define pooya_verify_scalar_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_scalar(), (sig)->_full_name + ": scalar signal expected!");
+    pooya_verify((sig)->is_scalar(), (sig)->_full_name + ": scalar signal expected!");
 
 #define pooya_verify_array_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_array(), (sig)->_full_name + ": array signal expected!");
+    pooya_verify((sig)->is_array(), (sig)->_full_name + ": array signal expected!");
 
 #define pooya_verify_int_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_int(), (sig)->_full_name + ": int signal expected!");
+    pooya_verify((sig)->is_int(), (sig)->_full_name + ": int signal expected!");
 
 #define pooya_verify_bool_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_bool(), (sig)->_full_name + ": bool signal expected!");
+    pooya_verify((sig)->is_bool(), (sig)->_full_name + ": bool signal expected!");
 
 #define pooya_verify_array_signal_size(sig, size_) \
     pooya_verify_array_signal(sig); \
@@ -119,7 +119,7 @@ public:
 
 #define pooya_verify_bus(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->as_bus(), (sig)->_full_name + ": bus signal expected!");
+    pooya_verify((sig)->is_bus(), (sig)->_full_name + ": bus signal expected!");
 
 #define pooya_verify_bus_spec(sig, spec_) \
     pooya_verify_bus(sig); \

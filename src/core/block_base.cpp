@@ -54,7 +54,7 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     {
         _dependencies.reserve(ibus->size());
         for (auto sig: *ibus)
-            if (sig.second->as_value())
+            if (sig.second->is_value())
                 add_dependency(sig.second->as_value());
         _dependencies.shrink_to_fit();
     }
@@ -427,15 +427,15 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
         for (const auto& ls: ports)
         {
             pooya_verify_valid_signal(ls.second);
-            if (ls.second->as_scalar())
+            if (ls.second->is_scalar())
                 wire_infos.emplace_back(ls.first);
-            else if (ls.second->as_int())
+            else if (ls.second->is_int())
                 wire_infos.emplace_back("i:" + ls.first);
-            else if (ls.second->as_bool())
+            else if (ls.second->is_bool())
                 wire_infos.emplace_back("b:" + ls.first);
-            else if (ls.second->as_array())
+            else if (ls.second->is_array())
                 wire_infos.emplace_back(ls.first, ls.second->as_array()->size());
-            else if (ls.second->as_bus())
+            else if (ls.second->is_bus())
                 wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);
             else
                 pooya_verify(false, "unknown signal type!");
@@ -485,7 +485,7 @@ void Model::lock_signals()
     for (const auto& signal: _signal_infos)
     {
         if (!signal->is_value()) continue;
-        auto size = (signal->as_scalar() || signal->as_int() || signal->as_bool()) ? 1 : signal->as_array()->_size;
+        auto size = (signal->is_scalar() || signal->is_int() || signal->is_bool()) ? 1 : signal->as_array()->_size;
         total_size += size;
         if (signal->is_float() && signal->as_float()->is_state_variable())
             state_variables_size += size;
@@ -545,7 +545,7 @@ void Model::lock_signals()
         else
             new (&signal->as_array()->_deriv_sig->as_array()->_deriv_array_value) MappedArray(deriv_start, signal->as_array()->_size);
 
-        deriv_start += signal->as_scalar() ? 1 : signal->as_array()->_size;
+        deriv_start += signal->is_scalar() ? 1 : signal->as_array()->_size;
     }
 
     _signals_locked = true;

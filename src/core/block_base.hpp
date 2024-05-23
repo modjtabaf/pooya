@@ -240,7 +240,11 @@ using SingleInputOutputT = SingleOutputT<T_out, SingleInputT<T_in>>;
 class Parent : public Block
 {
 protected:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::vector<std::reference_wrapper<Block>> _components;
+#else // defined(POOYA_USE_SMART_PTRS)
     std::vector<Block*> _components;
+#endif // defined(POOYA_USE_SMART_PTRS)
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
     Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
@@ -255,15 +259,25 @@ public:
     void pre_step(double t) override
     {
         pooya_trace("block: " + full_name());
+#if defined(POOYA_USE_SMART_PTRS)
+        for (auto& component: _components)
+            component.get().pre_step(t);
+#else // defined(POOYA_USE_SMART_PTRS)
         for (auto* component: _components)
             component->pre_step(t);
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void post_step(double t) override
     {
         pooya_trace("block: " + full_name());
+#if defined(POOYA_USE_SMART_PTRS)
+        for (auto& component: _components)
+            component.get().post_step(t);
+#else // defined(POOYA_USE_SMART_PTRS)
         for (auto* component: _components)
             component->post_step(t);
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     // retrieve an existing signal

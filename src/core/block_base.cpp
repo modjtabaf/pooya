@@ -245,10 +245,17 @@ void Parent::_mark_unprocessed()
     pooya_trace("block: " + full_name());
     Block::_mark_unprocessed();
 
-    for (auto component: _components)
+#if defined(POOYA_USE_SMART_PTRS)
+    for (auto& component: _components)
+    {
+        component.get()._mark_unprocessed();
+    }
+#else // defined(POOYA_USE_SMART_PTRS)
+    for (auto* component: _components)
     {
         component->_mark_unprocessed();
     }
+#endif // defined(POOYA_USE_SMART_PTRS)
 }
 
 uint Parent::_process(double t, bool go_deep)
@@ -259,12 +266,21 @@ uint Parent::_process(double t, bool go_deep)
     {
         _processed = true;
         if (go_deep)
+#if defined(POOYA_USE_SMART_PTRS)
+            for (auto& component: _components)
+            {
+                n_processed += component.get()._process(t);
+                if (not component.get().processed())
+                    _processed = false;
+            }
+#else // defined(POOYA_USE_SMART_PTRS)
             for (auto* component: _components)
             {
                 n_processed += component->_process(t);
                 if (not component->processed())
                     _processed = false;
             }
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     return n_processed;
@@ -281,11 +297,19 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
 
     if (level < max_level)
     {
+#if defined(POOYA_USE_SMART_PTRS)
         for (auto& c: _components)
+        {
+            if (!c.get().traverse(cb, level + 1, max_level))
+                return false;
+        }
+#else // defined(POOYA_USE_SMART_PTRS)
+        for (auto* c: _components)
         {
             if (!c->traverse(cb, level + 1, max_level))
                 return false;
         }
+#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     return true;
@@ -425,7 +449,11 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
     if (!component.init(*this, make_bus(iports), make_bus(oports)))
         return false;
 
+#if defined(POOYA_USE_SMART_PTRS)
+    _components.push_back(component);
+#else // defined(POOYA_USE_SMART_PTRS)
     _components.push_back(&component);
+#endif // defined(POOYA_USE_SMART_PTRS)
     component.post_init();
     return true;
 }

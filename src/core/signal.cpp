@@ -74,9 +74,9 @@ SignalId BusInfo::operator[](const std::string& label) const
     pooya_trace("label: " + label);
     auto pos = label.find(".");
     if (pos == std::string::npos)
-        return operator[](_spec.index_of(label)).second;
+        return operator[](static_cast<const BusSpec&>(_spec).index_of(label)).second;
 
-    auto sig = operator[](_spec.index_of(label.substr(0, pos))).second;
+    auto sig = operator[](static_cast<const BusSpec&>(_spec).index_of(label.substr(0, pos))).second;
     pooya_verify_bus(sig);
     return sig->as_bus()->operator[](label.substr(pos + 1));
 }
@@ -85,8 +85,8 @@ SignalId BusInfo::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
-    auto index = _spec.index_of(pos == std::string::npos ? label : label.substr(0, pos));
-    pooya_verify(index < _spec._wires.size(), label + ": label not found in bus!");
+    auto index = static_cast<const BusSpec&>(_spec).index_of(pos == std::string::npos ? label : label.substr(0, pos));
+    pooya_verify(index < static_cast<const BusSpec&>(_spec)._wires.size(), label + ": label not found in bus!");
     auto sig = at(index).second;
     if (pos == std::string::npos)
         return sig;
@@ -113,7 +113,7 @@ void BusInfo::_set(std::size_t index, SignalId sig)
     auto& ns = _signals[index];
     pooya_verify(ns.second == nullptr, ns.first + ": cannot re-assign a bus wire!");
 #if !defined(NDEBUG)
-    auto& wi = _spec._wires[index];
+    auto& wi = static_cast<const BusSpec&>(_spec)._wires[index];
     if (wi._bus)
     {
         pooya_verify_bus_spec(sig, *wi._bus);

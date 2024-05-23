@@ -602,7 +602,11 @@ class BusInfo : public SignalInfo
     friend class Model;
 
 public:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::reference_wrapper<const BusSpec> _spec;
+#else // defined(POOYA_USE_SMART_PTRS)
     const BusSpec& _spec;
+#endif // defined(POOYA_USE_SMART_PTRS)
 
 protected:
     LabelSignalIdList _signals;
@@ -628,12 +632,12 @@ public:
         : SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
-        pooya_verify(std::size_t(std::distance(begin_, end_)) == _spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
-        _signals.reserve(_spec._wires.size());
-        for(const auto& wi: _spec._wires)
+        pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
+        _signals.reserve(spec._wires.size());
+        for(const auto& wi: spec._wires)
             _signals.push_back({wi.label(), SignalId()});
         for (auto& it = begin_; it != end_; it++)
-            _set(_spec.index_of(it->first), it->second);
+            _set(spec.index_of(it->first), it->second);
 #if !defined(NDEBUG)
         for (const auto& ls: _signals)
         {

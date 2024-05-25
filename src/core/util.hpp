@@ -69,6 +69,7 @@ public:
 
     static void update(const std::string& file, int line, const std::string& msg)
     {
+        pooya_verify(!pooya_trace_info.empty(), "Empty trace queue!")
         auto& pt = pooya_trace_info.back();
         pt._file = file;
         pt._line = line;

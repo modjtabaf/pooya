@@ -229,6 +229,7 @@ public:
     const std::size_t _vi_index{0};   // the index of associated ValueInfo (REMOVE)
 
     double get_as_scalar() const;
+    void set_as_scalar(double value);
 
     bool is_assigned() const {return _assigned;}
 };
@@ -448,6 +449,19 @@ inline double ValueSignalInfo::get_as_scalar() const
     {
         pooya_verify(_bool, "boolean signal expected!");
         return as_bool()->get() ? 1 : 0;
+    }
+}
+
+inline void ValueSignalInfo::set_as_scalar(double value)
+{
+    if (_scalar)
+        as_scalar()->set(value);
+    else if (_int)
+        as_int()->set(std::round(value));
+    else
+    {
+        pooya_verify(_bool, "boolean signal expected!");
+        as_bool()->set(value != 0);
     }
 }
 

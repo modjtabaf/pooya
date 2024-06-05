@@ -115,7 +115,7 @@ void History::shrink_to_fit()
         p.second.conservativeResize(nrows, Eigen::NoChange);
 }
 
-void History::export_csv(std::string filename)
+void History::export_csv(const std::string& filename)
 {
     pooya_trace("filename = " + filename);
     if (size() == 0)

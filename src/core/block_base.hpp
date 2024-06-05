@@ -59,11 +59,11 @@ protected:
     std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
-    void _assign_valid_given_name(std::string given_name);
+    std::string make_valid_given_name(const std::string& given_name) const;
     bool add_dependency(ValueSignalId sig);
     bool remove_dependency(ValueSignalId sig);
 
-    Block(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+    Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Parent& parent, BusId ibus=BusId(), BusId obus=BusId());
@@ -193,7 +193,7 @@ class SingleInputT : public Block
 protected:
     typename Types<T>::SignalId _s_in{nullptr};
 
-    SingleInputT(std::string given_name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
+    SingleInputT(const std::string& given_name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
@@ -215,7 +215,7 @@ class SingleOutputT : public Base
 protected:
     typename Types<T>::SignalId _s_out{nullptr};
 
-    SingleOutputT(std::string given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
+    SingleOutputT(const std::string& given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
         Base(given_name, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
@@ -244,7 +244,7 @@ protected:
 #endif // defined(POOYA_USE_SMART_PTRS)
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
-    Parent(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+    Parent(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports) {}
 
     template<typename Iter>
@@ -411,7 +411,7 @@ public:
 class Submodel : public Parent
 {
 public:
-    Submodel(std::string given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
+    Submodel(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
 
 }; // class Submodel
 
@@ -477,7 +477,7 @@ protected:
     }
 
 public:
-    Model(std::string given_name="model");
+    Model(const std::string& given_name="model");
     ~Model();
 
     virtual void input_cb(double /*t*/) {}

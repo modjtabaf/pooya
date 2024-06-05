@@ -44,7 +44,7 @@ public:
     void track(SignalId sig);
     void untrack(SignalId sig);
     void update(uint k, double t);
-    void export_csv(std::string filename);
+    void export_csv(const std::string& filename);
     void shrink_to_fit();
     uint nrows() const {return _bottom_row + 1;}
     const Array& time() const {return _time;}

@@ -36,7 +36,7 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
 
     pooya_verify(parent.is_initialized(), _given_name + ": parent block is not initialized yet!");
 
-    _assign_valid_given_name(_given_name);
+    _given_name = make_valid_given_name(_given_name);
     if (_full_name.empty())
         _full_name = parent.full_name() + "/" + _given_name;
 
@@ -90,26 +90,22 @@ bool Block::remove_dependency(ValueSignalId sig)
     return true;
 }
 
-void Block::_assign_valid_given_name(std::string given_name)
+std::string Block::make_valid_given_name(const std::string& given_name) const
 {
     pooya_trace(_given_name);
-    auto pooya_verify_unique_name_cb = [&] (const Block& c, uint32_t level) -> bool
-    {
-        return (level == 0) || (c._given_name != given_name);
-    };
 
+    std::string ret;
     if (given_name.empty())
     {
-        given_name = "unnamed_block";
+        ret = "unnamed_block";
     }
     else
     {
-        std::replace(given_name.begin(), given_name.end(), ' ', '_');
-        std::replace(given_name.begin(), given_name.end(), '~', '_');
-        std::replace(given_name.begin(), given_name.end(), '/', '_');
+        ret = given_name;
+        std::replace(ret.begin(), ret.end(), ' ', '_');
+        std::replace(ret.begin(), ret.end(), '~', '_');
+        std::replace(ret.begin(), ret.end(), '/', '_');
     }
-
-    _given_name = given_name;
 
     if (_parent)
     {
@@ -119,11 +115,20 @@ void Block::_assign_valid_given_name(std::string given_name)
 #else // defined(POOYA_USE_SMART_PTRS)
         auto& parent = *_parent;
 #endif // defined(POOYA_USE_SMART_PTRS)
-        while (!parent.traverse(pooya_verify_unique_name_cb, 0, 1))
-            given_name = _given_name + "_" + std::to_string(n++);
 
-        _given_name = given_name;
+        std::string foo{ret};
+        auto pooya_verify_unique_name_cb = [&] (const Block& c, uint32_t level) -> bool
+        {
+            return (level == 0) || (c._given_name != foo);
+        };
+
+        while (!parent.traverse(pooya_verify_unique_name_cb, 0, 1))
+            foo = ret + "_" + std::to_string(n++);
+
+        ret = foo;
     }
+
+    return ret;
 }
 
 void Block::_mark_unprocessed()
@@ -458,10 +463,10 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
     return true;
 }
 
-Model::Model(std::string given_name) : Parent(given_name, 0, 0)
+Model::Model(const std::string& given_name) : Parent(given_name, 0, 0)
 {
     pooya_trace("block: " + full_name());
-    _assign_valid_given_name(_given_name);
+    _given_name = make_valid_given_name(_given_name);
     _full_name = "/" + _given_name;
     _initialized = true;
 }

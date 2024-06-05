@@ -23,7 +23,7 @@ public:
 	}
 };
 
-template<> std::string Gnuplot::file1d(const Eigen::MatrixXd &arg, const std::string &filename)
+template<> std::string Gnuplot::file1d(const Eigen::MatrixXd &arg, const std::string& filename)
 {
     return file1d(pooya::Array{arg.reshaped()}, filename);
 }

@@ -237,8 +237,7 @@ protected:
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
-            return false;
+        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         pooya_verify_valid_signal(ibus);
         pooya_verify_valid_signal(obus);
@@ -262,12 +261,9 @@ public:
         for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
             const auto &v = Types<T>::as_type(ls.second)->get();
-            if (*p == '+')
-                _ret += v;
-            else if (*p == '-')
-                _ret -= v;
-            else
-                assert(false);
+            if (*p == '+') {_ret += v;}
+            else if (*p == '-') {_ret -= v;}
+            else {assert(false);}
             p++;
         }
         SingleOutputT<T>::_s_out->set(_ret);
@@ -318,8 +314,7 @@ protected:
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
-            return false;
+        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         pooya_verify(ibus->size() >= 1, "MulDivT requires 1 or more input signals.");
         pooya_verify(_operators.size() == ibus->size(),
@@ -340,12 +335,9 @@ public:
         for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
             const auto &v = Types<T>::as_type(ls.second)->get();
-            if (*p == '*')
-                _ret *= v;
-            else if (*p == '/')
-                _ret /= v;
-            else
-                assert(false);
+            if (*p == '*') {_ret *= v;}
+            else if (*p == '/') {_ret /= v;}
+            else {assert(false);}
             p++;
         }
         SingleOutputT<T>::_s_out->set(_ret);
@@ -398,8 +390,7 @@ public:
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
-            return false;
+        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         SingleOutputT<T>::model_ref().register_state_variable(SingleOutputT<T>::_s_out, Types<T>::as_type(SingleOutputT<T>::_ibus->at(0).second));
 
@@ -423,8 +414,7 @@ public:
     uint _process(double /*t*/, bool /*go_deep*/ = true) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (SingleOutputT<T>::_processed)
-            return 0;
+        if (SingleOutputT<T>::_processed) {return 0;}
 
         SingleOutputT<T>::_processed = SingleOutputT<T>::_s_out->is_assigned();
         return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?
@@ -454,8 +444,7 @@ public:
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
-            return false;
+        if (!IntegratorBaseT<T>::init(parent, ibus, obus)) {return false;}
 
         _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
 
@@ -468,9 +457,9 @@ public:
         if (_triggered)
         {
             if constexpr (std::is_same_v<T, Array>)
-                IntegratorBaseT<T>::_value.setZero();
+                {IntegratorBaseT<T>::_value.setZero();}
             else
-                IntegratorBaseT<T>::_value = 0;
+                {IntegratorBaseT<T>::_value = 0;}
             _triggered = false;
         }
         IntegratorBaseT<T>::pre_step(t);
@@ -479,11 +468,9 @@ public:
     uint _process(double t, bool go_deep=true) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned())
-            return 0;
+        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned()) {return 0;}
 
-        if (!_triggered)
-            _triggered = _trigger->get();
+        if (!_triggered) {_triggered = _trigger->get();}
 
         return IntegratorBaseT<T>::_process(t, go_deep);
     }
@@ -512,8 +499,7 @@ public:
     bool init(Parent &parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
-            return false;
+        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         // input signals
         _s_x = Types<T>::as_type(SingleOutputT<T>::_ibus->at("in"));
@@ -532,8 +518,7 @@ public:
             int k = 0;
             for (const auto &v : _t)
             {
-                if (v >= t1)
-                    break;
+                if (v >= t1) {break;}
                 k++;
             }
             _t.erase(_t.begin(), _t.begin() + k);
@@ -568,8 +553,7 @@ public:
             int k = 0;
             for (const auto &v : _t)
             {
-                if (v >= t)
-                    break;
+                if (v >= t) {break;}
                 k++;
             }
 
@@ -609,8 +593,7 @@ public:
     uint _process(double /*t*/, bool /*go_deep*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        if (SingleInputOutputT<T>::_processed)
-            return 0;
+        if (SingleInputOutputT<T>::_processed) {return 0;}
 
         pooya_trace_update0;
         SingleInputOutputT<T>::_s_out->set(_value);

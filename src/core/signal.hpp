@@ -198,13 +198,11 @@ public:
         pooya_trace0;
         pooya_verify(!ls.first.empty(), "SignalId label can not be empty!");
         pooya_verify(ls.second, ls.first + ": invalid signal!");
-        if (ls.first.empty() || (ls.second == nullptr))
-            return false;
+        if (ls.first.empty() || (ls.second == nullptr)) {return false;}
 
         auto it = _label_signals_map.find(ls.first);
         pooya_verify(it == _label_signals_map.end(), ls.first + ": label already exists!");
-        if (it != _label_signals_map.end())
-            return false;
+        if (it != _label_signals_map.end()) {return false;}
 
         _label_signals_map[ls.first] = ls.second;
         _label_signals_list.push_back(ls);
@@ -442,9 +440,13 @@ public:
 inline double ValueSignalInfo::get_as_scalar() const
 {
     if (_scalar)
+    {
         return as_scalar()->get();
+    }
     else if (_int)
+    {
         return static_cast<double>(as_int()->get());
+    }
     else
     {
         pooya_verify(_bool, "boolean signal expected!");
@@ -455,9 +457,13 @@ inline double ValueSignalInfo::get_as_scalar() const
 inline void ValueSignalInfo::set_as_scalar(double value)
 {
     if (_scalar)
+    {
         as_scalar()->set(value);
+    }
     else if (_int)
+    {
         as_int()->set(std::round(value));
+    }
     else
     {
         pooya_verify(_bool, "boolean signal expected!");
@@ -587,12 +593,14 @@ public:
         pooya_trace0;
         std::size_t ret = _wires.size();
         for (const auto& wi: _wires)
+        {
             if (wi._bus)
 #if defined(POOYA_USE_SMART_PTRS)
-                ret += wi._bus.value().get().total_size();
+                {ret += wi._bus.value().get().total_size();}
 #else // defined(POOYA_USE_SMART_PTRS)
-                ret += wi._bus->total_size();
+                {ret += wi._bus->total_size();}
 #endif // defined(POOYA_USE_SMART_PTRS)
+        }
         return ret;
     }
 
@@ -649,9 +657,9 @@ public:
         pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(spec._wires.size());
         for(const auto& wi: spec._wires)
-            _signals.push_back({wi.label(), SignalId()});
+            {_signals.push_back({wi.label(), SignalId()});}
         for (auto& it = begin_; it != end_; it++)
-            _set(spec.index_of(it->first), it->second);
+            {_set(spec.index_of(it->first), it->second);}
 #if !defined(NDEBUG)
         for (const auto& ls: _signals)
         {

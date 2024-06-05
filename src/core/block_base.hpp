@@ -100,9 +100,9 @@ public:
         pooya_verify_bus(bus);
         SignalId sig;
         if constexpr (std::is_same_v<Key, std::size_t>)
-            sig = bus->at(key).second;
+            {sig = bus->at(key).second;}
         else
-            sig = bus->at(key);
+            {sig = bus->at(key);}
         Types<T>::verify_signal_type(sig);
         if (is_dependency)
         {
@@ -202,8 +202,7 @@ protected:
 public:
     bool init(Parent& parent, BusId ibus, BusId obus) override
     {
-        if (!Block::init(parent, ibus, obus))
-            return false;
+        if (!Block::init(parent, ibus, obus)) {return false;}
         _s_in = Types<T>::as_type(_ibus->at(0).second);
         return true;
     }
@@ -224,8 +223,7 @@ protected:
 public:
     bool init(Parent& parent, BusId ibus, BusId obus) override
     {
-        if (!Base::init(parent, ibus, obus))
-            return false;
+        if (!Base::init(parent, ibus, obus)) {return false;}
         _s_out = Types<T>::as_type(Base::_obus->at(0).second);
         return true;
     }
@@ -257,11 +255,9 @@ public:
     {
         pooya_trace("block: " + full_name());
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& component: _components)
-            component.get().pre_step(t);
+        for (auto& component: _components) {component.get().pre_step(t);}
 #else // defined(POOYA_USE_SMART_PTRS)
-        for (auto* component: _components)
-            component->pre_step(t);
+        for (auto* component: _components) {component->pre_step(t);}
 #endif // defined(POOYA_USE_SMART_PTRS)
     }
 
@@ -269,11 +265,9 @@ public:
     {
         pooya_trace("block: " + full_name());
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& component: _components)
-            component.get().post_step(t);
+        for (auto& component: _components) {component.get().post_step(t);}
 #else // defined(POOYA_USE_SMART_PTRS)
-        for (auto* component: _components)
-            component->post_step(t);
+        for (auto* component: _components) {component->post_step(t);}
 #endif // defined(POOYA_USE_SMART_PTRS)
     }
 
@@ -284,8 +278,7 @@ public:
     {
         pooya_trace("block: " + full_name() + ", given name: " + given_name);
         SignalId sig = get_generic_signal(given_name);
-        if (!sig)
-            return typename Types<T>::SignalId();
+        if (!sig) {return typename Types<T>::SignalId();}
         Types<T>::verify_signal_type(sig, args...);
         return Types<T>::as_type(sig);
     }
@@ -435,16 +428,16 @@ protected:
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         pooya_verify_signals_not_locked();
-        if (name.empty()) return typename Types<T>::SignalId();
+        if (name.empty()) {return typename Types<T>::SignalId();}
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
         auto index = _signal_infos.size();
         typename Types<T>::SignalId sig;
         if constexpr (std::is_base_of_v<ValueSignalInfo, typename Types<T>::SignalInfo>)
-            sig = Types<T>::SignalInfo::create_new(name, index, _vi_index++, args...);
+            {sig = Types<T>::SignalInfo::create_new(name, index, _vi_index++, args...);}
         else
-            sig = Types<T>::SignalInfo::create_new(name, index, args...);
+            {sig = Types<T>::SignalInfo::create_new(name, index, args...);}
         _signal_infos.emplace_back(sig);
 
         return Types<T>::as_type(_signal_infos.back());

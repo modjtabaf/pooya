@@ -64,11 +64,11 @@ void Rkf45::step(StepperCallback callback, double t0, const Array& v0, double t1
     double s4 = max_abs > 0 ? (eps_abs * h) / (2 * max_abs) : 1;
 
     if (s4 < 0.31640625) // 0.31640625 == 0.75 ^ 4
-        new_h = h / 2;
+        {new_h = h / 2;}
     else if (s4 > 5.0625) // 5.0625 == 1.5 ^ 4
-        new_h = 2 * h;
+        {new_h = 2 * h;}
     else
-        new_h = h;
+        {new_h = h;}
 }
 
 }

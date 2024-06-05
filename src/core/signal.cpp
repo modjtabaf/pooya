@@ -24,8 +24,7 @@ namespace pooya
 void LabelSignals::_init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
 {
     pooya_trace0;
-    for (auto it=begin_; it != end_; it++)
-        push_back(*it);
+    for (auto it=begin_; it != end_; it++) {push_back(*it);}
 }
 
 LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
@@ -33,8 +32,7 @@ LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
     pooya_trace0;
     LabelSignalIdList lsl;
     std::size_t index=0;
-    for (const auto& sig: il)
-        lsl.push_back({_make_auto_label(index++), sig});
+    for (const auto& sig: il) {lsl.push_back({_make_auto_label(index++), sig});}
     _init(lsl.begin(), lsl.end());
 }
 
@@ -74,7 +72,7 @@ SignalId BusInfo::operator[](const std::string& label) const
     pooya_trace("label: " + label);
     auto pos = label.find(".");
     if (pos == std::string::npos)
-        return operator[](static_cast<const BusSpec&>(_spec).index_of(label)).second;
+        {return operator[](static_cast<const BusSpec&>(_spec).index_of(label)).second;}
 
     auto sig = operator[](static_cast<const BusSpec&>(_spec).index_of(label.substr(0, pos))).second;
     pooya_verify_bus(sig);
@@ -88,8 +86,7 @@ SignalId BusInfo::at(const std::string& label) const
     auto index = static_cast<const BusSpec&>(_spec).index_of(pos == std::string::npos ? label : label.substr(0, pos));
     pooya_verify(index < static_cast<const BusSpec&>(_spec)._wires.size(), label + ": label not found in bus!");
     auto sig = at(index).second;
-    if (pos == std::string::npos)
-        return sig;
+    if (pos == std::string::npos) {return sig;}
 
     pooya_verify_bus(sig);
     return sig->as_bus()->at(label.substr(pos + 1));

@@ -26,7 +26,7 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     pooya_trace(_given_name);
 
     assert(!_parent);
-    if (_parent) return false;
+    if (_parent) {return false;}
 
 #if defined(POOYA_USE_SMART_PTRS)
     _parent = parent;
@@ -38,7 +38,9 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
 
     _given_name = make_valid_given_name(_given_name);
     if (_full_name.empty())
+    {
         _full_name = parent.full_name() + "/" + _given_name;
+    }
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
@@ -54,8 +56,12 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     {
         _dependencies.reserve(ibus->size());
         for (auto sig: *ibus)
+        {
             if (sig.second->is_value())
+            {
                 add_dependency(sig.second->as_value());
+            }
+        }
         _dependencies.shrink_to_fit();
     }
 
@@ -85,7 +91,9 @@ bool Block::remove_dependency(ValueSignalId sig)
     pooya_verify_valid_signal(sig);
     auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
     if (it == _dependencies.end())
+    {
         return false;
+    }
     _dependencies.erase(it);
     return true;
 }
@@ -123,7 +131,7 @@ std::string Block::make_valid_given_name(const std::string& given_name) const
         };
 
         while (!parent.traverse(pooya_verify_unique_name_cb, 0, 1))
-            foo = ret + "_" + std::to_string(n++);
+            {foo = ret + "_" + std::to_string(n++);}
 
         ret = foo;
     }
@@ -139,13 +147,10 @@ void Block::_mark_unprocessed()
 uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name());
-    if (_processed)
-        return 0;
-
+    if (_processed) {return 0;}
     for (auto& sig: _dependencies)
     {
-        if (sig->is_value() && !sig->as_value()->is_assigned())
-            return 0;
+        if (sig->is_value() && !sig->as_value()->is_assigned()) {return 0;}
     }
 
     activation_function(t);
@@ -174,24 +179,21 @@ Model::~Model()
 {
     pooya_trace("block: " + full_name());
 #if !defined(POOYA_USE_SMART_PTRS)
-    for (auto* si: _signal_infos)
-        delete si;
+    for (auto* si: _signal_infos) {delete si;}
 #endif // defined(POOYA_USE_SMART_PTRS)
 }
 
 SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
 {
     pooya_trace("block: " + full_name());
-    if (name.empty())
-        return SignalId();
+    if (name.empty()) {return SignalId();}
 
     auto name_len = name.length();
 
     auto it = std::find_if(_signal_infos.begin(), _signal_infos.end(),
         [&] (SignalId sig) -> bool
         {
-            if (exact_match)
-                return sig->_full_name == name;
+            if (exact_match) {return sig->_full_name == name;}
                 
             auto str_len = sig->_full_name.length();
             return (str_len >= name_len) && (sig->_full_name.substr(str_len - name_len) == name);
@@ -231,8 +233,7 @@ std::string Parent::make_signal_name(const std::string& given_name, bool make_ne
     }
 
     std::string sig_name =  _full_name + "~" + name;
-    if (!make_new)
-        return sig_name;
+    if (!make_new) {return sig_name;}
 
     auto& model_ = model_ref();
 
@@ -275,15 +276,13 @@ uint Parent::_process(double t, bool go_deep)
             for (auto& component: _components)
             {
                 n_processed += component.get()._process(t);
-                if (not component.get().processed())
-                    _processed = false;
+                if (not component.get().processed()) {_processed = false;}
             }
 #else // defined(POOYA_USE_SMART_PTRS)
             for (auto* component: _components)
             {
                 n_processed += component->_process(t);
-                if (not component->processed())
-                    _processed = false;
+                if (not component->processed()) {_processed = false;}
             }
 #endif // defined(POOYA_USE_SMART_PTRS)
     }
@@ -294,25 +293,21 @@ uint Parent::_process(double t, bool go_deep)
 bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
     pooya_trace("block: " + full_name());
-    if (level > max_level)
-        return true;
+    if (level > max_level) {return true;}
 
-    if (!Block::traverse(cb, level, max_level))
-        return false;
+    if (!Block::traverse(cb, level, max_level)) {return false;}
 
     if (level < max_level)
     {
 #if defined(POOYA_USE_SMART_PTRS)
         for (auto& c: _components)
         {
-            if (!c.get().traverse(cb, level + 1, max_level))
-                return false;
+            if (!c.get().traverse(cb, level + 1, max_level)) {return false;}
         }
 #else // defined(POOYA_USE_SMART_PTRS)
         for (auto* c: _components)
         {
-            if (!c->traverse(cb, level + 1, max_level))
-                return false;
+            if (!c->traverse(cb, level + 1, max_level)) {return false;}
         }
 #endif // defined(POOYA_USE_SMART_PTRS)
     }
@@ -335,8 +330,7 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Ite
 
     std::vector<LabelSignalId> label_signals;
     label_signals.reserve(size);
-    for (const auto& wi: spec._wires)
-        label_signals.push_back({wi.label(), SignalId()});
+    for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), SignalId()});}
     for (auto it=begin_; it != end_; it++)
     {
         auto index = spec.index_of(it->first);
@@ -350,17 +344,17 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Ite
         {
             std::string name = given_name + "." + wit->label();
             if (wit->_bus)
-                ls.second = create_bus(name, *wit->_bus);
+                {ls.second = create_bus(name, *wit->_bus);}
             else if (wit->_array_size > 0)
-                ls.second = create_array_signal(name, wit->_array_size);
+                {ls.second = create_array_signal(name, wit->_array_size);}
             else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
-                ls.second = create_scalar_signal(name);
+                {ls.second = create_scalar_signal(name);}
             else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
-                ls.second = create_int_signal(name);
+                {ls.second = create_int_signal(name);}
             else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
-                ls.second = create_bool_signal(name);
+                {ls.second = create_bool_signal(name);}
             else
-                pooya_verify(false, name + ": unknown wire type!");
+                {pooya_verify(false, name + ": unknown wire type!");}
         }
         wit++;
     }
@@ -433,17 +427,17 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
         {
             pooya_verify_valid_signal(ls.second);
             if (ls.second->is_scalar())
-                wire_infos.emplace_back(ls.first);
+                {wire_infos.emplace_back(ls.first);}
             else if (ls.second->is_int())
-                wire_infos.emplace_back("i:" + ls.first);
+                {wire_infos.emplace_back("i:" + ls.first);}
             else if (ls.second->is_bool())
-                wire_infos.emplace_back("b:" + ls.first);
+                {wire_infos.emplace_back("b:" + ls.first);}
             else if (ls.second->is_array())
-                wire_infos.emplace_back(ls.first, ls.second->as_array()->size());
+                {wire_infos.emplace_back(ls.first, ls.second->as_array()->size());}
             else if (ls.second->is_bus())
-                wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);
+                {wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);}
             else
-                pooya_verify(false, "unknown signal type!");
+                {pooya_verify(false, "unknown signal type!");}
             
             wires.emplace_back(ls.first, ls.second);
         }
@@ -451,8 +445,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
         return create_bus("", *_interface_bus_specs.back(), wires.begin(), wires.end());
     };
 
-    if (!component.init(*this, make_bus(iports), make_bus(oports)))
-        return false;
+    if (!component.init(*this, make_bus(iports), make_bus(oports))) {return false;}
 
 #if defined(POOYA_USE_SMART_PTRS)
     _components.push_back(component);
@@ -480,8 +473,7 @@ void Model::lock_signals()
 {
     pooya_trace("model: " + full_name());
 
-    if (_signals_locked) // nothing to do!
-        return;
+    if (_signals_locked) {return;} // nothing to do!
 
     std::size_t state_variables_size{0};
     std::size_t total_size{0};
@@ -489,11 +481,11 @@ void Model::lock_signals()
     // find the total sizes of signals and state variables
     for (const auto& signal: _signal_infos)
     {
-        if (!signal->is_value()) continue;
+        if (!signal->is_value()) {continue;}
         auto size = (signal->is_scalar() || signal->is_int() || signal->is_bool()) ? 1 : signal->as_array()->_size;
         total_size += size;
         if (signal->is_float() && signal->as_float()->is_state_variable())
-            state_variables_size += size;
+            {state_variables_size += size;}
     }
 
     _values.init(total_size, state_variables_size);
@@ -503,29 +495,29 @@ void Model::lock_signals()
 
     for (auto& signal: _signal_infos)
     {
-        if (!signal->is_value()) continue;
+        if (!signal->is_value()) {continue;}
         auto& start = signal->_float && signal->as_float()->is_state_variable() ? state_variables_start : other_start;
         auto size = (signal->_scalar || signal->_int || signal->_bool) ? 0 : signal->as_array()->_size;
         if (signal->_scalar)
 #if defined(POOYA_USE_SMART_PTRS)
-            signal->as_scalar()->_scalar_value = *start;
+            {signal->as_scalar()->_scalar_value = *start;}
 #else // defined(POOYA_USE_SMART_PTRS)
-            signal->as_scalar()->_scalar_value = start;
+            {signal->as_scalar()->_scalar_value = start;}
 #endif // defined(POOYA_USE_SMART_PTRS)
         else if (signal->_int)
 #if defined(POOYA_USE_SMART_PTRS)
-            signal->as_int()->_int_value = *start;
+            {signal->as_int()->_int_value = *start;}
 #else // defined(POOYA_USE_SMART_PTRS)
-            signal->as_int()->_int_value = start;
+            {signal->as_int()->_int_value = start;}
 #endif // defined(POOYA_USE_SMART_PTRS)
         else if (signal->_bool)
 #if defined(POOYA_USE_SMART_PTRS)
-            signal->as_bool()->_bool_value = *start;
+            {signal->as_bool()->_bool_value = *start;}
 #else // defined(POOYA_USE_SMART_PTRS)
-            signal->as_bool()->_bool_value = start;
+            {signal->as_bool()->_bool_value = start;}
 #endif // defined(POOYA_USE_SMART_PTRS)
         else
-            new (&signal->as_array()->_array_value) MappedArray(start, size);
+            {new (&signal->as_array()->_array_value) MappedArray(start, size);}
         start += std::max<std::size_t>(size, 1);
     }
 
@@ -538,17 +530,16 @@ void Model::lock_signals()
 
     for (auto& signal: _signal_infos)
     {
-        if (!signal->_float || !signal->as_float()->is_state_variable())
-            continue;
+        if (!signal->_float || !signal->as_float()->is_state_variable()) {continue;}
 
         if (signal->_scalar)
 #if defined(POOYA_USE_SMART_PTRS)
-            signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = *deriv_start;
+            {signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = *deriv_start;}
 #else // defined(POOYA_USE_SMART_PTRS)
-            signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = deriv_start;
+            {signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = deriv_start;}
 #endif // defined(POOYA_USE_SMART_PTRS)
         else
-            new (&signal->as_array()->_deriv_sig->as_array()->_deriv_array_value) MappedArray(deriv_start, signal->as_array()->_size);
+            {new (&signal->as_array()->_deriv_sig->as_array()->_deriv_array_value) MappedArray(deriv_start, signal->as_array()->_size);}
 
         deriv_start += signal->is_scalar() ? 1 : signal->as_array()->_size;
     }
@@ -567,29 +558,29 @@ void Model::reset_with_state_variables(const Array& state_variables)
     _values._state_variables = state_variables;
     for (auto& sig: _signal_infos)
     {
-        if (!sig->_value) // skip non-values
-            continue;
+        if (!sig->_value) {continue;} // skip non-values
 
         if (sig->_float) // skip non-floats
         {
             sig->as_float()->_assigned = bool(sig->as_float()->_deriv_sig);
-            if (!sig->as_float()->_assigned) // skip non-state-variables
-                continue;
+            if (!sig->as_float()->_assigned) {continue;} // skip non-state-variables
 
             if (sig->as_float()->_is_deriv) // skip non-derivatives
             {
                 if (sig->_scalar)
 #if defined(POOYA_USE_SMART_PTRS)
-                    sig->as_scalar()->_deriv_scalar_value.value().get() = sig->as_scalar()->_scalar_value.value().get();
+                    {sig->as_scalar()->_deriv_scalar_value.value().get() = sig->as_scalar()->_scalar_value.value().get();}
 #else // defined(POOYA_USE_SMART_PTRS)
-                    *sig->as_scalar()->_deriv_scalar_value = *sig->as_scalar()->_scalar_value;
+                    {*sig->as_scalar()->_deriv_scalar_value = *sig->as_scalar()->_scalar_value;}
 #endif // defined(POOYA_USE_SMART_PTRS)
                 else
-                    sig->as_array()->_deriv_array_value = sig->as_array()->_array_value;
+                    {sig->as_array()->_deriv_array_value = sig->as_array()->_array_value;}
             }
         }
         else
+        {
             sig->as_value()->_assigned = false;
+        }
     }
 }
 
@@ -600,8 +591,12 @@ void Model::invalidate()
     _values._state_variable_derivs.setZero();
 #endif // !defined(POOYA_NDEBUG)
     for (auto& sig: _signal_infos)
+    {
         if (sig->_value)
+        {
             sig->as_value()->_assigned = false;
+        }
+    }
 }
 
 }

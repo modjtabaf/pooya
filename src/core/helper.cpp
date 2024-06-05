@@ -33,14 +33,14 @@ void History::track_all()
 #else // defined(POOYA_USE_SMART_PTRS)
     for (auto sig: _model.signals())
 #endif // defined(POOYA_USE_SMART_PTRS)
-        if (sig->is_value()) n++;
+        {if (sig->is_value()) {n++;}}
     _signals.reserve(n);
 #if defined(POOYA_USE_SMART_PTRS)
     for (auto& sig: _model.get().signals())
 #else // defined(POOYA_USE_SMART_PTRS)
     for (auto sig: _model.signals())
 #endif // defined(POOYA_USE_SMART_PTRS)
-        if (sig->is_value()) _signals.push_back(sig->as_value());
+        {if (sig->is_value()) {_signals.push_back(sig->as_value());}}
 }
 
 void History::track(SignalId sig)
@@ -48,7 +48,7 @@ void History::track(SignalId sig)
     pooya_verify(empty(), "track should be called before the history is updated!");
     pooya_verify_value_signal(sig);
     if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
-        _signals.push_back(sig->as_value());
+        {_signals.push_back(sig->as_value());}
 }
 
 void History::untrack(SignalId sig)
@@ -63,43 +63,41 @@ void History::update(uint k, double t)
     pooya_trace("k = " + std::to_string(k));
     if (empty())
     {
-        if (_signals.empty())
-            track_all();
+        if (_signals.empty()) {track_all();}
         for (auto sig: _signals)
         {
             if (sig->is_scalar() || sig->is_int() || sig->is_bool())
-                insert_or_assign(sig, Array(_nrows_grow));
+                {insert_or_assign(sig, Array(_nrows_grow));}
             else
-                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));
+                {insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));}
         }
     }
 
     if (k >= _time.rows())
-        _time.conservativeResize(k + _nrows_grow, Eigen::NoChange);
+        {_time.conservativeResize(k + _nrows_grow, Eigen::NoChange);}
     _time(k, 0) = t;
     for (auto sig: _signals)
     {
         auto& h = at(sig);
         if (k >= h.rows())
-            h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
+            {h.conservativeResize(k + _nrows_grow, Eigen::NoChange);}
         bool valid = sig->is_assigned();
         if (sig->is_int())
-            h(k, 0) = valid ? sig->as_int()->get() : 0;
+            {h(k, 0) = valid ? sig->as_int()->get() : 0;}
         else if (sig->is_bool())
-            h(k, 0) = valid ? sig->as_bool()->get() : 0;
+            {h(k, 0) = valid ? sig->as_bool()->get() : 0;}
         else if (sig->is_scalar())
-            h(k, 0) = valid ? sig->as_scalar()->get() : 0;
+            {h(k, 0) = valid ? sig->as_scalar()->get() : 0;}
         else
         {
             if (valid)
-                h.row(k) = sig->as_array()->get();
+                {h.row(k) = sig->as_array()->get();}
             else
-                h.row(k).setZero();
+                {h.row(k).setZero();}
         }
     }
 
-    if ((_bottom_row == uint(-1)) || (k > _bottom_row))
-        _bottom_row = k;
+    if ((_bottom_row == uint(-1)) || (k > _bottom_row)) {_bottom_row = k;}
 }
 
 void History::shrink_to_fit()
@@ -107,19 +105,17 @@ void History::shrink_to_fit()
     pooya_trace0;
     const uint nrows = _bottom_row + 1;
 
-    if (nrows >= _time.rows()) // practically, nrows can't be the greater
-        return;
+    if (nrows >= _time.rows()) {return;} // practically, nrows can't be the greater
 
     _time.conservativeResize(nrows, Eigen::NoChange);
     for (auto& p: *this)
-        p.second.conservativeResize(nrows, Eigen::NoChange);
+        {p.second.conservativeResize(nrows, Eigen::NoChange);}
 }
 
 void History::export_csv(const std::string& filename)
 {
     pooya_trace("filename = " + filename);
-    if (size() == 0)
-        return;
+    if (size() == 0) {return;}
 
     std::ofstream ofs(filename);
 
@@ -133,10 +129,12 @@ void History::export_csv(const std::string& filename)
             {
                 auto sig = h.first->as_array();
                 for (std::size_t k=0; k < sig->size(); k++)
-                    ofs << "," << h.first->_full_name << "[" << k << "]";
+                    {ofs << "," << h.first->_full_name << "[" << k << "]";}
             }
             else
+            {
                 ofs << "," << h.first->_full_name;
+            }
         }
     }
     ofs << "\n";
@@ -147,16 +145,20 @@ void History::export_csv(const std::string& filename)
     {
         ofs << time()(k);
         for (const auto& h: *this)
-        if (h.first)
         {
-            if (h.first->is_array())
+            if (h.first)
             {
-                auto sig = h.first->as_array();
-                for (std::size_t j=0; j < sig->size(); j++)
-                    ofs << "," << h.second(k, j);
+                if (h.first->is_array())
+                {
+                    auto sig = h.first->as_array();
+                    for (std::size_t j=0; j < sig->size(); j++)
+                        {ofs << "," << h.second(k, j);}
+                }
+                else
+                {
+                    ofs << "," << h.second(k);
+                }
             }
-            else
-                ofs << "," << h.second(k);
         }
         ofs << "\n";
     }
@@ -174,9 +176,9 @@ Simulator::Simulator(Model& model, InputCallback inputs_cb, StepperBase* stepper
     pooya_trace("model: " + model.full_name());
     if (stepper)
 #if defined(POOYA_USE_SMART_PTRS)
-        _stepper = *stepper;
+        {_stepper = *stepper;}
 #else // defined(POOYA_USE_SMART_PTRS)
-        _stepper = stepper;
+        {_stepper = stepper;}
 #endif // defined(POOYA_USE_SMART_PTRS)
 }
 
@@ -206,8 +208,7 @@ uint Simulator::_process(double t)
 #if defined(POOYA_USE_SMART_PTRS)
             for (auto& base: _current_po.get())
             {
-                if (base.get().processed())
-                    continue;
+                if (base.get().processed()) {continue;}
                 n_processed += base.get()._process(t, false);
                 if (base.get().processed())
                 {
@@ -218,8 +219,7 @@ uint Simulator::_process(double t)
 #else // defined(POOYA_USE_SMART_PTRS)
             for (auto* base: *_current_po)
             {
-                if (base->processed())
-                    continue;
+                if (base->processed()) {continue;}
                 n_processed += base->_process(t, false);
                 if (base->processed())
                 {
@@ -234,7 +234,7 @@ uint Simulator::_process(double t)
         for (auto& base: _current_po.get())
         {
             if (!base.get().processed())
-                _new_po.get().emplace_back(base);
+                {_new_po.get().emplace_back(base);}
         }
 
         assert(_current_po.get().size() == _new_po.get().size());
@@ -244,7 +244,7 @@ uint Simulator::_process(double t)
         for (auto* base: *_current_po)
         {
             if (!base->processed())
-                _new_po->emplace_back(base);
+                {_new_po->emplace_back(base);}
         }
 
         assert(_current_po->size() == _new_po->size());
@@ -273,8 +273,7 @@ uint Simulator::_process(double t)
 
     auto find_unprocessed_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
     {
-        if (!c.processed())
-            unprocessed.push_back(&c);
+        if (!c.processed()) {unprocessed.push_back(&c);}
         return true;
     };
 
@@ -291,8 +290,7 @@ uint Simulator::_process(double t)
             std::cout << "- " << c->full_name() << "\n";
             for (auto sig: c->dependencies())
             {
-                if (sig->is_assigned())
-                    continue;
+                if (sig->is_assigned()) {continue;}
                 std::cout << "  - " << sig->_full_name << "\n";
             }
         }
@@ -351,12 +349,14 @@ void Simulator::init(double t0)
     else
     {
         if (_stepper)
+        {
             util::pooya_show_warning(__FILE__, __LINE__,
                 "A stepper is provided but no state variable is defined! The stepper will be ignored.");
+        }
     }
 
     static_cast<Model&>(_model).invalidate();
-    if (_inputs_cb) _inputs_cb(_model, t0);
+    if (_inputs_cb) {_inputs_cb(_model, t0);}
     static_cast<Model&>(_model).input_cb(t0);
     static_cast<Model&>(_model).pre_step(t0);
     _process(t0);
@@ -372,7 +372,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     {
         pooya_trace("t: " + std::to_string(t));
         static_cast<Model&>(_model).reset_with_state_variables(state_variables);
-        if (_inputs_cb) _inputs_cb(_model, t);
+        if (_inputs_cb) {_inputs_cb(_model, t);}
         static_cast<Model&>(_model).input_cb(t);
         _process(t);
         return static_cast<Model&>(_model).values().state_variable_derivs();
@@ -388,10 +388,12 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     if (static_cast<Model&>(_model).values().num_state_variables() > 0)
     {
         if (t <_t_prev)
+        {
             util::pooya_throw_exception(__FILE__, __LINE__,
                 "Simulation cannot go back in time. Aborting!\n  "
                 "- current time  = " + std::to_string(t) + "\n  "
                 "- previous time = " + std::to_string(_t_prev) + "\n");
+        }
 
         if (t == _t_prev)
         {
@@ -400,7 +402,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 "- time = " + std::to_string(t) + "\n");
 
             static_cast<Model&>(_model).invalidate();
-            if (_inputs_cb) _inputs_cb(_model, t);
+            if (_inputs_cb) {_inputs_cb(_model, t);}
             static_cast<Model&>(_model).input_cb(t);
             static_cast<Model&>(_model).pre_step(t);
             _state_variables = static_cast<Model&>(_model).values().state_variables();
@@ -419,7 +421,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             while (t1 < t)
             {
                 static_cast<Model&>(_model).invalidate();
-                if (_inputs_cb) _inputs_cb(_model, t1);
+                if (_inputs_cb) {_inputs_cb(_model, t1);}
                 static_cast<Model&>(_model).input_cb(t1);
                 static_cast<Model&>(_model).pre_step(t1);
                 _state_variables_orig = static_cast<Model&>(_model).values().state_variables();
@@ -443,7 +445,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                     if (t1 < t)
                     {
                         static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
-                        if (_inputs_cb) _inputs_cb(_model, t1);
+                        if (_inputs_cb) {_inputs_cb(_model, t1);}
                         static_cast<Model&>(_model).input_cb(t1);
                         _process(t1);
                         static_cast<Model&>(_model).post_step(t1);
@@ -461,10 +463,10 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     }
 
     static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
-    if (_inputs_cb) _inputs_cb(_model, t);
+    if (_inputs_cb) {_inputs_cb(_model, t);}
     static_cast<Model&>(_model).input_cb(t);
     if (static_cast<Model&>(_model).values().num_state_variables() == 0)
-        static_cast<Model&>(_model).pre_step(t);
+        {static_cast<Model&>(_model).pre_step(t);}
     _process(t);
     static_cast<Model&>(_model).post_step(t);
 

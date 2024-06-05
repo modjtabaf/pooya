@@ -34,7 +34,7 @@ namespace pooya::util
 void pooya_throw_exception(const std::string& file, int line, const std::string& msg);
 void pooya_show_warning(const std::string& file, int line, const std::string& msg);
 
-#define pooya_here(s) std::cout << "Pooya: " << __FILE__ << ":" << __LINE__ << ": " << s << "\n" << std::flush;
+#define pooya_here(s) std::cout << "Pooya: " << __FILE__ << ":" << __LINE__ << ": " << s << std::endl;
 // #undef pooya_here
 // #define pooya_here(s)
 
@@ -73,8 +73,7 @@ public:
         auto& pt = pooya_trace_info.back();
         pt._file = file;
         pt._line = line;
-        if (!msg.empty())
-            pt._msg = msg;
+        if (!msg.empty()) {pt._msg = msg;}
     }
 
     ~PooyaTracer()

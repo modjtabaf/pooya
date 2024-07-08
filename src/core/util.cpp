@@ -13,6 +13,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include "util.hpp"
+#include "block_base.hpp"
 
 namespace pooya::util
 {
@@ -54,6 +55,42 @@ std::string pooya_trace_info_string()
             {msg << "  " << it->_msg << "\n";}
     }
     return msg.str();
+}
+
+std::string make_valid_given_name(const std::string& given_name, pooya::Parent* parent)
+{
+    pooya_trace(given_name);
+
+    std::string ret;
+    if (given_name.empty())
+    {
+        ret = "unnamed_block";
+    }
+    else
+    {
+        ret = given_name;
+        std::replace(ret.begin(), ret.end(), ' ', '_');
+        std::replace(ret.begin(), ret.end(), '~', '_');
+        std::replace(ret.begin(), ret.end(), '/', '_');
+    }
+
+    if (parent)
+    {
+        uint n = 0;
+
+        std::string foo{ret};
+        auto pooya_verify_unique_name_cb = [&] (const Block& c, uint32_t level) -> bool
+        {
+            return (level == 0) || (c.given_name() != foo);
+        };
+
+        while (!parent->traverse(pooya_verify_unique_name_cb, 0, 1))
+            {foo = ret + "_" + std::to_string(n++);}
+
+        ret = foo;
+    }
+
+    return ret;
 }
 
 #endif // !defined(POOYA_NDEBUG)

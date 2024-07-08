@@ -316,7 +316,7 @@ void Simulator::init(double t0)
             assert(_processing_order2.empty());
 
             uint num_blocks = 0;
-            auto enum_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
+            auto enum_blocks_cb = [&] (Block& /*c*/, uint32_t /*level*/) -> bool
             {
                 num_blocks++;
                 return true;

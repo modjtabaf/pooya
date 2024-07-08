@@ -464,7 +464,7 @@ Model::Model(const std::string& given_name) : Parent(given_name, 0, 0)
     _initialized = true;
 }
 
-bool Model::init(Parent& parent, BusId ibus, BusId obus)
+bool Model::init(Parent& /*parent*/, BusId /*ibus*/, BusId /*obus*/)
 {
     return true;
 }

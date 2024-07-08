@@ -59,7 +59,6 @@ protected:
     std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
-    std::string make_valid_given_name(const std::string& given_name) const;
     bool add_dependency(ValueSignalId sig);
     bool remove_dependency(ValueSignalId sig);
 

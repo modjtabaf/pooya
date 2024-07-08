@@ -20,6 +20,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <string>
 #include <vector>
 
+namespace pooya
+{
+    class Parent;
+}
+
 namespace pooya::util
 {
 
@@ -132,6 +137,8 @@ public:
     pooya_verify(!_signals_locked, "Attempting to modify the signals while they are locked!");
 
 // utility functions
+
+std::string make_valid_given_name(const std::string& given_name, pooya::Parent* parent=nullptr);
 
 // utility classes
 

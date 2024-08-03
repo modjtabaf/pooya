@@ -109,7 +109,7 @@ uint Block::_process(double t, bool /*go_deep*/)
     if (_processed) {return 0;}
     for (auto& sig: _dependencies)
     {
-        if (sig->is_value() && !sig->as_value()->is_assigned()) {return 0;}
+        if (!sig->is_assigned()) {return 0;}
     }
 
     activation_function(t);

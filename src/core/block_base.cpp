@@ -274,12 +274,6 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-SignalId Parent::get_generic_signal(const std::string& given_name)
-{
-    pooya_trace("block: " + full_name());
-    return model_ref().lookup_signal(make_signal_name(given_name), true);
-}
-
 template<typename Iter>
 BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
@@ -344,34 +338,6 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, con
     }
 
     return create_bus(given_name, spec, label_signals.begin(), label_signals.end());
-}
-
-SignalId Parent::clone_signal(const std::string& given_name, SignalId sig)
-{
-    pooya_trace("block: " + full_name());
-    pooya_verify_valid_signal(sig);
-    if (sig->is_scalar())
-    {
-        return create_scalar_signal(given_name);
-    }
-    else if (sig->is_array())
-    {
-        return create_array_signal(given_name, sig->as_array()->size());
-    }
-    else
-    {
-        pooya_verify_bus(sig);
-        BusId bus = sig->as_bus();
-        std::size_t n = bus->spec()._wires.size();
-        std::vector<LabelSignalId> sigs;
-        sigs.reserve(n);
-        for (std::size_t k = 0; k < n; k++)
-        {
-            const auto& ns = bus->at(k);
-            sigs.emplace_back(ns.first, clone_signal("", ns.second));
-        }
-        return create_bus(given_name, bus->spec(), sigs.begin(), sigs.end());
-    }
 }
 
 bool Parent::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)

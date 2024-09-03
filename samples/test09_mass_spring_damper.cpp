@@ -47,9 +47,9 @@ public:
 
         _s_tau = scalar_input_at(0);
 
-        _s_x = parent.scalar_signal("x");
-        _s_xd = parent.scalar_signal("xd");
-        _s_xdd = parent.scalar_signal("xdd");
+        _s_x = parent.create_scalar_signal("x");
+        _s_xd = parent.create_scalar_signal("xd");
+        _s_xdd = parent.create_scalar_signal("xdd");
 
         auto& model_ = model_ref();
         model_.register_state_variable(_s_x, _s_xd);
@@ -95,7 +95,7 @@ int main()
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
-    auto tau = model.scalar_signal("tau");
+    auto tau = model.create_scalar_signal("tau");
 
     // setup the model
     model.add_block(msd, tau);

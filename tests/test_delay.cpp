@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
 to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -17,10 +17,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <gtest/gtest.h>
 
-#include "src/core/pooya.hpp"
-#include "src/core/helper.hpp"
-#include "src/core/solver.hpp"
-#include "src/misc/gp-ios.hpp"
+#include "src/block/delay.hpp"
+#include "src/block/model.hpp"
+#include "src/signal/scalar_signal.hpp"
+#include "src/solver/simulator.hpp"
 
 class TestDelay : public testing::Test
 {

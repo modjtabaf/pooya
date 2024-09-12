@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
 to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -15,9 +15,13 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <iostream>
 #include <chrono>
 
-#include "src/core/pooya.hpp"
-#include "src/core/helper.hpp"
-#include "src/core/solver.hpp"
+#include "src/helper/trace.hpp"
+#include "src/block/model.hpp"
+#include "src/block/const.hpp"
+#include "src/block/delay.hpp"
+#include "src/block/source.hpp"
+#include "src/solver/simulator.hpp"
+#include "src/solver/history.hpp"
 #include "src/misc/gp-ios.hpp"
 
 class MyModel : public pooya::Model
@@ -95,7 +99,7 @@ int main()
 	gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x',"
 		<< gp.file1d(history[model._s_y]) << "with lines title 'xd'\n";
 
-    assert(pooya::util::pooya_trace_info.size() == 1);
+    assert(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

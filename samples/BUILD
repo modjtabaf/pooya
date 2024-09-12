@@ -1,261 +1,78 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+# Copyright 2024 Mojtaba (Moji) Fathi
 
-cc_binary(
+#  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
+# to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+#  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+load(":pooya_samples_rules.bzl", "pooya_cc_binary")
+
+pooya_cc_binary(
     name = "gain_block",
-    srcs = ["gain_block.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "gain_block.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "memory_block",
-    srcs = ["memory_block.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "memory_block.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "delay_block",
-    srcs = ["delay_block.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "delay_block.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test03",
-    srcs = ["test03_integrator.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test03_integrator.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test04",
-    srcs = ["test04_mass_spring.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test04_mass_spring.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test05",
-    srcs = ["test05_pendulum.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test05_pendulum.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test06",
-    srcs = ["test06_pendulum_with_torque.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test06_pendulum_with_torque.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test07",
-    srcs = ["test07_pendulum_with_pi.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test07_pendulum_with_pi.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test08",
-    srcs = ["test08_pendulum_with_pid.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-        ],
+    src = "test08_pendulum_with_pid.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test09",
-    srcs = ["test09_mass_spring_damper.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test09_mass_spring_damper.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test10",
-    srcs = ["test10_memory_with_bus.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test10_memory_with_bus.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "test11",
-    srcs = ["test11_int_gain.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "test11_int_gain.cpp",
 )
 
-cc_binary(
+pooya_cc_binary(
     name = "tutorial01",
-    srcs = ["tut01_mass_spring_damper.cpp"],
-    copts = [
-        "-pedantic-errors",
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-        ],
-    linkopts = [
-        "-lboost_iostreams",
-        "-lboost_system",
-        "-lboost_filesystem",
-        ],
-    deps = [
-        "//src:core",
-        "//src:misc",
-    ],
+    src = "tut01_mass_spring_damper.cpp",
 )

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
 to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -13,11 +13,22 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
+// #include <math.h>
 #include <chrono>
 
-#include "src/core/pooya.hpp"
-#include "src/core/helper.hpp"
-#include "src/core/solver.hpp"
+#include "src/helper/trace.hpp"
+#include "src/block/submodel.hpp"
+#include "src/block/model.hpp"
+// #include "src/block/siso_function.hpp"
+// #include "src/block/so_function.hpp"
+// #include "src/block/function.hpp"
+#include "src/block/sin.hpp"
+#include "src/block/muldiv.hpp"
+#include "src/block/subtract.hpp"
+#include "src/block/integrator.hpp"
+#include "src/solver/rkf45.hpp"
+#include "src/solver/simulator.hpp"
+#include "src/solver/history.hpp"
 #include "src/misc/gp-ios.hpp"
 
 class Pendulum : public pooya::Submodel
@@ -25,11 +36,11 @@ class Pendulum : public pooya::Submodel
 protected:
     pooya::Integrator _integ1{"dphi", M_PI_4};
     pooya::Integrator _integ2{"phi"};
-    pooya::SISOFunction _sin{"sin_phi",
-        [](double /*t*/, double x) -> double
-        {
-            return std::sin(x);
-        }};
+    // pooya::SISOFunction _sin{"sin_phi",
+    //     [](double /*t*/, double x) -> double
+    //     {
+    //         return std::sin(x);
+    //     }};
     // pooya::SOFunction _sin{"sin_phi",
     //     [](double /*t*/, pooya::BusId ibus) -> double
     //     {
@@ -40,7 +51,7 @@ protected:
     //     {
     //         obus->scalar_at(0)->set(std::sin(ibus->scalar_at(0)->get()));
     //     }};
-    // pooya::Sin _sin{"sin(phi)"};
+    pooya::Sin _sin{"sin(phi)"};
     pooya::MulDiv _muldiv1{"g_l", "**/"};
     pooya::MulDiv _muldiv2{"tau_ml2", "*///"};
     pooya::Subtract _sub{"d2phi"};
@@ -141,7 +152,7 @@ int main()
 	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi',"
 	    << gp.file1d(history[dphi]) << "with lines title 'dphi'\n";
 
-    assert(pooya::util::pooya_trace_info.size() == 1);
+    assert(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

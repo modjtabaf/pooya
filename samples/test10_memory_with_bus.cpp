@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the “Software”), to deal in
@@ -20,12 +20,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <chrono>
-#include <iostream>
 #include <math.h>
+#include <iostream>
 
-#include "src/core/helper.hpp"
-#include "src/core/pooya.hpp"
-#include "src/core/solver.hpp"
+#include "src/helper/trace.hpp"
+#include "src/block/bus_memory.hpp"
+#include "src/block/model.hpp"
+#include "src/solver/simulator.hpp"
+#include "src/solver/history.hpp"
 #include "src/misc/gp-ios.hpp"
 
 int main()
@@ -55,8 +57,8 @@ int main()
     auto x = model.create_bus("x", bus_spec); // assign bus wires implicitely
     /*
     // alternative 1
-    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without
-    specifying wire labels (order matters) model.signal("x0"), model.signal("x1"),
+    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
+        model.signal("x0"), model.signal("x1"),
         model.bus("any_name_you_like", internal_bus_spec, {model.signal("z3")}),
         model.signal("x2"),
     });
@@ -129,7 +131,7 @@ int main()
         << gp.file1d(history[y_z3]) << "with lines title 'y3',"
         << "\n";
 
-    assert(pooya::util::pooya_trace_info.size() == 1);
+    assert(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

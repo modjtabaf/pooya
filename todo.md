@@ -18,7 +18,9 @@
 * define pooya::ArrayN<N> as an alias to public Eigen::Array<double, N, 1>
 * Create FloatSignalInfo
 * pass std::string as const ref
+* use gtest and cc_test
 
+- Deprecate Model
 - Create an abstraction layer between pooya and Eigen
 - Reduce the usage of POOYA_USE_SMART_PTRS through defining proper macros or helper classes
 - Call pre_step and post_step for minor steps too
@@ -27,7 +29,6 @@
 - Use DOT to generate a graph presentation of the model
 - Doxygen
 - logging (spdlog)
-- use gtest and cc_test
 - parallel processing
 - move BusBlockBuilder::traverse_bus to BusSpec
 - In BusSignalInfo, use both std::map and std::vector for signals so they can be accessed with either label or index

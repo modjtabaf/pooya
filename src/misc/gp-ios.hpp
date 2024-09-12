@@ -2,8 +2,8 @@
 #ifndef __GP_IOS_HPP__
 #define __GP_IOS_HPP__
 
-#include "src/core/signal.hpp"
 #include "Eigen/Core"
+#include "src/signal/signal.hpp"
 #include "misc/gnuplot-iostream.h"
 
 namespace gnuplotio

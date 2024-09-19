@@ -22,75 +22,85 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class BusSpec;
+class Signal;
 
 template<typename T>
 struct Types
 {
 };
 
-template<>
-struct Types<Array>
-{
-    using SignalInfo = ArraySignalInfo;
-    using SignalId = ArraySignalId;
-    using GetValue = const MappedArray&;
-    using SetValue = const Array&;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
-    static void verify_signal_type(pooya::SignalId sig, std::size_t size);
-#endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_array();}
-};
+// template<>
+// struct Types<Array>
+// {
+//     using SignalInfo = ArraySignalInfo;
+//     using SignalId = ArraySignalId;
+//     using GetValue = const MappedArray&;
+//     using SetValue = const Array&;
+// #if defined(POOYA_DEBUG)
+//     static void verify_signal_type(pooya::SignalId sig);
+//     static void verify_signal_type(pooya::SignalId sig, std::size_t size);
+// #endif // defined(POOYA_DEBUG)
+//     template<typename T> static SignalId as_type(const T& sig) {return sig->as_array();}
+// };
+
+class ScalarSignal;
 
 template<>
 struct Types<double>
 {
-    using SignalInfo = ScalarSignalInfo;
-    using SignalId = ScalarSignalId;
+    // using SignalInfo = ScalarSignalInfo;
+    // using SignalId = ScalarSignalId;
+    using Signal = ScalarSignal;
+    using SignalRef = std::reference_wrapper<ScalarSignal>;
+    using SignalConstRef = std::reference_wrapper<const ScalarSignal>;
     using GetValue = double;
     using SetValue = double;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
+    static void verify_signal_type(const pooya::Signal& sig);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_scalar();}
+    template<typename T> static const Signal& as_type(const T& sig) {return sig.as_scalar();}
 };
 
-template<>
-struct Types<int>
-{
-    using SignalInfo = IntSignalInfo;
-    using SignalId = IntSignalId;
-    using GetValue = int;
-    using SetValue = int;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
-#endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_int();}
-};
+// template<>
+// struct Types<int>
+// {
+//     using SignalInfo = IntSignalInfo;
+//     using SignalId = IntSignalId;
+//     using GetValue = int;
+//     using SetValue = int;
+// #if defined(POOYA_DEBUG)
+//     static void verify_signal_type(const pooya::Signal& sig);
+// #endif // defined(POOYA_DEBUG)
+//     template<typename T> static SignalId as_type(const T& sig) {return sig->as_int();}
+// };
 
-template<>
-struct Types<bool>
-{
-    using SignalInfo = BoolSignalInfo;
-    using SignalId = BoolSignalId;
-    using GetValue = bool;
-    using SetValue = bool;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
-#endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bool();}
-};
+// template<>
+// struct Types<bool>
+// {
+//     using SignalInfo = BoolSignalInfo;
+//     using SignalId = BoolSignalId;
+//     using GetValue = bool;
+//     using SetValue = bool;
+// #if defined(POOYA_DEBUG)
+//     static void verify_signal_type(const pooya::Signal& sig);
+// #endif // defined(POOYA_DEBUG)
+//     template<typename T> static SignalId as_type(const T& sig) {return sig->as_bool();}
+// };
+
+class BusSpec;
+class Bus;
 
 template<>
 struct Types<BusSpec>
 {
-    using SignalInfo = BusInfo;
-    using SignalId = BusId;
+    // using SignalInfo = BusInfo;
+    // using SignalId = BusId;
+    using Signal = Bus;
+    using SignalConstRef = std::reference_wrapper<const Bus>;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig, const BusSpec& spec);
+    static void verify_signal_type(const pooya::Signal& sig, const BusSpec& spec);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bus();}
+    template<typename T> static const Signal& as_type(const T& sig) {return sig.as_bus();}
 };
 
 }

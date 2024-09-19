@@ -42,7 +42,7 @@ protected:
     static IntSignalId create_new(const std::string& full_name, std::size_t index)
     {
 #if defined(POOYA_USE_SMART_PTRS)
-        return std::make_shared<IntSignalInfo>(Protected(), full_name, index,);
+        return std::make_shared<IntSignalInfo>(Protected(), full_name, index);
 #else // defined(POOYA_USE_SMART_PTRS)
         return new IntSignalInfo(full_name, index);
 #endif // defined(POOYA_USE_SMART_PTRS)

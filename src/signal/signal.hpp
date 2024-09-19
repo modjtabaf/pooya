@@ -15,6 +15,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SIGNAL_HPP__
 
+#include <functional>
+#include <memory>
+#include <optional>
 #include <string>
 
 #include "signal_id.hpp"
@@ -22,57 +25,82 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo
-#if defined(POOYA_USE_SMART_PTRS)
-    : public std::enable_shared_from_this<SignalInfo>
-#endif // defined(POOYA_USE_SMART_PTRS)
+class ValueSignal;
+class FloatSignal;
+class ScalarSignal;
+class Bus;
+
+class Signal
 {
-    friend class Model;
-
-#if defined(POOYA_USE_SMART_PTRS)
 protected:
-    struct Protected {};
-#endif // defined(POOYA_USE_SMART_PTRS)
+    // std::shared_ptr<ScalarSignalInfo> impl_;
+
+    struct SignalInfo : public std::enable_shared_from_this<SignalInfo>
+    {
+    public:
+        std::string _full_name; // full name of the signal
+        // const std::size_t _index{0};  // the signal index (REMOVE)
+
+        // SignalInfo(const std::string& full_name) : _full_name(full_name) {}
+    };
+
+    std::reference_wrapper<SignalInfo> signal_impl_;
+
+    std::optional<std::reference_wrapper<ValueSignal>> _value;
+    std::optional<std::reference_wrapper<FloatSignal>> _float;
+    std::optional<std::reference_wrapper<ScalarSignal>> _scalar;
+    std::optional<std::reference_wrapper<Bus>> _bus;
+
+    explicit Signal(SignalInfo& signal_impl) : signal_impl_(signal_impl) {}
 
 public:
-    const std::string _full_name; // full name of the signal
-    const std::size_t _index{0};  // the signal index
+    // ScalarSignal(const std::string& given_name="")
+    // {
+    //     impl_ = ScalarSignalInfo::create_new(given_name, 0);
+    // }
+    // ScalarSignal(const ScalarSignal& scalar_signal)
+    // {
+    //     impl_ = std::static_pointer_cast<ScalarSignalInfo>(scalar_signal.impl_->shared_from_this());
+    // }
+    // Signal() = default;
 
-protected:
-    bool  _value{false};
-    bool  _float{false};
-    bool _scalar{false};
-    bool  _array{false};
-    bool   _int {false};
-    bool   _bool{false};
-    bool    _bus{false};
+    bool is_value() const
+    {
+        return _value.has_value();
+    }
+    bool is_float() const
+    {
+        return _float.has_value();
+    }
+    bool is_scalar() const
+    {
+        return _scalar.has_value();
+    }
+    // IntSignalId       is_int();
+    // BoolSignalId     is_bool();
+    // ArraySignalId   is_array();
+    bool is_bus() const
+    {
+        return _bus.has_value();
+    }
 
-    SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
+    ValueSignal& as_value() {return _value.value();}
+    FloatSignal& as_float() {return _float.value();}
+    ScalarSignal& as_scalar() {return _scalar.value();}
+    // IntSignalId       as_int();
+    // BoolSignalId     as_bool();
+    // ArraySignalId   as_array();
+    Bus& as_bus() {return _bus.value();}
 
-public:
-    bool is_value() const {return _value;}
-    bool is_float() const {return _float;}
-    bool is_scalar() const {return _scalar;}
-    bool is_int() const {return _int;}
-    bool is_bool() const {return _bool;}
-    bool is_array() const {return _array;}
-    bool is_bus() const {return _bus;}
+    const ValueSignal& as_value() const {return _value.value();}
+    const FloatSignal& as_float() const {return _float.value();}
+    const ScalarSignal& as_scalar() const {return _scalar.value();}
+    // IntSignalId       as_int();
+    // BoolSignalId     as_bool();
+    // ArraySignalId   as_array();
+    const Bus& as_bus() const {return _bus.value();}
 
-    ValueSignalId   as_value();
-    FloatSignalId   as_float();
-    ScalarSignalId as_scalar();
-    IntSignalId       as_int();
-    BoolSignalId     as_bool();
-    ArraySignalId   as_array();
-    BusId             as_bus();
-
-    ReadOnlyValueSignalId   as_value() const;
-    ReadOnlyFloatSignalId   as_float() const;
-    ReadOnlyScalarSignalId as_scalar() const;
-    ReadOnlyIntSignalId       as_int() const;
-    ReadOnlyBoolSignalId     as_bool() const;
-    ReadOnlyArraySignalId   as_array() const;
-    ReadOnlyBusId             as_bus() const;
+    const std::string& name() const {return signal_impl_.get()._full_name;}
 };
 
 }

@@ -22,7 +22,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-bool Block::init(Parent& parent, BusId ibus, BusId obus)
+bool Block::init(Parent& parent, const Bus& ibus, const Bus& obus)
 {
     pooya_trace(_given_name);
 
@@ -43,24 +43,24 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
         _full_name = parent.full_name() + "/" + _given_name;
     }
 
-    pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
+    pooya_verify((_num_iports == NoIOLimit) /*|| (!ibus && _num_iports == 0)*/ || (/*ibus &&*/ ibus.size() == _num_iports),
         _num_iports == 0 ?
             _full_name + " cannot take any input." :
             _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
-    pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
+    pooya_verify((_num_oports == NoIOLimit) /*|| (!obus && _num_oports == 0)*/ || (/*obus &&*/ obus.size() == _num_oports),
         _num_oports == 0 ?
             _full_name + " cannot generate any output." :
             _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
     
-    if (ibus && ibus->size() > 0)
+    if (/*ibus &&*/ ibus.size() > 0)
     {
-        _dependencies.reserve(ibus->size());
-        for (auto sig: *ibus)
+        _dependencies.reserve(ibus.size());
+        for (auto& sig: ibus)
         {
-            if (sig.second->is_value())
+            if (std::holds_alternative<typename Types<double>::SignalConstRef>(sig.second) && std::get<typename Types<double>::SignalConstRef>(sig.second).get().is_value())
             {
-                add_dependency(sig.second->as_value());
+                add_dependency(std::get<typename Types<double>::SignalConstRef>(sig.second).get().as_value());
             }
         }
         _dependencies.shrink_to_fit();
@@ -73,10 +73,10 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     return true;
 }
 
-bool Block::add_dependency(ValueSignalId sig)
+bool Block::add_dependency(const ValueSignal& sig)
 {
     pooya_trace("block: " + full_name());
-    pooya_verify_valid_signal(sig);
+    // pooya_verify_valid_signal(sig);
     if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
     {
         _dependencies.push_back(sig);
@@ -86,10 +86,10 @@ bool Block::add_dependency(ValueSignalId sig)
     return false;
 }
 
-bool Block::remove_dependency(ValueSignalId sig)
+bool Block::remove_dependency(const ValueSignal& sig)
 {
     pooya_trace("block: " + full_name());
-    pooya_verify_valid_signal(sig);
+    // pooya_verify_valid_signal(sig);
     auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
     if (it == _dependencies.end())
     {
@@ -110,7 +110,7 @@ uint Block::_process(double t, bool /*go_deep*/)
     if (_processed) {return 0;}
     for (auto& sig: _dependencies)
     {
-        if (!sig->is_assigned()) {return 0;}
+        if (!sig.is_assigned()) {return 0;}
     }
 
     activation_function(t);
@@ -162,7 +162,7 @@ std::string Block::make_valid_given_name(const std::string& given_name)
             return (level == 0) || (c.given_name() != foo);
         };
 
-        while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
+        while (!_parent->get().traverse(pooya_verify_unique_name_cb, 0, 1))
             {foo = ret + "_" + std::to_string(n++);}
 
         ret = foo;

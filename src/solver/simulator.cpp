@@ -148,10 +148,10 @@ uint Simulator::_process(double t)
         for (const auto& c: unprocessed)
         {
             std::cout << "- " << c->full_name() << "\n";
-            for (auto sig: c->dependencies())
+            for (auto& sig: c->dependencies())
             {
-                if (sig->is_assigned()) {continue;}
-                std::cout << "  - " << sig->_full_name << "\n";
+                if (sig.is_assigned()) {continue;}
+                std::cout << "  - " << sig.name() << "\n";
             }
         }
     }

@@ -15,6 +15,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SIGNAL_ID_HPP__
 #define __POOYA_SIGNAL_SIGNAL_ID_HPP__
 
+#if defined(POOYA_USE_SMART_PTRS)
+#include <memory>
+#include <optional>
+#endif // defined(POOYA_USE_SMART_PTRS)
+
 namespace pooya
 {
 
@@ -29,43 +34,43 @@ class          BusInfo;
 
 #if defined(POOYA_USE_SMART_PTRS)
 
-using       SignalId =       std::shared_ptr<SignalInfo>;
-using  ValueSignalId =  std::shared_ptr<ValueSignalInfo>;
-using  FloatSignalId =  std::shared_ptr<FloatSignalInfo>;
-using ScalarSignalId = std::shared_ptr<ScalarSignalInfo>;
-using    IntSignalId =    std::shared_ptr<IntSignalInfo>;
-using   BoolSignalId =   std::shared_ptr<BoolSignalInfo>;
-using  ArraySignalId =  std::shared_ptr<ArraySignalInfo>;
-using          BusId =          std::shared_ptr<BusInfo>;
+// using       SignalId =       std::shared_ptr<SignalInfo>;
+// using  ValueSignalId =  std::shared_ptr<ValueSignalInfo>;
+// using  FloatSignalId =  std::shared_ptr<FloatSignalInfo>;
+// using ScalarSignalId = std::shared_ptr<ScalarSignalInfo>;
+// using    IntSignalId =    std::shared_ptr<IntSignalInfo>;
+// using   BoolSignalId =   std::shared_ptr<BoolSignalInfo>;
+// using  ArraySignalId =  std::shared_ptr<ArraySignalInfo>;
+// using          BusId =          std::shared_ptr<BusInfo>;
 
-using       ReadOnlySignalId = std::shared_ptr<const SignalInfo>;
-using  ReadOnlyValueSignalId =  std::shared_ptr<const ValueSignalInfo>;
-using  ReadOnlyFloatSignalId =  std::shared_ptr<const FloatSignalInfo>;
-using ReadOnlyScalarSignalId = std::shared_ptr<const ScalarSignalInfo>;
-using    ReadOnlyIntSignalId =    std::shared_ptr<const IntSignalInfo>;
-using   ReadOnlyBoolSignalId =   std::shared_ptr<const BoolSignalInfo>;
-using  ReadOnlyArraySignalId =  std::shared_ptr<const ArraySignalInfo>;
-using          ReadOnlyBusId =          std::shared_ptr<const BusInfo>;
+// using       ReadOnlySignalId = std::shared_ptr<const SignalInfo>;
+// using  ReadOnlyValueSignalId =  std::shared_ptr<const ValueSignalInfo>;
+// using  ReadOnlyFloatSignalId =  std::shared_ptr<const FloatSignalInfo>;
+// using ReadOnlyScalarSignalId = std::shared_ptr<const ScalarSignalInfo>;
+// using    ReadOnlyIntSignalId =    std::shared_ptr<const IntSignalInfo>;
+// using   ReadOnlyBoolSignalId =   std::shared_ptr<const BoolSignalInfo>;
+// using  ReadOnlyArraySignalId =  std::shared_ptr<const ArraySignalInfo>;
+// using          ReadOnlyBusId =          std::shared_ptr<const BusInfo>;
 
 #else // defined(POOYA_USE_SMART_PTRS)
 
-using       SignalId =       SignalInfo*;
-using  ValueSignalId =  ValueSignalInfo*;
-using  FloatSignalId =  FloatSignalInfo*;
-using ScalarSignalId = ScalarSignalInfo*;
-using    IntSignalId =    IntSignalInfo*;
-using   BoolSignalId =   BoolSignalInfo*;
-using  ArraySignalId =  ArraySignalInfo*;
-using          BusId =          BusInfo*;
+// using       SignalId =       SignalInfo*;
+// using  ValueSignalId =  ValueSignalInfo*;
+// using  FloatSignalId =  FloatSignalInfo*;
+// using ScalarSignalId = ScalarSignalInfo*;
+// using    IntSignalId =    IntSignalInfo*;
+// using   BoolSignalId =   BoolSignalInfo*;
+// using  ArraySignalId =  ArraySignalInfo*;
+// using          BusId =          BusInfo*;
 
-using       ReadOnlySignalId =       const SignalInfo*;
-using  ReadOnlyValueSignalId =  const ValueSignalInfo*;
-using  ReadOnlyFloatSignalId =  const FloatSignalInfo*;
-using ReadOnlyScalarSignalId = const ScalarSignalInfo*;
-using    ReadOnlyIntSignalId =    const IntSignalInfo*;
-using   ReadOnlyBoolSignalId =   const BoolSignalInfo*;
-using  ReadOnlyArraySignalId =  const ArraySignalInfo*;
-using          ReadOnlyBusId =          const BusInfo*;
+// using       ReadOnlySignalId =       const SignalInfo*;
+// using  ReadOnlyValueSignalId =  const ValueSignalInfo*;
+// using  ReadOnlyFloatSignalId =  const FloatSignalInfo*;
+// using ReadOnlyScalarSignalId = const ScalarSignalInfo*;
+// using    ReadOnlyIntSignalId =    const IntSignalInfo*;
+// using   ReadOnlyBoolSignalId =   const BoolSignalInfo*;
+// using  ReadOnlyArraySignalId =  const ArraySignalInfo*;
+// using          ReadOnlyBusId =          const BusInfo*;
 
 #endif // defined(POOYA_USE_SMART_PTRS)
 

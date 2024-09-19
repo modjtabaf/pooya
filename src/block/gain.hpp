@@ -40,7 +40,7 @@ public:
     void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        SingleInputOutputT<T>::_s_out->set(_k * SingleInputOutputT<T>::_s_in->get());
+        SingleInputOutputT<T>::_s_out.set(_k * SingleInputOutputT<T>::_s_in.get());
     }
 
     typename Types<GainType>::GetValue gain() const {return _k;}

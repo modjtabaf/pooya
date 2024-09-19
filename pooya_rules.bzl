@@ -10,10 +10,30 @@
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+SHARED_COPTS = ["-DPOOYA_USE_SMART_PTRS"]
 
-def pooya_cc_binary(name, src):
-    cc_binary(
+def pooya_cc_library(name, srcs, hdrs=[], deps=[], **kwargs):
+    native.cc_library(
+        name = name,
+        srcs = srcs,
+        hdrs = hdrs,
+        copts = [
+            "-pedantic-errors",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            ] + SHARED_COPTS,
+        linkopts = [
+            "-lboost_iostreams",
+            "-lboost_system",
+            "-lboost_filesystem",
+            ],
+        deps = deps,
+        **kwargs
+    )
+
+def pooya_cc_binary(name, src, **kwargs):
+    native.cc_binary(
         name = name,
         srcs = [src],
         copts = [
@@ -21,7 +41,7 @@ def pooya_cc_binary(name, src):
             "-Wall",
             "-Wextra",
             "-Werror",
-            ],
+            ] + SHARED_COPTS,
         linkopts = [
             "-lboost_iostreams",
             "-lboost_system",
@@ -32,4 +52,25 @@ def pooya_cc_binary(name, src):
             "//src/solver",
             "//src/misc",
         ],
+        **kwargs
+    )
+
+def pooya_cc_test(name, src, **kwargs):
+    native.cc_test(
+        name = name,
+        size = "small",
+        srcs = [src],
+        copts = SHARED_COPTS,
+        deps = [
+            "@com_google_googletest//:gtest_main",
+            "//src/block",
+            "//src/signal",
+            "//src/solver",
+        ],
+        linkopts = [
+            "-lboost_iostreams",
+            "-lboost_system",
+            "-lboost_filesystem",
+            ],
+        **kwargs
     )

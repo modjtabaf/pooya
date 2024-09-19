@@ -13,8 +13,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include "parent.hpp"
-#include "src/signal/array_signal.hpp"
+// #include "src/signal/array_signal.hpp"
 #include "model.hpp"
+#include <optional>
+#include <variant>
 
 namespace pooya
 {
@@ -118,37 +120,37 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
 }
 
 template<typename Iter>
-BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
+Bus Parent::create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_)
 {
     pooya_trace("block: " + full_name());
     auto size = spec._wires.size();
     pooya_verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
-    std::vector<LabelSignalId> label_signals;
+    std::vector<LabelSignal> label_signals;
     label_signals.reserve(size);
-    for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), SignalId()});}
+    for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), std::nullopt});}
     for (auto it=begin_; it != end_; it++)
     {
         auto index = spec.index_of(it->first);
-        pooya_verify(!label_signals.at(index).second, std::string("Duplicate label: ") + it->first);
+        pooya_verify(std::holds_alternative<std::nullopt_t>(label_signals.at(index).second), std::string("Duplicate label: ") + it->first);
         label_signals.at(index).second = it->second;
     }
     auto wit = spec._wires.begin();
     for (auto& ls: label_signals)
     {
-        if (!ls.second)
+        if (std::holds_alternative<std::nullopt_t>(ls.second))
         {
             std::string name = given_name + "." + wit->label();
             if (wit->_bus)
                 {ls.second = create_bus(name, *wit->_bus);}
-            else if (wit->_array_size > 0)
-                {ls.second = create_array_signal(name, wit->_array_size);}
+            // else if (wit->_array_size > 0)
+            //     {ls.second = create_array_signal(name, wit->_array_size);}
             else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
                 {ls.second = create_scalar_signal(name);}
-            else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
-                {ls.second = create_int_signal(name);}
-            else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
-                {ls.second = create_bool_signal(name);}
+            // else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
+            //     {ls.second = create_int_signal(name);}
+            // else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
+            //     {ls.second = create_bool_signal(name);}
             else
                 {pooya_verify(false, name + ": unknown wire type!");}
         }
@@ -158,25 +160,32 @@ BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, Ite
     return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
 }
 
-BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+Bus Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignal>& l)
 {
     pooya_trace("block: " + full_name());
     pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
     return create_bus(given_name, spec, l.begin(), l.end());
 }
 
-BusId Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l)
+Bus Parent::create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<Signal>& l)
 {
     pooya_trace("block: " + full_name());
     pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-    LabelSignalIdList label_signals;
+    LabelSignalList label_signals;
     label_signals.reserve(l.size());
 
     auto wit = spec._wires.begin();
     for (const auto& sig: l)
     {
-        label_signals.push_back({wit->label(), sig});
+        if (sig.is_scalar())
+        {
+            label_signals.push_back({wit->label(), sig.as_scalar()});
+        }
+        else
+        {
+            {pooya_verify(false, wit->label() + ": unsupported signal type!");}
+        }
         wit++;
     }
 
@@ -187,23 +196,23 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
 {
     pooya_trace("block: " + full_name());
 
-    auto make_bus = [&](const LabelSignals& ports) -> BusId
+    auto make_bus = [&](const LabelSignals& ports) -> Bus
     {
         std::vector<BusSpec::WireInfo> wire_infos;
-        LabelSignalIdList wires;
+        LabelSignalList wires;
         for (const auto& ls: ports)
         {
-            pooya_verify_valid_signal(ls.second);
-            if (ls.second->is_scalar())
+            // pooya_verify_valid_signal(ls.second);
+            if (std::holds_alternative<typename Types<double>::SignalConstRef>(ls.second))
                 {wire_infos.emplace_back(ls.first);}
-            else if (ls.second->is_int())
-                {wire_infos.emplace_back("i:" + ls.first);}
-            else if (ls.second->is_bool())
-                {wire_infos.emplace_back("b:" + ls.first);}
-            else if (ls.second->is_array())
-                {wire_infos.emplace_back(ls.first, ls.second->as_array()->size());}
-            else if (ls.second->is_bus())
-                {wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);}
+            // else if (ls.second->is_int())
+            //     {wire_infos.emplace_back("i:" + ls.first);}
+            // else if (ls.second->is_bool())
+            //     {wire_infos.emplace_back("b:" + ls.first);}
+            // else if (ls.second->is_array())
+            //     {wire_infos.emplace_back(ls.first, ls.second->as_array()->size());}
+            else if (std::holds_alternative<typename Types<BusSpec>::SignalConstRef>(ls.second))
+                {wire_infos.emplace_back(ls.first, std::get<typename Types<BusSpec>::SignalConstRef>(ls.second).get().impl_->_spec);}
             else
                 {pooya_verify(false, "unknown signal type!");}
             
@@ -215,17 +224,17 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
 
     if (!component.init(*this, make_bus(iports), make_bus(oports))) {return false;}
 
-#if defined(POOYA_USE_SMART_PTRS)
+// #if defined(POOYA_USE_SMART_PTRS)
     _components.push_back(component);
-#else // defined(POOYA_USE_SMART_PTRS)
-    _components.push_back(&component);
-#endif // defined(POOYA_USE_SMART_PTRS)
+// #else // defined(POOYA_USE_SMART_PTRS)
+//     _components.push_back(&component);
+// #endif // defined(POOYA_USE_SMART_PTRS)
     component.post_init();
     return true;
 }
 
 template<typename T, typename... Ts>
-typename Types<T>::SignalId Parent::create_signal(const std::string& given_name, Ts... args)
+typename Types<T>::Signal Parent::create_signal(const std::string& given_name, Ts... args)
 {
     pooya_trace("block: " + full_name() + ", given name: " + given_name);
     return Types<T>::as_type(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));

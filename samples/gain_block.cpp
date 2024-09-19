@@ -20,8 +20,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/block/model.hpp"
 #include "src/block/gain.hpp"
 #include "src/solver/simulator.hpp"
-#include "src/solver/history.hpp"
-#include "src/misc/gp-ios.hpp"
+// #include "src/solver/history.hpp"
+// #include "src/misc/gp-ios.hpp"
 
 int main()
 {
@@ -35,8 +35,8 @@ int main()
     pooya::Gain gain("gain", 2.0);
 
     // create pooya signals
-    auto x = model.create_scalar_signal("x");
-    auto y = model.create_scalar_signal("y");
+    pooya::ScalarSignal x("x");
+    pooya::ScalarSignal y("y");
 
     // setup the model
     model.add_block(gain, x, y);
@@ -45,17 +45,17 @@ int main()
         [&](pooya::Model&, double t) -> void
         {
             pooya_trace0;
-            x->set(std::sin(M_PI * t / 5));
+            x.set(std::sin(M_PI * t / 5));
         });
 
-    pooya::History history(model);
+    // pooya::History history(model);
 
     uint k = 0;
     double t;
     while (pooya::arange(k, t, 0, 10, 0.1))
     {
         sim.run(t);
-        history.update(k, t);
+        // history.update(k, t);
         k++;
     }
 
@@ -64,13 +64,13 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    history.shrink_to_fit();
+    // history.shrink_to_fit();
 
-    Gnuplot gp;
-	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
-    gp << "set yrange [-2:2]\n";
-	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[y]) << "with lines title 'y'\n";
+    // Gnuplot gp;
+	// gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
+    // gp << "set yrange [-2:2]\n";
+	// gp << "plot" << gp.file1d(history[x.id()]) << "with lines title 'x',"
+	// 	<< gp.file1d(history[y.id()]) << "with lines title 'y'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

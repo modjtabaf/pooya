@@ -15,23 +15,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_BUS_HPP__
 #define __POOYA_SIGNAL_BUS_HPP__
 
-// #include <cstddef>
-// #include <cmath>
-// #include <initializer_list>
+#include "scalar_signal.hpp"
 #include <algorithm>
 #include <string>
 #include <vector>
 
-// #if defined(POOYA_USE_SMART_PTRS)
-// #include <memory>
-// #include <optional>
-// #endif // defined(POOYA_USE_SMART_PTRS)
+#if defined(POOYA_USE_SMART_PTRS)
+#include <optional>
+#endif // defined(POOYA_USE_SMART_PTRS)
 
-// #include "Eigen/Core"
-// #include "util.hpp"
-// #include "src/helper/trace.hpp"
-// #include "src/helper/verify.hpp"
-// #include "signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/verify.hpp"
 #include "src/signal/signal.hpp"
@@ -39,8 +31,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/signal/label_signal.hpp"
 
 #define pooya_verify_bus(sig) \
-    pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_bus(), (sig)->_full_name + ": bus signal expected!");
+    pooya_verify(sig.is_bus(), sig.name() + ": bus signal expected!");
 
 #define pooya_verify_bus_spec(sig, spec_) \
     pooya_verify_bus(sig); \
@@ -58,8 +49,8 @@ public:
     {
         None,
         Scalar,
-        Int,
-        Bool,
+        // Int,
+        // Bool,
     };
 
     struct WireInfo
@@ -69,11 +60,7 @@ public:
         SingleValueType _single_value_type{SingleValueType::None};
 
     public:
-#if defined(POOYA_USE_SMART_PTRS)
         std::optional<std::reference_wrapper<const BusSpec>> _bus;
-#else // defined(POOYA_USE_SMART_PTRS)
-        const BusSpec* _bus{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
         const std::size_t _array_size{0};
 
         // single-valued, coded_label defines the type and label:
@@ -84,18 +71,14 @@ public:
         WireInfo(const std::string& coded_label);
 
         // array
-        WireInfo(const std::string& label, std::size_t array_size) : _label(label), _array_size(array_size)
-        {
-            pooya_verify(array_size > 0, "array size cannot be zero!");
-        }
+        // WireInfo(const std::string& label, std::size_t array_size) : _label(label), _array_size(array_size)
+        // {
+        //     pooya_verify(array_size > 0, "array size cannot be zero!");
+        // }
 
         // bus
         WireInfo(const std::string& label, const BusSpec& bus) : _label(label)
-#if defined(POOYA_USE_SMART_PTRS)
             , _bus(bus) {}
-#else // defined(POOYA_USE_SMART_PTRS)
-            , _bus(&bus) {}
-#endif // defined(POOYA_USE_SMART_PTRS)
 
         const std::string& label() const {return _label;}
         SingleValueType single_value_type() const {return _single_value_type;};
@@ -118,11 +101,7 @@ public:
         for (const auto& wi: _wires)
         {
             if (wi._bus)
-#if defined(POOYA_USE_SMART_PTRS)
                 {ret += wi._bus.value().get().total_size();}
-#else // defined(POOYA_USE_SMART_PTRS)
-                {ret += wi._bus->total_size();}
-#endif // defined(POOYA_USE_SMART_PTRS)
         }
         return ret;
     }
@@ -142,103 +121,211 @@ public:
     bool operator==(const BusSpec& other) const {return this == &other;}
 };
 
-class BusInfo : public SignalInfo
+// #if defined(POOYA_USE_SMART_PTRS)
+
+// inline BusId SignalInfo::as_bus() {return _bus ? std::static_pointer_cast<BusInfo>(shared_from_this()) : BusId();}
+// inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? std::static_pointer_cast<const BusInfo>(shared_from_this()) : ReadOnlyBusId();}
+
+// #else // defined(POOYA_USE_SMART_PTS)
+
+// inline BusId SignalInfo::as_bus() {return _bus ? static_cast<BusId>(this) : nullptr;}
+// inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? static_cast<ReadOnlyBusId>(this) : nullptr;}
+
+// #endif // defined(POOYA_USE_SMART_PTS)
+
+class Bus : public Signal
 {
-    friend class Model;
-
-public:
-#if defined(POOYA_USE_SMART_PTRS)
-    std::reference_wrapper<const BusSpec> _spec;
-#else // defined(POOYA_USE_SMART_PTRS)
-    const BusSpec& _spec;
-#endif // defined(POOYA_USE_SMART_PTRS)
-
+    friend class Parent;
 protected:
-    LabelSignalIdList _signals;
-
-protected:
-    static BusId create_new(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+    struct BusInfo : public Signal::SignalInfo
     {
-#if defined(POOYA_USE_SMART_PTRS)
-        return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new BusInfo(full_name, index, spec, begin_, end_);
-#endif // defined(POOYA_USE_SMART_PTRS)
-    } 
+        // static const BusSpec _empty_spec{}; // used by the default constructor
+        std::reference_wrapper<const BusSpec> _spec;
+        LabelSignalList _signals;
 
-    void _set(std::size_t index, SignalId sig);
+    // protected:
+        // void _set(std::size_t index, Signal& sig);
 
-public:
-#if defined(POOYA_USE_SMART_PTRS)
-    BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-#else // defined(POOYA_USE_SMART_PTRS)
-    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-#endif // defined(POOYA_USE_SMART_PTRS)
-        : SignalInfo(full_name, index), _spec(spec)
-    {
-        pooya_trace("fullname: " + full_name);
-        pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
-        _signals.reserve(spec._wires.size());
-        for(const auto& wi: spec._wires)
-            {_signals.push_back({wi.label(), SignalId()});}
-        for (auto& it = begin_; it != end_; it++)
-            {_set(spec.index_of(it->first), it->second);}
-#if defined(POOYA_DEBUG)
-        for (const auto& ls: _signals)
+    // public:
+        // BusInfo() : SignalInfo(), _spec(_empty_spec) {}
+
+        BusInfo(const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
+            : SignalInfo(), _spec(spec)
         {
-            pooya_verify(ls.second, "Unassigned wire detected: " + ls.first);
-        }
-#endif // defined(POOYA_DEBUG)
+            // pooya_trace("fullname: " + full_name);
+            pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
+            _signals.reserve(spec._wires.size());
+            for(const auto& wi: spec._wires)
+            {
+                auto iter = std::find_if(begin_, end_,
+                    [&](const LabelSignal& ls) -> bool {return wi.label() == ls.first;});
+                pooya_verify(iter != end_, "Unassigned wire detected: " + wi.label());
+                _signals.push_back({wi.label(), iter->second});
+            }
+    //         for (auto& it = begin_; it != end_; it++)
+    //             {_set(spec.index_of(it->first), it->second);}
+    //             _signals.push_back({wi.label(), Signal()});
+    //         }
+    //         for (auto& it = begin_; it != end_; it++)
+    //             {_set(spec.index_of(it->first), it->second);}
+    // #if defined(POOYA_DEBUG)
+    //         for (const auto& ls: _signals)
+    //         {
+    //             pooya_verify(ls.second, "Unassigned wire detected: " + ls.first);
+    //         }
+    // #endif // defined(POOYA_DEBUG)
 
-        _bus = true;
-    }
+            // _bus = true;
+        }
+
+        // static std::shared_ptr<BusInfo> create_new(const std::string& full_name)
+        // {
+        //     auto ret = std::make_shared<BusInfo>();
+        //     if (!ret) {helper::pooya_throw_exception(__FILE__, __LINE__, "Failed to create a new BusInfo!");}
+        //     ret->_full_name = full_name;
+        //     return ret;
+        // } 
+
+        static std::shared_ptr<BusInfo> create_new(const std::string& full_name, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
+        {
+            auto ret = std::make_shared<BusInfo>(spec, begin_, end_);
+            if (!ret) {helper::pooya_throw_exception(__FILE__, __LINE__, "Failed to create a new BusInfo!");}
+            ret->_full_name = full_name;
+            return ret;
+        } 
+
+        // const BusSpec& spec() const {return _spec;}
+        // std::size_t size() const {return _signals.size();}
+        // LabelSignalList::const_iterator begin() const noexcept {return _signals.begin();}
+        // LabelSignalList::const_iterator end() const noexcept {return _signals.end();}
+
+        // const LabelSignal& operator[](std::size_t index) const
+        // {
+        //     pooya_trace("index: " + std::to_string(index));
+        //     pooya_verify(index < _signals.size(), "index out of range!");
+        //     return _signals[index];
+        // }
+
+        // const LabelSignal& at(std::size_t index) const
+        // {
+        //     pooya_trace("index: " + std::to_string(index));
+        //     return _signals.at(index);
+        // }
+
+        // const LabelSignal::second_type& operator[](const std::string& label) const;
+        // const LabelSignal::second_type& at(const std::string& label) const;
+        // ValueSignalId value_at(const std::string& label) const;
+        // ScalarSignalRef scalar_at(const std::string& label) const;
+        // IntSignalId int_at(const std::string& label) const;
+        // BoolSignalId bool_at(const std::string& label) const;
+        // ArraySignalId array_at(const std::string& label) const;
+        // BusId bus_at(const std::string& label) const;
+        // ValueSignalId value_at(std::size_t index) const;
+        // ScalarSignalConstRef scalar_at(std::size_t index) const;
+        // IntSignalId int_at(std::size_t index) const;
+        // BoolSignalId bool_at(std::size_t index) const;
+        // ArraySignalId array_at(std::size_t index) const;
+        // BusId bus_at(std::size_t index) const;
+    };
+
+    std::shared_ptr<BusInfo> impl_;
 
 public:
-    const BusSpec& spec() const {return _spec;}
-    std::size_t size() const {return _signals.size();}
-    LabelSignalIdList::const_iterator begin() const noexcept {return _signals.begin();}
-    LabelSignalIdList::const_iterator end() const noexcept {return _signals.end();}
-
-    const LabelSignalId& operator[](std::size_t index) const
+    // Bus(const std::string& given_name="") :
+    //     Signal(*BusInfo::create_new(given_name)),
+    //     impl_(std::static_pointer_cast<BusInfo>(signal_impl_.get().shared_from_this()))
+    // {
+    //     _bus = *this;
+    // }
+    Bus(const std::string& given_name, const BusSpec& spec, LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_) :
+        Signal(*BusInfo::create_new(given_name, spec, begin_, end_)),
+        impl_(std::static_pointer_cast<BusInfo>(signal_impl_.get().shared_from_this()))
     {
-        pooya_trace("index: " + std::to_string(index));
-        pooya_verify(index < _signals.size(), "index out of range!");
-        return _signals[index];
+        _bus = *this;
+    }
+    Bus(const Bus& bus) :
+        Signal(bus),
+        impl_(std::static_pointer_cast<BusInfo>(signal_impl_.get().shared_from_this()))
+    {
+        _bus = *this;
     }
 
-    const LabelSignalId& at(std::size_t index) const
+    // const LabelSignal& at(std::size_t index) const
+    // {
+    //     pooya_trace("index: " + std::to_string(index));
+    //     return impl_->_signals.at(index);
+    // }
+
+    Bus& operator=(const Bus& bus) = default;
+
+    template<typename T>
+    const typename Types<T>::Signal& at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
-        return _signals.at(index);
+        return std::get<typename Types<T>::SignalConstRef>(impl_->_signals.at(index).second);
     }
 
-    SignalId operator[](const std::string& label) const;
-    SignalId at(const std::string& label) const;
-    ValueSignalId value_at(const std::string& label) const;
-    ScalarSignalId scalar_at(const std::string& label) const;
-    IntSignalId int_at(const std::string& label) const;
-    BoolSignalId bool_at(const std::string& label) const;
-    ArraySignalId array_at(const std::string& label) const;
-    BusId bus_at(const std::string& label) const;
-    ValueSignalId value_at(std::size_t index) const;
-    ScalarSignalId scalar_at(std::size_t index) const;
-    IntSignalId int_at(std::size_t index) const;
-    BoolSignalId bool_at(std::size_t index) const;
-    ArraySignalId array_at(std::size_t index) const;
-    BusId bus_at(std::size_t index) const;
+    template<typename T>
+    const typename Types<T>::Signal& at(const std::string& label) const;
+
+    // ScalarSignalInfo& operator->() {return *impl_;}
+    // double get() const {return impl_->get();}
+    // void set(double v) {impl_->set(v);}
+
+    // std::shared_ptr<BusInfo> operator->() // TEMPORARY
+    // {
+    //     return std::static_pointer_cast<BusInfo>(impl_->shared_from_this());
+    // }
+    // std::shared_ptr<const BusInfo> operator->() const // TEMPORARY
+    // {
+    //     return std::static_pointer_cast<const BusInfo>(impl_->shared_from_this());
+    // }
+    // std::shared_ptr<ScalarSignalInfo> id() // TEMPORARY
+    // {
+    //     return std::static_pointer_cast<ScalarSignalInfo>(impl_->shared_from_this());
+    // }
+    // operator SignalId()
+    // {
+    //     return impl_->shared_from_this();
+    // }
+    // const std::string& name() const override {return impl_->_full_name;}
+
+    // const BusSpec& spec() const {return _spec;}
+    std::size_t size() const {return impl_->_signals.size();}
+    LabelSignalList::const_iterator begin() const noexcept {return impl_->_signals.begin();}
+    LabelSignalList::const_iterator end() const noexcept {return impl_->_signals.end();}
+
+    // const LabelSignal& operator[](std::size_t index) const
+    // {
+    //     pooya_trace("index: " + std::to_string(index));
+    //     pooya_verify(index < _signals.size(), "index out of range!");
+    //     return _signals[index];
+    // }
+
+    // const LabelSignal& at(std::size_t index) const
+    // {
+    //     pooya_trace("index: " + std::to_string(index));
+    //     return _signals.at(index);
+    // }
+
+    // const LabelSignal::second_type& operator[](const std::string& label) const;
+    // const LabelSignal::second_type& at(const std::string& label) const;
+    // ValueSignalId value_at(const std::string& label) const;
+    // ScalarSignalRef scalar_at(const std::string& label) const;
+    // IntSignalId int_at(const std::string& label) const;
+    // BoolSignalId bool_at(const std::string& label) const;
+    // ArraySignalId array_at(const std::string& label) const;
+    // BusId bus_at(const std::string& label) const;
+    // ValueSignalId value_at(std::size_t index) const;
+    // ScalarSignalConstRef scalar_at(std::size_t index) const;
+    // IntSignalId int_at(std::size_t index) const;
+    // BoolSignalId bool_at(std::size_t index) const;
+    // ArraySignalId array_at(std::size_t index) const;
+    // BusId bus_at(std::size_t index) const;
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
-
-inline BusId SignalInfo::as_bus() {return _bus ? std::static_pointer_cast<BusInfo>(shared_from_this()) : BusId();}
-inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? std::static_pointer_cast<const BusInfo>(shared_from_this()) : ReadOnlyBusId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline BusId SignalInfo::as_bus() {return _bus ? static_cast<BusId>(this) : nullptr;}
-inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? static_cast<ReadOnlyBusId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
+// using BusRef = std::reference_wrapper<Bus>;
+// using BusConstRef = std::reference_wrapper<const Bus>;
 
 }
 

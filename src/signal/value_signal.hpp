@@ -18,6 +18,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/helper/trace.hpp"
 #include "src/helper/verify.hpp"
 #include "signal.hpp"
+#include <functional>
+#include <memory>
 
 #define  pooya_verify_value_signal(sig) \
     pooya_verify_valid_signal(sig); \
@@ -26,37 +28,72 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class ValueSignalInfo : public SignalInfo
+// #if defined(POOYA_USE_SMART_PTRS)
+
+// inline ValueSignalId SignalInfo::as_value() {return _value ? std::static_pointer_cast<ValueSignalInfo>(shared_from_this()) : ValueSignalId();}
+// inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? std::static_pointer_cast<const ValueSignalInfo>(shared_from_this()) : ReadOnlyValueSignalId();}
+
+// #else // defined(POOYA_USE_SMART_PTS)
+
+// inline ValueSignalId SignalInfo::as_value() {return _value ? static_cast<ValueSignalId>(this) : nullptr;}
+// inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? static_cast<ReadOnlyValueSignalId>(this) : nullptr;}
+
+// #endif // defined(POOYA_USE_SMART_PTS)
+
+class ValueSignal : public Signal
 {
     friend class Model;
-
 protected:
-    bool _assigned{false};             // has the value been assigned?
-
-    ValueSignalInfo(const std::string& full_name, std::size_t index) :
-        SignalInfo(full_name, index)
+    struct ValueSignalInfo : public Signal::SignalInfo
     {
-        _value = true;
+        friend class Model;
+        // friend class ValueSignal;
+
+    // public:
+        bool _assigned{false};             // has the value been assigned?
+
+        // ValueSignalInfo(const std::string& full_name) :
+        //     SignalInfo(full_name)
+        // {
+        //     // _value = true;
+        // }
+
+    // public:
+    //     double get_as_scalar() const;
+    //     void set_as_scalar(double value);
+
+        // bool is_assigned() const {return _assigned;}
+    };
+
+    std::reference_wrapper<ValueSignalInfo> value_signal_impl_;
+
+    explicit ValueSignal(ValueSignalInfo& value_signal_impl) :
+        Signal(value_signal_impl), value_signal_impl_(value_signal_impl)
+    {
+        _value = *this;
     }
 
 public:
+    // ScalarSignal(const std::string& given_name="")
+    // {
+    //     impl_ = ScalarSignalInfo::create_new(given_name, 0);
+    // }
+    // ValueSignal()
+    // {
+    //     _value = *this;
+    // }
+
+    // ValueSignalInfo* operator->() {return value_signal_impl_;}
+
+    // const ValueSignalInfo* operator->() const {return value_signal_impl_;}
+
     double get_as_scalar() const;
     void set_as_scalar(double value);
 
-    bool is_assigned() const {return _assigned;}
+    bool is_assigned() const {return value_signal_impl_.get()._assigned;}
+
+    bool operator==(const ValueSignal& other) const {return &value_signal_impl_.get() == &other.value_signal_impl_.get();}
 };
-
-#if defined(POOYA_USE_SMART_PTRS)
-
-inline ValueSignalId SignalInfo::as_value() {return _value ? std::static_pointer_cast<ValueSignalInfo>(shared_from_this()) : ValueSignalId();}
-inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? std::static_pointer_cast<const ValueSignalInfo>(shared_from_this()) : ReadOnlyValueSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline ValueSignalId SignalInfo::as_value() {return _value ? static_cast<ValueSignalId>(this) : nullptr;}
-inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? static_cast<ReadOnlyValueSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 
 }
 

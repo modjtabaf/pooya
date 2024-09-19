@@ -12,31 +12,33 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <functional>
+
 #include "src/helper/trace.hpp"
 #include "label_signal.hpp"
 
 namespace pooya
 {
 
-void LabelSignals::_init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+void LabelSignals::_init(LabelSignalList::const_iterator begin_, LabelSignalList::const_iterator end_)
 {
     pooya_trace0;
     for (auto it=begin_; it != end_; it++) {push_back(*it);}
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
+LabelSignals::LabelSignals(const std::initializer_list<LabelSignal::second_type>& il)
 {
     pooya_trace0;
-    LabelSignalIdList lsl;
+    LabelSignalList lsl;
     std::size_t index=0;
     for (const auto& sig: il) {lsl.push_back({_make_auto_label(index++), sig});}
     _init(lsl.begin(), lsl.end());
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<LabelSignalId>& il)
+LabelSignals::LabelSignals(const std::initializer_list<LabelSignal>& il)
 {
     pooya_trace0;
-    LabelSignalIdList lsl(il);
+    LabelSignalList lsl(il);
     _init(lsl.begin(), lsl.end());
 }
 

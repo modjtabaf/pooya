@@ -17,10 +17,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/signal/values_array.hpp"
 #include "src/signal/scalar_signal.hpp"
-#include "src/signal/int_signal.hpp"
-#include "src/signal/bool_signal.hpp"
-#include "src/signal/array_signal.hpp"
+// #include "src/signal/int_signal.hpp"
+// #include "src/signal/bool_signal.hpp"
+// #include "src/signal/array_signal.hpp"
 #include "parent.hpp"
+#include <functional>
 
 namespace pooya
 {
@@ -36,53 +37,54 @@ class Model : public Parent
     friend class Parent;
 
 public:
-    using SignalInfos = std::vector<SignalId>;
+    using SignalInfos = std::vector<std::reference_wrapper<Signal>>; // this will be discarded soon
 
 protected:
     SignalInfos _signal_infos;
     ValuesArray _values;
     bool _signals_locked{false};
 
-    bool init(Parent&, BusId, BusId) override;
+    bool init(Parent&, const Bus&, const Bus&) override;
 
     template<typename T, typename... Ts>
-    typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
+    typename Types<T>::Signal register_signal(const std::string& name, Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         pooya_verify_signals_not_locked();
-        if (name.empty()) {return typename Types<T>::SignalId();}
+        // if (name.empty()) {return typename Types<T>::Signal();}
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
-        auto index = _signal_infos.size();
-        typename Types<T>::SignalId sig;
-        sig = Types<T>::SignalInfo::create_new(name, index, args...);
+        // auto index = _signal_infos.size();
+        // auto sig = Types<T>::Signal::create_new(args...);
+        auto sig = typename Types<T>::Signal(name, args...);
         _signal_infos.emplace_back(sig);
 
-        return Types<T>::as_type(_signal_infos.back());
+        // return Types<T>::as_type(_signal_infos.back().get());
+        return Types<T>::as_type(sig);
     }
 
-    ScalarSignalId register_scalar_signal(const std::string& name)
+    ScalarSignal register_scalar_signal(const std::string& name)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<double>(name);
     }
-    IntSignalId register_int_signal(const std::string& name)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<int>(name);
-    }
-    BoolSignalId register_bool_signal(const std::string& name)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<bool>(name);
-    }
-    ArraySignalId register_array_signal(const std::string& name, std::size_t size)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<Array, std::size_t>(name, size);
-    }
-    BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
+    // IntSignalId register_int_signal(const std::string& name)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<int>(name);
+    // }
+    // BoolSignalId register_bool_signal(const std::string& name)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<bool>(name);
+    // }
+    // ArraySignalId register_array_signal(const std::string& name, std::size_t size)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<Array, std::size_t>(name, size);
+    // }
+    Bus register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
         return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
@@ -98,8 +100,8 @@ public:
     const SignalInfos& signals() const {return _signal_infos;}
     const ValuesArray& values() const {return _values;}
 
-    void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
-    SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
+    void register_state_variable(const FloatSignal& sig, const FloatSignal& deriv_sig);
+    Signal* lookup_signal(const std::string& name, bool exact_match=false) const;
     void lock_signals();
     void reset_with_state_variables(const Array& state_variables);
     void invalidate();

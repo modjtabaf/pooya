@@ -28,7 +28,7 @@ namespace pooya
 
 class Model;
 
-class History : public std::unordered_map<SignalId, Eigen::MatrixXd>
+class History : public std::unordered_map<Signal, Eigen::MatrixXd>
 {
 protected:
 #if defined(POOYA_USE_SMART_PTRS)

@@ -24,7 +24,7 @@ template<typename T, class Base=Block>
 class SingleOutputT : public Base
 {
 protected:
-    typename Types<T>::SignalId _s_out{nullptr};
+    typename Types<T>::Signal _s_out;
 
     SingleOutputT(const std::string& given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
         Base(given_name, num_iports, num_oports)
@@ -33,10 +33,10 @@ protected:
     }
 
 public:
-    bool init(Parent& parent, BusId ibus, BusId obus) override
+    bool init(Parent& parent, const Bus& ibus, const Bus& obus) override
     {
         if (!Base::init(parent, ibus, obus)) {return false;}
-        _s_out = Types<T>::as_type(Base::_obus->at(0).second);
+        _s_out = Types<T>::as_type(obus.at<T>(0));
         return true;
     }
 };

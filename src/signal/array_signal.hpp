@@ -42,19 +42,11 @@ protected:
 
     static ArraySignalId create_new(const std::string& full_name, std::size_t index, std::size_t size)
     {
-#if defined(POOYA_USE_SMART_PTRS)
         return std::make_shared<ArraySignalInfo>(Protected(), full_name, index, size);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new ArraySignalInfo(full_name, index, size);
-#endif // defined(POOYA_USE_SMART_PTRS)
     } 
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t size)
-#else // defined(POOYA_USE_SMART_PTRS)
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t size)
-#endif // defined(POOYA_USE_SMART_PTRS)
         : FloatSignalInfo(full_name, index), _size(size)
     {
         _array = true;
@@ -86,17 +78,8 @@ public:
     std::size_t size() const {return _size;}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
-
 inline ArraySignalId SignalInfo::as_array() {return _array ? std::static_pointer_cast<ArraySignalInfo>(shared_from_this()) : ArraySignalId();}
 inline ReadOnlyArraySignalId SignalInfo::as_array() const {return _array ? std::static_pointer_cast<const ArraySignalInfo>(shared_from_this()) : ReadOnlyArraySignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline ArraySignalId SignalInfo::as_array() {return _array ? static_cast<ArraySignalId>(this) : nullptr;}
-inline ReadOnlyArraySignalId SignalInfo::as_array() const {return _array ? static_cast<ReadOnlyArraySignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 
 }
 

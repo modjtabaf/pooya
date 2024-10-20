@@ -46,17 +46,8 @@ public:
     bool is_assigned() const {return _assigned;}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
-
 inline ValueSignalId SignalInfo::as_value() {return _value ? std::static_pointer_cast<ValueSignalInfo>(shared_from_this()) : ValueSignalId();}
 inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? std::static_pointer_cast<const ValueSignalInfo>(shared_from_this()) : ReadOnlyValueSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline ValueSignalId SignalInfo::as_value() {return _value ? static_cast<ValueSignalId>(this) : nullptr;}
-inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? static_cast<ReadOnlyValueSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 
 }
 

@@ -22,17 +22,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo
-#if defined(POOYA_USE_SMART_PTRS)
-    : public std::enable_shared_from_this<SignalInfo>
-#endif // defined(POOYA_USE_SMART_PTRS)
+class SignalInfo : public std::enable_shared_from_this<SignalInfo>
 {
     friend class Model;
 
-#if defined(POOYA_USE_SMART_PTRS)
 protected:
     struct Protected {};
-#endif // defined(POOYA_USE_SMART_PTRS)
 
 public:
     const std::string _full_name; // full name of the signal

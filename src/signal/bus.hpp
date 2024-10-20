@@ -18,10 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <algorithm>
 #include <string>
 #include <vector>
-
-#if defined(POOYA_USE_SMART_PTRS)
 #include <optional>
-#endif // defined(POOYA_USE_SMART_PTRS)
 
 #include "src/helper/trace.hpp"
 #include "src/helper/verify.hpp"
@@ -60,11 +57,7 @@ public:
         SingleValueType _single_value_type{SingleValueType::None};
 
     public:
-#if defined(POOYA_USE_SMART_PTRS)
         std::optional<std::reference_wrapper<const BusSpec>> _bus;
-#else // defined(POOYA_USE_SMART_PTRS)
-        const BusSpec* _bus{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
         const std::size_t _array_size{0};
 
         // single-valued, coded_label defines the type and label:
@@ -81,12 +74,7 @@ public:
         }
 
         // bus
-        WireInfo(const std::string& label, const BusSpec& bus) : _label(label)
-#if defined(POOYA_USE_SMART_PTRS)
-            , _bus(bus) {}
-#else // defined(POOYA_USE_SMART_PTRS)
-            , _bus(&bus) {}
-#endif // defined(POOYA_USE_SMART_PTRS)
+        WireInfo(const std::string& label, const BusSpec& bus) : _label(label), _bus(bus) {}
 
         const std::string& label() const {return _label;}
         SingleValueType single_value_type() const {return _single_value_type;};
@@ -109,11 +97,7 @@ public:
         for (const auto& wi: _wires)
         {
             if (wi._bus)
-#if defined(POOYA_USE_SMART_PTRS)
                 {ret += wi._bus.value().get().total_size();}
-#else // defined(POOYA_USE_SMART_PTRS)
-                {ret += wi._bus->total_size();}
-#endif // defined(POOYA_USE_SMART_PTRS)
         }
         return ret;
     }
@@ -138,11 +122,7 @@ class BusInfo : public SignalInfo
     friend class Model;
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     std::reference_wrapper<const BusSpec> _spec;
-#else // defined(POOYA_USE_SMART_PTRS)
-    const BusSpec& _spec;
-#endif // defined(POOYA_USE_SMART_PTRS)
 
 protected:
     LabelSignalIdList _signals;
@@ -150,21 +130,13 @@ protected:
 protected:
     static BusId create_new(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
     {
-#if defined(POOYA_USE_SMART_PTRS)
         return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new BusInfo(full_name, index, spec, begin_, end_);
-#endif // defined(POOYA_USE_SMART_PTRS)
     } 
 
     void _set(std::size_t index, SignalId sig);
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-#else // defined(POOYA_USE_SMART_PTRS)
-    BusInfo(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-#endif // defined(POOYA_USE_SMART_PTRS)
         : SignalInfo(full_name, index), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
@@ -219,17 +191,8 @@ public:
     BusId bus_at(std::size_t index) const;
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
-
 inline BusId SignalInfo::as_bus() {return _bus ? std::static_pointer_cast<BusInfo>(shared_from_this()) : BusId();}
 inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? std::static_pointer_cast<const BusInfo>(shared_from_this()) : ReadOnlyBusId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline BusId SignalInfo::as_bus() {return _bus ? static_cast<BusId>(this) : nullptr;}
-inline ReadOnlyBusId SignalInfo::as_bus() const {return _bus ? static_cast<ReadOnlyBusId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 
 }
 

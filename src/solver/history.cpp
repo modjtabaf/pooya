@@ -12,11 +12,9 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// #include <iostream>
 #include <fstream>
 #include <string>
 
-// #include "signal.hpp"
 #include "src/block/model.hpp"
 #include "history.hpp"
 
@@ -28,18 +26,10 @@ void History::track_all()
     pooya_verify(empty(), "track_all should be called before the history is updated!");
     _signals.clear();
     std::size_t n = 0;
-#if defined(POOYA_USE_SMART_PTRS)
     for (auto& sig: _model.get().signals())
-#else // defined(POOYA_USE_SMART_PTRS)
-    for (auto sig: _model.signals())
-#endif // defined(POOYA_USE_SMART_PTRS)
         {if (sig->is_value()) {n++;}}
     _signals.reserve(n);
-#if defined(POOYA_USE_SMART_PTRS)
     for (auto& sig: _model.get().signals())
-#else // defined(POOYA_USE_SMART_PTRS)
-    for (auto sig: _model.signals())
-#endif // defined(POOYA_USE_SMART_PTRS)
         {if (sig->is_value()) {_signals.push_back(sig->as_value());}}
 }
 

@@ -31,27 +31,15 @@ class BoolSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-#if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<double>> _bool_value;
-#else // defined(POOYA_USE_SMART_PTRS)
-    double* _bool_value{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
 
     static BoolSignalId create_new(const std::string& full_name, std::size_t index)
     {
-#if defined(POOYA_USE_SMART_PTRS)
         return std::make_shared<BoolSignalInfo>(Protected(), full_name, index);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new BoolSignalInfo(full_name, index);
-#endif // defined(POOYA_USE_SMART_PTRS)
     } 
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     BoolSignalInfo(Protected, const std::string& full_name, std::size_t index)
-#else // defined(POOYA_USE_SMART_PTRS)
-    BoolSignalInfo(const std::string& full_name, std::size_t index)
-#endif // defined(POOYA_USE_SMART_PTRS)
         : ValueSignalInfo(full_name, index)
     {
         _bool = true;
@@ -62,11 +50,7 @@ public:
         pooya_trace0;
         pooya_verify(_bool_value, _full_name + ": attempting to retrieve the value of an uninitialized bool signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
-#if defined(POOYA_USE_SMART_PTRS)
         return _bool_value.value().get() != 0;
-#else // defined(POOYA_USE_SMART_PTRS)
-        return *_bool_value != 0;
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void set(bool value)
@@ -74,28 +58,15 @@ public:
         pooya_trace("value: " + std::to_string(value));
         pooya_verify(_bool_value, _full_name + ": attempting to assign the value of an uninitialized bool signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
-#if defined(POOYA_USE_SMART_PTRS)
         _bool_value.value().get() = value;
-#else // defined(POOYA_USE_SMART_PTRS)
-        *_bool_value = value;
-#endif // defined(POOYA_USE_SMART_PTRS)
         _assigned = true;
     }
 
     operator bool() const {return get();}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
-
 inline BoolSignalId SignalInfo::as_bool() {return _bool ? std::static_pointer_cast<BoolSignalInfo>(shared_from_this()) : BoolSignalId();}
 inline ReadOnlyBoolSignalId SignalInfo::as_bool() const {return _bool ? std::static_pointer_cast<const BoolSignalInfo>(shared_from_this()) : ReadOnlyBoolSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline BoolSignalId SignalInfo::as_bool() {return _bool ? static_cast<BoolSignalId>(this) : nullptr;}
-inline ReadOnlyBoolSignalId SignalInfo::as_bool() const {return _bool ? static_cast<ReadOnlyBoolSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 
 }
 

@@ -90,7 +90,6 @@ protected:
 
 public:
     Model(const std::string& given_name="model");
-    ~Model();
 
     virtual void input_cb(double /*t*/) {}
 

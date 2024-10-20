@@ -40,17 +40,9 @@ public:
 };
 
 
-#if defined(POOYA_USE_SMART_PTRS)
-
 inline FloatSignalId SignalInfo::as_float() {return _float ? std::static_pointer_cast<FloatSignalInfo>(shared_from_this()) : FloatSignalId();}
 inline ReadOnlyFloatSignalId SignalInfo::as_float() const {return _float ? std::static_pointer_cast<const FloatSignalInfo>(shared_from_this()) : ReadOnlyFloatSignalId();}
 
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline FloatSignalId SignalInfo::as_float() {return _float ? static_cast<FloatSignalId>(this) : nullptr;}
-inline ReadOnlyFloatSignalId SignalInfo::as_float() const {return _float ? static_cast<ReadOnlyFloatSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 }
 
 #endif // __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__

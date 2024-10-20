@@ -15,6 +15,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SIGNAL_HPP__
 
+#include <cstdint>
 #include <string>
 
 #include "signal_id.hpp"
@@ -22,57 +23,56 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo
-#if defined(POOYA_USE_SMART_PTRS)
-    : public std::enable_shared_from_this<SignalInfo>
-#endif // defined(POOYA_USE_SMART_PTRS)
+class SignalInfo : public std::enable_shared_from_this<SignalInfo>
 {
     friend class Model;
 
-#if defined(POOYA_USE_SMART_PTRS)
 protected:
     struct Protected {};
-#endif // defined(POOYA_USE_SMART_PTRS)
 
 public:
     const std::string _full_name; // full name of the signal
     const std::size_t _index{0};  // the signal index
+    const uint16_t _type;
+
+    enum SignalTypes
+    {
+        BusType    = 0x0001,
+        ValueType  = 0x0002,
+        FloatType  = 0x0004,
+        ScalarType = 0x0008,
+        IntType    = 0x0010,
+        BoolType   = 0x0020,
+        ArrayType  = 0x0040,
+    };
 
 protected:
-    bool  _value{false};
-    bool  _float{false};
-    bool _scalar{false};
-    bool  _array{false};
-    bool   _int {false};
-    bool   _bool{false};
-    bool    _bus{false};
-
-    SignalInfo(const std::string& full_name, std::size_t index) : _full_name(full_name), _index(index) {}
+    SignalInfo(const std::string& full_name, uint16_t type, std::size_t index) : _full_name(full_name), _index(index), _type(type) {}
 
 public:
-    bool is_value() const {return _value;}
-    bool is_float() const {return _float;}
-    bool is_scalar() const {return _scalar;}
-    bool is_int() const {return _int;}
-    bool is_bool() const {return _bool;}
-    bool is_array() const {return _array;}
-    bool is_bus() const {return _bus;}
+    bool is_value() const {return _type & ValueType;}
+    bool is_float() const {return _type & FloatType;}
+    bool is_scalar() const {return _type & ScalarType;}
+    bool is_int() const {return _type & IntType;}
+    bool is_bool() const {return _type & BoolType;}
+    bool is_array() const {return _type & ArrayType;}
+    bool is_bus() const {return _type & BusType;}
 
-    ValueSignalId   as_value();
-    FloatSignalId   as_float();
-    ScalarSignalId as_scalar();
-    IntSignalId       as_int();
-    BoolSignalId     as_bool();
-    ArraySignalId   as_array();
-    BusId             as_bus();
+    ValueSignalInfo&   as_value();
+    FloatSignalInfo&   as_float();
+    ScalarSignalInfo& as_scalar();
+    IntSignalInfo&       as_int();
+    BoolSignalInfo&     as_bool();
+    ArraySignalInfo&   as_array();
+    BusInfo&             as_bus();
 
-    ReadOnlyValueSignalId   as_value() const;
-    ReadOnlyFloatSignalId   as_float() const;
-    ReadOnlyScalarSignalId as_scalar() const;
-    ReadOnlyIntSignalId       as_int() const;
-    ReadOnlyBoolSignalId     as_bool() const;
-    ReadOnlyArraySignalId   as_array() const;
-    ReadOnlyBusId             as_bus() const;
+    const ValueSignalInfo&   as_value() const;
+    const FloatSignalInfo&   as_float() const;
+    const ScalarSignalInfo& as_scalar() const;
+    const IntSignalInfo&       as_int() const;
+    const BoolSignalInfo&     as_bool() const;
+    const ArraySignalInfo&   as_array() const;
+    const BusInfo&             as_bus() const;
 };
 
 }

@@ -26,14 +26,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-Model::~Model()
-{
-    pooya_trace("block: " + full_name());
-#if !defined(POOYA_USE_SMART_PTRS)
-    for (auto* si: _signal_infos) {delete si;}
-#endif // defined(POOYA_USE_SMART_PTRS)
-}
-
 SignalId Model::lookup_signal(const std::string& name, bool exact_match) const
 {
     pooya_trace("block: " + full_name());
@@ -61,11 +53,11 @@ void Model::register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig)
     pooya_verify_valid_signal(deriv_sig);
     pooya_verify(!sig->is_state_variable(), sig->_full_name + ": signal is already registered as a state variable!");
     pooya_verify(!deriv_sig->_is_deriv, deriv_sig->_full_name + ": signal is already registered as a state variable derivative!");
-    pooya_verify((sig->_scalar && deriv_sig->_scalar) || (sig->_array && deriv_sig->_array && sig->as_array()->_size == deriv_sig->as_array()->_size),
+    pooya_verify((sig->is_scalar() && deriv_sig->is_scalar()) || (sig->is_array() && deriv_sig->is_array() && sig->as_array()._size == deriv_sig->as_array()._size),
         sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
 
-    _signal_infos[sig->_index]->as_float()->_deriv_sig = deriv_sig->as_float();
-    _signal_infos[deriv_sig->_index]->as_float()->_is_deriv = true;
+    _signal_infos[sig->_index]->as_float()._deriv_sig = deriv_sig;
+    _signal_infos[deriv_sig->_index]->as_float()._is_deriv = true;
 }
 
 Model::Model(const std::string& given_name) : Parent(given_name, 0, 0)
@@ -94,9 +86,9 @@ void Model::lock_signals()
     for (const auto& signal: _signal_infos)
     {
         if (!signal->is_value()) {continue;}
-        auto size = (signal->is_scalar() || signal->is_int() || signal->is_bool()) ? 1 : signal->as_array()->_size;
+        auto size = (signal->_type & (SignalInfo::ScalarType | SignalInfo::IntType | SignalInfo::BoolType)) ? 1 : signal->as_array()._size;
         total_size += size;
-        if (signal->is_float() && signal->as_float()->is_state_variable())
+        if (signal->is_float() && signal->as_float().is_state_variable())
             {state_variables_size += size;}
     }
 
@@ -108,28 +100,16 @@ void Model::lock_signals()
     for (auto& signal: _signal_infos)
     {
         if (!signal->is_value()) {continue;}
-        auto& start = signal->_float && signal->as_float()->is_state_variable() ? state_variables_start : other_start;
-        auto size = (signal->_scalar || signal->_int || signal->_bool) ? 0 : signal->as_array()->_size;
-        if (signal->_scalar)
-#if defined(POOYA_USE_SMART_PTRS)
-            {signal->as_scalar()->_scalar_value = *start;}
-#else // defined(POOYA_USE_SMART_PTRS)
-            {signal->as_scalar()->_scalar_value = start;}
-#endif // defined(POOYA_USE_SMART_PTRS)
-        else if (signal->_int)
-#if defined(POOYA_USE_SMART_PTRS)
-            {signal->as_int()->_int_value = *start;}
-#else // defined(POOYA_USE_SMART_PTRS)
-            {signal->as_int()->_int_value = start;}
-#endif // defined(POOYA_USE_SMART_PTRS)
-        else if (signal->_bool)
-#if defined(POOYA_USE_SMART_PTRS)
-            {signal->as_bool()->_bool_value = *start;}
-#else // defined(POOYA_USE_SMART_PTRS)
-            {signal->as_bool()->_bool_value = start;}
-#endif // defined(POOYA_USE_SMART_PTRS)
+        auto& start = signal->is_float() && signal->as_float().is_state_variable() ? state_variables_start : other_start;
+        auto size = (signal->_type & (SignalInfo::ScalarType | SignalInfo::IntType | SignalInfo::BoolType)) ? 0 : signal->as_array()._size;
+        if (signal->is_scalar())
+            {signal->as_scalar()._scalar_value = *start;}
+        else if (signal->is_int())
+            {signal->as_int()._int_value = *start;}
+        else if (signal->is_bool())
+            {signal->as_bool()._bool_value = *start;}
         else
-            {new (&signal->as_array()->_array_value) MappedArray(start, size);}
+            {new (&signal->as_array()._array_value) MappedArray(start, size);}
         start += std::max<std::size_t>(size, 1);
     }
 
@@ -142,18 +122,14 @@ void Model::lock_signals()
 
     for (auto& signal: _signal_infos)
     {
-        if (!signal->_float || !signal->as_float()->is_state_variable()) {continue;}
+        if (!signal->is_float() || !signal->as_float().is_state_variable()) {continue;}
 
-        if (signal->_scalar)
-#if defined(POOYA_USE_SMART_PTRS)
-            {signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = *deriv_start;}
-#else // defined(POOYA_USE_SMART_PTRS)
-            {signal->as_scalar()->_deriv_sig->as_scalar()->_deriv_scalar_value = deriv_start;}
-#endif // defined(POOYA_USE_SMART_PTRS)
+        if (signal->is_scalar())
+            {signal->as_scalar()._deriv_sig->as_scalar()._deriv_scalar_value = *deriv_start;}
         else
-            {new (&signal->as_array()->_deriv_sig->as_array()->_deriv_array_value) MappedArray(deriv_start, signal->as_array()->_size);}
+            {new (&signal->as_array()._deriv_sig->as_array()._deriv_array_value) MappedArray(deriv_start, signal->as_array()._size);}
 
-        deriv_start += signal->is_scalar() ? 1 : signal->as_array()->_size;
+        deriv_start += signal->is_scalar() ? 1 : signal->as_array()._size;
     }
 
     _signals_locked = true;
@@ -170,28 +146,24 @@ void Model::reset_with_state_variables(const Array& state_variables)
     _values._state_variables = state_variables;
     for (auto& sig: _signal_infos)
     {
-        if (!sig->_value) {continue;} // skip non-values
+        if (!sig->is_value()) {continue;} // skip non-values
 
-        if (sig->_float) // skip non-floats
+        if (sig->is_float()) // skip non-floats
         {
-            sig->as_float()->_assigned = bool(sig->as_float()->_deriv_sig);
-            if (!sig->as_float()->_assigned) {continue;} // skip non-state-variables
+            sig->as_float()._assigned = bool(sig->as_float()._deriv_sig);
+            if (!sig->as_float()._assigned) {continue;} // skip non-state-variables
 
-            if (sig->as_float()->_is_deriv) // skip non-derivatives
+            if (sig->as_float()._is_deriv) // skip non-derivatives
             {
-                if (sig->_scalar)
-#if defined(POOYA_USE_SMART_PTRS)
-                    {sig->as_scalar()->_deriv_scalar_value.value().get() = sig->as_scalar()->_scalar_value.value().get();}
-#else // defined(POOYA_USE_SMART_PTRS)
-                    {*sig->as_scalar()->_deriv_scalar_value = *sig->as_scalar()->_scalar_value;}
-#endif // defined(POOYA_USE_SMART_PTRS)
+                if (sig->is_scalar())
+                    {sig->as_scalar()._deriv_scalar_value.value().get() = sig->as_scalar()._scalar_value.value().get();}
                 else
-                    {sig->as_array()->_deriv_array_value = sig->as_array()->_array_value;}
+                    {sig->as_array()._deriv_array_value = sig->as_array()._array_value;}
             }
         }
         else
         {
-            sig->as_value()->_assigned = false;
+            sig->as_value()._assigned = false;
         }
     }
 }
@@ -204,9 +176,9 @@ void Model::invalidate()
 #endif // defined(POOYA_DEBUG)
     for (auto& sig: _signal_infos)
     {
-        if (sig->_value)
+        if (sig->is_value())
         {
-            sig->as_value()->_assigned = false;
+            sig->as_value()._assigned = false;
         }
     }
 }

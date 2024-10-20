@@ -46,11 +46,7 @@ public:
     LabelSignals(const T& signal)
     {
         pooya_trace0;
-#if defined(POOYA_USE_SMART_PTRS)
         LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
-#else // defined(POOYA_USE_SMART_PTRS)
-        LabelSignalIdList lsl({{_make_auto_label(0), signal}});
-#endif // defined(POOYA_USE_SMART_PTRS)
         _init(lsl.begin(), lsl.end());
     }
     LabelSignals(const std::initializer_list<SignalId>& il);

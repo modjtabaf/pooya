@@ -61,7 +61,7 @@ void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::Wi
     auto& parent = *_parent;
 #endif // defined(POOYA_USE_SMART_PTRS)
     parent.add_block(*block, sig_in, sig_out);
-    _blocks.push_back(std::move(block));
+    _blocks.emplace_back(std::move(block));
 }
 
 } // namespace pooya

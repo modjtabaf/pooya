@@ -201,9 +201,9 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
             else if (ls.second->is_bool())
                 {wire_infos.emplace_back("b:" + ls.first);}
             else if (ls.second->is_array())
-                {wire_infos.emplace_back(ls.first, ls.second->as_array()->size());}
+                {wire_infos.emplace_back(ls.first, ls.second->as_array().size());}
             else if (ls.second->is_bus())
-                {wire_infos.emplace_back(ls.first, ls.second->as_bus()->_spec);}
+                {wire_infos.emplace_back(ls.first, ls.second->as_bus()._spec);}
             else
                 {pooya_verify(false, "unknown signal type!");}
             
@@ -228,7 +228,7 @@ template<typename T, typename... Ts>
 typename Types<T>::SignalId Parent::create_signal(const std::string& given_name, Ts... args)
 {
     pooya_trace("block: " + full_name() + ", given name: " + given_name);
-    return Types<T>::as_type(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));
+    return Types<T>::as_signal_id(model_ref().register_signal<T, Ts...>(make_signal_name(given_name, true), args...));
 }
 
 }

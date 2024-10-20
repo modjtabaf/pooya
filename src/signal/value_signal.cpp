@@ -22,35 +22,35 @@ namespace pooya
 
 double ValueSignalInfo::get_as_scalar() const
 {
-    if (_scalar)
+    if (is_scalar())
     {
-        return as_scalar()->get();
+        return as_scalar().get();
     }
-    else if (_int)
+    else if (is_int())
     {
-        return static_cast<double>(as_int()->get());
+        return static_cast<double>(as_int().get());
     }
     else
     {
-        pooya_verify(_bool, "boolean signal expected!");
-        return as_bool()->get() ? 1 : 0;
+        pooya_verify(is_bool(), "boolean signal expected!");
+        return as_bool().get() ? 1 : 0;
     }
 }
 
 void ValueSignalInfo::set_as_scalar(double value)
 {
-    if (_scalar)
+    if (is_scalar())
     {
-        as_scalar()->set(value);
+        as_scalar().set(value);
     }
-    else if (_int)
+    else if (is_int())
     {
-        as_int()->set(std::round(value));
+        as_int().set(std::round(value));
     }
     else
     {
-        pooya_verify(_bool, "boolean signal expected!");
-        as_bool()->set(value != 0);
+        pooya_verify(is_bool(), "boolean signal expected!");
+        as_bool().set(value != 0);
     }
 }
 

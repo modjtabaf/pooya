@@ -59,7 +59,7 @@ public:
         const char *p = _operators.c_str();
         for (const auto &ls: *SingleOutputT<T>::_ibus)
         {
-            const auto &v = Types<T>::as_type(ls.second)->get();
+            const auto &v = Types<T>::as_signal_info(ls.second).get();
             if (*p == '*') {_ret *= v;}
             else if (*p == '/') {_ret /= v;}
             else {assert(false);}

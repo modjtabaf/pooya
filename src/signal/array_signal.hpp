@@ -15,9 +15,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 #define __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 
-#include "src/helper/trace.hpp"
-#include "src/helper/verify.hpp"
 #include "array.hpp"
+#include "src/helper/trace.hpp"
+#include "src/helper/util.hpp"
+#include "src/helper/verify.hpp"
 #include "float_signal.hpp"
 
 #define pooya_verify_array_signal(sig) \
@@ -26,7 +27,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_array_signal_size(sig, size_) \
     pooya_verify_array_signal(sig); \
-    pooya_verify((sig)->as_array()->size() == size_, (sig)->_full_name + ": array size mismatch!");
+    pooya_verify((sig)->as_array().size() == size_, (sig)->_full_name + ": array size mismatch!");
 
 namespace pooya
 {
@@ -42,23 +43,12 @@ protected:
 
     static ArraySignalId create_new(const std::string& full_name, std::size_t index, std::size_t size)
     {
-#if defined(POOYA_USE_SMART_PTRS)
         return std::make_shared<ArraySignalInfo>(Protected(), full_name, index, size);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new ArraySignalInfo(full_name, index, size);
-#endif // defined(POOYA_USE_SMART_PTRS)
     } 
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t size)
-#else // defined(POOYA_USE_SMART_PTRS)
-    ArraySignalInfo(const std::string& full_name, std::size_t index, std::size_t size)
-#endif // defined(POOYA_USE_SMART_PTRS)
-        : FloatSignalInfo(full_name, index), _size(size)
-    {
-        _array = true;
-    }
+        : FloatSignalInfo(full_name, ArrayType, index), _size(size) {}
 
     const MappedArray& get() const
     {
@@ -86,17 +76,17 @@ public:
     std::size_t size() const {return _size;}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
+inline ArraySignalInfo& SignalInfo::as_array()
+{
+    pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
+    return *static_cast<ArraySignalInfo*>(this);
+}
 
-inline ArraySignalId SignalInfo::as_array() {return _array ? std::static_pointer_cast<ArraySignalInfo>(shared_from_this()) : ArraySignalId();}
-inline ReadOnlyArraySignalId SignalInfo::as_array() const {return _array ? std::static_pointer_cast<const ArraySignalInfo>(shared_from_this()) : ReadOnlyArraySignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline ArraySignalId SignalInfo::as_array() {return _array ? static_cast<ArraySignalId>(this) : nullptr;}
-inline ReadOnlyArraySignalId SignalInfo::as_array() const {return _array ? static_cast<ReadOnlyArraySignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
+inline const ArraySignalInfo& SignalInfo::as_array() const
+{
+    pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
+    return *static_cast<const ArraySignalInfo*>(this);
+}
 
 }
 

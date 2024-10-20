@@ -17,14 +17,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 // #include <type_traits>
 
 #if defined(POOYA_USE_SMART_PTRS)
 #include <optional>
 #endif // defined(POOYA_USE_SMART_PTRS)
 
-// #include "src/core/util.hpp"
 #include "src/signal/trait.hpp"
+#include "src/signal/scalar_signal.hpp"
+#include "src/signal/int_signal.hpp"
+#include "src/signal/bool_signal.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/bus.hpp"
 
@@ -108,9 +111,9 @@ public:
         if (is_dependency)
         {
             pooya_verify_value_signal(sig);
-            add_dependency(sig->as_value());
+            add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
         }
-        return Types<T>::as_type(sig);
+        return Types<T>::as_signal_id(sig);
     }
 
     ScalarSignalId scalar_input_at(const std::string& label, bool is_dependency=true)

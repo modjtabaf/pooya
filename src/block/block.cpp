@@ -13,6 +13,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <cassert>
+#include <memory>
 
 #include "block.hpp"
 #include "parent.hpp"
@@ -60,7 +61,7 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
         {
             if (sig.second->is_value())
             {
-                add_dependency(sig.second->as_value());
+                add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
             }
         }
         _dependencies.shrink_to_fit();

@@ -47,25 +47,25 @@ void BusMemory::block_builder(const std::string& full_label, const BusSpec::Wire
     {
         block = (it == _init_values.end())
             ? std::make_shared<Memory>("memory")
-            : std::make_shared<Memory>("memory", std::get<double>(it->second));
+            : std::make_shared<Memory>("memory", it->second.as_scalar());
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
     {
         block = (it == _init_values.end())
             ? std::make_shared<MemoryI>("memory")
-            : std::make_shared<MemoryI>("memory", std::round(std::get<double>(it->second)));
+            : std::make_shared<MemoryI>("memory", std::round(it->second.as_scalar()));
     }
     else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
     {
         block = (it == _init_values.end())
             ? std::make_shared<MemoryB>("memory")
-            : std::make_shared<MemoryB>("memory", std::get<double>(it->second) != 0);
+            : std::make_shared<MemoryB>("memory", it->second.as_scalar() != 0);
     }
     else if (wi._array_size > 0)
     {
         block = (it == _init_values.end())
             ? std::make_shared<MemoryA>("memory", Array::Zero(wi._array_size))
-            : std::make_shared<MemoryA>("memory", std::get<Array>(it->second));
+            : std::make_shared<MemoryA>("memory", it->second.as_array());
     }
     else
     {
@@ -83,7 +83,7 @@ void BusMemory::block_builder(const std::string& full_label, const BusSpec::Wire
     auto& parent = *_parent;
 #endif // defined(POOYA_USE_SMART_PTRS)
     parent.add_block(*block, sig_in, sig_out);
-    _blocks.push_back(std::move(block));
+    _blocks.emplace_back(std::move(block));
 }
 
 } // namespace pooya

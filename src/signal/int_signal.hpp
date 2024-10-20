@@ -16,8 +16,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_SIGNAL_INT_SIGNAL_HPP__
 
 #include <cmath>
+#include <optional>
 
+#include "signal.hpp"
 #include "src/helper/trace.hpp"
+#include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 #include "value_signal.hpp"
 
@@ -33,42 +36,23 @@ class IntSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-#if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<double>> _int_value;
-#else // defined(POOYA_USE_SMART_PTRS)
-    double* _int_value{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
 
     static IntSignalId create_new(const std::string& full_name, std::size_t index)
     {
-#if defined(POOYA_USE_SMART_PTRS)
         return std::make_shared<IntSignalInfo>(Protected(), full_name, index);
-#else // defined(POOYA_USE_SMART_PTRS)
-        return new IntSignalInfo(full_name, index);
-#endif // defined(POOYA_USE_SMART_PTRS)
     } 
 
 public:
-#if defined(POOYA_USE_SMART_PTRS)
     IntSignalInfo(Protected, const std::string& full_name, std::size_t index)
-#else // defined(POOYA_USE_SMART_PTRS)
-    IntSignalInfo(const std::string& full_name, std::size_t index)
-#endif // defined(POOYA_USE_SMART_PTRS)
-        : ValueSignalInfo(full_name, index)
-    {
-        _int = true;
-    }
+        : ValueSignalInfo(full_name, IntType, index) {}
 
     int get() const
     {
         pooya_trace0;
         pooya_verify(_int_value, _full_name + ": attempting to retrieve the value of an uninitialized int signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
-#if defined(POOYA_USE_SMART_PTRS)
         return std::round(_int_value.value().get());
-#else // defined(POOYA_USE_SMART_PTRS)
-        return std::round(*_int_value);
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void set(double value)
@@ -76,28 +60,24 @@ public:
         pooya_trace("value: " + std::to_string(value));
         pooya_verify(_int_value, _full_name + ": attempting to assign the value of an uninitialized int signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
-#if defined(POOYA_USE_SMART_PTRS)
         _int_value.value().get() = std::round(value);
-#else // defined(POOYA_USE_SMART_PTRS)
-        *_int_value = std::round(value);
-#endif // defined(POOYA_USE_SMART_PTRS)
         _assigned = true;
     }
 
     operator int() const {return get();}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
+inline IntSignalInfo& SignalInfo::as_int()
+{
+    pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
+    return *static_cast<IntSignalInfo*>(this);
+}
 
-inline IntSignalId SignalInfo::as_int() {return _int ? std::static_pointer_cast<IntSignalInfo>(shared_from_this()) : IntSignalId();}
-inline ReadOnlyIntSignalId SignalInfo::as_int() const {return _int ? std::static_pointer_cast<const IntSignalInfo>(shared_from_this()) : ReadOnlyIntSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline IntSignalId SignalInfo::as_int() {return _int ? static_cast<IntSignalId>(this) : nullptr;}
-inline ReadOnlyIntSignalId SignalInfo::as_int() const {return _int ? static_cast<ReadOnlyIntSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
+inline const IntSignalInfo& SignalInfo::as_int() const
+{
+    pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
+    return *static_cast<const IntSignalInfo*>(this);
+}
 
 }
 

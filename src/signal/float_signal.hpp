@@ -15,7 +15,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__
 #define __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__
 
-#include "signal_id.hpp"
+#include "signal.hpp"
+#include "src/helper/trace.hpp"
+#include "src/helper/util.hpp"
+#include "src/helper/verify.hpp"
 #include "value_signal.hpp"
 
 namespace pooya
@@ -29,28 +32,25 @@ protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     bool _is_deriv{false};             // is this the derivative of another signal?
 
-    FloatSignalInfo(const std::string& full_name, std::size_t index) :
-        ValueSignalInfo(full_name, index)
-    {
-        _float = true;
-    }
+    FloatSignalInfo(const std::string& full_name, uint16_t type, std::size_t index) :
+        ValueSignalInfo(full_name, type | FloatType, index) {}
 
 public:
     bool is_state_variable() const {return static_cast<bool>(_deriv_sig);}
 };
 
+inline FloatSignalInfo& SignalInfo::as_float()
+{
+    pooya_verify(_type & FloatType, "Illegal attempt to dereference a non-float as a float.");
+    return *static_cast<FloatSignalInfo*>(this);
+}
 
-#if defined(POOYA_USE_SMART_PTRS)
+inline const FloatSignalInfo& SignalInfo::as_float() const
+{
+    pooya_verify(_type & FloatType, "Illegal attempt to dereference a non-float as a float.");
+    return *static_cast<const FloatSignalInfo*>(this);
+}
 
-inline FloatSignalId SignalInfo::as_float() {return _float ? std::static_pointer_cast<FloatSignalInfo>(shared_from_this()) : FloatSignalId();}
-inline ReadOnlyFloatSignalId SignalInfo::as_float() const {return _float ? std::static_pointer_cast<const FloatSignalInfo>(shared_from_this()) : ReadOnlyFloatSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline FloatSignalId SignalInfo::as_float() {return _float ? static_cast<FloatSignalId>(this) : nullptr;}
-inline ReadOnlyFloatSignalId SignalInfo::as_float() const {return _float ? static_cast<ReadOnlyFloatSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
 }
 
 #endif // __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__

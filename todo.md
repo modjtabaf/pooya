@@ -20,6 +20,10 @@
 * pass std::string as const ref
 * use gtest and cc_test
 
+- Unify given_name and full_name of signals
+- Define pooya_assert_* and pooya_verify_* where pooya_assert_* macros are debug-only and a preprocessor directive is used to exclude pooya_verify_* macros from the release build
+- Use static_assert() in pooya_assert_* macros
+- Deprecate BusSpec
 - Deprecate Model
 - Create an abstraction layer between pooya and Eigen
 - Reduce the usage of POOYA_USE_SMART_PTRS through defining proper macros or helper classes

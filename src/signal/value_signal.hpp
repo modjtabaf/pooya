@@ -16,8 +16,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_SIGNAL_VALUE_SIGNAL_HPP__
 
 #include "src/helper/trace.hpp"
+#include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 #include "signal.hpp"
+#include <cstdint>
 
 #define  pooya_verify_value_signal(sig) \
     pooya_verify_valid_signal(sig); \
@@ -33,11 +35,8 @@ class ValueSignalInfo : public SignalInfo
 protected:
     bool _assigned{false};             // has the value been assigned?
 
-    ValueSignalInfo(const std::string& full_name, std::size_t index) :
-        SignalInfo(full_name, index)
-    {
-        _value = true;
-    }
+    ValueSignalInfo(const std::string& full_name, uint16_t type, std::size_t index) :
+        SignalInfo(full_name, type | ValueType, index) {}
 
 public:
     double get_as_scalar() const;
@@ -46,17 +45,17 @@ public:
     bool is_assigned() const {return _assigned;}
 };
 
-#if defined(POOYA_USE_SMART_PTRS)
+inline ValueSignalInfo& SignalInfo::as_value()
+{
+    pooya_verify(_type & ValueType, "Illegal attempt to dereference a non-value as a value.");
+    return *static_cast<ValueSignalInfo*>(this);
+}
 
-inline ValueSignalId SignalInfo::as_value() {return _value ? std::static_pointer_cast<ValueSignalInfo>(shared_from_this()) : ValueSignalId();}
-inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? std::static_pointer_cast<const ValueSignalInfo>(shared_from_this()) : ReadOnlyValueSignalId();}
-
-#else // defined(POOYA_USE_SMART_PTS)
-
-inline ValueSignalId SignalInfo::as_value() {return _value ? static_cast<ValueSignalId>(this) : nullptr;}
-inline ReadOnlyValueSignalId SignalInfo::as_value() const {return _value ? static_cast<ReadOnlyValueSignalId>(this) : nullptr;}
-
-#endif // defined(POOYA_USE_SMART_PTS)
+inline const ValueSignalInfo& SignalInfo::as_value() const
+{
+    pooya_verify(_type & ValueType, "Illegal attempt to dereference a non-value as a value.");
+    return *static_cast<const ValueSignalInfo*>(this);
+}
 
 }
 

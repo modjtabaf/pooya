@@ -36,7 +36,7 @@ public:
     bool init(Parent& parent, BusId ibus, BusId obus) override
     {
         if (!Base::init(parent, ibus, obus)) {return false;}
-        _s_out = Types<T>::as_type(Base::_obus->at(0).second);
+        _s_out = std::move(Types<T>::as_signal_id(Base::_obus->at(0).second));
         return true;
     }
 };

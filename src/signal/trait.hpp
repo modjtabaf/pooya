@@ -18,6 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/helper/verify.hpp"
 #include "array.hpp"
 #include "signal_id.hpp"
+#include <memory>
 
 namespace pooya
 {
@@ -40,7 +41,12 @@ struct Types<Array>
     static void verify_signal_type(pooya::SignalId sig);
     static void verify_signal_type(pooya::SignalId sig, std::size_t size);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_array();}
+    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_array();}
+    template<typename T> static SignalId as_signal_id(const T& sig)
+    {
+        pooya_verify(sig->is_array(), "Illegal attempt to dereference a non-array as an array.");
+        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+    }
 };
 
 template<>
@@ -53,7 +59,12 @@ struct Types<double>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_scalar();}
+    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_scalar();}
+    template<typename T> static SignalId as_signal_id(const T& sig)
+    {
+        pooya_verify(sig->is_scalar(), "Illegal attempt to dereference a non-scalar as a scalar.");
+        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+    }
 };
 
 template<>
@@ -66,7 +77,12 @@ struct Types<int>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_int();}
+    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_int();}
+    template<typename T> static SignalId as_signal_id(const T& sig)
+    {
+        pooya_verify(sig->is_int(), "Illegal attempt to dereference a non-int as an int.");
+        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+    }
 };
 
 template<>
@@ -79,7 +95,12 @@ struct Types<bool>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bool();}
+    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bool();}
+    template<typename T> static SignalId as_signal_id(const T& sig)
+    {
+        pooya_verify(sig->is_bool(), "Illegal attempt to dereference a non-bool as a bool.");
+        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+    }
 };
 
 template<>
@@ -90,7 +111,12 @@ struct Types<BusSpec>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig, const BusSpec& spec);
 #endif // defined(POOYA_DEBUG)
-    template<typename T> static SignalId as_type(const T& sig) {return sig->as_bus();}
+    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bus();}
+    template<typename T> static SignalId as_signal_id(const T& sig)
+    {
+        pooya_verify(sig->is_bus(), "Illegal attempt to dereference a non-bus as a bus.");
+        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+    }
 };
 
 }

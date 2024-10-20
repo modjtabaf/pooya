@@ -59,7 +59,7 @@ protected:
         sig = Types<T>::SignalInfo::create_new(name, index, args...);
         _signal_infos.emplace_back(sig);
 
-        return Types<T>::as_type(_signal_infos.back());
+        return Types<T>::as_signal_id(_signal_infos.back());
     }
 
     ScalarSignalId register_scalar_signal(const std::string& name)
@@ -90,7 +90,6 @@ protected:
 
 public:
     Model(const std::string& given_name="model");
-    ~Model();
 
     virtual void input_cb(double /*t*/) {}
 

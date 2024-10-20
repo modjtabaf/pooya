@@ -12,11 +12,10 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-// #include <iostream>
 #include <fstream>
+#include <memory>
 #include <string>
 
-// #include "signal.hpp"
 #include "src/block/model.hpp"
 #include "history.hpp"
 
@@ -29,18 +28,15 @@ void History::track_all()
     _signals.clear();
     std::size_t n = 0;
 #if defined(POOYA_USE_SMART_PTRS)
-    for (auto& sig: _model.get().signals())
+    const Model& model{_model.get()};
 #else // defined(POOYA_USE_SMART_PTRS)
-    for (auto sig: _model.signals())
+    const Model& model{_model};
 #endif // defined(POOYA_USE_SMART_PTRS)
+    for (auto& sig: model.signals())
         {if (sig->is_value()) {n++;}}
     _signals.reserve(n);
-#if defined(POOYA_USE_SMART_PTRS)
-    for (auto& sig: _model.get().signals())
-#else // defined(POOYA_USE_SMART_PTRS)
-    for (auto sig: _model.signals())
-#endif // defined(POOYA_USE_SMART_PTRS)
-        {if (sig->is_value()) {_signals.push_back(sig->as_value());}}
+    for (auto& sig: model.signals())
+        {if (sig->is_value()) {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this())));}}
 }
 
 void History::track(SignalId sig)
@@ -48,7 +44,7 @@ void History::track(SignalId sig)
     pooya_verify(empty(), "track should be called before the history is updated!");
     pooya_verify_value_signal(sig);
     if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
-        {_signals.push_back(sig->as_value());}
+        {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this())));}
 }
 
 void History::untrack(SignalId sig)
@@ -69,7 +65,7 @@ void History::update(uint k, double t)
             if (sig->is_scalar() || sig->is_int() || sig->is_bool())
                 {insert_or_assign(sig, Array(_nrows_grow));}
             else
-                {insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array()->size()));}
+                {insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array().size()));}
         }
     }
 
@@ -83,15 +79,15 @@ void History::update(uint k, double t)
             {h.conservativeResize(k + _nrows_grow, Eigen::NoChange);}
         bool valid = sig->is_assigned();
         if (sig->is_int())
-            {h(k, 0) = valid ? sig->as_int()->get() : 0;}
+            {h(k, 0) = valid ? sig->as_int().get() : 0;}
         else if (sig->is_bool())
-            {h(k, 0) = valid ? sig->as_bool()->get() : 0;}
+            {h(k, 0) = valid ? sig->as_bool().get() : 0;}
         else if (sig->is_scalar())
-            {h(k, 0) = valid ? sig->as_scalar()->get() : 0;}
+            {h(k, 0) = valid ? sig->as_scalar().get() : 0;}
         else
         {
             if (valid)
-                {h.row(k) = sig->as_array()->get();}
+                {h.row(k) = sig->as_array().get();}
             else
                 {h.row(k).setZero();}
         }
@@ -128,7 +124,7 @@ void History::export_csv(const std::string& filename)
             if (h.first->is_array())
             {
                 auto sig = h.first->as_array();
-                for (std::size_t k=0; k < sig->size(); k++)
+                for (std::size_t k=0; k < sig.size(); k++)
                     {ofs << "," << h.first->_full_name << "[" << k << "]";}
             }
             else
@@ -151,7 +147,7 @@ void History::export_csv(const std::string& filename)
                 if (h.first->is_array())
                 {
                     auto sig = h.first->as_array();
-                    for (std::size_t j=0; j < sig->size(); j++)
+                    for (std::size_t j=0; j < sig.size(); j++)
                         {ofs << "," << h.second(k, j);}
                 }
                 else

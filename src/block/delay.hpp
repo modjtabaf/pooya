@@ -52,9 +52,9 @@ public:
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         // input signals
-        _s_x = Types<T>::as_type(SingleOutputT<T>::_ibus->at("in"));
+        _s_x = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus->at("in")));
         _s_delay = SingleOutputT<T>::scalar_input_at("delay");
-        _s_initial = Types<T>::as_type(SingleOutputT<T>::_ibus->at("initial"));
+        _s_initial = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus->at("initial")));
 
         return true;
     }

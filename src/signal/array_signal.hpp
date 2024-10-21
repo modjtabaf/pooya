@@ -36,9 +36,7 @@ class ArraySignalInfo : public FloatSignalInfo
     friend class Model;
 
 protected:
-    const std::size_t _size;
-    MappedArray _array_value{nullptr, 0};
-    MappedArray _deriv_array_value{nullptr, 0};
+    Array _array_value;
 
     static ArraySignalId create_new(const std::string& full_name, std::size_t index, std::size_t size)
     {
@@ -47,12 +45,12 @@ protected:
 
 public:
     ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t size)
-        : FloatSignalInfo(full_name, index), _size(size)
+        : FloatSignalInfo(full_name, index, size)
     {
         _array = true;
     }
 
-    const MappedArray& get() const
+    const Array& get() const
     {
         pooya_trace0;
         pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to retrieve the value of an uninitialized array signal!");
@@ -68,14 +66,8 @@ public:
             std::string("size mismatch (id=") + _full_name + ")(" + std::to_string(_size) +
             " vs " + std::to_string(value.rows()) + ")!");
         _array_value = value;
-        if (_deriv_array_value.size() == int(_size))
-        {
-            _deriv_array_value = value;
-        }
         _assigned = true;
     }
-
-    std::size_t size() const {return _size;}
 };
 
 inline ArraySignalId SignalInfo::as_array() {return _array ? std::static_pointer_cast<ArraySignalInfo>(shared_from_this()) : ArraySignalId();}

@@ -15,7 +15,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_BLOCK_MODEL_HPP__
 #define __POOYA_BLOCK_MODEL_HPP__
 
-#include "src/signal/values_array.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/signal/int_signal.hpp"
 #include "src/signal/bool_signal.hpp"
@@ -24,12 +23,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 namespace pooya
 {
-
-#define pooya_verify_signals_locked() \
-    pooya_verify(_signals_locked, "Signals are not locked!");
-
-#define pooya_verify_signals_not_locked() \
-    pooya_verify(!_signals_locked, "Attempting to modify the signals while they are locked!");
 
 class Model : public Parent
 {
@@ -40,8 +33,6 @@ public:
 
 protected:
     SignalInfos _signal_infos;
-    ValuesArray _values;
-    bool _signals_locked{false};
 
     bool init(Parent&, BusId, BusId) override;
 
@@ -49,7 +40,6 @@ protected:
     typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
     {
         pooya_trace("block: " + full_name() + ", given name: " + name);
-        pooya_verify_signals_not_locked();
         if (name.empty()) {return typename Types<T>::SignalId();}
 
         pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
@@ -95,12 +85,9 @@ public:
 
     Model* model() override {return this;}
     const SignalInfos& signals() const {return _signal_infos;}
-    const ValuesArray& values() const {return _values;}
 
     void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
     SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
-    void lock_signals();
-    void reset_with_state_variables(const Array& state_variables);
     void invalidate();
 };
 

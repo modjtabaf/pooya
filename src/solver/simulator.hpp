@@ -41,6 +41,8 @@ protected:
     InputCallback _inputs_cb;
     Array _state_variables;
     Array _state_variables_orig;
+    Array _state_variable_derivs;
+    std::vector<FloatSignalId> _state_signals;
 #if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<StepperBase>> _stepper;
 #else // defined(POOYA_USE_SMART_PTRS)
@@ -65,6 +67,8 @@ protected:
 #endif // defined(POOYA_USE_SMART_PTRS)
 
     uint _process(double t);
+    void reset_with_state_variables(const Array& state_variables);
+    void get_state_variables(Array& state_variables);
 
 public:
     Simulator(Model& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr, bool reuse_order = false);

@@ -27,7 +27,6 @@ class FloatSignalInfo : public ValueSignalInfo
 
 protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
-    bool _is_deriv{false};             // is this the derivative of another signal?
     const std::size_t _size;
 
     FloatSignalInfo(const std::string& full_name, std::size_t index, std::size_t size=1) :

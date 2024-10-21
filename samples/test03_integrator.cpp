@@ -53,7 +53,6 @@ int main()
             pooya_trace0;
             xd->set(t < 3 or t > 7 ? 1.0 : 0.0);
             trigger->set(t >= 4.9 && t <= 5.1);
-
         },
         &stepper);
 

@@ -15,9 +15,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 
-#include <optional>
-
-#include "signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
@@ -35,8 +32,7 @@ class ScalarSignalInfo : public FloatSignalInfo
     friend class Model;
 
 protected:
-    std::optional<std::reference_wrapper<double>> _scalar_value;
-    std::optional<std::reference_wrapper<double>> _deriv_scalar_value;    // only valid if _is_deriv is true, nullptr otherwise
+    double _scalar_value;
 
     static ScalarSignalId create_new(const std::string& full_name, std::size_t index)
     {
@@ -50,21 +46,15 @@ public:
     double get() const
     {
         pooya_trace0;
-        pooya_verify(_scalar_value, _full_name + ": attempting to retrieve the value of an uninitialized scalar signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
-        return _scalar_value.value().get();
+        return _scalar_value;
     }
 
     void set(double value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(_scalar_value, _full_name + ": attempting to assign the value of an uninitialized scalar signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
-        _scalar_value.value().get() = value;
-        if (_deriv_scalar_value)
-        {
-            _deriv_scalar_value.value().get() = value;
-        }
+        _scalar_value = value;
         _assigned = true;
     }
 

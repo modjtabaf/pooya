@@ -33,8 +33,6 @@ using Array7 = ArrayN<7>;
 using Array8 = ArrayN<8>;
 using Array9 = ArrayN<9>;
 
-using MappedArray = Eigen::Map<Array>;
-
 }
 
 #endif // __POOYA_SIGNAL_ARRAY_HPP__

@@ -19,7 +19,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/helper/trace.hpp"
 #include "src/signal/array.hpp"
-#include "src/signal/values_array.hpp"
 
 namespace pooya
 {
@@ -27,12 +26,12 @@ namespace pooya
 class StepperBase
 {
 public:
-    using StepperCallback = std::function<const ValuesArray::StateVariableDerivs&(double, const Array&)>;
+    using StepperCallback = std::function<const Array&(double, const Array&)>;
 
 protected:
     StepperCallback _callback;
 
-    auto f(double t, const Array& v) -> const ValuesArray::StateVariableDerivs&
+    auto f(double t, const Array& v) -> const Array&
     {
         pooya_trace0;
         return _callback(t, v);

@@ -36,7 +36,7 @@ class IntSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    std::optional<std::reference_wrapper<double>> _int_value;
+    int _int_value;
 
     static IntSignalId create_new(const std::string& full_name, std::size_t index)
     {
@@ -50,17 +50,15 @@ public:
     int get() const
     {
         pooya_trace0;
-        pooya_verify(_int_value, _full_name + ": attempting to retrieve the value of an uninitialized int signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
-        return std::round(_int_value.value().get());
+        return _int_value;
     }
 
-    void set(double value)
+    void set(int value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(_int_value, _full_name + ": attempting to assign the value of an uninitialized int signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
-        _int_value.value().get() = std::round(value);
+        _int_value = value;
         _assigned = true;
     }
 

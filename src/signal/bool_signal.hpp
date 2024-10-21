@@ -34,7 +34,7 @@ class BoolSignalInfo : public ValueSignalInfo
     friend class Model;
 
 protected:
-    std::optional<std::reference_wrapper<double>> _bool_value;
+    bool _bool_value;
 
     static BoolSignalId create_new(const std::string& full_name, std::size_t index)
     {
@@ -48,17 +48,15 @@ public:
     bool get() const
     {
         pooya_trace0;
-        pooya_verify(_bool_value, _full_name + ": attempting to retrieve the value of an uninitialized bool signal!");
         pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
-        return _bool_value.value().get() != 0;
+        return _bool_value;
     }
 
     void set(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(_bool_value, _full_name + ": attempting to assign the value of an uninitialized bool signal!");
         pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
-        _bool_value.value().get() = value;
+        _bool_value = value;
         _assigned = true;
     }
 

@@ -15,6 +15,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_HELPER_HERE_HPP__
 #define __POOYA_HELPER_HERE_HPP__
 
+#include <iostream>
+
 #define pooya_here(s) std::cout << "Pooya: " << __FILE__ << ":" << __LINE__ << ": " << s << std::endl;
 // #undef pooya_here
 // #define pooya_here(s)

@@ -13,10 +13,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 */
 
 #include <iostream>
-// #include <fstream>
-// #include <string>
 
-// #include "signal.hpp"
 #include "src/helper/util.hpp"
 #include "src/block/model.hpp"
 #include "simulator.hpp"
@@ -164,11 +161,36 @@ void Simulator::init(double t0)
 {
     pooya_trace("t0: " + std::to_string(t0));
 
-    static_cast<Model&>(_model).lock_signals();
+    std::size_t state_variables_size{0};
+    std::size_t state_signals_count{0};
+
+    // find the total sizes of signals and state variables
+    auto& signals = static_cast<Model&>(_model).signals();
+    for (const auto& signal: signals)
+    {
+        if (!signal->is_float()) {continue;}
+        auto float_signal = signal->as_float();
+        if (!float_signal.is_state_variable()) {continue;}
+        state_variables_size += float_signal.size();
+        state_signals_count++;
+    }
+    _state_variables.resize(state_variables_size);
+    _state_variables_orig.resize(state_variables_size);
+    _state_variable_derivs.resize(state_variables_size);
+
+    _state_signals.reserve(state_signals_count);
+    for (auto& signal: signals)
+    {
+        if (!signal->is_float()) {continue;}
+        auto& float_signal = signal->as_float();
+        if (!float_signal.is_state_variable()) {continue;}
+        _state_signals.push_back(std::static_pointer_cast<FloatSignalInfo>(float_signal.shared_from_this()));
+    }
+    pooya_verify(_state_signals.size() == state_signals_count, "State signals count mismatch!");
 
     _t_prev = t0;
 
-    if (static_cast<Model&>(_model).values().num_state_variables() > 0)
+    if (state_variables_size > 0)
     {
         if (_reuse_order)
         {
@@ -228,14 +250,31 @@ void Simulator::init(double t0)
 void Simulator::run(double t, double min_time_step, double max_time_step)
 {
     pooya_trace("t: " + std::to_string(t));
-    auto stepper_callback = [&](double t, const Array& state_variables) -> const ValuesArray::StateVariableDerivs&
+    auto stepper_callback = [&](double t, const Array& state_variables) -> const Array&
     {
         pooya_trace("t: " + std::to_string(t));
-        static_cast<Model&>(_model).reset_with_state_variables(state_variables);
+        reset_with_state_variables(state_variables);
         if (_inputs_cb) {_inputs_cb(_model, t);}
         static_cast<Model&>(_model).input_cb(t);
         _process(t);
-        return static_cast<Model&>(_model).values().state_variable_derivs();
+
+        double* data = _state_variable_derivs.data();
+        for (auto sig: _state_signals)
+        {
+            auto& deriv_sig = sig->deriv_signal();
+            if (deriv_sig->is_scalar())
+            {
+                *data = deriv_sig->as_scalar().get();
+                data++;
+            }
+            else if (deriv_sig->is_array())
+            {
+                Eigen::Map<Array>(data, deriv_sig->size()) = deriv_sig->as_array().get();
+                data += deriv_sig->size();
+            }
+        }
+
+        return _state_variable_derivs;
     };
 
     if (!_initialized)
@@ -245,7 +284,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         return;
     }
 
-    if (static_cast<Model&>(_model).values().num_state_variables() > 0)
+    if (_state_variables.size() > 0)
     {
         if (t <_t_prev)
         {
@@ -265,7 +304,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             if (_inputs_cb) {_inputs_cb(_model, t);}
             static_cast<Model&>(_model).input_cb(t);
             static_cast<Model&>(_model).pre_step(t);
-            _state_variables = static_cast<Model&>(_model).values().state_variables();
+            get_state_variables(_state_variables);
         }
         else
         {
@@ -284,7 +323,8 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 if (_inputs_cb) {_inputs_cb(_model, t1);}
                 static_cast<Model&>(_model).input_cb(t1);
                 static_cast<Model&>(_model).pre_step(t1);
-                _state_variables_orig = static_cast<Model&>(_model).values().state_variables();
+                get_state_variables(_state_variables_orig);
+
 
 #if defined(POOYA_USE_SMART_PTRS)
                 _stepper.value().get().step
@@ -304,7 +344,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 
                     if (t1 < t)
                     {
-                        static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
+                        reset_with_state_variables(_state_variables);
                         if (_inputs_cb) {_inputs_cb(_model, t1);}
                         static_cast<Model&>(_model).input_cb(t1);
                         _process(t1);
@@ -322,15 +362,55 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         }
     }
 
-    static_cast<Model&>(_model).reset_with_state_variables(_state_variables);
+    reset_with_state_variables(_state_variables);
     if (_inputs_cb) {_inputs_cb(_model, t);}
     static_cast<Model&>(_model).input_cb(t);
-    if (static_cast<Model&>(_model).values().num_state_variables() == 0)
+    if (_state_variables.size() == 0)
         {static_cast<Model&>(_model).pre_step(t);}
     _process(t);
     static_cast<Model&>(_model).post_step(t);
 
     _t_prev = t;
+}
+
+void Simulator::reset_with_state_variables(const Array& state_variables)
+{
+    pooya_trace0;
+    static_cast<Model&>(_model).invalidate();
+    const double* data = state_variables.data();
+    for (auto sig: _state_signals)
+    {
+        if (sig->is_scalar())
+        {
+            sig->as_scalar().set(*data);
+            data++;
+        }
+        else if (sig->is_array())
+        {
+            sig->as_array().set(Eigen::Map<const Array>(data, sig->size()));
+            data += sig->size();
+        }
+    }
+}
+
+void Simulator::get_state_variables(Array& state_variables)
+{
+    pooya_trace0;
+    pooya_verify(state_variables.size() == _state_variables.size(), "Incorrect output array size!");
+    double* data = state_variables.data();
+    for (auto sig: _state_signals)
+    {
+        if (sig->is_scalar())
+        {
+            *data = sig->as_scalar().get();
+            data++;
+        }
+        else if (sig->is_array())
+        {
+            Eigen::Map<Array>(data, sig->size()) = sig->as_array().get();
+            data += sig->size();
+        }
+    }
 }
 
 }

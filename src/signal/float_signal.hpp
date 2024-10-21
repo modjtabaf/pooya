@@ -31,12 +31,16 @@ class FloatSignalInfo : public ValueSignalInfo
 protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     bool _is_deriv{false};             // is this the derivative of another signal?
+    const std::size_t _size;
 
-    FloatSignalInfo(const std::string& full_name, uint16_t type, std::size_t index) :
-        ValueSignalInfo(full_name, type | FloatType, index) {}
+    FloatSignalInfo(const std::string& full_name, uint16_t type, std::size_t index, std::size_t size=1) :
+        ValueSignalInfo(full_name, type | FloatType, index), _size(size) {}
 
 public:
     bool is_state_variable() const {return static_cast<bool>(_deriv_sig);}
+    std::size_t size() const {return _size;}
+    FloatSignalId& deriv_signal() {return _deriv_sig;}
+    const FloatSignalId& deriv_signal() const {return _deriv_sig;}
 };
 
 inline FloatSignalInfo& SignalInfo::as_float()

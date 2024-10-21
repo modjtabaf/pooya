@@ -41,6 +41,7 @@ protected:
 public:
     double get_as_scalar() const;
     void set_as_scalar(double value);
+    void clear() {_assigned = false;}
 
     bool is_assigned() const {return _assigned;}
 };

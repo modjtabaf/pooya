@@ -35,7 +35,7 @@ struct Types<Array>
 {
     using SignalInfo = ArraySignalInfo;
     using SignalId = ArraySignalId;
-    using GetValue = const MappedArray&;
+    using GetValue = const Array&;
     using SetValue = const Array&;
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);

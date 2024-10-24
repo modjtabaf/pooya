@@ -36,7 +36,7 @@ void Rkf45::step(StepperCallback callback, double t0, const Array& v0, double t1
     v1  = v0 + (2375./20520) * _K1 + (11264./20520) * _K3 + (10985./20520) * _K4 - (4104./20520) * _K5;
     _ZT = v0 + (33440./282150) * _K1 + (146432./282150) * _K3 + (142805./282150) * _K4 - (50787./282150) * _K5 + (10260./282150) * _K6;
 
-    double max_abs = (v1 - _ZT).abs().max(0)(0, 0);
+    double max_abs = (v1 - _ZT).cwiseAbs().cwiseMax(0)(0, 0);
     double s4 = max_abs > 0 ? (eps_abs * h) / (2 * max_abs) : 1;
 
     if (s4 < 0.31640625) // 0.31640625 == 0.75 ^ 4

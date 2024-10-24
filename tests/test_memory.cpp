@@ -40,8 +40,8 @@ TEST_F(TestMemory, ScalarMemory)
     // model setup
     pooya::Model model;
     pooya::Memory memory("memory", x0);
-    pooya::ScalarSignalId s_x = model.create_scalar_signal("x");
-    pooya::ScalarSignalId s_y = model.create_scalar_signal("y");
+    auto s_x = pooya::ScalarSignalInfo::create_new("x");
+    auto s_y = pooya::ScalarSignalInfo::create_new("y");
     model.add_block(memory, s_x, s_y);
 
     // simulator setup
@@ -68,8 +68,8 @@ TEST_F(TestMemory, ArrayMemory)
     // model setup
     pooya::Model model;
     pooya::MemoryA memory("memory", x0);
-    pooya::ArraySignalId s_x = model.create_array_signal("x", N);
-    pooya::ArraySignalId s_y = model.create_array_signal("y", N);
+    auto s_x = pooya::ArraySignalInfo::create_new("x", N);
+    auto s_y = pooya::ArraySignalInfo::create_new("y", N);
     model.add_block(memory, s_x, s_y);
 
     // simulator setup

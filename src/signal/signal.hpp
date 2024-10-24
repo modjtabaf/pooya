@@ -32,8 +32,7 @@ protected:
 
 public:
     const std::string _full_name; // full name of the signal
-    const std::size_t _index{0};  // the signal index
-    const uint16_t _type;
+    const uint32_t _type;
 
     enum SignalTypes
     {
@@ -44,10 +43,11 @@ public:
         IntType    = 0x0010,
         BoolType   = 0x0020,
         ArrayType  = 0x0040,
+        AllTypes   = -1,
     };
 
 protected:
-    SignalInfo(const std::string& full_name, uint16_t type, std::size_t index) : _full_name(full_name), _index(index), _type(type) {}
+    SignalInfo(const std::string& full_name, uint32_t type) : _full_name(full_name), _type(type) {}
 
 public:
     bool is_value() const {return _type & ValueType;}

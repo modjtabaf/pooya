@@ -38,14 +38,14 @@ class IntSignalInfo : public ValueSignalInfo
 protected:
     int _int_value;
 
-    static IntSignalId create_new(const std::string& full_name, std::size_t index)
-    {
-        return std::make_shared<IntSignalInfo>(Protected(), full_name, index);
-    } 
-
 public:
-    IntSignalInfo(Protected, const std::string& full_name, std::size_t index)
-        : ValueSignalInfo(full_name, IntType, index) {}
+    IntSignalInfo(Protected, const std::string& full_name)
+        : ValueSignalInfo(full_name, IntType) {}
+
+    static IntSignalId create_new(const std::string& full_name)
+    {
+        return std::make_shared<IntSignalInfo>(Protected(), full_name);
+    } 
 
     int get() const
     {

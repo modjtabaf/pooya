@@ -17,10 +17,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <cstdint>
 #include <functional>
-
-#if defined(POOYA_USE_SMART_PTRS)
+#include <memory>
 #include <optional>
-#endif // defined(POOYA_USE_SMART_PTRS)
+#include <unordered_set>
 
 #include "src/signal/trait.hpp"
 #include "src/signal/scalar_signal.hpp"
@@ -34,9 +33,9 @@ namespace pooya
 
 class Block;
 class Parent;
-class Model;
 
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
+using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
 
 class Block
 {
@@ -45,11 +44,21 @@ class Block
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
 
+    enum class SignalAssociationType
+    {
+        Input,
+        Output,
+        Internal,
+        Unknown,
+    };
+
+    using SignalAssociationPair = std::pair<ValueSignalId, SignalAssociationType>;
+
 protected:
     bool _initialized{false};
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
-    std::vector<ValueSignalId> _dependencies;
+    std::vector<SignalAssociationPair> _associated_signals;
 #if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<Parent>> _parent;
 #else // defined(POOYA_USE_SMART_PTRS)
@@ -62,8 +71,7 @@ protected:
     std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
-    bool add_dependency(ValueSignalId sig);
-    bool remove_dependency(ValueSignalId sig);
+    bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
 
     Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -77,15 +85,6 @@ public:
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
     virtual void activation_function(double /*t*/) {}
-    virtual Model* model();
-
-    Model& model_ref()
-    {
-        pooya_trace("block: " + full_name());
-        auto* mdl = model();
-        pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
-        return *mdl;
-    }
 
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
@@ -94,10 +93,10 @@ public:
     const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}
     BusId obus() const {return _obus;}
-    const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
+    auto associated_signals() const -> const auto& {return _associated_signals;}
 
     template<typename T, typename Key>
-    typename Types<T>::SignalId io_at(BusId bus, Key key, bool is_dependency)
+    typename Types<T>::SignalId io_at(BusId bus, Key key, std::optional<SignalAssociationType> type)
     {
         pooya_verify_bus(bus);
         SignalId sig;
@@ -105,84 +104,91 @@ public:
             {sig = bus->at(key).second;}
         else
             {sig = bus->at(key);}
+#if defined (POOYA_DEBUG)
         Types<T>::verify_signal_type(sig);
-        if (is_dependency)
+#endif // defined (POOYA_DEBUG)
+        if (type.has_value())
         {
             pooya_verify_value_signal(sig);
-            add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
+            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()), *type);
         }
         return Types<T>::as_signal_id(sig);
     }
 
-    ScalarSignalId scalar_input_at(const std::string& label, bool is_dependency=true)
+    ScalarSignalId scalar_input_at(const std::string& label)
     {
-        return io_at<double, const std::string&>(_ibus, label, is_dependency);
+        return io_at<double, const std::string&>(_ibus, label, SignalAssociationType::Input);
     }
-    IntSignalId int_input_at(const std::string& label, bool is_dependency=true)
+    IntSignalId int_input_at(const std::string& label)
     {
-        return io_at<int, const std::string&>(_ibus, label, is_dependency);
+        return io_at<int, const std::string&>(_ibus, label, SignalAssociationType::Input);
     }
-    BoolSignalId bool_input_at(const std::string& label, bool is_dependency=true)
+    BoolSignalId bool_input_at(const std::string& label)
     {
-        return io_at<bool, const std::string&>(_ibus, label, is_dependency);
+        return io_at<bool, const std::string&>(_ibus, label, SignalAssociationType::Input);
     }
-    ArraySignalId array_input_at(const std::string& label, bool is_dependency=true)
+    ArraySignalId array_input_at(const std::string& label)
     {
-        return io_at<Array, const std::string&>(_ibus, label, is_dependency);
+        return io_at<Array, const std::string&>(_ibus, label, SignalAssociationType::Input);
     }
-    ScalarSignalId scalar_input_at(std::size_t index, bool is_dependency=true)
+    ScalarSignalId scalar_input_at(std::size_t index)
     {
-        return io_at<double, std::size_t>(_ibus, index, is_dependency);
+        return io_at<double, std::size_t>(_ibus, index, SignalAssociationType::Input);
     }
-    IntSignalId int_input_at(std::size_t index, bool is_dependency=true)
+    IntSignalId int_input_at(std::size_t index)
     {
-        return io_at<int, std::size_t>(_ibus, index, is_dependency);
+        return io_at<int, std::size_t>(_ibus, index, SignalAssociationType::Input);
     }
-    BoolSignalId bool_input_at(std::size_t index, bool is_dependency=true)
+    BoolSignalId bool_input_at(std::size_t index)
     {
-        return io_at<bool, std::size_t>(_ibus, index, is_dependency);
+        return io_at<bool, std::size_t>(_ibus, index, SignalAssociationType::Input);
     }
-    ArraySignalId array_input_at(std::size_t index, bool is_dependency=true)
+    ArraySignalId array_input_at(std::size_t index)
     {
-        return io_at<Array, std::size_t>(_ibus, index, is_dependency);
+        return io_at<Array, std::size_t>(_ibus, index, SignalAssociationType::Input);
     }
-    ScalarSignalId scalar_output_at(const std::string& label, bool is_dependency=false)
+    ScalarSignalId scalar_output_at(const std::string& label)
     {
-        return io_at<double, const std::string&>(_obus, label, is_dependency);
+        return io_at<double, const std::string&>(_obus, label, SignalAssociationType::Output);
     }
-    IntSignalId int_output_at(const std::string& label, bool is_dependency=false)
+    IntSignalId int_output_at(const std::string& label)
     {
-        return io_at<int, const std::string&>(_obus, label, is_dependency);
+        return io_at<int, const std::string&>(_obus, label, SignalAssociationType::Output);
     }
-    BoolSignalId bool_output_at(const std::string& label, bool is_dependency=false)
+    BoolSignalId bool_output_at(const std::string& label)
     {
-        return io_at<bool, const std::string&>(_obus, label, is_dependency);
+        return io_at<bool, const std::string&>(_obus, label, SignalAssociationType::Output);
     }
-    ArraySignalId array_output_at(const std::string& label, bool is_dependency=false)
+    ArraySignalId array_output_at(const std::string& label)
     {
-        return io_at<Array, const std::string&>(_obus, label, is_dependency);
+        return io_at<Array, const std::string&>(_obus, label, SignalAssociationType::Output);
     }
-    ScalarSignalId scalar_output_at(std::size_t index, bool is_dependency=false)
+    ScalarSignalId scalar_output_at(std::size_t index)
     {
-        return io_at<double, std::size_t>(_obus, index, is_dependency);
+        return io_at<double, std::size_t>(_obus, index, SignalAssociationType::Output);
     }
-    IntSignalId int_output_at(std::size_t index, bool is_dependency=false)
+    IntSignalId int_output_at(std::size_t index)
     {
-        return io_at<int, std::size_t>(_obus, index, is_dependency);
+        return io_at<int, std::size_t>(_obus, index, SignalAssociationType::Output);
     }
-    BoolSignalId bool_output_at(std::size_t index, bool is_dependency=false)
+    BoolSignalId bool_output_at(std::size_t index)
     {
-        return io_at<bool, std::size_t>(_obus, index, is_dependency);
+        return io_at<bool, std::size_t>(_obus, index, SignalAssociationType::Output);
     }
-    ArraySignalId array_output_at(std::size_t index, bool is_dependency=false)
+    ArraySignalId array_output_at(std::size_t index)
     {
-        return io_at<Array, std::size_t>(_obus, index, is_dependency);
+        return io_at<Array, std::size_t>(_obus, index, SignalAssociationType::Output);
     }
 
     virtual void _mark_unprocessed();
     virtual uint _process(double t, bool go_deep = true);
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
+    {
+        pooya_trace("block: " + full_name());
+        return (level > max_level) || cb(*this, level);
+    }
+    virtual bool const_traverse(ConstTraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) const
     {
         pooya_trace("block: " + full_name());
         return (level > max_level) || cb(*this, level);

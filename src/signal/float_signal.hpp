@@ -32,12 +32,20 @@ protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     const std::size_t _size;
 
-    FloatSignalInfo(const std::string& full_name, uint16_t type, std::size_t index, std::size_t size=1) :
-        ValueSignalInfo(full_name, type | FloatType, index), _size(size) {}
+    FloatSignalInfo(const std::string& full_name, uint32_t type, std::size_t size=1) :
+        ValueSignalInfo(full_name, type | FloatType), _size(size) {}
 
 public:
     bool is_state_variable() const {return static_cast<bool>(_deriv_sig);}
     std::size_t size() const {return _size;}
+    void set_deriv_signal(FloatSignalId deriv_sig)
+    {
+        pooya_verify_valid_signal(deriv_sig);
+        pooya_verify(_type == deriv_sig->_type, _full_name + ", " + deriv_sig->_full_name + ": type mismatch!");
+        pooya_verify(_size == deriv_sig->_size, _full_name + ", " + deriv_sig->_full_name + ": size mismatch!");
+
+        _deriv_sig = deriv_sig;
+    }
     FloatSignalId& deriv_signal() {return _deriv_sig;}
     const FloatSignalId& deriv_signal() const {return _deriv_sig;}
 };

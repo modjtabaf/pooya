@@ -47,11 +47,11 @@ public:
         pooya_trace0;
 
         // create pooya signals
-        auto time_delay = create_scalar_signal("time_delay");
-        auto initial = create_scalar_signal("initial");
+        auto time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
+        auto initial    = pooya::ScalarSignalInfo::create_new("initial");
 
-        _s_x = create_scalar_signal("x");
-        _s_y = create_scalar_signal("y");
+        _s_x = pooya::ScalarSignalInfo::create_new("x");
+        _s_y = pooya::ScalarSignalInfo::create_new("y");
 
         // setup the submodel
         add_block(_source, {}, _s_x);
@@ -76,6 +76,8 @@ int main()
 
     pooya::Simulator sim(model);
     pooya::History history(model);
+    history.track(model._s_x);
+    history.track(model._s_y);
 
     uint k = 0;
     double t;

@@ -53,19 +53,39 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
         _num_oports == 0 ?
             _full_name + " cannot generate any output." :
             _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
-    
-    if (ibus && ibus->size() > 0)
+
+    _associated_signals.reserve((ibus ? ibus->size() : 0) + (obus ? obus->size() : 0));
+
+    if (ibus)
     {
-        _dependencies.reserve(ibus->size());
+        // _dependencies.reserve(ibus->size());
+        // _input_values.reserve(ibus->size());
         for (auto sig: *ibus)
         {
             if (sig.second->is_value())
             {
-                add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
+                // add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
+                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Input);
             }
         }
-        _dependencies.shrink_to_fit();
+        // _dependencies.shrink_to_fit();
+        // _input_values.shrink_to_fit();
     }
+
+    if (obus)
+    {
+        // _output_values.reserve(obus->size());
+        for (auto sig: *obus)
+        {
+            if (sig.second->is_value())
+            {
+                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Output);
+            }
+        }
+        // _output_values.shrink_to_fit();
+    }
+
+    _associated_signals.shrink_to_fit();
 
     _ibus = ibus;
     _obus = obus;
@@ -74,31 +94,54 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     return true;
 }
 
-bool Block::add_dependency(ValueSignalId sig)
+// bool Block::add_dependency(ValueSignalId sig)
+bool Block::register_associated_signal(ValueSignalId signal, SignalAssociationType type)
 {
     pooya_trace("block: " + full_name());
-    pooya_verify_valid_signal(sig);
-    if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+    pooya_verify_valid_signal(signal);
+    // if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+    auto it = std::find_if(_associated_signals.begin(), _associated_signals.end(),
+        [&](const SignalAssociationPair& sig_type) -> bool
+        {
+            return sig_type.first == signal;
+        });
+    if (it == _associated_signals.end())
     {
-        _dependencies.push_back(sig);
+        // _dependencies.push_back(sig);
+        _associated_signals.emplace_back(signal, type);
         return true;
     }
 
     return false;
 }
 
-bool Block::remove_dependency(ValueSignalId sig)
-{
-    pooya_trace("block: " + full_name());
-    pooya_verify_valid_signal(sig);
-    auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
-    if (it == _dependencies.end())
-    {
-        return false;
-    }
-    _dependencies.erase(it);
-    return true;
-}
+// bool Block::add_output_value_signal(ValueSignalId sig)
+// {
+//     pooya_trace("block: " + full_name());
+//     pooya_verify_valid_signal(sig);
+//     // if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+//     if (std::find(_output_values.begin(), _output_values.end(), sig) == _output_values.end())
+//     {
+//         // _dependencies.push_back(sig);
+//         _output_values.push_back(sig);
+//         return true;
+//     }
+
+//     return false;
+// }
+
+// bool Block::remove_dependency(ValueSignalId sig)
+// {
+//     pooya_trace("block: " + full_name());
+//     pooya_verify_valid_signal(sig);
+//     auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
+//     if (it == _dependencies.end())
+//     {
+//         return false;
+//     }
+//     _dependencies.erase(it);
+//     return true;
+// }
 
 void Block::_mark_unprocessed()
 {
@@ -109,9 +152,10 @@ uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name());
     if (_processed) {return 0;}
-    for (auto& sig: _dependencies)
+    // for (auto& sig: _dependencies)
+    for (auto& sig: _associated_signals)
     {
-        if (!sig->is_assigned()) {return 0;}
+        if ((sig.second == SignalAssociationType::Input) && !sig.first->is_assigned()) {return 0;}
     }
 
     activation_function(t);
@@ -120,21 +164,21 @@ uint Block::_process(double t, bool /*go_deep*/)
     return 1;
 }
 
-Model* Block::model()
-{
-    pooya_trace("block: " + full_name());
+// Model* Block::model()
+// {
+//     pooya_trace("block: " + full_name());
 
-    if (_parent)
-    {
-#if defined(POOYA_USE_SMART_PTRS)
-        return _parent->get().model();
-#else // defined(POOYA_USE_SMART_PTRS)
-        return _parent->model();
-#endif // defined(POOYA_USE_SMART_PTRS)
-    }
+//     if (_parent)
+//     {
+// #if defined(POOYA_USE_SMART_PTRS)
+//         return _parent->get().model();
+// #else // defined(POOYA_USE_SMART_PTRS)
+//         return _parent->model();
+// #endif // defined(POOYA_USE_SMART_PTRS)
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
 std::string Block::make_valid_given_name(const std::string& given_name)
 {

@@ -63,6 +63,9 @@ public:
     pooya::ScalarSignalId _m{nullptr};
     pooya::ScalarSignalId _g{nullptr};
     pooya::ScalarSignalId _l{nullptr};
+    pooya::ScalarSignalId _phi{nullptr};
+    pooya::ScalarSignalId _dphi{nullptr};
+    pooya::ScalarSignalId _d2phi{nullptr};
 
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
@@ -72,28 +75,26 @@ public:
             return false;
 
         // create pooya signals
-        auto phi   = create_scalar_signal("phi");
-        auto dphi  = create_scalar_signal("dphi");
-        auto d2phi = create_scalar_signal("d2phi");
+        _phi   = pooya::ScalarSignalInfo::create_new("phi");
+        _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
+        _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
 
-        // choose random names for these internal signals
-        auto s10 = create_scalar_signal();
-        auto s20 = create_scalar_signal();
-        auto s30 = create_scalar_signal();
+        auto s10 = pooya::ScalarSignalInfo::create_new("");
+        auto s20 = pooya::ScalarSignalInfo::create_new("");
+        auto s30 = pooya::ScalarSignalInfo::create_new("");
 
-        auto& model_ = model_ref();
-        _tau = model_.create_scalar_signal("tau");
-        _m = model_.create_scalar_signal("m");
-        _g = model_.create_scalar_signal("g");
-        _l = model_.create_scalar_signal("l");
+        _tau = pooya::ScalarSignalInfo::create_new("tau");
+        _m = pooya::ScalarSignalInfo::create_new("m");
+        _g = pooya::ScalarSignalInfo::create_new("g");
+        _l = pooya::ScalarSignalInfo::create_new("l");
 
         // setup the submodel
-        add_block(_integ1, d2phi, dphi);
-        add_block(_integ2, dphi, phi);
-        add_block(_sin, phi, s10);
+        add_block(_integ1, _d2phi, _dphi);
+        add_block(_integ2, _dphi, _phi);
+        add_block(_sin, _phi, s10);
         add_block(_muldiv1, {s10, _g, _l}, s20);
         add_block(_muldiv2, {_tau, _m, _l, _l}, s30);
-        add_block(_sub, {s30, s20}, d2phi);
+        add_block(_sub, {s30, s20}, _d2phi);
 
         return true;
     }
@@ -126,6 +127,8 @@ int main()
         &stepper, true);
 
     pooya::History history(model);
+    history.track(pendulum._phi);
+    history.track(pendulum._dphi);
 
     uint k = 0;
     double t;
@@ -141,16 +144,16 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto  phi = model.lookup_signal("/pendulum~phi");
-    auto dphi = model.lookup_signal("~dphi");
+    // auto  phi = model.lookup_signal("/pendulum~phi");
+    // auto dphi = model.lookup_signal("~dphi");
 
     history.shrink_to_fit();
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-8:8]\n";
-	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'phi',"
-	    << gp.file1d(history[dphi]) << "with lines title 'dphi'\n";
+	gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'phi',"
+	    << gp.file1d(history[pendulum._dphi]) << "with lines title 'dphi'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

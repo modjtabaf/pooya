@@ -32,14 +32,14 @@ protected:
     double _x;
     double _xd;
 
+public:
+    MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
+        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
+
     pooya::ScalarSignalId _s_tau;
     pooya::ScalarSignalId _s_x;
     pooya::ScalarSignalId _s_xd;
     pooya::ScalarSignalId _s_xdd;
-
-public:
-    MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
-        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
 
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId) override
     {
@@ -50,17 +50,23 @@ public:
 
         _s_tau = scalar_input_at(0);
 
-        _s_x = parent.create_scalar_signal("x");
-        _s_xd = parent.create_scalar_signal("xd");
-        _s_xdd = parent.create_scalar_signal("xdd");
+        _s_x = pooya::ScalarSignalInfo::create_new("x");
+        _s_xd = pooya::ScalarSignalInfo::create_new("xd");
+        _s_xdd = pooya::ScalarSignalInfo::create_new("xdd");
 
-        auto& model_ = model_ref();
-        model_.register_state_variable(_s_x, _s_xd);
-        model_.register_state_variable(_s_xd, _s_xdd);
+        // auto& model_ = model_ref();
+        // model_.register_state_variable(_s_x, _s_xd);
+        _s_x->set_deriv_signal(_s_xd);
+        // model_.register_state_variable(_s_xd, _s_xdd);
+        _s_xd->set_deriv_signal(_s_xdd);
 
         // it is not necessary to add these dependencies since both _x and _xd are state variables and so, are known always
-        add_dependency(_s_x);
-        add_dependency(_s_xd);
+        // add_dependency(_s_x);
+        register_associated_signal(_s_x, SignalAssociationType::Input);
+        // add_dependency(_s_xd);
+        register_associated_signal(_s_xd, SignalAssociationType::Input);
+
+        register_associated_signal(_s_xdd, SignalAssociationType::Internal);
 
         return true;
     }
@@ -98,7 +104,7 @@ int main()
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
-    auto tau = model.create_scalar_signal("tau");
+    auto tau = pooya::ScalarSignalInfo::create_new("tau");
 
     // setup the model
     model.add_block(msd, tau);
@@ -112,6 +118,7 @@ int main()
     }, &stepper);
 
     pooya::History history(model);
+    history.track(msd._s_x);
 
     uint k = 0;
     double t;
@@ -129,12 +136,12 @@ int main()
 
     history.shrink_to_fit();
 
-    auto x = model.lookup_signal("~x");
+    // auto x = model.lookup_signal("~x");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.4:0.5]\n";
-	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x'\n";
+	gp << "plot" << gp.file1d(history[msd._s_x]) << "with lines title 'x'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

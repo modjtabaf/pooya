@@ -22,17 +22,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-void History::track_all()
-{
-    pooya_verify(empty(), "track_all should be called before the history is updated!");
-    _signals.clear();
-    std::size_t n = 0;
-    for (auto& sig: _model.get().signals())
-        {if (sig->is_value()) {n++;}}
-    _signals.reserve(n);
-    for (auto& sig: _model.get().signals())
-        {if (sig->is_value()) {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this())));}}
-}
+// void History::track_all()
+// {
+//     pooya_verify(empty(), "track_all should be called before the history is updated!");
+//     _signals.clear();
+//     std::size_t n = 0;
+//     for (auto& sig: _model.get().signals())
+//         {if (sig->is_value()) {n++;}}
+//     _signals.reserve(n);
+//     for (auto& sig: _model.get().signals())
+//         {if (sig->is_value()) {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this())));}}
+// }
 
 void History::track(SignalId sig)
 {
@@ -54,7 +54,7 @@ void History::update(uint k, double t)
     pooya_trace("k = " + std::to_string(k));
     if (empty())
     {
-        if (_signals.empty()) {track_all();}
+        if (_signals.empty()) {/*track_all()*/return;}
         for (auto sig: _signals)
         {
             if (sig->is_scalar() || sig->is_int() || sig->is_bool())

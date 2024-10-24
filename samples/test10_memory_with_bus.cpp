@@ -54,7 +54,7 @@ int main()
 
     // create buses (signals)
 
-    auto x = model.create_bus("x", bus_spec); // assign bus wires implicitely
+    auto x = pooya::BusInfo::create_new("x", bus_spec); // assign bus wires implicitely
     /*
     // alternative 1
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
@@ -74,7 +74,7 @@ int main()
     });
     */
 
-    auto y = model.create_bus("y", bus_spec);
+    auto y = pooya::BusInfo::create_new("y", bus_spec);
 
     // setup the model
     model.add_block(bus_memory, x, y);
@@ -84,17 +84,33 @@ int main()
     auto x_x2 = x->scalar_at("x2");
     auto x_z3 = x->scalar_at("Z.z3");
 
+    auto y_x0 = y->scalar_at("x0");
+    auto y_x1 = y->scalar_at("x1");
+    auto y_x2 = y->scalar_at("x2");
+    auto y_z3 = y->scalar_at("Z.z3");
+
+    x_x1->set(0);
+    y_x1->set(0);
+
     pooya::Simulator sim(
         model, [&](pooya::Model &, double t) -> void
         {
             pooya_trace0;
             x_x0->set(std::sin(M_PI * t / 3));
-            x_x1->set(std::sin(M_PI * t / 5));
+            // x_x1->set(std::sin(M_PI * t / 5));
             x_x2->set(std::sin(M_PI * t / 7));
             x_z3->set(std::sin(M_PI * t / 9));
         });
 
     pooya::History history(model);
+    history.track(x_x0);
+    history.track(x_x1);
+    history.track(x_x2);
+    history.track(x_z3);
+    history.track(y_x0);
+    history.track(y_x1);
+    history.track(y_x2);
+    history.track(y_z3);
 
     uint k = 0;
     double t;
@@ -111,11 +127,6 @@ int main()
               << " milliseconds\n";
 
     history.shrink_to_fit();
-
-    auto y_x0 = y->scalar_at("x0");
-    auto y_x1 = y->scalar_at("x1");
-    auto y_x2 = y->scalar_at("x2");
-    auto y_z3 = y->scalar_at("Z.z3");
 
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

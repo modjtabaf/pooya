@@ -34,14 +34,14 @@ class ScalarSignalInfo : public FloatSignalInfo
 protected:
     double _scalar_value;
 
-    static ScalarSignalId create_new(const std::string& full_name, std::size_t index)
-    {
-        return std::make_shared<ScalarSignalInfo>(Protected(), full_name, index);
-    } 
-
 public:
-    ScalarSignalInfo(Protected, const std::string& full_name, std::size_t index)
-        : FloatSignalInfo(full_name, ScalarType, index) {}
+    ScalarSignalInfo(Protected, const std::string& full_name)
+        : FloatSignalInfo(full_name, ScalarType) {}
+
+    static ScalarSignalId create_new(const std::string& full_name)
+    {
+        return std::make_shared<ScalarSignalInfo>(Protected(), full_name);
+    } 
 
     double get() const
     {

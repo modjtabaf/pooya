@@ -35,8 +35,8 @@ protected:
     Parent(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(given_name, num_iports, num_oports) {}
 
-    template<typename Iter>
-    BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
+    // template<typename Iter>
+    // BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);
 
 public:
     bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
@@ -62,36 +62,37 @@ public:
     }
 
     // create with a unique name
-    template<typename T, typename... Ts>
-    typename Types<T>::SignalId create_signal(const std::string& given_name="", Ts... args);
-    BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l);
-    BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={});
+    // template<typename T, typename... Ts>
+    // typename Types<T>::SignalId create_signal(const std::string& given_name="", Ts... args);
+    // BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l);
+    // BusId create_bus(const std::string& given_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={});
 
-    ScalarSignalId create_scalar_signal(const std::string& given_name="")
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
-        return create_signal<double>(given_name);
-    }
-    IntSignalId create_int_signal(const std::string& given_name="")
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
-        return create_signal<int>(given_name);
-    }
-    BoolSignalId create_bool_signal(const std::string& given_name="")
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
-        return create_signal<bool>(given_name);
-    }
-    ArraySignalId create_array_signal(const std::string& given_name, std::size_t size)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + given_name);
-        return create_signal<Array, std::size_t>(given_name, size);
-    }
+    // ScalarSignalId create_scalar_signal(const std::string& given_name="")
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + given_name);
+    //     return create_signal<double>(given_name);
+    // }
+    // IntSignalId create_int_signal(const std::string& given_name="")
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + given_name);
+    //     return create_signal<int>(given_name);
+    // }
+    // BoolSignalId create_bool_signal(const std::string& given_name="")
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + given_name);
+    //     return create_signal<bool>(given_name);
+    // }
+    // ArraySignalId create_array_signal(const std::string& given_name, std::size_t size)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + given_name);
+    //     return create_signal<Array, std::size_t>(given_name, size);
+    // }
 
     std::string make_signal_name(const std::string& given_name, bool make_new=false);
     void _mark_unprocessed() override;
     uint _process(double t, bool go_deep = true) override;
     bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
+    bool const_traverse(ConstTraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) const override;
 }; // class Parent
 
 }

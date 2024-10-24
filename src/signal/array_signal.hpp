@@ -39,14 +39,14 @@ class ArraySignalInfo : public FloatSignalInfo
 protected:
     Array _array_value;
 
-    static ArraySignalId create_new(const std::string& full_name, std::size_t index, std::size_t size)
-    {
-        return std::make_shared<ArraySignalInfo>(Protected(), full_name, index, size);
-    } 
-
 public:
-    ArraySignalInfo(Protected, const std::string& full_name, std::size_t index, std::size_t size)
-        : FloatSignalInfo(full_name, ArrayType, index, size) {}
+    ArraySignalInfo(Protected, const std::string& full_name, std::size_t size)
+        : FloatSignalInfo(full_name, ArrayType, size), _array_value(size) {}
+
+    static ArraySignalId create_new(const std::string& full_name, std::size_t size)
+    {
+        return std::make_shared<ArraySignalInfo>(Protected(), full_name, size);
+    } 
 
     const Array& get() const
     {

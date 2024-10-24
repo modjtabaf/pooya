@@ -46,6 +46,7 @@ public:
     pooya::ScalarSignalId _m{nullptr};
     pooya::ScalarSignalId _g{nullptr};
     pooya::ScalarSignalId _l{nullptr};
+    pooya::ScalarSignalId _dphi{nullptr};
 
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -55,18 +56,18 @@ public:
             return false;
 
         // create pooya signals
-        auto dphi = create_scalar_signal("dphi");
+        _dphi = pooya::ScalarSignalInfo::create_new("dphi");
 
         // choose random names for these internal signals
-        auto s10 = create_scalar_signal();
-        auto s20 = create_scalar_signal();
-        auto s30 = create_scalar_signal();
-        auto s40 = create_scalar_signal();
+        auto s10 = pooya::ScalarSignalInfo::create_new("");
+        auto s20 = pooya::ScalarSignalInfo::create_new("");
+        auto s30 = pooya::ScalarSignalInfo::create_new("");
+        auto s40 = pooya::ScalarSignalInfo::create_new("");
 
-        auto& model_ = model_ref();
-        _m = model_.create_scalar_signal("m");
-        _g = model_.create_scalar_signal("g");
-        _l = model_.create_scalar_signal("l");
+        // auto& model_ = model_ref();
+        _m = pooya::ScalarSignalInfo::create_new("m");
+        _g = pooya::ScalarSignalInfo::create_new("g");
+        _l = pooya::ScalarSignalInfo::create_new("l");
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -74,8 +75,8 @@ public:
         // setup the submodel
         add_block(_muldiv1, {tau, _m, _l, _l}, s10);
         add_block(_sub,  {s10, s20}, s30);
-        add_block(_integ1, s30, dphi);
-        add_block(_integ2, dphi, phi);
+        add_block(_integ1, s30, _dphi);
+        add_block(_integ2, _dphi, phi);
         add_block(_sin, phi,  s40);
         add_block(_muldiv2, {s40, _g, _l}, s20);
 
@@ -109,11 +110,11 @@ public:
             return false;
 
         // choose random names for these internal signals
-        auto s10 = create_scalar_signal();
-        auto s20 = create_scalar_signal();
-        auto s30 = create_scalar_signal();
-        auto s40 = create_scalar_signal();
-        auto s50 = create_scalar_signal();
+        auto s10 = pooya::ScalarSignalInfo::create_new("");
+        auto s20 = pooya::ScalarSignalInfo::create_new("");
+        auto s30 = pooya::ScalarSignalInfo::create_new("");
+        auto s40 = pooya::ScalarSignalInfo::create_new("");
+        auto s50 = pooya::ScalarSignalInfo::create_new("");
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);
@@ -141,6 +142,9 @@ public:
 
     Pendulum _pend;
     pooya::ScalarSignalId _des_phi{nullptr};
+    pooya::ScalarSignalId _phi{nullptr};
+    pooya::ScalarSignalId _tau{nullptr};
+    pooya::ScalarSignalId _err{nullptr};
 
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
@@ -150,16 +154,15 @@ public:
             return false;
 
         // signals
-        auto phi = create_scalar_signal("phi");
-        auto tau = create_scalar_signal("tau");
-        auto err = create_scalar_signal("err");
-
-        _des_phi = model_ref().create_scalar_signal("des_phi");
+        _phi = pooya::ScalarSignalInfo::create_new("phi");
+        _tau = pooya::ScalarSignalInfo::create_new("tau");
+        _err = pooya::ScalarSignalInfo::create_new("err");
+        _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
 
         // blocks
-        add_block(_sub, {_des_phi, phi}, err);
-        add_block(_pid, err, tau);
-        add_block(_pend, tau, phi);
+        add_block(_sub, {_des_phi, _phi}, _err);
+        add_block(_pid, _err, _tau);
+        add_block(_pend, _tau, _phi);
 
         return true;
     }
@@ -190,14 +193,14 @@ int main()
         },
         &stepper);
 
-    auto  phi = model.lookup_signal("/test08/pendulum_with_PID~phi", true); // find using the exact name
-    auto dphi = model.lookup_signal("~dphi"); // find using the partial name
-    auto  tau = model.lookup_signal("tau");   // find using the partial name
+    // auto  phi = model.lookup_signal("/test08/pendulum_with_PID~phi", true); // find using the exact name
+    // auto dphi = model.lookup_signal("~dphi"); // find using the partial name
+    // auto  tau = model.lookup_signal("tau");   // find using the partial name
 
     pooya::History history(model);
-    history.track(phi);
-    history.track(dphi);
-    history.track(tau);
+    history.track(pendulum_with_pid._phi);
+    history.track(pendulum_with_pid._pend._dphi);
+    history.track(pendulum_with_pid._tau);
 
     uint k = 0;
     double t;
@@ -218,9 +221,9 @@ int main()
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-80:80]\n";
-	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
-	    << gp.file1d(history[dphi]) << "with lines title 'dphi',"
-	    << gp.file1d(history[tau]) << "with lines title 'tau'\n";
+	gp << "plot" << gp.file1d((history[pendulum_with_pid._phi] * (180/M_PI)).eval()) << "with lines title 'phi',"
+	    << gp.file1d(history[pendulum_with_pid._pend._dphi]) << "with lines title 'dphi',"
+	    << gp.file1d(history[pendulum_with_pid._tau]) << "with lines title 'tau'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

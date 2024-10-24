@@ -20,6 +20,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <vector>
 #include <optional>
 
+#include "int_signal.hpp"
+#include "scalar_signal.hpp"
+#include "array_signal.hpp"
+#include "bool_signal.hpp"
+#include "signal_id.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
@@ -128,17 +133,12 @@ public:
 protected:
     LabelSignalIdList _signals;
 
-protected:
-    static BusId create_new(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-    {
-        return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
-    } 
-
     void _set(std::size_t index, SignalId sig);
 
 public:
-    BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-        : SignalInfo(full_name, BusType, index), _spec(spec)
+    template<typename Iter>
+    BusInfo(Protected, const std::string& full_name, const BusSpec& spec, Iter begin_, Iter end_)
+        : SignalInfo(full_name, BusType), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
         pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
@@ -155,7 +155,84 @@ public:
 #endif // defined(POOYA_DEBUG)
     }
 
-public:
+    // static BusId create_new(const std::string& full_name, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+    // {
+    //     return std::make_shared<BusInfo>(Protected(), full_name, spec, begin_, end_);
+    // } 
+
+    template<typename Iter>
+    static BusId create_new(const std::string& full_name, const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        pooya_trace("bus: " + full_name);
+        auto size = spec._wires.size();
+        pooya_verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
+
+        std::vector<LabelSignalId> label_signals;
+        label_signals.reserve(size);
+        for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), SignalId()});}
+        for (auto it=begin_; it != end_; it++)
+        {
+            auto index = spec.index_of(it->first);
+            pooya_verify(!label_signals.at(index).second, std::string("Duplicate label: ") + it->first);
+            label_signals.at(index).second = it->second;
+        }
+        auto wit = spec._wires.begin();
+        for (auto& ls: label_signals)
+        {
+            if (!ls.second)
+            {
+                std::string name = full_name + "." + wit->label();
+                if (wit->_bus)
+                    // {ls.second = create_bus(name, *wit->_bus);}
+                    {ls.second = BusInfo::create_new(name, (*wit->_bus).get());}
+                else if (wit->_array_size > 0)
+                    // {ls.second = create_array_signal(name, wit->_array_size);}
+                    {ls.second = ArraySignalInfo::create_new(name, wit->_array_size);}
+                else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
+                    // {ls.second = create_scalar_signal(name);}
+                    {ls.second = ScalarSignalInfo::create_new(name);}
+                else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
+                    // {ls.second = create_int_signal(name);}
+                    {ls.second = IntSignalInfo::create_new(name);}
+                else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
+                    // {ls.second = create_bool_signal(name);}
+                    {ls.second = BoolSignalInfo::create_new(name);}
+                else
+                    {pooya_verify(false, name + ": unknown wire type!");}
+            }
+            wit++;
+        }
+
+        // return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
+        // return BusInfo::create_new(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
+        return std::make_shared<BusInfo>(Protected(), full_name, spec, label_signals.begin(), label_signals.end());
+    }
+
+    static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    {
+        // pooya_trace("block: " + full_name());
+        pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
+        return create_new(full_name, spec, l.begin(), l.end());
+    }
+
+    static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
+    {
+        // pooya_trace("block: " + full_name());
+        pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
+
+        LabelSignalIdList label_signals;
+        label_signals.reserve(l.size());
+
+        auto wit = spec._wires.begin();
+        for (const auto& sig: l)
+        {
+            label_signals.push_back({wit->label(), sig});
+            wit++;
+        }
+
+        return create_new(full_name, spec, label_signals.begin(), label_signals.end());
+    }
+
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
     LabelSignalIdList::const_iterator begin() const noexcept {return _signals.begin();}

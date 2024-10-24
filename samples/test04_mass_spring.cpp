@@ -36,6 +36,10 @@ protected:
 public:
     MyModel() : pooya::Submodel("MyModel") {}
 
+    pooya::ScalarSignalId _x{nullptr};
+    pooya::ScalarSignalId _xd{nullptr};
+    pooya::ScalarSignalId _xdd{nullptr};
+
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
@@ -44,14 +48,14 @@ public:
             return false;
 
         // create pooya signals
-        auto x   = create_scalar_signal("x");
-        auto xd  = create_scalar_signal("xd");
-        auto xdd = create_scalar_signal("xdd");
+        _x   = pooya::ScalarSignalInfo::create_new("x");
+        _xd  = pooya::ScalarSignalInfo::create_new("xd");
+        _xdd = pooya::ScalarSignalInfo::create_new("xdd");
 
         // setup the submodel
-        add_block(_integ1, xdd, xd);
-        add_block(_integ2, xd, x);
-        add_block(_gain, x, xdd);
+        add_block(_integ1, _xdd, _xd);
+        add_block(_integ2, _xd, _x);
+        add_block(_gain, _x, _xdd);
 
         return true;
     }
@@ -75,6 +79,8 @@ int main()
     pooya::Simulator sim(model, nullptr, &stepper);
 
     pooya::History history(model);
+    history.track(mymodel._x);
+    history.track(mymodel._xd);
 
     uint k = 0;
     double t;
@@ -93,14 +99,11 @@ int main()
     history.shrink_to_fit();
     history.export_csv("mass_spring.csv");
 
-    auto  x = model.lookup_signal( "x");
-    auto xd = model.lookup_signal("xd");
-
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.15:0.15]\n";
-	gp << "plot" << gp.file1d(history[x]) << "with lines title 'x',"
-		<< gp.file1d(history[xd]) << "with lines title 'xd'\n";
+	gp << "plot" << gp.file1d(history[mymodel._x]) << "with lines title 'x',"
+		<< gp.file1d(history[mymodel._xd]) << "with lines title 'xd'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

@@ -36,9 +36,9 @@ int main()
     pooya::TriggeredIntegrator integ("integ", 1.0);
 
     // create pooya signals
-    auto x       = model.create_scalar_signal("x");
-    auto xd      = model.create_scalar_signal("xd");
-    auto trigger = model.create_bool_signal("trigger");
+    auto x       = pooya::ScalarSignalInfo::create_new("x");
+    auto xd      = pooya::ScalarSignalInfo::create_new("xd");
+    auto trigger = pooya::BoolSignalInfo::create_new("trigger");
 
     pooya::BusSpec spec{{"z"}};
 
@@ -57,6 +57,8 @@ int main()
         &stepper);
 
     pooya::History history(model);
+    history.track(x);
+    history.track(xd);
 
     uint k = 0;
     double t;

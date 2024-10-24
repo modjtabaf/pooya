@@ -35,8 +35,8 @@ int main()
     pooya::GainI gain("gain", 2);
 
     // create pooya signals
-    auto x = model.create_int_signal("x");
-    auto y = model.create_int_signal("y");
+    auto x = pooya::IntSignalInfo::create_new("x");
+    auto y = pooya::IntSignalInfo::create_new("y");
 
     // setup the model
     model.add_block(gain, x, y);
@@ -49,6 +49,8 @@ int main()
         });
 
     pooya::History history(model);
+    history.track(x);
+    history.track(y);
 
     uint k = 0;
     double t;

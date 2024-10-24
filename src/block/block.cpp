@@ -56,15 +56,31 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     
     if (ibus && ibus->size() > 0)
     {
-        _dependencies.reserve(ibus->size());
+        // _dependencies.reserve(ibus->size());
+        _input_values.reserve(ibus->size());
         for (auto sig: *ibus)
         {
             if (sig.second->is_value())
             {
-                add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
+                // add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
+                add_input_value_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
             }
         }
-        _dependencies.shrink_to_fit();
+        // _dependencies.shrink_to_fit();
+        _input_values.shrink_to_fit();
+    }
+
+    if (obus && obus->size() > 0)
+    {
+        _output_values.reserve(obus->size());
+        for (auto sig: *obus)
+        {
+            if (sig.second->is_value())
+            {
+                add_output_value_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()));
+            }
+        }
+        _output_values.shrink_to_fit();
     }
 
     _ibus = ibus;
@@ -74,31 +90,49 @@ bool Block::init(Parent& parent, BusId ibus, BusId obus)
     return true;
 }
 
-bool Block::add_dependency(ValueSignalId sig)
+// bool Block::add_dependency(ValueSignalId sig)
+bool Block::add_input_value_signal(ValueSignalId sig)
 {
     pooya_trace("block: " + full_name());
     pooya_verify_valid_signal(sig);
-    if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+    // if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+    if (std::find(_input_values.begin(), _input_values.end(), sig) == _input_values.end())
     {
-        _dependencies.push_back(sig);
+        // _dependencies.push_back(sig);
+        _input_values.push_back(sig);
         return true;
     }
 
     return false;
 }
 
-bool Block::remove_dependency(ValueSignalId sig)
+bool Block::add_output_value_signal(ValueSignalId sig)
 {
     pooya_trace("block: " + full_name());
     pooya_verify_valid_signal(sig);
-    auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
-    if (it == _dependencies.end())
+    // if (std::find(_dependencies.begin(), _dependencies.end(), sig) == _dependencies.end())
+    if (std::find(_output_values.begin(), _output_values.end(), sig) == _output_values.end())
     {
-        return false;
+        // _dependencies.push_back(sig);
+        _output_values.push_back(sig);
+        return true;
     }
-    _dependencies.erase(it);
-    return true;
+
+    return false;
 }
+
+// bool Block::remove_dependency(ValueSignalId sig)
+// {
+//     pooya_trace("block: " + full_name());
+//     pooya_verify_valid_signal(sig);
+//     auto it = std::find(_dependencies.begin(), _dependencies.end(), sig);
+//     if (it == _dependencies.end())
+//     {
+//         return false;
+//     }
+//     _dependencies.erase(it);
+//     return true;
+// }
 
 void Block::_mark_unprocessed()
 {
@@ -109,7 +143,8 @@ uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name());
     if (_processed) {return 0;}
-    for (auto& sig: _dependencies)
+    // for (auto& sig: _dependencies)
+    for (auto& sig: _input_values)
     {
         if (!sig->is_assigned()) {return 0;}
     }
@@ -120,21 +155,21 @@ uint Block::_process(double t, bool /*go_deep*/)
     return 1;
 }
 
-Model* Block::model()
-{
-    pooya_trace("block: " + full_name());
+// Model* Block::model()
+// {
+//     pooya_trace("block: " + full_name());
 
-    if (_parent)
-    {
-#if defined(POOYA_USE_SMART_PTRS)
-        return _parent->get().model();
-#else // defined(POOYA_USE_SMART_PTRS)
-        return _parent->model();
-#endif // defined(POOYA_USE_SMART_PTRS)
-    }
+//     if (_parent)
+//     {
+// #if defined(POOYA_USE_SMART_PTRS)
+//         return _parent->get().model();
+// #else // defined(POOYA_USE_SMART_PTRS)
+//         return _parent->model();
+// #endif // defined(POOYA_USE_SMART_PTRS)
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
 std::string Block::make_valid_given_name(const std::string& given_name)
 {

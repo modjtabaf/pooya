@@ -29,66 +29,66 @@ class Model : public Parent
     friend class Parent;
 
 public:
-    using SignalInfos = std::vector<SignalId>;
+    // using SignalInfos = std::vector<SignalId>;
 
 protected:
-    SignalInfos _signal_infos;
+    // SignalInfos _signal_infos;
 
     bool init(Parent&, BusId, BusId) override;
 
-    template<typename T, typename... Ts>
-    typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        if (name.empty()) {return typename Types<T>::SignalId();}
+    // template<typename T, typename... Ts>
+    // typename Types<T>::SignalId register_signal(const std::string& name, Ts... args)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     if (name.empty()) {return typename Types<T>::SignalId();}
 
-        pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
+    //     pooya_verify(!lookup_signal(name, true), "Re-registering a signal is not allowed!");
 
-        auto index = _signal_infos.size();
-        typename Types<T>::SignalId sig;
-        sig = Types<T>::SignalInfo::create_new(name, index, args...);
-        _signal_infos.emplace_back(sig);
+    //     auto index = _signal_infos.size();
+    //     typename Types<T>::SignalId sig;
+    //     sig = Types<T>::SignalInfo::create_new(name, index, args...);
+    //     _signal_infos.emplace_back(sig);
 
-        return Types<T>::as_signal_id(_signal_infos.back());
-    }
+    //     return Types<T>::as_signal_id(_signal_infos.back());
+    // }
 
-    ScalarSignalId register_scalar_signal(const std::string& name)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<double>(name);
-    }
-    IntSignalId register_int_signal(const std::string& name)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<int>(name);
-    }
-    BoolSignalId register_bool_signal(const std::string& name)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<bool>(name);
-    }
-    ArraySignalId register_array_signal(const std::string& name, std::size_t size)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<Array, std::size_t>(name, size);
-    }
-    BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
-    {
-        pooya_trace("block: " + full_name() + ", given name: " + name);
-        return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
-    }
+    // ScalarSignalId register_scalar_signal(const std::string& name)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<double>(name);
+    // }
+    // IntSignalId register_int_signal(const std::string& name)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<int>(name);
+    // }
+    // BoolSignalId register_bool_signal(const std::string& name)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<bool>(name);
+    // }
+    // ArraySignalId register_array_signal(const std::string& name, std::size_t size)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<Array, std::size_t>(name, size);
+    // }
+    // BusId register_bus(const std::string& name, const BusSpec& spec, LabelSignals::const_iterator begin_, LabelSignals::const_iterator end_)
+    // {
+    //     pooya_trace("block: " + full_name() + ", given name: " + name);
+    //     return register_signal<BusSpec, const BusSpec&, LabelSignals::const_iterator, LabelSignals::const_iterator>(name, spec, begin_, end_);
+    // }
 
 public:
     Model(const std::string& given_name="model");
 
     virtual void input_cb(double /*t*/) {}
 
-    Model* model() override {return this;}
-    const SignalInfos& signals() const {return _signal_infos;}
+    // Model* model() override {return this;}
+    // const SignalInfos& signals() const {return _signal_infos;}
 
-    void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
-    SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
-    void invalidate();
+    // void register_state_variable(FloatSignalId sig, FloatSignalId deriv_sig);
+    // SignalId lookup_signal(const std::string& name, bool exact_match=false) const;
+    // void invalidate();
 };
 
 }

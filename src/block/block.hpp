@@ -18,6 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 // #include <type_traits>
 
 #if defined(POOYA_USE_SMART_PTRS)
@@ -36,7 +37,7 @@ namespace pooya
 
 class Block;
 class Parent;
-class Model;
+// class Model;
 
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 
@@ -49,9 +50,10 @@ public:
 
 protected:
     bool _initialized{false};
-    BusId _ibus{nullptr};
-    BusId _obus{nullptr};
-    std::vector<ValueSignalId> _dependencies;
+    BusId _ibus{nullptr}; // are these needed?
+    BusId _obus{nullptr}; // are these needed?
+    std::vector<ValueSignalId> _input_values;
+    std::vector<ValueSignalId> _output_values;
 #if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<Parent>> _parent;
 #else // defined(POOYA_USE_SMART_PTRS)
@@ -64,8 +66,10 @@ protected:
     std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
-    bool add_dependency(ValueSignalId sig);
-    bool remove_dependency(ValueSignalId sig);
+    // bool add_dependency(ValueSignalId sig);
+    bool add_input_value_signal(ValueSignalId sig);
+    // bool remove_dependency(ValueSignalId sig);
+    bool add_output_value_signal(ValueSignalId sig);
 
     Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
@@ -79,15 +83,15 @@ public:
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
     virtual void activation_function(double /*t*/) {}
-    virtual Model* model();
+    // virtual Model* model();
 
-    Model& model_ref()
-    {
-        pooya_trace("block: " + full_name());
-        auto* mdl = model();
-        pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
-        return *mdl;
-    }
+    // Model& model_ref()
+    // {
+    //     pooya_trace("block: " + full_name());
+    //     auto* mdl = model();
+    //     pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
+    //     return *mdl;
+    // }
 
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
@@ -96,7 +100,9 @@ public:
     const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}
     BusId obus() const {return _obus;}
-    const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
+    // const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
+    const std::vector<ValueSignalId>& input_values() const {return _input_values;}
+    const std::vector<ValueSignalId>& output_values() const {return _output_values;}
 
     template<typename T, typename Key>
     typename Types<T>::SignalId io_at(BusId bus, Key key, bool is_dependency)
@@ -107,11 +113,14 @@ public:
             {sig = bus->at(key).second;}
         else
             {sig = bus->at(key);}
+#if defined (POOYA_DEBUG)
         Types<T>::verify_signal_type(sig);
+#endif // defined (POOYA_DEBUG)
         if (is_dependency)
         {
             pooya_verify_value_signal(sig);
-            add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
+            // add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
+            add_input_value_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
         }
         return Types<T>::as_signal_id(sig);
     }

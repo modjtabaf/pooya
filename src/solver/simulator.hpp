@@ -15,8 +15,9 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SOLVER_SIMULATOR_HPP__
 #define __POOYA_SOLVER_SIMULATOR_HPP__
 
-#include <vector>
 #include <functional>
+#include <unordered_set>
+#include <vector>
 
 #include "src/signal/array.hpp"
 #include "src/block/block.hpp"
@@ -39,10 +40,13 @@ protected:
 #endif // defined(POOYA_USE_SMART_PTRS)
     double _t_prev{0};
     InputCallback _inputs_cb;
+    std::vector<ValueSignalId> value_signals_;
+    std::vector<ScalarSignalId> scalar_state_signals_;
+    std::vector<ArraySignalId> array_state_signals_;
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;
-    std::vector<FloatSignalId> _state_signals;
+    // std::vector<FloatSignalId> _state_signals;
 #if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<StepperBase>> _stepper;
 #else // defined(POOYA_USE_SMART_PTRS)

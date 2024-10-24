@@ -128,17 +128,11 @@ public:
 protected:
     LabelSignalIdList _signals;
 
-protected:
-    static BusId create_new(const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-    {
-        return std::make_shared<BusInfo>(Protected(), full_name, index, spec, begin_, end_);
-    } 
-
     void _set(std::size_t index, SignalId sig);
 
 public:
-    BusInfo(Protected, const std::string& full_name, std::size_t index, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-        : SignalInfo(full_name, BusType, index), _spec(spec)
+    BusInfo(Protected, const std::string& full_name, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+        : SignalInfo(full_name, BusType), _spec(spec)
     {
         pooya_trace("fullname: " + full_name);
         pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
@@ -155,7 +149,11 @@ public:
 #endif // defined(POOYA_DEBUG)
     }
 
-public:
+    static BusId create_new(const std::string& full_name, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+    {
+        return std::make_shared<BusInfo>(Protected(), full_name, spec, begin_, end_);
+    } 
+
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
     LabelSignalIdList::const_iterator begin() const noexcept {return _signals.begin();}

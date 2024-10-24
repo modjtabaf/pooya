@@ -35,8 +35,8 @@ int main()
     pooya::Gain gain("gain", 2.0);
 
     // create pooya signals
-    auto x = model.create_scalar_signal("x");
-    auto y = model.create_scalar_signal("y");
+    auto x = pooya::ScalarSignalInfo::create_new("x");
+    auto y = pooya::ScalarSignalInfo::create_new("y");
 
     // setup the model
     model.add_block(gain, x, y);
@@ -49,6 +49,8 @@ int main()
         });
 
     pooya::History history(model);
+    history.track(x);
+    history.track(y);
 
     uint k = 0;
     double t;

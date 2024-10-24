@@ -35,8 +35,8 @@ class ValueSignalInfo : public SignalInfo
 protected:
     bool _assigned{false};             // has the value been assigned?
 
-    ValueSignalInfo(const std::string& full_name, uint16_t type, std::size_t index) :
-        SignalInfo(full_name, type | ValueType, index) {}
+    ValueSignalInfo(const std::string& full_name, uint32_t type) :
+        SignalInfo(full_name, type | ValueType) {}
 
 public:
     double get_as_scalar() const;

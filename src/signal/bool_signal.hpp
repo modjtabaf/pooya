@@ -36,14 +36,14 @@ class BoolSignalInfo : public ValueSignalInfo
 protected:
     bool _bool_value;
 
-    static BoolSignalId create_new(const std::string& full_name, std::size_t index)
-    {
-        return std::make_shared<BoolSignalInfo>(Protected(), full_name, index);
-    } 
-
 public:
-    BoolSignalInfo(Protected, const std::string& full_name, std::size_t index)
-        : ValueSignalInfo(full_name, BoolType, index) {}
+    BoolSignalInfo(Protected, const std::string& full_name)
+        : ValueSignalInfo(full_name, BoolType) {}
+
+    static BoolSignalId create_new(const std::string& full_name)
+    {
+        return std::make_shared<BoolSignalInfo>(Protected(), full_name);
+    } 
 
     bool get() const
     {

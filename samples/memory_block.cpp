@@ -34,8 +34,8 @@ int main()
     pooya::Memory memory("memory");
 
     // create pooya signals
-    auto x = model.create_scalar_signal("x");
-    auto y = model.create_scalar_signal("y");
+    auto x = pooya::ScalarSignalInfo::create_new("x");
+    auto y = pooya::ScalarSignalInfo::create_new("y");
 
     // setup the model
     model.add_block(memory, x, y);
@@ -48,6 +48,8 @@ int main()
         });
 
     pooya::History history(model);
+    history.track(x);
+    history.track(y);
 
     uint k = 0;
     double t;

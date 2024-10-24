@@ -20,7 +20,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-template<int N> using ArrayN = Eigen::Array<double, N, 1>;
+// template<int N> using ArrayN = Eigen::Array<double, N, 1>;
+template<int N> using ArrayN = Eigen::Vector<double, N>;
 
 using Array  = ArrayN<Eigen::Dynamic>;
 using Array1 = ArrayN<1>; // use a scalar instead

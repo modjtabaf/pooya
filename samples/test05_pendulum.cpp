@@ -43,6 +43,9 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
+    pooya::ScalarSignalId _phi{nullptr};
+    pooya::ScalarSignalId _dphi{nullptr};
+    pooya::ScalarSignalId _d2phi{nullptr};
     pooya::ScalarSignalId _g{nullptr};
     pooya::ScalarSignalId _l{nullptr};
 
@@ -54,21 +57,20 @@ public:
             return false;
 
         // create pooya signals
-        auto phi   = create_scalar_signal("phi");
-        auto dphi  = create_scalar_signal("dphi");
-        auto d2phi = create_scalar_signal("d2phi");
+        _phi   = pooya::ScalarSignalInfo::create_new("phi");
+        _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
+        _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
 
-        auto s10 = create_scalar_signal(); // choose a random name for this internal signal
+        auto s10 = pooya::ScalarSignalInfo::create_new("");
 
-        auto& model_ = model_ref();
-        _g = model_.create_scalar_signal("g");
-        _l = model_.create_scalar_signal("l");
+        _g = pooya::ScalarSignalInfo::create_new("g");
+        _l = pooya::ScalarSignalInfo::create_new("l");
 
         // setup the submodel
-        add_block(_integ1, d2phi, dphi);
-        add_block(_integ2, dphi, phi);
-        add_block(_sin, phi, s10);
-        add_block(_muldiv, {s10, _g, _l}, d2phi);
+        add_block(_integ1, _d2phi, _dphi);
+        add_block(_integ2, _dphi, _phi);
+        add_block(_sin, _phi, s10);
+        add_block(_muldiv, {s10, _g, _l}, _d2phi);
 
         return true;
     }
@@ -99,6 +101,7 @@ int main()
         &stepper);
 
     pooya::History history(model);
+    history.track(pendulum._phi);
 
     uint k = 0;
     double t;
@@ -114,14 +117,12 @@ int main()
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
 
-    auto phi = model.lookup_signal("/pendulum~phi");
-
     history.shrink_to_fit();
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.8:0.8]\n";
-	gp << "plot" << gp.file1d(history[phi]) << "with lines title 'x'\n";
+	gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'x'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

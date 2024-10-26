@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/block/gain.hpp"
 #include "src/block/addsub.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/solver/rk4.hpp"
 #include "src/solver/simulator.hpp"
 #include "src/solver/history.hpp"
@@ -28,7 +28,7 @@ int main()
     constexpr double m{0.25}, c{0.3}, k{0.7};
 
     // create pooya blocks
-    pooya::Model      model("model");
+    pooya::Submodel   model("model");
     pooya::Source     src_F("F(t)",
         [](double t) -> double
         {

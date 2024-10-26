@@ -32,7 +32,7 @@ template <typename T>
 class AddT : public AddSubT<T>
 {
 protected:
-    bool init(Parent &parent, BusId ibus, BusId obus) override
+    bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + AddSubT<T>::full_name());
         AddSubT<T>::_operators = std::string(ibus->size(), '+');

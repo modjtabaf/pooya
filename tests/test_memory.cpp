@@ -18,7 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <gtest/gtest.h>
 
 #include "src/block/memory.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -38,7 +38,7 @@ TEST_F(TestMemory, ScalarMemory)
     const double x0 = -4.8;
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::Memory memory("memory", x0);
     auto s_x = pooya::ScalarSignalInfo::create_new("x");
     auto s_y = pooya::ScalarSignalInfo::create_new("y");
@@ -46,7 +46,7 @@ TEST_F(TestMemory, ScalarMemory)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             s_x->set(x);
         });
@@ -66,7 +66,7 @@ TEST_F(TestMemory, ArrayMemory)
     const pooya::ArrayN<N> x0{-10.56, 0.18, 7.24, -3.67};
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::MemoryA memory("memory", x0);
     auto s_x = pooya::ArraySignalInfo::create_new("x", N);
     auto s_y = pooya::ArraySignalInfo::create_new("y", N);
@@ -74,7 +74,7 @@ TEST_F(TestMemory, ArrayMemory)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             s_x->set(x);
         });

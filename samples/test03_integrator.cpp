@@ -17,7 +17,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <chrono>
 
 #include "src/helper/trace.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/block/triggered_integrator.hpp"
 #include "src/solver/euler.hpp"
 #include "src/solver/simulator.hpp"
@@ -32,7 +32,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test03");
+    pooya::Submodel model("test03");
     pooya::TriggeredIntegrator integ("integ", 1.0);
 
     // create pooya signals
@@ -48,7 +48,7 @@ int main()
     pooya::Euler stepper;
 
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t) -> void
+        [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
             xd->set(t < 3 or t > 7 ? 1.0 : 0.0);

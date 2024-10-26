@@ -23,9 +23,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace pooya {
 
-bool BusBlockBuilder::init(Parent &parent, BusId ibus, BusId obus)
+bool BusBlockBuilder::init(Parent* parent, BusId ibus, BusId obus)
 {
     pooya_trace("block: " + full_name());
+    pooya_verify(parent, "Bus block builder needs a parent.");
     if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus)) {return false;}
 
     pooya_verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");

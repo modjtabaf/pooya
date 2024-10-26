@@ -30,8 +30,6 @@ namespace pooya
 
 class ValueSignalInfo : public SignalInfo
 {
-    friend class Model;
-
 protected:
     bool _assigned{false};             // has the value been assigned?
 

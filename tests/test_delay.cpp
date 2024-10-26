@@ -18,7 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <gtest/gtest.h>
 
 #include "src/block/delay.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -44,7 +44,7 @@ TEST_F(TestDelay, ScalarDelay)
     };
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::Delay delay("delay");
     auto s_time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
     auto s_initial = pooya::ScalarSignalInfo::create_new("initial");
@@ -57,7 +57,7 @@ TEST_F(TestDelay, ScalarDelay)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t) -> void
+        [&](pooya::Block&, double t) -> void
         {
             s_time_delay->set(time_delay);
             s_initial->set(initial);
@@ -98,7 +98,7 @@ TEST_F(TestDelay, ArrayDelay)
     };
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::DelayA delay("delay");
     auto s_time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
     auto s_initial = pooya::ArraySignalInfo::create_new("initial", N);
@@ -111,7 +111,7 @@ TEST_F(TestDelay, ArrayDelay)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t) -> void
+        [&](pooya::Block&, double t) -> void
         {
             s_time_delay->set(time_delay);
             s_initial->set(initial);

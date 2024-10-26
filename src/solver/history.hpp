@@ -26,23 +26,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class Model;
+class Block;
 
 class History : public std::unordered_map<SignalId, Eigen::MatrixXd>
 {
 protected:
-#if defined(POOYA_USE_SMART_PTRS)
-    std::reference_wrapper<const Model> _model;
-#else // defined(POOYA_USE_SMART_PTRS)
-    const Model& _model;
-#endif // defined(POOYA_USE_SMART_PTRS)
+    const Block& _model;
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
     Array _time;
     std::vector<ValueSignalId> _signals;
 
 public:
-    History(const Model& model, uint nrows_grow = 1000) :
+    History(const Block& model, uint nrows_grow = 1000) :
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
     void track(SignalId sig);

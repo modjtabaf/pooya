@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/helper/trace.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/model.hpp"
 // #include "src/block/siso_function.hpp"
 // #include "src/block/so_function.hpp"
 // #include "src/block/function.hpp"
@@ -67,7 +66,7 @@ public:
     pooya::ScalarSignalId _dphi{nullptr};
     pooya::ScalarSignalId _d2phi{nullptr};
 
-    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
 
@@ -108,7 +107,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test06");
+    pooya::Submodel model("test06");
     Pendulum pendulum;
 
     // setup the model
@@ -116,7 +115,7 @@ int main()
 
     pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
             pendulum._m->set(0.2);

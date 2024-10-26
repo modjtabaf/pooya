@@ -29,8 +29,6 @@ namespace pooya
 
 class ScalarSignalInfo : public FloatSignalInfo
 {
-    friend class Model;
-
 protected:
     double _scalar_value;
 

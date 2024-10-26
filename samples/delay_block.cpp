@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <chrono>
 
 #include "src/helper/trace.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/block/const.hpp"
 #include "src/block/delay.hpp"
 #include "src/block/source.hpp"
@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/solver/history.hpp"
 #include "src/misc/gp-ios.hpp"
 
-class MyModel : public pooya::Model
+class MyModel : public pooya::Submodel
 {
 protected:
     pooya::Source _source{"Source",
@@ -42,7 +42,7 @@ public:
     pooya::ScalarSignalId _s_y;
 
 public:
-    MyModel() : pooya::Model("delay_block")
+    MyModel() : pooya::Submodel("delay_block")
     {
         pooya_trace0;
 

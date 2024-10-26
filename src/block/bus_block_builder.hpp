@@ -47,7 +47,7 @@ public:
     BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
         : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
 
-    bool init(Parent &parent, BusId ibus, BusId obus) override;
+    bool init(Parent* parent, BusId ibus, BusId obus) override;
     void post_init() override;
 };
 

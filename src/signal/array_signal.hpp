@@ -34,8 +34,6 @@ namespace pooya
 
 class ArraySignalInfo : public FloatSignalInfo
 {
-    friend class Model;
-
 protected:
     Array _array_value;
 

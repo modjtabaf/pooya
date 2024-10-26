@@ -23,25 +23,20 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-bool Block::init(Parent& parent, BusId ibus, BusId obus)
+bool Block::init(Parent* parent, BusId ibus, BusId obus)
 {
     pooya_trace(_given_name);
 
     assert(!_parent);
     if (_parent) {return false;}
-
-#if defined(POOYA_USE_SMART_PTRS)
     _parent = parent;
-#else // defined(POOYA_USE_SMART_PTRS)
-    _parent = &parent;
-#endif // defined(POOYA_USE_SMART_PTRS)
 
-    pooya_verify(parent.is_initialized(), _given_name + ": parent block is not initialized yet!");
+    pooya_verify(!parent || parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
 
     _given_name = make_valid_given_name(_given_name);
     if (_full_name.empty())
     {
-        _full_name = parent.full_name() + "/" + _given_name;
+        _full_name = (parent ? parent->full_name() : "") + "/" + _given_name;
     }
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
@@ -152,11 +147,7 @@ std::string Block::make_valid_given_name(const std::string& given_name)
             return (level == 0) || (c.given_name() != foo);
         };
 
-#if defined(POOYA_USE_SMART_PTRS)
-        while (!_parent->get().traverse(pooya_verify_unique_name_cb, 0, 1))
-#else // defined(POOYA_USE_SMART_PTRS)
         while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
-#endif // defined(POOYA_USE_SMART_PTRS)
             {foo = ret + "_" + std::to_string(n++);}
 
         ret = foo;

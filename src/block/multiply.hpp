@@ -32,7 +32,7 @@ template <typename T>
 class MultiplyT : public MulDivT<T>
 {
 protected:
-    bool init(Parent &parent, BusId ibus, BusId obus) override
+    bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + MulDivT<T>::full_name());
         MulDivT<T>::_operators = std::string(ibus->size(), '*');

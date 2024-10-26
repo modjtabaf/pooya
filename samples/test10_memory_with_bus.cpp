@@ -25,7 +25,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "src/helper/trace.hpp"
 #include "src/block/bus_memory.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/solver/simulator.hpp"
 #include "src/solver/history.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -38,7 +38,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test10");
+    pooya::Submodel model("test10");
     pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
 
     pooya::BusSpec internal_bus_spec({
@@ -93,7 +93,7 @@ int main()
     y_x1->set(0);
 
     pooya::Simulator sim(
-        model, [&](pooya::Model &, double t) -> void
+        model, [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
             x_x0->set(std::sin(M_PI * t / 3));

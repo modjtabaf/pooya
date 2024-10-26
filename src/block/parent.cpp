@@ -14,7 +14,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "parent.hpp"
 #include "src/signal/array_signal.hpp"
-#include "model.hpp"
 
 namespace pooya
 {
@@ -117,6 +116,8 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
 {
     pooya_trace("block: " + full_name());
 
+    if (!_initialized && !init()) {return false;}
+
     auto make_bus = [&](const LabelSignals& ports) -> BusId
     {
         std::vector<BusSpec::WireInfo> wire_infos;
@@ -143,7 +144,7 @@ bool Parent::add_block(Block& component, const LabelSignals& iports, const Label
         return BusInfo::create_new("", *_interface_bus_specs.back(), wires.begin(), wires.end());
     };
 
-    if (!component.init(*this, make_bus(iports), make_bus(oports))) {return false;}
+    if (!component.init(this, make_bus(iports), make_bus(oports))) {return false;}
 
 #if defined(POOYA_USE_SMART_PTRS)
     _components.push_back(component);

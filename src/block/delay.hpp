@@ -46,7 +46,7 @@ public:
     DelayT(const std::string& given_name, double lifespan = 10.0)
             : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
 
-    bool init(Parent &parent, BusId ibus, BusId obus) override
+    bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}

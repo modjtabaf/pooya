@@ -38,7 +38,7 @@ protected:
 public:
     TriggeredIntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
 
-    bool init(Parent &parent, BusId ibus, BusId obus) override
+    bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
         if (!IntegratorBaseT<T>::init(parent, ibus, obus)) {return false;}

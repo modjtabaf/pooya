@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <memory>
 #include <string>
 
-#include "src/block/model.hpp"
+#include "src/block/block.hpp"
 #include "history.hpp"
 
 namespace pooya

@@ -42,6 +42,7 @@ using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
 class Block
 {
     friend class Parent;
+    friend class Simulator; // a dirty workaround so Simulator::init can call Block::init. Should be resolved!
 
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
@@ -63,11 +64,11 @@ protected:
     // std::vector<ValueSignalId> _input_values;
     // std::vector<ValueSignalId> _output_values;
     std::vector<SignalAssociationPair> _associated_signals;
-#if defined(POOYA_USE_SMART_PTRS)
-    std::optional<std::reference_wrapper<Parent>> _parent;
-#else // defined(POOYA_USE_SMART_PTRS)
+// #if defined(POOYA_USE_SMART_PTRS)
+//     std::optional<std::reference_wrapper<Parent>> _parent;
+// #else // defined(POOYA_USE_SMART_PTRS)
     Parent* _parent{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
+// #endif // defined(POOYA_USE_SMART_PTRS)
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -84,12 +85,13 @@ protected:
     Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent& parent, BusId ibus=BusId(), BusId obus=BusId());
+    virtual bool init(Parent* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
     virtual void post_init() {}
 
 public:
     virtual ~Block() = default;
 
+    virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
     virtual void activation_function(double /*t*/) {}

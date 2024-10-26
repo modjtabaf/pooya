@@ -33,7 +33,7 @@ namespace pooya
 
 class IntSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    // friend class Model;
 
 protected:
     int _int_value;

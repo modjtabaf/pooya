@@ -17,7 +17,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <chrono>
 
 #include "src/helper/trace.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/block/gain.hpp"
 #include "src/solver/simulator.hpp"
 #include "src/solver/history.hpp"
@@ -31,7 +31,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("gain_block");
+    pooya::Submodel model("gain_block");
     pooya::Gain gain("gain", 2.0);
 
     // create pooya signals
@@ -42,7 +42,7 @@ int main()
     model.add_block(gain, x, y);
 
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double t) -> void
+        [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
             x->set(std::sin(M_PI * t / 5));

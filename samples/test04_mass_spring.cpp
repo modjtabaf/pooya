@@ -18,7 +18,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/helper/trace.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/model.hpp"
 #include "src/block/gain.hpp"
 #include "src/block/integrator.hpp"
 #include "src/solver/rk4.hpp"
@@ -40,7 +39,7 @@ public:
     pooya::ScalarSignalId _xd{nullptr};
     pooya::ScalarSignalId _xdd{nullptr};
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
 
@@ -69,7 +68,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test04");
+    pooya::Submodel model("test04");
     MyModel mymodel;
 
     // setup the model

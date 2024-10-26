@@ -17,7 +17,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/helper/trace.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/model.hpp"
 #include "src/block/gain.hpp"
 #include "src/block/add.hpp"
 #include "src/block/sin.hpp"
@@ -46,7 +45,7 @@ public:
     pooya::ScalarSignalId _g{nullptr};
     pooya::ScalarSignalId _l{nullptr};
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
 
@@ -98,7 +97,7 @@ public:
         _gain_i("Ki", Ki)
     {}
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
 
@@ -138,7 +137,7 @@ public:
     pooya::ScalarSignalId _tau{nullptr};
     pooya::ScalarSignalId _err{nullptr};
 
-    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
 
@@ -168,7 +167,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test07");
+    pooya::Submodel model("test07");
     PendulumWithPI pendulum_with_pi;
 
     // setup the model
@@ -176,7 +175,7 @@ int main()
 
     pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
             pendulum_with_pi._pend._m->set(0.2);

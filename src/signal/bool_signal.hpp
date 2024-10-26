@@ -31,7 +31,7 @@ namespace pooya
 
 class BoolSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    // friend class Model;
 
 protected:
     bool _bool_value;

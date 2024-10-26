@@ -125,7 +125,7 @@ public:
 
 class BusInfo : public SignalInfo
 {
-    friend class Model;
+    // friend class Model;
 
 public:
     std::reference_wrapper<const BusSpec> _spec;

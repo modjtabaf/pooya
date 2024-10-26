@@ -41,6 +41,7 @@ struct Types<Array>
     static void verify_signal_type(pooya::SignalId sig);
     static void verify_signal_type(pooya::SignalId sig, std::size_t size);
 #endif // defined(POOYA_DEBUG)
+    template<typename T> static SignalInfo& is_same_type(const T& sig) {return sig->is_array();}
     template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_array();}
     template<typename T> static SignalId as_signal_id(const T& sig)
     {
@@ -59,6 +60,7 @@ struct Types<double>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
+    template<typename T> static SignalInfo& is_same_type(const T& sig) {return sig->is_scalar();}
     template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_scalar();}
     template<typename T> static SignalId as_signal_id(const T& sig)
     {
@@ -77,6 +79,7 @@ struct Types<int>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
+    template<typename T> static SignalInfo& is_same_type(const T& sig) {return sig->is_int();}
     template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_int();}
     template<typename T> static SignalId as_signal_id(const T& sig)
     {
@@ -95,6 +98,7 @@ struct Types<bool>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig);
 #endif // defined(POOYA_DEBUG)
+    template<typename T> static SignalInfo& is_same_type(const T& sig) {return sig->is_bool();}
     template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bool();}
     template<typename T> static SignalId as_signal_id(const T& sig)
     {
@@ -111,6 +115,7 @@ struct Types<BusSpec>
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalId sig, const BusSpec& spec);
 #endif // defined(POOYA_DEBUG)
+    template<typename T> static SignalInfo& is_same_type(const T& sig) {return sig->is_bus();}
     template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bus();}
     template<typename T> static SignalId as_signal_id(const T& sig)
     {

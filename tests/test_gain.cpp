@@ -18,7 +18,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <gtest/gtest.h>
 
 #include "src/block/gain.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -37,7 +37,7 @@ TEST_F(TestGain, ScalarGain)
     const double x = 3.7;
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::Gain gain("gain", 2.0);
     auto s_x = pooya::ScalarSignalInfo::create_new("x");
     auto s_y = pooya::ScalarSignalInfo::create_new("y");
@@ -45,7 +45,7 @@ TEST_F(TestGain, ScalarGain)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             s_x->set(x);
         });
@@ -64,7 +64,7 @@ TEST_F(TestGain, ArrayGain)
     const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
 
     // model setup
-    pooya::Model model;
+    pooya::Submodel model("");
     pooya::GainA gain("gain", -5.89);
     auto s_x = pooya::ArraySignalInfo::create_new("x", N);
     auto s_y = pooya::ArraySignalInfo::create_new("y", N);
@@ -72,7 +72,7 @@ TEST_F(TestGain, ArrayGain)
 
     // simulator setup
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             s_x->set(x);
         });

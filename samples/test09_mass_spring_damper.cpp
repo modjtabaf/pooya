@@ -16,8 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <chrono>
 
 #include "src/helper/trace.hpp"
-#include "src/block/block.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/solver/euler.hpp"
 #include "src/solver/simulator.hpp"
 #include "src/solver/history.hpp"
@@ -41,7 +40,7 @@ public:
     pooya::ScalarSignalId _s_xd;
     pooya::ScalarSignalId _s_xdd;
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId) override
+    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId) override
     {
         pooya_trace0;
 
@@ -100,7 +99,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test10");
+    pooya::Submodel model("test10");
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
@@ -111,7 +110,7 @@ int main()
 
     pooya::Euler stepper;
     pooya::Simulator sim(model,
-    [&](pooya::Model&, double t) -> void
+    [&](pooya::Block&, double t) -> void
     {
         pooya_trace0;
         tau->set(0.01 * std::sin(t));

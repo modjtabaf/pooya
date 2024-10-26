@@ -16,7 +16,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/block/gain.hpp"
 #include "src/block/addsub.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/model.hpp"
+#include "src/block/submodel.hpp"
 #include "src/solver/rk4.hpp"
 #include "src/solver/simulator.hpp"
 #include "src/solver/history.hpp"

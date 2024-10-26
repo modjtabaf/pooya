@@ -17,7 +17,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "src/helper/trace.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/model.hpp"
 #include "src/block/sin.hpp"
 // #include "src/block/siso_function.hpp"
 #include "src/block/muldiv.hpp"
@@ -49,7 +48,7 @@ public:
     pooya::ScalarSignalId _g{nullptr};
     pooya::ScalarSignalId _l{nullptr};
 
-    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
 
@@ -84,7 +83,7 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test05");
+    pooya::Submodel model("test05");
     Pendulum pendulum;
 
     // setup the model
@@ -92,7 +91,7 @@ int main()
 
     pooya::Rk4 stepper;
     pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+        [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
             pendulum._l->set(0.1);

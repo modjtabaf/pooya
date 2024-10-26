@@ -26,7 +26,7 @@ namespace pooya
 
 class FloatSignalInfo : public ValueSignalInfo
 {
-    friend class Model;
+    // friend class Model;
 
 protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise

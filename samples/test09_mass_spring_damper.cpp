@@ -35,10 +35,10 @@ public:
     MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
         pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
 
-    pooya::ScalarSignalId _s_tau;
-    pooya::ScalarSignalId _s_x;
-    pooya::ScalarSignalId _s_xd;
-    pooya::ScalarSignalId _s_xdd;
+    pooya::ScalarSignal _s_tau{"tau"};
+    pooya::ScalarSignal _s_x{"x"};
+    pooya::ScalarSignal _s_xd{"xd"};
+    pooya::ScalarSignal _s_xdd{"xdd"};
 
     bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId) override
     {
@@ -49,12 +49,8 @@ public:
 
         _s_tau = scalar_input_at(0);
 
-        _s_x = pooya::ScalarSignalInfo::create_new("x");
-        _s_xd = pooya::ScalarSignalInfo::create_new("xd");
-        _s_xdd = pooya::ScalarSignalInfo::create_new("xdd");
-
-        _s_x->set_deriv_signal(_s_xd);
-        _s_xd->set_deriv_signal(_s_xdd);
+        _s_x.set_deriv_signal(_s_xd);
+        _s_xd.set_deriv_signal(_s_xdd);
 
         register_associated_signal(_s_x, SignalAssociationType::Input);
         register_associated_signal(_s_xd, SignalAssociationType::Input);
@@ -68,19 +64,19 @@ public:
         pooya_trace0;
 
         // calculate acceleration
-        _s_xdd->set(*_s_tau/_m - _c/_m * *_s_xd - _k/_m * *_s_x);
+        _s_xdd = _s_tau/_m - _c/_m * _s_xd - _k/_m * _s_x;
     }
 
     void pre_step(double /*t*/) override
     {
-        _s_x->set(_x);
-        _s_xd->set(_xd);
+        _s_x = _x;
+        _s_xd = _xd;
     }
 
     void post_step(double /*t*/) override
     {
-        _x = *_s_x;
-        _xd = *_s_xd;
+        _x = _s_x;
+        _xd = _s_xd;
     }
 };
 
@@ -96,7 +92,7 @@ int main()
     MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
-    auto tau = pooya::ScalarSignalInfo::create_new("tau");
+    pooya::ScalarSignal tau("tau");
 
     // setup the model
     model.add_block(msd, tau);
@@ -106,7 +102,7 @@ int main()
     [&](pooya::Block&, double t) -> void
     {
         pooya_trace0;
-        tau->set(0.01 * std::sin(t));
+        tau = 0.01 * std::sin(t);
     }, &stepper);
 
     pooya::History history(model);

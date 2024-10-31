@@ -46,6 +46,21 @@ public:
     LabelSignals(const T& signal)
     {
         pooya_trace0;
+        if constexpr(std::is_pointer_v<T>)
+        {
+            LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
+            _init(lsl.begin(), lsl.end());
+        }
+        else
+        {
+            LabelSignalIdList lsl({{_make_auto_label(0), signal.id()->shared_from_this()}});
+            _init(lsl.begin(), lsl.end());
+        }
+    }
+    template<typename T>
+    LabelSignals(const std::shared_ptr<T>& signal)
+    {
+        pooya_trace0;
         LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
         _init(lsl.begin(), lsl.end());
     }

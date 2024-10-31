@@ -79,26 +79,23 @@ int main()
     // setup the model
     model.add_block(bus_memory, x, y);
 
-    auto x_x0 = x->scalar_at("x0");
-    auto x_x1 = x->scalar_at("x1");
-    auto x_x2 = x->scalar_at("x2");
-    auto x_z3 = x->scalar_at("Z.z3");
+    pooya::ScalarSignal x_x0 = x->scalar_at("x0");
+    pooya::ScalarSignal x_x1 = x->scalar_at("x1");
+    pooya::ScalarSignal x_x2 = x->scalar_at("x2");
+    pooya::ScalarSignal x_z3 = x->scalar_at("Z.z3");
 
-    auto y_x0 = y->scalar_at("x0");
-    auto y_x1 = y->scalar_at("x1");
-    auto y_x2 = y->scalar_at("x2");
-    auto y_z3 = y->scalar_at("Z.z3");
-
-    x_x1->set(0);
-    y_x1->set(0);
+    pooya::ScalarSignal y_x0 = y->scalar_at("x0");
+    pooya::ScalarSignal y_x1 = y->scalar_at("x1");
+    pooya::ScalarSignal y_x2 = y->scalar_at("x2");
+    pooya::ScalarSignal y_z3 = y->scalar_at("Z.z3");
 
     pooya::Simulator sim(
         model, [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
-            x_x0->set(std::sin(M_PI * t / 3));
-            x_x2->set(std::sin(M_PI * t / 7));
-            x_z3->set(std::sin(M_PI * t / 9));
+            x_x0 = std::sin(M_PI * t / 3);
+            x_x2 = std::sin(M_PI * t / 7);
+            x_z3 = std::sin(M_PI * t / 9);
         });
 
     pooya::History history(model);

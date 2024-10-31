@@ -15,6 +15,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 
+#include "signal_id.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
@@ -70,6 +71,17 @@ inline const ScalarSignalInfo& SignalInfo::as_scalar() const
     pooya_verify(_type & ScalarType, "Illegal attempt to dereference a non-scalar as a scalar.");
     return *static_cast<const ScalarSignalInfo*>(this);
 }
+
+class ScalarSignal : public FloatSignal<ScalarSignal, double>
+{
+    using Base = FloatSignal<ScalarSignal, double>;
+
+public:
+    explicit ScalarSignal(const std::string& full_name="") : Base(ScalarSignalInfo::create_new(full_name)) {}
+    ScalarSignal(const ScalarSignalId& sid) : Base(sid) {}
+
+    using Signal<ScalarSignal, double>::operator=;
+};
 
 }
 

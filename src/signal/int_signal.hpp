@@ -75,6 +75,17 @@ inline const IntSignalInfo& SignalInfo::as_int() const
     return *static_cast<const IntSignalInfo*>(this);
 }
 
+class IntSignal : public ValueSignal<IntSignal, int>
+{
+    using Base = ValueSignal<IntSignal, int>;
+
+public:
+    explicit IntSignal(const std::string& full_name="") : Base(IntSignalInfo::create_new(full_name)) {}
+    IntSignal(const IntSignalId& sid) : Base(sid) {}
+
+    using Signal<IntSignal, int>::operator=;
+};
+
 }
 
 #endif // __POOYA_SIGNAL_INT_SIGNAL_HPP__

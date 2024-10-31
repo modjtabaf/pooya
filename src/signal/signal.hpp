@@ -18,6 +18,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <cstdint>
 #include <string>
 
+#include "src/helper/util.hpp"
+#include "trait.hpp"
 #include "signal_id.hpp"
 
 namespace pooya
@@ -71,6 +73,48 @@ public:
     const BoolSignalInfo&     as_bool() const;
     const ArraySignalInfo&   as_array() const;
     const BusInfo&             as_bus() const;
+};
+
+template<typename Derived, typename T>
+class Signal
+{
+protected:
+    typename Types<T>::SignalId _sid;
+
+    static void fail_if_invalid_signal(const SignalId& sid)
+    {
+        if (!sid)
+            helper::pooya_throw_exception(__FILE__, __LINE__, "invalid signal id!");
+    }
+
+public:
+    explicit Signal(const typename Types<T>::SignalId& sid) : _sid(sid)
+    {
+        fail_if_invalid_signal(sid);
+    }
+
+    void operator=(const typename Types<T>::SignalId& sid)
+    {
+        fail_if_invalid_signal(sid);
+        _sid = sid;
+    }
+
+    operator typename Types<T>::GetValue() const {return _sid->get();}
+    typename Types<T>::GetValue operator*() const {return _sid->get();}
+    const typename Types<T>::SignalId operator->() const {return _sid;}
+    typename Types<T>::SignalId operator->() {return _sid;}
+
+    typename Types<T>::GetValue operator=(typename Types<T>::SetValue value) const
+    {
+        _sid->set(value);
+        return value;
+    }
+
+    const typename Types<T>::SignalId& id() const {return _sid;}
+    typename Types<T>::SignalId& id() {return _sid;}
+
+    operator const typename Types<T>::SignalId&() const {return _sid;}
+    operator SignalId() const {return _sid->shared_from_this();}
 };
 
 }

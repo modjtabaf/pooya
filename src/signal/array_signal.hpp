@@ -38,7 +38,7 @@ protected:
     Array _array_value;
 
 public:
-    ArraySignalInfo(Protected, const std::string& full_name, std::size_t size)
+    ArraySignalInfo(Protected, const std::string& full_name="", std::size_t size=1)
         : FloatSignalInfo(full_name, ArrayType, size), _array_value(size) {}
 
     static ArraySignalId create_new(const std::string& full_name, std::size_t size)
@@ -77,6 +77,18 @@ inline const ArraySignalInfo& SignalInfo::as_array() const
     pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
     return *static_cast<const ArraySignalInfo*>(this);
 }
+
+class ArraySignal : public FloatSignal<ArraySignal, Array>
+{
+    using Base = FloatSignal<ArraySignal, Array>;
+
+public:
+    explicit ArraySignal(const std::string& full_name, std::size_t size) : Base(ArraySignalInfo::create_new(full_name, size)) {}
+    ArraySignal(const ArraySignalId& sid) : Base(sid) {}
+
+    using Signal<ArraySignal, Array>::operator=;
+    double operator[](std::size_t index) const {return _sid->get()[index];}
+};
 
 }
 

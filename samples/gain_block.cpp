@@ -35,8 +35,8 @@ int main()
     pooya::Gain gain("gain", 2.0);
 
     // create pooya signals
-    auto x = pooya::ScalarSignalInfo::create_new("x");
-    auto y = pooya::ScalarSignalInfo::create_new("y");
+    pooya::ScalarSignal x("x");
+    pooya::ScalarSignal y("y");
 
     // setup the model
     model.add_block(gain, x, y);
@@ -45,7 +45,7 @@ int main()
         [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
-            x->set(std::sin(M_PI * t / 5));
+            x = std::sin(M_PI * t / 5);
         });
 
     pooya::History history(model);

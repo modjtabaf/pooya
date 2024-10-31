@@ -36,9 +36,9 @@ int main()
     pooya::TriggeredIntegrator integ("integ", 1.0);
 
     // create pooya signals
-    auto x       = pooya::ScalarSignalInfo::create_new("x");
-    auto xd      = pooya::ScalarSignalInfo::create_new("xd");
-    auto trigger = pooya::BoolSignalInfo::create_new("trigger");
+    pooya::ScalarSignal x("x");
+    pooya::ScalarSignal xd("xd");
+    pooya::BoolSignal trigger("trigger");
 
     pooya::BusSpec spec{{"z"}};
 
@@ -51,8 +51,8 @@ int main()
         [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
-            xd->set(t < 3 or t > 7 ? 1.0 : 0.0);
-            trigger->set(t >= 4.9 && t <= 5.1);
+            xd = t < 3 or t > 7 ? 1.0 : 0.0;
+            trigger = t >= 4.9 && t <= 5.1;
         },
         &stepper);
 

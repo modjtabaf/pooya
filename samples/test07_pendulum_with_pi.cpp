@@ -41,9 +41,9 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    pooya::ScalarSignalId _m{nullptr};
-    pooya::ScalarSignalId _g{nullptr};
-    pooya::ScalarSignalId _l{nullptr};
+    pooya::ScalarSignal _m{"m"};
+    pooya::ScalarSignal _g{"g"};
+    pooya::ScalarSignal _l{"l"};
 
     bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -53,18 +53,18 @@ public:
             return false;
 
         // create pooya signals
-        auto dphi = pooya::ScalarSignalInfo::create_new("dphi");
+        pooya::ScalarSignal dphi("dphi");
 
         // choose random names for these internal signals
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
-        auto s20 = pooya::ScalarSignalInfo::create_new("");
-        auto s30 = pooya::ScalarSignalInfo::create_new("");
-        auto s40 = pooya::ScalarSignalInfo::create_new("");
+        pooya::ScalarSignal s10("");
+        pooya::ScalarSignal s20("");
+        pooya::ScalarSignal s30("");
+        pooya::ScalarSignal s40("");
 
         // auto& model_ = model_ref();
-        _m = pooya::ScalarSignalInfo::create_new("m");
-        _g = pooya::ScalarSignalInfo::create_new("g");
-        _l = pooya::ScalarSignalInfo::create_new("l");
+        // _m = pooya::ScalarSignalInfo::create_new("m");
+        // _g = pooya::ScalarSignalInfo::create_new("g");
+        // _l = pooya::ScalarSignalInfo::create_new("l");
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -105,9 +105,9 @@ public:
             return false;
 
         // choose random names for these internal signals
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
-        auto s20 = pooya::ScalarSignalInfo::create_new("");
-        auto s30 = pooya::ScalarSignalInfo::create_new("");
+        pooya::ScalarSignal s10("");
+        pooya::ScalarSignal s20("");
+        pooya::ScalarSignal s30("");
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);
@@ -132,10 +132,10 @@ public:
     PendulumWithPI() : pooya::Submodel("pendulum_with_PI") {}
 
     Pendulum _pend;
-    pooya::ScalarSignalId _des_phi{nullptr};
-    pooya::ScalarSignalId _phi{nullptr};
-    pooya::ScalarSignalId _tau{nullptr};
-    pooya::ScalarSignalId _err{nullptr};
+    pooya::ScalarSignal _des_phi{"des_phi"};
+    pooya::ScalarSignal _phi{"phi"};
+    pooya::ScalarSignal _tau{"tau"};
+    pooya::ScalarSignal _err{"err"};
 
     bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
@@ -145,10 +145,10 @@ public:
             return false;
 
         // signals
-        _phi = pooya::ScalarSignalInfo::create_new("phi");
-        _tau = pooya::ScalarSignalInfo::create_new("tau");
-        _err = pooya::ScalarSignalInfo::create_new("err");
-        _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
+        // _phi = pooya::ScalarSignalInfo::create_new("phi");
+        // _tau = pooya::ScalarSignalInfo::create_new("tau");
+        // _err = pooya::ScalarSignalInfo::create_new("err");
+        // _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
 
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
@@ -178,10 +178,10 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum_with_pi._pend._m->set(0.2);
-            pendulum_with_pi._pend._l->set(0.1);
-            pendulum_with_pi._pend._g->set(9.81);
-            pendulum_with_pi._des_phi->set(M_PI_4);
+            pendulum_with_pi._pend._m = 0.2;
+            pendulum_with_pi._pend._l = 0.1;
+            pendulum_with_pi._pend._g = 9.81;
+            pendulum_with_pi._des_phi = M_PI_4;
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference
 

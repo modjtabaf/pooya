@@ -13,5 +13,5 @@ Roadmap:
 - use LabelSignal in bus
 - discard BusSpec
 - discard Block::init and combine it with the constructor
-- Define and use signal wrappers
+* Define and use signal wrappers
 - make it possible to modify the model between major steps given init is called after modification

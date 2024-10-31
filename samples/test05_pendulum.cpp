@@ -42,11 +42,11 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    pooya::ScalarSignalId _phi{nullptr};
-    pooya::ScalarSignalId _dphi{nullptr};
-    pooya::ScalarSignalId _d2phi{nullptr};
-    pooya::ScalarSignalId _g{nullptr};
-    pooya::ScalarSignalId _l{nullptr};
+    pooya::ScalarSignal _phi{"phi"};
+    pooya::ScalarSignal _dphi{"dphi"};
+    pooya::ScalarSignal _d2phi{"d2phi"};
+    pooya::ScalarSignal _g{"g"};
+    pooya::ScalarSignal _l{"l"};
 
     bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
@@ -56,14 +56,14 @@ public:
             return false;
 
         // create pooya signals
-        _phi   = pooya::ScalarSignalInfo::create_new("phi");
-        _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
-        _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
+        // _phi   = pooya::ScalarSignalInfo::create_new("phi");
+        // _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
+        // _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
 
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
+        pooya::ScalarSignal s10("");
 
-        _g = pooya::ScalarSignalInfo::create_new("g");
-        _l = pooya::ScalarSignalInfo::create_new("l");
+        // pooya::ScalarSignal _g("g");
+        // pooya::ScalarSignal _l("l");
 
         // setup the submodel
         add_block(_integ1, _d2phi, _dphi);
@@ -94,8 +94,8 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum._l->set(0.1);
-            pendulum._g->set(9.81);
+            pendulum._l = 0.1;
+            pendulum._g = 9.81;
         },
         &stepper);
 

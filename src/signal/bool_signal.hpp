@@ -75,6 +75,17 @@ inline const BoolSignalInfo& SignalInfo::as_bool() const
     return *static_cast<const BoolSignalInfo*>(this);
 }
 
+class BoolSignal : public ValueSignal<BoolSignal, bool>
+{
+    using Base = ValueSignal<BoolSignal, bool>;
+
+public:
+    explicit BoolSignal(const std::string& full_name="") : Base(BoolSignalInfo::create_new(full_name)) {}
+    BoolSignal(const BoolSignalId& sid) : Base(sid) {}
+
+    using Signal<BoolSignal, bool>::operator=;
+};
+
 }
 
 #endif // __POOYA_SIGNAL_BOOL_SIGNAL_HPP__

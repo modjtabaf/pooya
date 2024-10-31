@@ -58,13 +58,13 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    pooya::ScalarSignalId _tau{nullptr};
-    pooya::ScalarSignalId _m{nullptr};
-    pooya::ScalarSignalId _g{nullptr};
-    pooya::ScalarSignalId _l{nullptr};
-    pooya::ScalarSignalId _phi{nullptr};
-    pooya::ScalarSignalId _dphi{nullptr};
-    pooya::ScalarSignalId _d2phi{nullptr};
+    pooya::ScalarSignal _tau{"tau"};
+    pooya::ScalarSignal _m{"m"};
+    pooya::ScalarSignal _g{"g"};
+    pooya::ScalarSignal _l{"l"};
+    pooya::ScalarSignal _phi{"phi"};
+    pooya::ScalarSignal _dphi{"dphi"};
+    pooya::ScalarSignal _d2phi{"d2phi"};
 
     bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
@@ -74,18 +74,18 @@ public:
             return false;
 
         // create pooya signals
-        _phi   = pooya::ScalarSignalInfo::create_new("phi");
-        _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
-        _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
+        // _phi   = pooya::ScalarSignalInfo::create_new("phi");
+        // _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
+        // _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
 
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
-        auto s20 = pooya::ScalarSignalInfo::create_new("");
-        auto s30 = pooya::ScalarSignalInfo::create_new("");
+        pooya::ScalarSignal s10("");
+        pooya::ScalarSignal s20("");
+        pooya::ScalarSignal s30("");
 
-        _tau = pooya::ScalarSignalInfo::create_new("tau");
-        _m = pooya::ScalarSignalInfo::create_new("m");
-        _g = pooya::ScalarSignalInfo::create_new("g");
-        _l = pooya::ScalarSignalInfo::create_new("l");
+        // _tau = pooya::ScalarSignalInfo::create_new("tau");
+        // _m = pooya::ScalarSignalInfo::create_new("m");
+        // _g = pooya::ScalarSignalInfo::create_new("g");
+        // _l = pooya::ScalarSignalInfo::create_new("l");
 
         // setup the submodel
         add_block(_integ1, _d2phi, _dphi);
@@ -118,10 +118,10 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum._m->set(0.2);
-            pendulum._l->set(0.1);
-            pendulum._g->set(9.81);
-            pendulum._tau->set(0.13);
+            pendulum._m = 0.2;
+            pendulum._l = 0.1;
+            pendulum._g = 9.81;
+            pendulum._tau = 0.13;
         },
         &stepper, true);
 

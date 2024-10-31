@@ -42,10 +42,10 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
-    pooya::ScalarSignalId _m{nullptr};
-    pooya::ScalarSignalId _g{nullptr};
-    pooya::ScalarSignalId _l{nullptr};
-    pooya::ScalarSignalId _dphi{nullptr};
+    pooya::ScalarSignal _m{"m"};
+    pooya::ScalarSignal _g{"g"};
+    pooya::ScalarSignal _l{"l"};
+    pooya::ScalarSignal _dphi{"dphi"};
 
     bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -54,18 +54,10 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // create pooya signals
-        _dphi = pooya::ScalarSignalInfo::create_new("dphi");
-
-        // choose random names for these internal signals
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
-        auto s20 = pooya::ScalarSignalInfo::create_new("");
-        auto s30 = pooya::ScalarSignalInfo::create_new("");
-        auto s40 = pooya::ScalarSignalInfo::create_new("");
-
-        _m = pooya::ScalarSignalInfo::create_new("m");
-        _g = pooya::ScalarSignalInfo::create_new("g");
-        _l = pooya::ScalarSignalInfo::create_new("l");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s40;
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -108,11 +100,11 @@ public:
             return false;
 
         // choose random names for these internal signals
-        auto s10 = pooya::ScalarSignalInfo::create_new("");
-        auto s20 = pooya::ScalarSignalInfo::create_new("");
-        auto s30 = pooya::ScalarSignalInfo::create_new("");
-        auto s40 = pooya::ScalarSignalInfo::create_new("");
-        auto s50 = pooya::ScalarSignalInfo::create_new("");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s40;
+        pooya::ScalarSignal s50;
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);
@@ -139,10 +131,10 @@ public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
 
     Pendulum _pend;
-    pooya::ScalarSignalId _des_phi{nullptr};
-    pooya::ScalarSignalId _phi{nullptr};
-    pooya::ScalarSignalId _tau{nullptr};
-    pooya::ScalarSignalId _err{nullptr};
+    pooya::ScalarSignal _des_phi{"des_phi"};
+    pooya::ScalarSignal _phi{"phi"};
+    pooya::ScalarSignal _tau{"tau"};
+    pooya::ScalarSignal _err{"err"};
 
     bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
     {
@@ -150,12 +142,6 @@ public:
 
         if (!pooya::Submodel::init(parent))
             return false;
-
-        // signals
-        _phi = pooya::ScalarSignalInfo::create_new("phi");
-        _tau = pooya::ScalarSignalInfo::create_new("tau");
-        _err = pooya::ScalarSignalInfo::create_new("err");
-        _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
 
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
@@ -184,10 +170,10 @@ int main()
     pooya::Simulator sim(model,
         [&](pooya::Block&, double /*t*/) -> void
         {
-            pendulum_with_pid._pend._m->set(0.2);
-            pendulum_with_pid._pend._l->set(0.1);
-            pendulum_with_pid._pend._g->set(9.81);
-            pendulum_with_pid._des_phi->set(M_PI_4);
+            pendulum_with_pid._pend._m = 0.2;
+            pendulum_with_pid._pend._l = 0.1;
+            pendulum_with_pid._pend._g = 9.81;
+            pendulum_with_pid._des_phi = M_PI_4;
         },
         &stepper);
 

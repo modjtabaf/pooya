@@ -38,8 +38,8 @@ protected:
     pooya::Delay _delay{"Delay"};
 
 public:
-    pooya::ScalarSignalId _s_x;
-    pooya::ScalarSignalId _s_y;
+    pooya::ScalarSignal _s_x{"x"};
+    pooya::ScalarSignal _s_y{"y"};
 
 public:
     MyModel() : pooya::Submodel("delay_block")
@@ -47,11 +47,8 @@ public:
         pooya_trace0;
 
         // create pooya signals
-        auto time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
-        auto initial    = pooya::ScalarSignalInfo::create_new("initial");
-
-        _s_x = pooya::ScalarSignalInfo::create_new("x");
-        _s_y = pooya::ScalarSignalInfo::create_new("y");
+        pooya::ScalarSignal time_delay("time_delay");
+        pooya::ScalarSignal initial("initial");
 
         // setup the submodel
         add_block(_source, {}, _s_x);

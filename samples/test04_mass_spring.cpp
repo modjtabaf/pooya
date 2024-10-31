@@ -35,9 +35,9 @@ protected:
 public:
     MyModel() : pooya::Submodel("MyModel") {}
 
-    pooya::ScalarSignalId _x{nullptr};
-    pooya::ScalarSignalId _xd{nullptr};
-    pooya::ScalarSignalId _xdd{nullptr};
+    pooya::ScalarSignal _x{"x"};
+    pooya::ScalarSignal _xd{"xd"};
+    pooya::ScalarSignal _xdd{"xdd"};
 
     bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -45,11 +45,6 @@ public:
 
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
-
-        // create pooya signals
-        _x   = pooya::ScalarSignalInfo::create_new("x");
-        _xd  = pooya::ScalarSignalInfo::create_new("xd");
-        _xdd = pooya::ScalarSignalInfo::create_new("xdd");
 
         // setup the submodel
         add_block(_integ1, _xdd, _xd);

@@ -20,6 +20,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 #include "value_signal.hpp"
+#include <memory>
 
 namespace pooya
 {
@@ -59,6 +60,17 @@ inline const FloatSignalInfo& SignalInfo::as_float() const
     pooya_verify(_type & FloatType, "Illegal attempt to dereference a non-float as a float.");
     return *static_cast<const FloatSignalInfo*>(this);
 }
+
+template<typename Derived, typename T>
+class FloatSignal : public ValueSignal<Derived, T>
+{
+public:
+    explicit FloatSignal(const typename Types<T>::SignalId& sid) : ValueSignal<Derived, T>(sid) {}
+
+    void set_deriv_signal(FloatSignalId deriv_sig) {static_cast<Derived*>(this)->id()->set_deriv_signal(deriv_sig);}
+
+    operator FloatSignalId() const {return std::static_pointer_cast<FloatSignalInfo>(static_cast<const Derived*>(this)->id()->shared_from_this());}
+};
 
 }
 

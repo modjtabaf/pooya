@@ -46,10 +46,10 @@ TEST_F(TestDelay, ScalarDelay)
     // model setup
     pooya::Submodel model("");
     pooya::Delay delay("delay");
-    auto s_time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
-    auto s_initial = pooya::ScalarSignalInfo::create_new("initial");
-    auto s_x = pooya::ScalarSignalInfo::create_new("x");
-    auto s_y = pooya::ScalarSignalInfo::create_new("y");
+    pooya::ScalarSignal s_time_delay("time_delay");
+    pooya::ScalarSignal s_initial("initial");
+    pooya::ScalarSignal s_x("x");
+    pooya::ScalarSignal s_y("y");
     model.add_block(delay, {
         {"delay", s_time_delay},
         {"in", s_x},
@@ -59,9 +59,9 @@ TEST_F(TestDelay, ScalarDelay)
     pooya::Simulator sim(model,
         [&](pooya::Block&, double t) -> void
         {
-            s_time_delay->set(time_delay);
-            s_initial->set(initial);
-            s_x->set(func(t));
+            s_time_delay = time_delay;
+            s_initial = initial;
+            s_x = func(t);
         });
 
     double t;
@@ -72,14 +72,14 @@ TEST_F(TestDelay, ScalarDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ(initial, s_y->get());
+    EXPECT_EQ(initial, s_y);
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR(func(t_end - time_delay), s_y->get(), 1e-10);
+    EXPECT_NEAR(func(t_end - time_delay), s_y, 1e-10);
 }
 
 TEST_F(TestDelay, ArrayDelay)
@@ -100,10 +100,10 @@ TEST_F(TestDelay, ArrayDelay)
     // model setup
     pooya::Submodel model("");
     pooya::DelayA delay("delay");
-    auto s_time_delay = pooya::ScalarSignalInfo::create_new("time_delay");
-    auto s_initial = pooya::ArraySignalInfo::create_new("initial", N);
-    auto s_x = pooya::ArraySignalInfo::create_new("x", N);
-    auto s_y = pooya::ArraySignalInfo::create_new("y", N);
+    pooya::ScalarSignal s_time_delay("time_delay");
+    pooya::ArraySignal s_initial("initial", N);
+    pooya::ArraySignal s_x("x", N);
+    pooya::ArraySignal s_y("y", N);
     model.add_block(delay, {
         {"delay", s_time_delay},
         {"in", s_x},
@@ -113,9 +113,9 @@ TEST_F(TestDelay, ArrayDelay)
     pooya::Simulator sim(model,
         [&](pooya::Block&, double t) -> void
         {
-            s_time_delay->set(time_delay);
-            s_initial->set(initial);
-            s_x->set(func(t));
+            s_time_delay = time_delay;
+            s_initial = initial;
+            s_x = func(t);
         });
 
     double t;
@@ -126,12 +126,12 @@ TEST_F(TestDelay, ArrayDelay)
         sim.run(t);
 
     // verify the results
-    EXPECT_EQ((initial - s_y->get()).abs().maxCoeff(), 0);
+    EXPECT_EQ((initial - *s_y).abs().maxCoeff(), 0);
 
     // continue running the simulation
     for (; t < t_end; t += dt)
         sim.run(t);
 
     // verify the results
-    EXPECT_NEAR((func(t_end - time_delay) - s_y->get()).abs().maxCoeff(), 0, 1e-10);
+    EXPECT_NEAR((func(t_end - time_delay) - *s_y).abs().maxCoeff(), 0, 1e-10);
 }

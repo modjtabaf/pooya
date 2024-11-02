@@ -39,7 +39,7 @@ protected:
 
 public:
     SourceT(const std::string& given_name, SourceFunction src_func) :
-        SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _src_func(src_func) {}
+        SingleOutputT<T>(given_name, true, Block::NoIOLimit, 1), _src_func(src_func) {}
 
     void activation_function(double t) override
     {

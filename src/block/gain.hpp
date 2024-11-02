@@ -35,7 +35,7 @@ protected:
     GainType _k;
 
 public:
-    GainT(const std::string& given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
+    GainT(const std::string& given_name, GainType k) : SingleInputOutputT<T>(given_name, true, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {

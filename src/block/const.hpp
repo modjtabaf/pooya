@@ -36,7 +36,7 @@ protected:
 
 public:
     ConstT(const std::string& given_name, const T &value)
-            : SingleOutputT<T>(given_name, 0, 1), _value(value) {}
+            : SingleOutputT<T>(given_name, true, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/) override
     {

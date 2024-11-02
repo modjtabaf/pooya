@@ -130,9 +130,9 @@ uint Simulator::_process(double t)
 #if defined(POOYA_DEBUG)
     std::vector<const Block*> unprocessed;
 
-    auto find_unprocessed_cb = [&] (const Block& c, uint32_t /*level*/) -> bool
+    auto find_unprocessed_cb = [&] (const Block& block, uint32_t /*level*/) -> bool
     {
-        if (!c.processed()) {unprocessed.push_back(&c);}
+        if (block.is_active() && !block.processed()) {unprocessed.push_back(&block);}
         return true;
     };
 
@@ -257,9 +257,9 @@ void Simulator::init(double t0)
             assert(_processing_order2.empty());
 
             uint num_blocks = 0;
-            auto enum_blocks_cb = [&] (Block& /*c*/, uint32_t /*level*/) -> bool
+            auto enum_blocks_cb = [&] (Block& block, uint32_t /*level*/) -> bool
             {
-                num_blocks++;
+                if (block.is_active()) num_blocks++;
                 return true;
             };
             _model.traverse(enum_blocks_cb, 0);
@@ -267,12 +267,12 @@ void Simulator::init(double t0)
             _processing_order1.reserve(num_blocks);
             _processing_order2.reserve(num_blocks);
 
-            auto add_blocks_cb = [&] (Block& c, uint32_t /*level*/) -> bool
+            auto add_blocks_cb = [&] (Block& block, uint32_t /*level*/) -> bool
             {
 #if defined(POOYA_USE_SMART_PTRS)
-                _processing_order1.emplace_back(c);
+                if (block.is_active()) _processing_order1.emplace_back(block);
 #else // defined(POOYA_USE_SMART_PTRS)
-                _processing_order1.emplace_back(&c);
+                if (block.is_active()) _processing_order1.emplace_back(&block);
 #endif // defined(POOYA_USE_SMART_PTRS)
                 return true;
             };

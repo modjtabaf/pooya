@@ -39,7 +39,7 @@ protected:
 
 public:
     DerivativeT(const std::string& given_name, const T &y0 = 0)
-            : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
+            : SingleInputOutputT<T>(given_name, true, 1, 1), _y(y0) {}
 
     void post_step(double t) override
     {

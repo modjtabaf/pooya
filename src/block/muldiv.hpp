@@ -50,7 +50,7 @@ protected:
 
 public:
     MulDivT(const std::string& given_name, const char *operators, const T &initial = 1.0)
-            : SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
+            : SingleOutputT<T>(given_name, true, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/) override
     {

@@ -36,7 +36,7 @@ protected:
     bool _init{true};
 
 public:
-    InitialValueT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    InitialValueT(const std::string& given_name) : SingleInputOutputT<T>(given_name, true, 1, 1) {}
 
     void activation_function(double /*t*/) override
     {

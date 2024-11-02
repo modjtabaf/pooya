@@ -26,8 +26,8 @@ class SingleOutputT : public Base
 protected:
     typename Types<T>::SignalId _s_out{nullptr};
 
-    SingleOutputT(const std::string& given_name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
-        Base(given_name, num_iports, num_oports)
+    SingleOutputT(const std::string& given_name, bool active, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
+        Base(given_name, active, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }

@@ -35,7 +35,7 @@ protected:
 
 public:
     IntegratorBaseT(const std::string& given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
-            : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
+            : SingleOutputT<T>(given_name, true, num_iports, num_oports), _value(ic) {}
 
     bool init(Parent* parent, BusId ibus, BusId obus) override
     {

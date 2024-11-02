@@ -44,7 +44,7 @@ protected:
 
 public:
     DelayT(const std::string& given_name, double lifespan = 10.0)
-            : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
+            : SingleOutputT<T>(given_name, true, 3, 1), _lifespan(lifespan) {}
 
     bool init(Parent* parent, BusId ibus, BusId obus) override
     {

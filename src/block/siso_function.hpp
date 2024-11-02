@@ -39,7 +39,7 @@ protected:
 
 public:
     SISOFunctionT(const std::string& given_name, ActFunction act_func)
-            : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
+            : SingleInputOutputT<T>(given_name, true, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {

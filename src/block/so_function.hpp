@@ -39,7 +39,7 @@ protected:
 
 public:
     SOFunctionT(const std::string& given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
-            : SingleOutputT<T>(given_name, num_iports, 1), _act_func(act_func) {}
+            : SingleOutputT<T>(given_name, true, num_iports, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {

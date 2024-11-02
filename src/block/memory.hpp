@@ -36,7 +36,7 @@ protected:
 
 public:
     MemoryT(const std::string& given_name, const T &ic = T(0))
-            : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
+            : SingleInputOutputT<T>(given_name, true, 1, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
     {

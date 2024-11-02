@@ -33,7 +33,7 @@ protected:
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
     Parent(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, num_iports, num_oports) {}
+        Block(given_name, false, num_iports, num_oports) {}
 
     // template<typename Iter>
     // BusId create_bus(const std::string& given_name, const BusSpec& spec, Iter begin_, Iter end_);

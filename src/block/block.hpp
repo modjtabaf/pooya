@@ -59,6 +59,7 @@ public:
 
 protected:
     bool _initialized{false};
+    const bool _active{false};
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     // std::vector<ValueSignalId> _input_values;
@@ -82,8 +83,8 @@ protected:
     // bool add_output_value_signal(ValueSignalId sig);
     bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
 
-    Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
+    Block(const std::string& given_name, bool active, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        _active(active), _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Parent* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
     virtual void post_init() {}
@@ -108,6 +109,7 @@ public:
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
+    bool is_active() const {return _active;}
     const std::string& given_name() const {return _given_name;}
     const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}

@@ -33,7 +33,7 @@ protected:
 
 public:
     MassSpringDamper(const std::string& given_name, double m, double k, double c, double x0, double xd0) :
-        pooya::Block(given_name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
+        pooya::Block(given_name, true, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0) {}
 
     pooya::ScalarSignal _s_tau{"tau"};
     pooya::ScalarSignal _s_x{"x"};

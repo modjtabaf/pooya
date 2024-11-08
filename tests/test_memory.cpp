@@ -40,15 +40,15 @@ TEST_F(TestMemory, ScalarMemory)
     // model setup
     pooya::Submodel model("");
     pooya::Memory memory("memory", x0);
-    auto s_x = pooya::ScalarSignalInfo::create_new("x");
-    auto s_y = pooya::ScalarSignalInfo::create_new("y");
+    pooya::ScalarSignal s_x("x");
+    pooya::ScalarSignal s_y("y");
     model.add_block(memory, s_x, s_y);
 
     // simulator setup
     pooya::Simulator sim(model,
         [&](pooya::Block&, double /*t*/) -> void
         {
-            s_x->set(x);
+            s_x = x;
         });
 
     // do one step
@@ -68,24 +68,23 @@ TEST_F(TestMemory, ArrayMemory)
     // model setup
     pooya::Submodel model("");
     pooya::MemoryA memory("memory", x0);
-    auto s_x = pooya::ArraySignalInfo::create_new("x", N);
-    auto s_y = pooya::ArraySignalInfo::create_new("y", N);
+    pooya::ArraySignal s_x(N, "x");
+    pooya::ArraySignal s_y(N, "y");
     model.add_block(memory, s_x, s_y);
 
     // simulator setup
     pooya::Simulator sim(model,
         [&](pooya::Block&, double /*t*/) -> void
         {
-            s_x->set(x);
+            s_x = x;
         });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    auto y = s_y->get();
     for (std::size_t k=0; k < N; k++)
     {
-        EXPECT_EQ(y[k], x0[k]);
+        EXPECT_EQ(s_y[k], x0[k]);
     }
 }

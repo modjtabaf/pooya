@@ -67,6 +67,8 @@ class FloatSignal : public ValueSignal<Derived, T>
 public:
     explicit FloatSignal(const typename Types<T>::SignalId& sid) : ValueSignal<Derived, T>(sid) {}
 
+    FloatSignal& operator=(const FloatSignal&) = delete;
+
     void set_deriv_signal(FloatSignalId deriv_sig) {static_cast<Derived*>(this)->id()->set_deriv_signal(deriv_sig);}
 
     operator FloatSignalId() const {return std::static_pointer_cast<FloatSignalInfo>(static_cast<const Derived*>(this)->id()->shared_from_this());}

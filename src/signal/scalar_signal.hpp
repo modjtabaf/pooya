@@ -37,7 +37,7 @@ public:
     ScalarSignalInfo(Protected, const std::string& full_name)
         : FloatSignalInfo(full_name, ScalarType) {}
 
-    static ScalarSignalId create_new(const std::string& full_name)
+    static ScalarSignalId create_new(const std::string& full_name="")
     {
         return std::make_shared<ScalarSignalInfo>(Protected(), full_name);
     } 
@@ -80,7 +80,15 @@ public:
     explicit ScalarSignal(const std::string& full_name="") : Base(ScalarSignalInfo::create_new(full_name)) {}
     ScalarSignal(const ScalarSignalId& sid) : Base(sid) {}
 
+    ScalarSignal& operator=(const ScalarSignal&) = delete;
+
+    void reset(const std::string& full_name="")
+    {
+        _sid = ScalarSignalInfo::create_new(full_name);
+    }
+
     using Signal<ScalarSignal, double>::operator=;
+    using Signal<ScalarSignal, double>::reset;
 };
 
 }

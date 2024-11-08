@@ -54,12 +54,10 @@ public:
 
         // create pooya signals
         pooya::ScalarSignal dphi("dphi");
-
-        // choose random names for these internal signals
-        pooya::ScalarSignal s10("");
-        pooya::ScalarSignal s20("");
-        pooya::ScalarSignal s30("");
-        pooya::ScalarSignal s40("");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s40;
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -99,10 +97,9 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // choose random names for these internal signals
-        pooya::ScalarSignal s10("");
-        pooya::ScalarSignal s20("");
-        pooya::ScalarSignal s30("");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);

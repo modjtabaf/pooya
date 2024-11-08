@@ -26,18 +26,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-// class Model;
-
 using InputCallback = std::function<void(Block&, double)>;
 
 class Simulator
 {
 protected:
-// #if defined(POOYA_USE_SMART_PTRS)
-//     std::reference_wrapper<Model> _model;
-// #else // defined(POOYA_USE_SMART_PTRS)
     Block& _model;
-// #endif // defined(POOYA_USE_SMART_PTRS)
     double _t_prev{0};
     InputCallback _inputs_cb;
     std::vector<ValueSignalId> value_signals_;
@@ -46,7 +40,6 @@ protected:
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;
-    // std::vector<FloatSignalId> _state_signals;
 #if defined(POOYA_USE_SMART_PTRS)
     std::optional<std::reference_wrapper<StepperBase>> _stepper;
 #else // defined(POOYA_USE_SMART_PTRS)

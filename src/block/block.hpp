@@ -20,7 +20,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <memory>
 #include <optional>
 #include <unordered_set>
-// #include <type_traits>
 
 #include "src/signal/trait.hpp"
 #include "src/signal/scalar_signal.hpp"
@@ -34,7 +33,6 @@ namespace pooya
 
 class Block;
 class Parent;
-// class Model;
 
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
@@ -62,14 +60,8 @@ protected:
     const bool _active{false};
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
-    // std::vector<ValueSignalId> _input_values;
-    // std::vector<ValueSignalId> _output_values;
     std::vector<SignalAssociationPair> _associated_signals;
-// #if defined(POOYA_USE_SMART_PTRS)
-//     std::optional<std::reference_wrapper<Parent>> _parent;
-// #else // defined(POOYA_USE_SMART_PTRS)
     Parent* _parent{nullptr};
-// #endif // defined(POOYA_USE_SMART_PTRS)
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -77,10 +69,6 @@ protected:
     std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
-    // bool add_dependency(ValueSignalId sig);
-    // bool add_input_value_signal(ValueSignalId sig);
-    // bool remove_dependency(ValueSignalId sig);
-    // bool add_output_value_signal(ValueSignalId sig);
     bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
 
     Block(const std::string& given_name, bool active, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
@@ -96,15 +84,6 @@ public:
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
     virtual void activation_function(double /*t*/) {}
-    // virtual Model* model();
-
-    // Model& model_ref()
-    // {
-    //     pooya_trace("block: " + full_name());
-    //     auto* mdl = model();
-    //     pooya_verify(mdl, _full_name + ": a model is necessary but none is defined!");
-    //     return *mdl;
-    // }
 
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
@@ -114,9 +93,6 @@ public:
     const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}
     BusId obus() const {return _obus;}
-    // const std::vector<ValueSignalId>& dependencies() const {return _dependencies;}
-    // const std::vector<ValueSignalId>& input_values() const {return _input_values;}
-    // const std::vector<ValueSignalId>& output_values() const {return _output_values;}
     auto associated_signals() const -> const auto& {return _associated_signals;}
 
     template<typename T, typename Key>
@@ -134,8 +110,6 @@ public:
         if (type.has_value())
         {
             pooya_verify_value_signal(sig);
-            // add_dependency(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
-            // add_input_value_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()));
             register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()), *type);
         }
         return Types<T>::as_signal_id(sig);

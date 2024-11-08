@@ -77,11 +77,6 @@ void BusMemory::block_builder(const std::string& full_label, const BusSpec::Wire
         _init_values.erase(it);
     }
 
-// #if defined(POOYA_USE_SMART_PTRS)
-//     auto& parent = _parent->get();
-// #else // defined(POOYA_USE_SMART_PTRS)
-    // auto& parent = *_parent;
-// #endif // defined(POOYA_USE_SMART_PTRS)
     _parent->add_block(*block, sig_in, sig_out);
     _blocks.emplace_back(std::move(block));
 }

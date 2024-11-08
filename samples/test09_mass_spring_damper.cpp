@@ -47,24 +47,13 @@ public:
         if (!pooya::Block::init(parent, ibus))
             return false;
 
-        _s_tau = scalar_input_at(0);
+        _s_tau.reset(scalar_input_at(0));
 
-        // _s_x = pooya::ScalarSignalInfo::create_new("x");
-        // _s_xd = pooya::ScalarSignalInfo::create_new("xd");
-        // _s_xdd = pooya::ScalarSignalInfo::create_new("xdd");
-
-        // auto& model_ = model_ref();
-        // model_.register_state_variable(_s_x, _s_xd);
         _s_x.set_deriv_signal(_s_xd);
-        // model_.register_state_variable(_s_xd, _s_xdd);
         _s_xd.set_deriv_signal(_s_xdd);
 
-        // it is not necessary to add these dependencies since both _x and _xd are state variables and so, are known always
-        // add_dependency(_s_x);
         register_associated_signal(_s_x, SignalAssociationType::Input);
-        // add_dependency(_s_xd);
         register_associated_signal(_s_xd, SignalAssociationType::Input);
-
         register_associated_signal(_s_xdd, SignalAssociationType::Internal);
 
         return true;
@@ -134,8 +123,6 @@ int main()
               << " milliseconds\n";
 
     history.shrink_to_fit();
-
-    // auto x = model.lookup_signal("~x");
 
     Gnuplot gp;
 	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";

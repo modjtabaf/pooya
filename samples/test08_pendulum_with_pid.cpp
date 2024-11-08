@@ -54,19 +54,10 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // create pooya signals
-        // _dphi = pooya::ScalarSignalInfo::create_new("dphi");
-
-        // choose random names for these internal signals
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
         pooya::ScalarSignal s40;
-
-        // auto& model_ = model_ref();
-        // _m = pooya::ScalarSignalInfo::create_new("m");
-        // _g = pooya::ScalarSignalInfo::create_new("g");
-        // _l = pooya::ScalarSignalInfo::create_new("l");
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -108,7 +99,6 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // choose random names for these internal signals
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
@@ -152,12 +142,6 @@ public:
         if (!pooya::Submodel::init(parent))
             return false;
 
-        // signals
-        // _phi = pooya::ScalarSignalInfo::create_new("phi");
-        // _tau = pooya::ScalarSignalInfo::create_new("tau");
-        // _err = pooya::ScalarSignalInfo::create_new("err");
-        // _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
-
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
         add_block(_pid, _err, _tau);
@@ -191,10 +175,6 @@ int main()
             pendulum_with_pid._des_phi = M_PI_4;
         },
         &stepper);
-
-    // auto  phi = model.lookup_signal("/test08/pendulum_with_PID~phi", true); // find using the exact name
-    // auto dphi = model.lookup_signal("~dphi"); // find using the partial name
-    // auto  tau = model.lookup_signal("tau");   // find using the partial name
 
     pooya::History history(model);
     history.track(pendulum_with_pid._phi);

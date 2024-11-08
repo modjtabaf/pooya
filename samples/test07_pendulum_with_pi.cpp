@@ -54,17 +54,10 @@ public:
 
         // create pooya signals
         pooya::ScalarSignal dphi("dphi");
-
-        // choose random names for these internal signals
-        pooya::ScalarSignal s10("");
-        pooya::ScalarSignal s20("");
-        pooya::ScalarSignal s30("");
-        pooya::ScalarSignal s40("");
-
-        // auto& model_ = model_ref();
-        // _m = pooya::ScalarSignalInfo::create_new("m");
-        // _g = pooya::ScalarSignalInfo::create_new("g");
-        // _l = pooya::ScalarSignalInfo::create_new("l");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s40;
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
@@ -104,10 +97,9 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // choose random names for these internal signals
-        pooya::ScalarSignal s10("");
-        pooya::ScalarSignal s20("");
-        pooya::ScalarSignal s30("");
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);
@@ -143,12 +135,6 @@ public:
 
         if (!pooya::Submodel::init(parent))
             return false;
-
-        // signals
-        // _phi = pooya::ScalarSignalInfo::create_new("phi");
-        // _tau = pooya::ScalarSignalInfo::create_new("tau");
-        // _err = pooya::ScalarSignalInfo::create_new("err");
-        // _des_phi = pooya::ScalarSignalInfo::create_new("des_phi");
 
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
@@ -201,8 +187,6 @@ int main()
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
-
-    // auto phi = model.lookup_signal("~phi");
 
     history.shrink_to_fit();
 

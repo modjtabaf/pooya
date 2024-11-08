@@ -46,11 +46,6 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // create pooya signals
-        // _x   = pooya::ScalarSignalInfo::create_new("x");
-        // _xd  = pooya::ScalarSignalInfo::create_new("xd");
-        // _xdd = pooya::ScalarSignalInfo::create_new("xdd");
-
         // setup the submodel
         add_block(_integ1, _xdd, _xd);
         add_block(_integ2, _xd, _x);

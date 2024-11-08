@@ -50,9 +50,6 @@ public:
         pooya::ScalarSignal time_delay("time_delay");
         pooya::ScalarSignal initial("initial");
 
-        // _s_x = pooya::ScalarSignalInfo::create_new("x");
-        // _s_y = pooya::ScalarSignalInfo::create_new("y");
-
         // setup the submodel
         add_block(_source, {}, _s_x);
         add_block(_const1, {}, time_delay);

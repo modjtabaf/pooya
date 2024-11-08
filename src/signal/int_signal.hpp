@@ -33,8 +33,6 @@ namespace pooya
 
 class IntSignalInfo : public ValueSignalInfo
 {
-    // friend class Model;
-
 protected:
     int _int_value;
 
@@ -42,7 +40,7 @@ public:
     IntSignalInfo(Protected, const std::string& full_name)
         : ValueSignalInfo(full_name, IntType) {}
 
-    static IntSignalId create_new(const std::string& full_name)
+    static IntSignalId create_new(const std::string& full_name="")
     {
         return std::make_shared<IntSignalInfo>(Protected(), full_name);
     } 
@@ -85,7 +83,15 @@ public:
     explicit IntSignal(const std::string& full_name="") : Base(IntSignalInfo::create_new(full_name)) {}
     IntSignal(const IntSignalId& sid) : Base(sid) {}
 
+    IntSignal& operator=(const IntSignal&) = delete;
+
+    void reset(const std::string& full_name="")
+    {
+        _sid = IntSignalInfo::create_new(full_name);
+    }
+
     using Signal<IntSignal, int>::operator=;
+    using Signal<IntSignal, int>::reset;
 };
 
 }

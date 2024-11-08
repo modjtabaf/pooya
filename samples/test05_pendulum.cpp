@@ -55,15 +55,7 @@ public:
         if (!pooya::Submodel::init(parent))
             return false;
 
-        // create pooya signals
-        // _phi   = pooya::ScalarSignalInfo::create_new("phi");
-        // _dphi  = pooya::ScalarSignalInfo::create_new("dphi");
-        // _d2phi = pooya::ScalarSignalInfo::create_new("d2phi");
-
-        pooya::ScalarSignal s10("");
-
-        // pooya::ScalarSignal _g("g");
-        // pooya::ScalarSignal _l("l");
+        pooya::ScalarSignal s10;
 
         // setup the submodel
         add_block(_integ1, _d2phi, _dphi);
@@ -115,8 +107,6 @@ int main()
     std::cout << "It took "
               << std::chrono::duration_cast<milli>(finish - start).count()
               << " milliseconds\n";
-
-    // auto phi = model.lookup_signal("/pendulum~phi");
 
     history.shrink_to_fit();
 

@@ -34,9 +34,7 @@ int main()
     pooya::Memory memory("memory");
 
     // create pooya signals
-    // auto x = pooya::ScalarSignalInfo::create_new("x");
     pooya::ScalarSignal x("x");
-    // auto y = pooya::ScalarSignalInfo::create_new("y");
     pooya::ScalarSignal y("y");
 
     // setup the model

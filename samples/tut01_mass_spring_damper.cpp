@@ -28,7 +28,7 @@ int main()
     constexpr double m{0.25}, c{0.3}, k{0.7};
 
     // create pooya blocks
-    pooya::Model      model("model");
+    pooya::Submodel   model("model");
     pooya::Source     src_F("F(t)",
         [](double t) -> double
         {
@@ -42,13 +42,13 @@ int main()
     pooya::Gain       gain_k_m("k_m", k / m);
 
     // create pooya signals
-    pooya::ScalarSignalId s_F     = model.create_scalar_signal("F");
-    pooya::ScalarSignalId s_F_m   = model.create_scalar_signal("F_m");
-    pooya::ScalarSignalId s_xdd   = model.create_scalar_signal("xdd");
-    pooya::ScalarSignalId s_xd    = model.create_scalar_signal("xd");
-    pooya::ScalarSignalId s_x     = model.create_scalar_signal("x");
-    pooya::ScalarSignalId s_kx_m  = model.create_scalar_signal("kx_m");
-    pooya::ScalarSignalId s_cxd_m = model.create_scalar_signal("cxd_m");
+    pooya::ScalarSignal s_F("F");
+    pooya::ScalarSignal s_F_m("F_m");
+    pooya::ScalarSignal s_xdd("xdd");
+    pooya::ScalarSignal s_xd("xd");
+    pooya::ScalarSignal s_x("x");
+    pooya::ScalarSignal s_kx_m("kx_m");
+    pooya::ScalarSignal s_cxd_m("cxd_m");
 
     // set up the model
     model.add_block(src_F, {}, s_F);
@@ -62,7 +62,10 @@ int main()
     // set up the simulator
     pooya::Rk4 solver;
     pooya::Simulator sim(model, nullptr, &solver);
+
     pooya::History history(model);
+    history.track(s_x);
+    history.track(s_xd);
 
     // run the simulation
     double t;

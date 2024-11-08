@@ -101,9 +101,9 @@ TEST_F(TestDelay, ArrayDelay)
     pooya::Submodel model("");
     pooya::DelayA delay("delay");
     pooya::ScalarSignal s_time_delay("time_delay");
-    pooya::ArraySignal s_initial("initial", N);
-    pooya::ArraySignal s_x("x", N);
-    pooya::ArraySignal s_y("y", N);
+    pooya::ArraySignal s_initial(N, "initial");
+    pooya::ArraySignal s_x(N, "x");
+    pooya::ArraySignal s_y(N, "y");
     model.add_block(delay, {
         {"delay", s_time_delay},
         {"in", s_x},

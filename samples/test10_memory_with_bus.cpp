@@ -94,7 +94,6 @@ int main()
         {
             pooya_trace0;
             x_x0 = std::sin(M_PI * t / 3);
-            // x_x1 = std::sin(M_PI * t / 5);
             x_x2 = std::sin(M_PI * t / 7);
             x_z3 = std::sin(M_PI * t / 9);
         });

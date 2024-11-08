@@ -41,7 +41,6 @@ public:
     History(const Block& model, uint nrows_grow = 1000) :
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
-    // void track_all();
     void track(SignalId sig);
     void untrack(SignalId sig);
     void update(uint k, double t);

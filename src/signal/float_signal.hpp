@@ -27,8 +27,6 @@ namespace pooya
 
 class FloatSignalInfo : public ValueSignalInfo
 {
-    // friend class Model;
-
 protected:
     FloatSignalId _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     const std::size_t _size;
@@ -42,9 +40,6 @@ public:
     void set_deriv_signal(FloatSignalId deriv_sig)
     {
         pooya_verify_valid_signal(deriv_sig);
-        // pooya_verify(!sig->is_state_variable(), sig->_full_name + ": signal is already registered as a state variable!");
-        // pooya_verify((sig->is_scalar() && deriv_sig->is_scalar()) || (sig->is_array() && deriv_sig->is_array() && sig->as_array()._size == deriv_sig->as_array()._size),
-        //     sig->_full_name + ", " + deriv_sig->_full_name + ": type or size mismatch!");
         pooya_verify(_type == deriv_sig->_type, _full_name + ", " + deriv_sig->_full_name + ": type mismatch!");
         pooya_verify(_size == deriv_sig->_size, _full_name + ", " + deriv_sig->_full_name + ": size mismatch!");
 
@@ -71,6 +66,8 @@ class FloatSignal : public ValueSignal<Derived, T>
 {
 public:
     explicit FloatSignal(const typename Types<T>::SignalId& sid) : ValueSignal<Derived, T>(sid) {}
+
+    FloatSignal& operator=(const FloatSignal&) = delete;
 
     void set_deriv_signal(FloatSignalId deriv_sig) {static_cast<Derived*>(this)->id()->set_deriv_signal(deriv_sig);}
 

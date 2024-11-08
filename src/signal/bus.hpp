@@ -125,8 +125,6 @@ public:
 
 class BusInfo : public SignalInfo
 {
-    // friend class Model;
-
 public:
     std::reference_wrapper<const BusSpec> _spec;
 
@@ -155,11 +153,6 @@ public:
 #endif // defined(POOYA_DEBUG)
     }
 
-    // static BusId create_new(const std::string& full_name, const BusSpec& spec, LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
-    // {
-    //     return std::make_shared<BusInfo>(Protected(), full_name, spec, begin_, end_);
-    // } 
-
     template<typename Iter>
     static BusId create_new(const std::string& full_name, const BusSpec& spec, Iter begin_, Iter end_)
     {
@@ -183,19 +176,14 @@ public:
             {
                 std::string name = full_name + "." + wit->label();
                 if (wit->_bus)
-                    // {ls.second = create_bus(name, *wit->_bus);}
                     {ls.second = BusInfo::create_new(name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
-                    // {ls.second = create_array_signal(name, wit->_array_size);}
-                    {ls.second = ArraySignalInfo::create_new(name, wit->_array_size);}
+                    {ls.second = ArraySignalInfo::create_new(wit->_array_size, name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
-                    // {ls.second = create_scalar_signal(name);}
                     {ls.second = ScalarSignalInfo::create_new(name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
-                    // {ls.second = create_int_signal(name);}
                     {ls.second = IntSignalInfo::create_new(name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
-                    // {ls.second = create_bool_signal(name);}
                     {ls.second = BoolSignalInfo::create_new(name);}
                 else
                     {pooya_verify(false, name + ": unknown wire type!");}
@@ -203,21 +191,19 @@ public:
             wit++;
         }
 
-        // return model_ref().register_bus(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
-        // return BusInfo::create_new(make_signal_name(given_name, true), spec, label_signals.begin(), label_signals.end());
         return std::make_shared<BusInfo>(Protected(), full_name, spec, label_signals.begin(), label_signals.end());
     }
 
     static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
     {
-        // pooya_trace("block: " + full_name());
+        pooya_trace("create_new: " + full_name);
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
         return create_new(full_name, spec, l.begin(), l.end());
     }
 
     static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
     {
-        // pooya_trace("block: " + full_name());
+        pooya_trace("create_new: " + full_name);
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
         LabelSignalIdList label_signals;

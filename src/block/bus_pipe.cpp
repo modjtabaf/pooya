@@ -55,11 +55,6 @@ void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::Wi
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-// #if defined(POOYA_USE_SMART_PTRS)
-//     auto& parent = _parent->get();
-// #else // defined(POOYA_USE_SMART_PTRS)
-//     auto& parent = *_parent;
-// #endif // defined(POOYA_USE_SMART_PTRS)
     _parent->add_block(*block, sig_in, sig_out);
     _blocks.emplace_back(std::move(block));
 }

@@ -42,7 +42,6 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
-        // SingleOutputT<T>::model_ref().register_state_variable(SingleOutputT<T>::_s_out, std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus->at(0).second)));
         SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus->at(0).second));
 
         return true;

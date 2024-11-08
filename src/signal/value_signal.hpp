@@ -30,8 +30,6 @@ namespace pooya
 
 class ValueSignalInfo : public SignalInfo
 {
-    // friend class Model;
-
 protected:
     bool _assigned{false};             // has the value been assigned?
 
@@ -63,6 +61,8 @@ class ValueSignal : public Signal<Derived, T>
 {
 public:
     explicit ValueSignal(const typename Types<T>::SignalId& sid) : Signal<Derived, T>(sid) {}
+
+    ValueSignal& operator=(const ValueSignal&) = delete;
 
     operator ValueSignalId() const {return std::static_pointer_cast<ValueSignalInfo>(static_cast<const Derived*>(this)->id()->shared_from_this());}
 };

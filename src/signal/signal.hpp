@@ -28,8 +28,6 @@ namespace pooya
 
 class SignalInfo : public std::enable_shared_from_this<SignalInfo>
 {
-    // friend class Model;
-
 protected:
     struct Protected {};
 
@@ -91,12 +89,14 @@ protected:
     }
 
 public:
-    explicit Signal(const typename Types<T>::SignalId& sid) : _sid(sid)
+    explicit Signal(const typename Types<T>::SignalId& sid)
     {
-        fail_if_invalid_signal(sid);
+        reset(sid);
     }
 
-    void operator=(const typename Types<T>::SignalId& sid)
+    Signal<Derived, T>& operator=(const Signal<Derived, T>&) = delete;
+
+    void reset(const typename Types<T>::SignalId& sid)
     {
         fail_if_invalid_signal(sid);
         _sid = sid;

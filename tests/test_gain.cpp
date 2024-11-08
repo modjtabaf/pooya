@@ -66,8 +66,8 @@ TEST_F(TestGain, ArrayGain)
     // model setup
     pooya::Submodel model("");
     pooya::GainA gain("gain", -5.89);
-    pooya::ArraySignal s_x("x", N);
-    pooya::ArraySignal s_y("y", N);
+    pooya::ArraySignal s_x(N, "x");
+    pooya::ArraySignal s_y(N, "y");
     model.add_block(gain, s_x, s_y);
 
     // simulator setup

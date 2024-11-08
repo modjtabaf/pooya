@@ -47,7 +47,7 @@ public:
         if (!pooya::Block::init(parent, ibus))
             return false;
 
-        _s_tau = scalar_input_at(0);
+        _s_tau.reset(scalar_input_at(0));
 
         _s_x.set_deriv_signal(_s_xd);
         _s_xd.set_deriv_signal(_s_xdd);

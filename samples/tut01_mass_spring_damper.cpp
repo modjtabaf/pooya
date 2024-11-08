@@ -42,13 +42,13 @@ int main()
     pooya::Gain       gain_k_m("k_m", k / m);
 
     // create pooya signals
-    pooya::ScalarSignalId s_F     = pooya::ScalarSignalInfo::create_new("F");
-    pooya::ScalarSignalId s_F_m   = pooya::ScalarSignalInfo::create_new("F_m");
-    pooya::ScalarSignalId s_xdd   = pooya::ScalarSignalInfo::create_new("xdd");
-    pooya::ScalarSignalId s_xd    = pooya::ScalarSignalInfo::create_new("xd");
-    pooya::ScalarSignalId s_x     = pooya::ScalarSignalInfo::create_new("x");
-    pooya::ScalarSignalId s_kx_m  = pooya::ScalarSignalInfo::create_new("kx_m");
-    pooya::ScalarSignalId s_cxd_m = pooya::ScalarSignalInfo::create_new("cxd_m");
+    pooya::ScalarSignal s_F("F");
+    pooya::ScalarSignal s_F_m("F_m");
+    pooya::ScalarSignal s_xdd("xdd");
+    pooya::ScalarSignal s_xd("xd");
+    pooya::ScalarSignal s_x("x");
+    pooya::ScalarSignal s_kx_m("kx_m");
+    pooya::ScalarSignal s_cxd_m("cxd_m");
 
     // set up the model
     model.add_block(src_F, {}, s_F);
@@ -62,6 +62,7 @@ int main()
     // set up the simulator
     pooya::Rk4 solver;
     pooya::Simulator sim(model, nullptr, &solver);
+
     pooya::History history(model);
     history.track(s_x);
     history.track(s_xd);

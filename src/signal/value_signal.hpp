@@ -62,6 +62,8 @@ class ValueSignal : public Signal<Derived, T>
 public:
     explicit ValueSignal(const typename Types<T>::SignalId& sid) : Signal<Derived, T>(sid) {}
 
+    ValueSignal& operator=(const ValueSignal&) = delete;
+
     operator ValueSignalId() const {return std::static_pointer_cast<ValueSignalInfo>(static_cast<const Derived*>(this)->id()->shared_from_this());}
 };
 

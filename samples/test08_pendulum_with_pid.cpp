@@ -99,7 +99,6 @@ public:
         if (!pooya::Submodel::init(parent, ibus, obus))
             return false;
 
-        // choose random names for these internal signals
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;

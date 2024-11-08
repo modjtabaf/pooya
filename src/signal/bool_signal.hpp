@@ -38,7 +38,7 @@ public:
     BoolSignalInfo(Protected, const std::string& full_name)
         : ValueSignalInfo(full_name, BoolType) {}
 
-    static BoolSignalId create_new(const std::string& full_name)
+    static BoolSignalId create_new(const std::string& full_name="")
     {
         return std::make_shared<BoolSignalInfo>(Protected(), full_name);
     } 
@@ -81,7 +81,15 @@ public:
     explicit BoolSignal(const std::string& full_name="") : Base(BoolSignalInfo::create_new(full_name)) {}
     BoolSignal(const BoolSignalId& sid) : Base(sid) {}
 
+    BoolSignal& operator=(const BoolSignal&) = delete;
+
+    void reset(const std::string& full_name="")
+    {
+        _sid = BoolSignalInfo::create_new(full_name);
+    }
+
     using Signal<BoolSignal, bool>::operator=;
+    using Signal<BoolSignal, bool>::reset;
 };
 
 }

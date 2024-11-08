@@ -178,7 +178,7 @@ public:
                 if (wit->_bus)
                     {ls.second = BusInfo::create_new(name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
-                    {ls.second = ArraySignalInfo::create_new(name, wit->_array_size);}
+                    {ls.second = ArraySignalInfo::create_new(wit->_array_size, name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
                     {ls.second = ScalarSignalInfo::create_new(name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
@@ -196,12 +196,14 @@ public:
 
     static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
     {
+        pooya_trace("create_new: " + full_name);
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
         return create_new(full_name, spec, l.begin(), l.end());
     }
 
     static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
     {
+        pooya_trace("create_new: " + full_name);
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
         LabelSignalIdList label_signals;

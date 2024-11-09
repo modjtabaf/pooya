@@ -30,9 +30,12 @@ struct Types
 {
 };
 
+class ArraySignal;
+
 template<>
 struct Types<Array>
 {
+    using SignalWrapper = ArraySignal;
     using SignalInfo = ArraySignalInfo;
     using SignalId = ArraySignalId;
     using GetValue = const Array&;
@@ -50,9 +53,12 @@ struct Types<Array>
     }
 };
 
+class ScalarSignal;
+
 template<>
 struct Types<double>
 {
+    using SignalWrapper = ScalarSignal;
     using SignalInfo = ScalarSignalInfo;
     using SignalId = ScalarSignalId;
     using GetValue = double;
@@ -69,9 +75,12 @@ struct Types<double>
     }
 };
 
+class IntSignal;
+
 template<>
 struct Types<int>
 {
+    using SignalWrapper = IntSignal;
     using SignalInfo = IntSignalInfo;
     using SignalId = IntSignalId;
     using GetValue = int;
@@ -88,9 +97,12 @@ struct Types<int>
     }
 };
 
+class BoolSignal;
+
 template<>
 struct Types<bool>
 {
+    using SignalWrapper = BoolSignal;
     using SignalInfo = BoolSignalInfo;
     using SignalId = BoolSignalId;
     using GetValue = bool;

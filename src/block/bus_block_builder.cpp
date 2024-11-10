@@ -21,13 +21,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "bus_block_builder.hpp"
 
-namespace pooya {
+namespace pooya
+{
 
 bool BusBlockBuilder::init(Parent* parent, BusId ibus, BusId obus)
 {
     pooya_trace("block: " + full_name());
     pooya_verify(parent, "Bus block builder needs a parent.");
-    if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus)) {return false;}
+    if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus))
+    {
+        return false;
+    }
 
     pooya_verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
 
@@ -37,7 +41,7 @@ bool BusBlockBuilder::init(Parent* parent, BusId ibus, BusId obus)
 void BusBlockBuilder::post_init()
 {
     pooya_trace("block: " + full_name());
-    const auto &bus_spec = _s_in->spec();
+    const auto& bus_spec = _s_in->spec();
     _blocks.reserve(bus_spec.total_size());
     traverse_bus("", bus_spec);
 }
@@ -46,9 +50,12 @@ void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec&
 {
     pooya_trace("block: " + full_name());
 
-    if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end()) {return;}
+    if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end())
+    {
+        return;
+    }
 
-    for (const auto &wi : bus_spec._wires)
+    for (const auto& wi : bus_spec._wires)
     {
         if (wi._bus)
         {
@@ -58,7 +65,9 @@ void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec&
         {
             auto label = full_label + wi.label();
             if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
-                {block_builder(label, wi, _s_in->at(label), _s_out->at(label));}
+            {
+                block_builder(label, wi, _s_in->at(label), _s_out->at(label));
+            }
         }
     }
 }

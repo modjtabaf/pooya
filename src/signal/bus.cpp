@@ -1,24 +1,31 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "value_signal.hpp"
-#include "scalar_signal.hpp"
-#include "int_signal.hpp"
-#include "bool_signal.hpp"
-#include "array_signal.hpp"
-#include <memory>
 #include "bus.hpp"
+#include "array_signal.hpp"
+#include "bool_signal.hpp"
+#include "int_signal.hpp"
+#include "scalar_signal.hpp"
+#include "value_signal.hpp"
+#include <memory>
 
 namespace pooya
 {
@@ -27,22 +34,22 @@ BusSpec::WireInfo::WireInfo(const std::string& coded_label)
 {
     if (coded_label.find("i:") == 0)
     {
-        _label = coded_label.substr(2);
+        _label             = coded_label.substr(2);
         _single_value_type = BusSpec::SingleValueType::Int;
     }
     else if (coded_label.find("b:") == 0)
     {
-        _label = coded_label.substr(2);
+        _label             = coded_label.substr(2);
         _single_value_type = BusSpec::SingleValueType::Bool;
     }
     else if (coded_label.find("f:") == 0)
     {
-        _label = coded_label.substr(2);
+        _label             = coded_label.substr(2);
         _single_value_type = BusSpec::SingleValueType::Scalar;
     }
     else
     {
-        _label = coded_label;
+        _label             = coded_label;
         _single_value_type = BusSpec::SingleValueType::Scalar;
     }
 }
@@ -146,11 +153,14 @@ BusId BusInfo::bus_at(std::size_t index) const
 SignalId BusInfo::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    auto pos = label.find(".");
+    auto pos   = label.find(".");
     auto index = static_cast<const BusSpec&>(_spec).index_of(pos == std::string::npos ? label : label.substr(0, pos));
     pooya_verify(index < static_cast<const BusSpec&>(_spec)._wires.size(), label + ": label not found in bus!");
     auto sig = at(index).second;
-    if (pos == std::string::npos) {return sig;}
+    if (pos == std::string::npos)
+    {
+        return sig;
+    }
 
     pooya_verify_bus(sig);
     return sig->as_bus().at(label.substr(pos + 1));
@@ -193,11 +203,13 @@ SignalId BusInfo::operator[](const std::string& label) const
     pooya_trace("label: " + label);
     auto pos = label.find(".");
     if (pos == std::string::npos)
-        {return operator[](static_cast<const BusSpec&>(_spec).index_of(label)).second;}
+    {
+        return operator[](static_cast<const BusSpec&>(_spec).index_of(label)).second;
+    }
 
     auto sig = operator[](static_cast<const BusSpec&>(_spec).index_of(label.substr(0, pos))).second;
     pooya_verify_bus(sig);
     return sig->as_bus()[label.substr(pos + 1)];
 }
 
-}
+} // namespace pooya

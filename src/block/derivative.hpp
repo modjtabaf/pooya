@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_DERIVATIVE_HPP__
 #define __POOYA_BLOCK_DERIVATIVE_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class DerivativeT : public SingleInputOutputT<T>
 {
 protected:
@@ -38,15 +38,16 @@ protected:
     T _y;
 
 public:
-    DerivativeT(const std::string& given_name, const T &y0 = 0)
-            : SingleInputOutputT<T>(given_name, true, 1, 1), _y(y0) {}
+    DerivativeT(const std::string& given_name, const T& y0 = 0) : SingleInputOutputT<T>(given_name, true, 1, 1), _y(y0)
+    {
+    }
 
     void post_step(double t) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        _t = t;
-        _x = *SingleInputOutputT<T>::_s_in;
-        _y = _x;
+        _t          = t;
+        _x          = *SingleInputOutputT<T>::_s_in;
+        _y          = _x;
         _first_step = false;
     }
 
@@ -70,7 +71,7 @@ public:
     }
 };
 
-using Derivative = DerivativeT<double>;
+using Derivative  = DerivativeT<double>;
 using DerivativeA = DerivativeT<Array>;
 
 } // namespace pooya

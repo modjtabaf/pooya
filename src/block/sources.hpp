@@ -36,8 +36,10 @@ protected:
     SourcesFunction _src_func;
 
 public:
-    Sources(const std::string& given_name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, true, 0, num_oports), _src_func(src_func) {}
+    Sources(const std::string& given_name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
+        : Block(given_name, true, 0, num_oports), _src_func(src_func)
+    {
+    }
 
     void activation_function(double t) override
     {

@@ -19,18 +19,19 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "pipe.hpp"
-#include "parent.hpp"
-#include "src/signal/scalar_signal.hpp"
-#include "src/signal/int_signal.hpp"
-#include "src/signal/bool_signal.hpp"
-#include "src/signal/array_signal.hpp"
 #include "bus_pipe.hpp"
+#include "parent.hpp"
+#include "pipe.hpp"
+#include "src/signal/array_signal.hpp"
+#include "src/signal/bool_signal.hpp"
+#include "src/signal/int_signal.hpp"
+#include "src/signal/scalar_signal.hpp"
 
-namespace pooya {
+namespace pooya
+{
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo &wi,
-    SignalId sig_in, SignalId sig_out)
+void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo& wi, SignalId sig_in,
+                            SignalId sig_out)
 {
     pooya_trace("block: " + full_name());
     std::shared_ptr<Block> block;

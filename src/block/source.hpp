@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SOURCE_HPP__
 #define __POOYA_BLOCK_SOURCE_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class SourceT : public SingleOutputT<T>
 {
 public:
@@ -38,8 +38,10 @@ protected:
     SourceFunction _src_func;
 
 public:
-    SourceT(const std::string& given_name, SourceFunction src_func) :
-        SingleOutputT<T>(given_name, true, Block::NoIOLimit, 1), _src_func(src_func) {}
+    SourceT(const std::string& given_name, SourceFunction src_func)
+        : SingleOutputT<T>(given_name, true, Block::NoIOLimit, 1), _src_func(src_func)
+    {
+    }
 
     void activation_function(double t) override
     {
@@ -48,7 +50,7 @@ public:
     }
 };
 
-using Source = SourceT<double>;
+using Source  = SourceT<double>;
 using SourceI = SourceT<int>;
 using SourceA = SourceT<Array>;
 

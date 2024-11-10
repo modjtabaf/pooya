@@ -22,20 +22,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_INTEGRATOR_HPP__
 #define __POOYA_BLOCK_INTEGRATOR_HPP__
 
-#include "src/signal/array.hpp"
 #include "integrator_base.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class IntegratorT : public IntegratorBaseT<T>
 {
 public:
     IntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
 };
 
-using Integrator = IntegratorT<double>;
+using Integrator  = IntegratorT<double>;
 using IntegratorA = IntegratorT<Array>;
 
 } // namespace pooya

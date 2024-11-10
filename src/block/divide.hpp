@@ -22,21 +22,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_DIVIDE_HPP__
 #define __POOYA_BLOCK_DIVIDE_HPP__
 
-#include "src/signal/array.hpp"
 #include "muldiv.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class DivideT : public MulDivT<T>
 {
 public:
-    DivideT(const std::string& given_name, const T &initial = 1.0)
-            : MulDivT<T>(given_name, "*/", initial) {}
+    DivideT(const std::string& given_name, const T& initial = 1.0) : MulDivT<T>(given_name, "*/", initial) {}
 };
 
-using Divide = DivideT<double>;
+using Divide  = DivideT<double>;
 using DivideA = DivideT<Array>;
 
 } // namespace pooya

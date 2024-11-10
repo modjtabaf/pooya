@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_TRIGGERED_INTEGRATOR_HPP__
 #define __POOYA_BLOCK_TRIGGERED_INTEGRATOR_HPP__
 
-#include "src/signal/array.hpp"
 #include "integrator_base.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
 {
 protected:
@@ -41,7 +41,10 @@ public:
     bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (!IntegratorBaseT<T>::init(parent, ibus, obus)) {return false;}
+        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
+        {
+            return false;
+        }
 
         _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
 
@@ -54,26 +57,36 @@ public:
         if (_triggered)
         {
             if constexpr (std::is_same_v<T, Array>)
-                {IntegratorBaseT<T>::_value.setZero();}
+            {
+                IntegratorBaseT<T>::_value.setZero();
+            }
             else
-                {IntegratorBaseT<T>::_value = 0;}
+            {
+                IntegratorBaseT<T>::_value = 0;
+            }
             _triggered = false;
         }
         IntegratorBaseT<T>::pre_step(t);
     }
 
-    uint _process(double t, bool go_deep=true) override
+    uint _process(double t, bool go_deep = true) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name());
-        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned()) {return 0;}
+        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned())
+        {
+            return 0;
+        }
 
-        if (!_triggered) {_triggered = _trigger->get();}
+        if (!_triggered)
+        {
+            _triggered = _trigger->get();
+        }
 
         return IntegratorBaseT<T>::_process(t, go_deep);
     }
 };
 
-using TriggeredIntegrator = TriggeredIntegratorT<double>;
+using TriggeredIntegrator  = TriggeredIntegratorT<double>;
 using TriggeredIntegratorA = TriggeredIntegratorT<Array>;
 
 } // namespace pooya

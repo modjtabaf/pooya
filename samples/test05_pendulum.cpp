@@ -1,30 +1,37 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
-#include "src/helper/trace.hpp"
-#include "src/block/submodel.hpp"
 #include "src/block/sin.hpp"
+#include "src/block/submodel.hpp"
+#include "src/helper/trace.hpp"
 // #include "src/block/siso_function.hpp"
-#include "src/block/muldiv.hpp"
 #include "src/block/integrator.hpp"
+#include "src/block/muldiv.hpp"
+#include "src/misc/gp-ios.hpp"
+#include "src/solver/history.hpp"
 #include "src/solver/rk4.hpp"
 #include "src/solver/simulator.hpp"
-#include "src/solver/history.hpp"
-#include "src/misc/gp-ios.hpp"
 
 class Pendulum : public pooya::Submodel
 {
@@ -52,8 +59,7 @@ public:
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent))
-            return false;
+        if (!pooya::Submodel::init(parent)) return false;
 
         pooya::ScalarSignal s10;
 
@@ -72,7 +78,7 @@ int main()
     pooya_trace0;
 
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
     pooya::Submodel model("test05");
@@ -82,7 +88,8 @@ int main()
     model.add_block(pendulum);
 
     pooya::Rk4 stepper;
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(
+        model,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
@@ -104,16 +111,14 @@ int main()
     }
 
     auto finish = std::chrono::high_resolution_clock::now();
-    std::cout << "It took "
-              << std::chrono::duration_cast<milli>(finish - start).count()
-              << " milliseconds\n";
+    std::cout << "It took " << std::chrono::duration_cast<milli>(finish - start).count() << " milliseconds\n";
 
     history.shrink_to_fit();
 
     Gnuplot gp;
-	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
+    gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.8:0.8]\n";
-	gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'x'\n";
+    gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'x'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

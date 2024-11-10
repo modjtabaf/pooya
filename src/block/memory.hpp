@@ -22,21 +22,23 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_MEMORY_HPP__
 #define __POOYA_BLOCK_MEMORY_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class MemoryT : public SingleInputOutputT<T>
 {
 protected:
     T _value;
 
 public:
-    MemoryT(const std::string& given_name, const T &ic = T(0))
-            : SingleInputOutputT<T>(given_name, true, 1, 1), _value(ic) {}
+    MemoryT(const std::string& given_name, const T& ic = T(0))
+        : SingleInputOutputT<T>(given_name, true, 1, 1), _value(ic)
+    {
+    }
 
     void post_step(double /*t*/) override
     {
@@ -56,7 +58,10 @@ public:
     uint _process(double /*t*/, bool /*go_deep*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
-        if (SingleInputOutputT<T>::_processed) {return 0;}
+        if (SingleInputOutputT<T>::_processed)
+        {
+            return 0;
+        }
 
         pooya_trace_update0;
         SingleInputOutputT<T>::_s_out->set(_value);
@@ -65,7 +70,7 @@ public:
     }
 };
 
-using Memory = MemoryT<double>;
+using Memory  = MemoryT<double>;
 using MemoryI = MemoryT<int>;
 using MemoryB = MemoryT<bool>;
 using MemoryA = MemoryT<Array>;

@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_INITIAL_VALUE_HPP__
 #define __POOYA_BLOCK_INITIAL_VALUE_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class InitialValueT : public SingleInputOutputT<T>
 {
 protected:
@@ -43,15 +43,15 @@ public:
         pooya_trace("block: " + SingleInputOutputT<T>::full_name());
         if (_init)
         {
-            _value = SingleInputOutputT<T>::_s_in->get();
+            _value                       = SingleInputOutputT<T>::_s_in->get();
             SingleInputOutputT<T>::_ibus = nullptr;
-            _init = false;
+            _init                        = false;
         }
         SingleInputOutputT<T>::_s_out->set(_value);
     }
 };
 
-using InitialValue = InitialValueT<double>;
+using InitialValue  = InitialValueT<double>;
 using InitialValueA = InitialValueT<Array>;
 
 } // namespace pooya

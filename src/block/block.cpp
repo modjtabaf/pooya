@@ -1,15 +1,22 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
@@ -17,8 +24,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include "block.hpp"
 #include "parent.hpp"
-#include "src/signal/value_signal.hpp"
 #include "src/helper/util.hpp"
+#include "src/signal/value_signal.hpp"
 
 namespace pooya
 {
@@ -28,7 +35,10 @@ bool Block::init(Parent* parent, BusId ibus, BusId obus)
     pooya_trace(_given_name);
 
     assert(!_parent);
-    if (_parent) {return false;}
+    if (_parent)
+    {
+        return false;
+    }
 
     _parent = parent;
 
@@ -41,35 +51,37 @@ bool Block::init(Parent* parent, BusId ibus, BusId obus)
     }
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
-        _num_iports == 0 ?
-            _full_name + " cannot take any input." :
-            _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+                 _num_iports == 0 ? _full_name + " cannot take any input."
+                                  : _full_name + " requires " + std::to_string(_num_iports) +
+                                        std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
     pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
-        _num_oports == 0 ?
-            _full_name + " cannot generate any output." :
-            _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+                 _num_oports == 0 ? _full_name + " cannot generate any output."
+                                  : _full_name + " requires " + std::to_string(_num_oports) +
+                                        std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
     _associated_signals.reserve((ibus ? ibus->size() : 0) + (obus ? obus->size() : 0));
 
     if (ibus)
     {
-        for (auto sig: *ibus)
+        for (auto sig : *ibus)
         {
             if (sig.second->is_value())
             {
-                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Input);
+                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()),
+                                           SignalAssociationType::Input);
             }
         }
     }
 
     if (obus)
     {
-        for (auto sig: *obus)
+        for (auto sig : *obus)
         {
             if (sig.second->is_value())
             {
-                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Output);
+                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()),
+                                           SignalAssociationType::Output);
             }
         }
     }
@@ -88,10 +100,7 @@ bool Block::register_associated_signal(ValueSignalId signal, SignalAssociationTy
     pooya_trace("block: " + full_name());
     pooya_verify_valid_signal(signal);
     auto it = std::find_if(_associated_signals.begin(), _associated_signals.end(),
-        [&](const SignalAssociationPair& sig_type) -> bool
-        {
-            return sig_type.first == signal;
-        });
+                           [&](const SignalAssociationPair& sig_type) -> bool { return sig_type.first == signal; });
     if (it == _associated_signals.end())
     {
         _associated_signals.emplace_back(signal, type);
@@ -109,10 +118,16 @@ void Block::_mark_unprocessed()
 uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name());
-    if (_processed) {return 0;}
-    for (auto& sig: _associated_signals)
+    if (_processed)
     {
-        if ((sig.second == SignalAssociationType::Input) && !sig.first->is_assigned()) {return 0;}
+        return 0;
+    }
+    for (auto& sig : _associated_signals)
+    {
+        if ((sig.second == SignalAssociationType::Input) && !sig.first->is_assigned())
+        {
+            return 0;
+        }
     }
 
     activation_function(t);
@@ -143,13 +158,13 @@ std::string Block::make_valid_given_name(const std::string& given_name)
         uint n = 0;
 
         std::string foo{ret};
-        auto pooya_verify_unique_name_cb = [&] (const pooya::Block& c, uint32_t level) -> bool
-        {
-            return (level == 0) || (c.given_name() != foo);
-        };
+        auto pooya_verify_unique_name_cb = [&](const pooya::Block& c, uint32_t level) -> bool
+        { return (level == 0) || (c.given_name() != foo); };
 
         while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
-            {foo = ret + "_" + std::to_string(n++);}
+        {
+            foo = ret + "_" + std::to_string(n++);
+        }
 
         ret = foo;
     }
@@ -157,4 +172,4 @@ std::string Block::make_valid_given_name(const std::string& given_name)
     return ret;
 }
 
-}
+} // namespace pooya

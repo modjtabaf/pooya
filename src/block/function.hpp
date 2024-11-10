@@ -38,8 +38,11 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(const std::string& given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
-        : Block(given_name, true, num_iports, num_oports), _act_func(act_func) {}
+    Function(const std::string& given_name, ActFunction act_func, uint16_t num_iports = NoIOLimit,
+             uint16_t num_oports = NoIOLimit)
+        : Block(given_name, true, num_iports, num_oports), _act_func(act_func)
+    {
+    }
 
     void activation_function(double t) override
     {

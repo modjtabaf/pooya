@@ -27,20 +27,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class IntegratorBaseT : public SingleOutputT<T>
 {
 protected:
     T _value;
 
 public:
-    IntegratorBaseT(const std::string& given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
-            : SingleOutputT<T>(given_name, true, num_iports, num_oports), _value(ic) {}
+    IntegratorBaseT(const std::string& given_name, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+                    uint16_t num_oports = Block::NoIOLimit)
+        : SingleOutputT<T>(given_name, true, num_iports, num_oports), _value(ic)
+    {
+    }
 
     bool init(Parent* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        {
+            return false;
+        }
 
         SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus->at(0).second));
 
@@ -64,7 +70,10 @@ public:
     uint _process(double /*t*/, bool /*go_deep*/ = true) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
-        if (SingleOutputT<T>::_processed) {return 0;}
+        if (SingleOutputT<T>::_processed)
+        {
+            return 0;
+        }
 
         SingleOutputT<T>::_processed = SingleOutputT<T>::_s_out->is_assigned();
         return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?

@@ -48,6 +48,11 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
+    pooya::ScalarSignalId _tau{nullptr};
+    pooya::ScalarSignalId _m{nullptr};
+    pooya::ScalarSignalId _g{nullptr};
+    pooya::ScalarSignalId _l{nullptr};
+
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
@@ -56,27 +61,27 @@ public:
             return false;
 
         // create pooya signals
-        auto phi   = scalar_signal("phi");
-        auto dphi  = scalar_signal("dphi");
-        auto d2phi = scalar_signal("d2phi");
+        auto phi   = create_scalar_signal("phi");
+        auto dphi  = create_scalar_signal("dphi");
+        auto d2phi = create_scalar_signal("d2phi");
 
         // choose random names for these internal signals
-        auto s10 = scalar_signal();
-        auto s20 = scalar_signal();
-        auto s30 = scalar_signal();
+        auto s10 = create_scalar_signal();
+        auto s20 = create_scalar_signal();
+        auto s30 = create_scalar_signal();
 
         auto& model_ = model_ref();
-        auto tau = model_.scalar_signal("tau");
-        auto m = model_.scalar_signal("m");
-        auto g = model_.scalar_signal("g");
-        auto l = model_.scalar_signal("l");
+        _tau = model_.create_scalar_signal("tau");
+        _m = model_.create_scalar_signal("m");
+        _g = model_.create_scalar_signal("g");
+        _l = model_.create_scalar_signal("l");
 
         // setup the submodel
         add_block(_integ1, d2phi, dphi);
         add_block(_integ2, dphi, phi);
         add_block(_sin, phi, s10);
-        add_block(_muldiv1, {s10, g, l}, s20);
-        add_block(_muldiv2, {tau, m, l, l}, s30);
+        add_block(_muldiv1, {s10, _g, _l}, s20);
+        add_block(_muldiv2, {_tau, _m, _l, _l}, s30);
         add_block(_sub, {s30, s20}, d2phi);
 
         return true;
@@ -97,20 +102,15 @@ int main()
     // setup the model
     model.add_block(pendulum);
 
-    auto m = model.scalar_signal("m");
-    auto l = model.scalar_signal("l");
-    auto g = model.scalar_signal("g");
-    auto tau = model.scalar_signal("tau");
-
     pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            m->set(0.2);
-            l->set(0.1);
-            g->set(9.81);
-            tau->set(0.13);
+            pendulum._m->set(0.2);
+            pendulum._l->set(0.1);
+            pendulum._g->set(9.81);
+            pendulum._tau->set(0.13);
         },
         &stepper, true);
 

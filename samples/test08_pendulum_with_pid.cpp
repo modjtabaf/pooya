@@ -33,6 +33,10 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
+    pooya::ScalarSignalId _m{nullptr};
+    pooya::ScalarSignalId _g{nullptr};
+    pooya::ScalarSignalId _l{nullptr};
+
     bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
@@ -41,29 +45,29 @@ public:
             return false;
 
         // create pooya signals
-        auto dphi = scalar_signal("dphi");
+        auto dphi = create_scalar_signal("dphi");
 
         // choose random names for these internal signals
-        auto s10 = scalar_signal();
-        auto s20 = scalar_signal();
-        auto s30 = scalar_signal();
-        auto s40 = scalar_signal();
+        auto s10 = create_scalar_signal();
+        auto s20 = create_scalar_signal();
+        auto s30 = create_scalar_signal();
+        auto s40 = create_scalar_signal();
 
         auto& model_ = model_ref();
-        auto m = model_.scalar_signal("m");
-        auto g = model_.scalar_signal("g");
-        auto l = model_.scalar_signal("l");
+        _m = model_.create_scalar_signal("m");
+        _g = model_.create_scalar_signal("g");
+        _l = model_.create_scalar_signal("l");
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
 
         // setup the submodel
-        add_block(_muldiv1, {tau, m, l, l}, s10);
+        add_block(_muldiv1, {tau, _m, _l, _l}, s10);
         add_block(_sub,  {s10, s20}, s30);
         add_block(_integ1, s30, dphi);
         add_block(_integ2, dphi, phi);
         add_block(_sin, phi,  s40);
-        add_block(_muldiv2, {s40, g, l}, s20);
+        add_block(_muldiv2, {s40, _g, _l}, s20);
 
         return true;
     }
@@ -121,10 +125,12 @@ class PendulumWithPID : public pooya::Submodel
 protected:
     pooya::Subtract _sub{"Sub"};
     PID _pid{40.0, 20.0, 0.05};
-    Pendulum _pend;
 
 public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
+
+    Pendulum _pend;
+    pooya::ScalarSignalId _des_phi{nullptr};
 
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
@@ -134,14 +140,14 @@ public:
             return false;
 
         // signals
-        auto phi = scalar_signal("phi");
-        auto tau = scalar_signal("tau");
-        auto err = scalar_signal("err");
+        auto phi = create_scalar_signal("phi");
+        auto tau = create_scalar_signal("tau");
+        auto err = create_scalar_signal("err");
 
-        auto des_phi = model_ref().scalar_signal("des_phi");
+        _des_phi = model_ref().create_scalar_signal("des_phi");
 
         // blocks
-        add_block(_sub, {des_phi, phi}, err);
+        add_block(_sub, {_des_phi, phi}, err);
         add_block(_pid, err, tau);
         add_block(_pend, tau, phi);
 
@@ -163,19 +169,14 @@ int main()
     // setup the model
     model.add_block(pendulum_with_pid);
 
-    auto m = model.scalar_signal("m");
-    auto l = model.scalar_signal("l");
-    auto g = model.scalar_signal("g");
-    auto des_phi = model.scalar_signal("des_phi");
-
     pooya::Rkf45 stepper;
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/) -> void
         {
-            m->set(0.2);
-            l->set(0.1);
-            g->set(9.81);
-            des_phi->set(M_PI_4);
+            pendulum_with_pid._pend._m->set(0.2);
+            pendulum_with_pid._pend._l->set(0.1);
+            pendulum_with_pid._pend._g->set(9.81);
+            pendulum_with_pid._des_phi->set(M_PI_4);
         },
         &stepper);
 

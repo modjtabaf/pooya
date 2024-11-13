@@ -52,7 +52,7 @@ int main()
 
     // create buses (signals)
 
-    auto x = model.bus("x", bus_spec); // assign bus wires implicitely
+    auto x = model.create_bus("x", bus_spec); // assign bus wires implicitely
     /*
     // alternative 1
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without
@@ -72,7 +72,7 @@ int main()
     });
     */
 
-    auto y = model.bus("y", bus_spec);
+    auto y = model.create_bus("y", bus_spec);
 
     // setup the model
     model.add_block(bus_memory, x, y);

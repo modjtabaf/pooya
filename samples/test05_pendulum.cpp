@@ -36,6 +36,9 @@ protected:
 public:
     Pendulum() : pooya::Submodel("pendulum") {}
 
+    pooya::ScalarSignalId _g{nullptr};
+    pooya::ScalarSignalId _l{nullptr};
+
     bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
@@ -51,14 +54,14 @@ public:
         auto s10 = create_scalar_signal(); // choose a random name for this internal signal
 
         auto& model_ = model_ref();
-        auto g = model_.scalar_signal("g");
-        auto l = model_.scalar_signal("l");
+        _g = model_.create_scalar_signal("g");
+        _l = model_.create_scalar_signal("l");
 
         // setup the submodel
         add_block(_integ1, d2phi, dphi);
         add_block(_integ2, dphi, phi);
         add_block(_sin, phi, s10);
-        add_block(_muldiv, {s10, g, l}, d2phi);
+        add_block(_muldiv, {s10, _g, _l}, d2phi);
 
         return true;
     }
@@ -78,16 +81,13 @@ int main()
     // setup the model
     model.add_block(pendulum);
 
-    auto l = model.scalar_signal("l");
-    auto g = model.scalar_signal("g");
-
     pooya::Rk4 stepper;
     pooya::Simulator sim(model,
         [&](pooya::Model&, double /*t*/) -> void
         {
             pooya_trace0;
-            l->set(0.1);
-            g->set(9.81);
+            pendulum._l->set(0.1);
+            pendulum._g->set(9.81);
         },
         &stepper);
 

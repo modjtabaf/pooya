@@ -20,6 +20,7 @@
 * pass std::string as const ref
 * use gtest and cc_test
 * Deprecate Model
+* Merge Submodel into Submodel
 
 - Remove Block::_parent
 - Unify given_name and full_name of signals

@@ -45,7 +45,7 @@ public:
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
 
-    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Submodel* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
 
@@ -90,7 +90,7 @@ public:
         _gain_i("Ki", Ki)
     {}
 
-    bool init(pooya::Parent* parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Submodel* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
         pooya_trace0;
 
@@ -129,7 +129,7 @@ public:
     pooya::ScalarSignal _tau{"tau"};
     pooya::ScalarSignal _err{"err"};
 
-    bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Submodel* parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
 

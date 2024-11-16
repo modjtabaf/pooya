@@ -15,16 +15,51 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_BLOCK_SUBMODEL_HPP__
 #define __POOYA_BLOCK_SUBMODEL_HPP__
 
-#include "parent.hpp"
+#include "block.hpp"
 
 namespace pooya
 {
 
-class Submodel : public Parent
+class Submodel : public Block
 {
-public:
-    Submodel(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) : Parent(given_name, num_iports, num_oports) {}
+protected:
+#if defined(POOYA_USE_SMART_PTRS)
+    std::vector<std::reference_wrapper<Block>> _components;
+#else // defined(POOYA_USE_SMART_PTRS)
+    std::vector<Block*> _components;
+#endif // defined(POOYA_USE_SMART_PTRS)
+    std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
+public:
+    Submodel(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        Block(given_name, num_iports, num_oports) {}
+
+    bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
+
+    void pre_step(double t) override
+    {
+        pooya_trace("block: " + full_name());
+#if defined(POOYA_USE_SMART_PTRS)
+        for (auto& component: _components) {component.get().pre_step(t);}
+#else // defined(POOYA_USE_SMART_PTRS)
+        for (auto* component: _components) {component->pre_step(t);}
+#endif // defined(POOYA_USE_SMART_PTRS)
+    }
+
+    void post_step(double t) override
+    {
+        pooya_trace("block: " + full_name());
+#if defined(POOYA_USE_SMART_PTRS)
+        for (auto& component: _components) {component.get().post_step(t);}
+#else // defined(POOYA_USE_SMART_PTRS)
+        for (auto* component: _components) {component->post_step(t);}
+#endif // defined(POOYA_USE_SMART_PTRS)
+    }
+
+    void _mark_unprocessed() override;
+    uint _process(double t, bool go_deep = true) override;
+    bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) override;
+    bool const_traverse(ConstTraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) const override;
 }; // class Submodel
 
 }

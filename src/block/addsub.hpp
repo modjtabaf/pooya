@@ -36,7 +36,7 @@ protected:
     T _initial;
     T _ret;
 
-    bool init(Parent* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}

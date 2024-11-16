@@ -20,7 +20,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "pipe.hpp"
-#include "parent.hpp"
+#include "submodel.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/signal/int_signal.hpp"
 #include "src/signal/bool_signal.hpp"

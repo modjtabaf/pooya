@@ -16,14 +16,14 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <memory>
 
 #include "block.hpp"
-#include "parent.hpp"
+#include "submodel.hpp"
 #include "src/signal/value_signal.hpp"
 #include "src/helper/util.hpp"
 
 namespace pooya
 {
 
-bool Block::init(Parent* parent, BusId ibus, BusId obus)
+bool Block::init(Submodel* parent, BusId ibus, BusId obus)
 {
     pooya_trace(_given_name);
 

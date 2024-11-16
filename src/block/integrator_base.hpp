@@ -37,7 +37,7 @@ public:
     IntegratorBaseT(const std::string& given_name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
             : SingleOutputT<T>(given_name, num_iports, num_oports), _value(ic) {}
 
-    bool init(Parent* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}

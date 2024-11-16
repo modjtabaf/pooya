@@ -19,7 +19,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 namespace pooya
 {
-    class Parent;
+    class Submodel;
 }
 
 namespace pooya::helper

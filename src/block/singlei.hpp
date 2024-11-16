@@ -33,7 +33,7 @@ protected:
     }
 
 public:
-    bool init(Parent* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
         if (!Block::init(parent, ibus, obus)) {return false;}
         _s_in = std::move(Types<T>::as_signal_id(_ibus->at(0).second));

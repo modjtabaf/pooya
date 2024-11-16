@@ -66,7 +66,7 @@ public:
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
 
-    bool init(pooya::Parent* parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Submodel* parent, pooya::BusId, pooya::BusId) override
     {
         pooya_trace0;
 

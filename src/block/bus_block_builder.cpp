@@ -23,7 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace pooya {
 
-bool BusBlockBuilder::init(Parent* parent, BusId ibus, BusId obus)
+bool BusBlockBuilder::init(Submodel* parent, BusId ibus, BusId obus)
 {
     pooya_trace("block: " + full_name());
     pooya_verify(parent, "Bus block builder needs a parent.");

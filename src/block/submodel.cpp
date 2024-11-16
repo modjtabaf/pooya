@@ -12,13 +12,13 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "parent.hpp"
+#include "submodel.hpp"
 #include "src/signal/array_signal.hpp"
 
 namespace pooya
 {
 
-void Parent::_mark_unprocessed()
+void Submodel::_mark_unprocessed()
 {
     pooya_trace("block: " + full_name());
     Block::_mark_unprocessed();
@@ -36,7 +36,7 @@ void Parent::_mark_unprocessed()
 #endif // defined(POOYA_USE_SMART_PTRS)
 }
 
-uint Parent::_process(double t, bool go_deep)
+uint Submodel::_process(double t, bool go_deep)
 {
     pooya_trace("block: " + full_name());
     uint n_processed = 0;
@@ -62,7 +62,7 @@ uint Parent::_process(double t, bool go_deep)
     return n_processed;
 }
 
-bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
+bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
     pooya_trace("block: " + full_name());
     if (level > max_level) {return true;}
@@ -87,7 +87,7 @@ bool Parent::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_l
     return true;
 }
 
-bool Parent::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype(level) max_level) const
+bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype(level) max_level) const
 {
     pooya_trace("block: " + full_name());
     if (level > max_level) {return true;}
@@ -112,7 +112,7 @@ bool Parent::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype(l
     return true;
 }
 
-bool Parent::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
+bool Submodel::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
 {
     pooya_trace("block: " + full_name());
 

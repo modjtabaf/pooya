@@ -32,14 +32,14 @@ namespace pooya
 {
 
 class Block;
-class Parent;
+class Submodel;
 
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
 
 class Block
 {
-    friend class Parent;
+    friend class Submodel;
     friend class Simulator; // a dirty workaround so Simulator::init can call Block::init. Should be resolved!
 
 public:
@@ -60,7 +60,7 @@ protected:
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<SignalAssociationPair> _associated_signals;
-    Parent* _parent{nullptr};
+    Submodel* _parent{nullptr};
     std::string _given_name;
     std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
@@ -73,7 +73,7 @@ protected:
     Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Parent* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
+    virtual bool init(Submodel* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
     virtual void post_init() {}
 
 public:

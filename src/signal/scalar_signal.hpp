@@ -23,7 +23,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_scalar_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_scalar(), (sig)->_full_name + ": scalar signal expected!");
+    pooya_verify((sig)->is_scalar(), (sig)->name().str() + ": scalar signal expected!");
 
 namespace pooya
 {
@@ -34,25 +34,25 @@ protected:
     double _scalar_value;
 
 public:
-    ScalarSignalInfo(Protected, const std::string& full_name)
-        : FloatSignalInfo(full_name, ScalarType) {}
+    ScalarSignalInfo(Protected, const ValidName& name)
+        : FloatSignalInfo(name, ScalarType) {}
 
-    static ScalarSignalId create_new(const std::string& full_name="")
+    static ScalarSignalId create_new(const ValidName& name="")
     {
-        return std::make_shared<ScalarSignalInfo>(Protected(), full_name);
+        return std::make_shared<ScalarSignalInfo>(Protected(), name);
     } 
 
     double get() const
     {
         pooya_trace0;
-        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _scalar_value;
     }
 
     void set(double value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
         _scalar_value = value;
         _assigned = true;
     }
@@ -77,14 +77,14 @@ class ScalarSignal : public FloatSignal<ScalarSignal, double>
     using Base = FloatSignal<ScalarSignal, double>;
 
 public:
-    explicit ScalarSignal(const std::string& full_name="") : Base(ScalarSignalInfo::create_new(full_name)) {}
+    explicit ScalarSignal(const ValidName& name="") : Base(ScalarSignalInfo::create_new(name)) {}
     ScalarSignal(const ScalarSignalId& sid) : Base(sid) {}
 
     ScalarSignal& operator=(const ScalarSignal&) = delete;
 
-    void reset(const std::string& full_name="")
+    void reset(const ValidName& name="")
     {
-        _sid = ScalarSignalInfo::create_new(full_name);
+        _sid = ScalarSignalInfo::create_new(name);
     }
 
     using Signal<ScalarSignal, double>::operator=;

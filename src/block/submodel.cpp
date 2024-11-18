@@ -20,7 +20,7 @@ namespace pooya
 
 void Submodel::_mark_unprocessed()
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     Block::_mark_unprocessed();
 
 #if defined(POOYA_USE_SMART_PTRS)
@@ -38,7 +38,7 @@ void Submodel::_mark_unprocessed()
 
 uint Submodel::_process(double t, bool go_deep)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     uint n_processed = 0;
     if (!_processed)
     {
@@ -64,7 +64,7 @@ uint Submodel::_process(double t, bool go_deep)
 
 bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     if (level > max_level) {return true;}
 
     if (!Block::traverse(cb, level, max_level)) {return false;}
@@ -89,7 +89,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
 
 bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype(level) max_level) const
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     if (level > max_level) {return true;}
 
     if (!Block::const_traverse(cb, level, max_level)) {return false;}
@@ -114,7 +114,7 @@ bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype
 
 bool Submodel::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
 
     if (!_initialized && !init()) {return false;}
 

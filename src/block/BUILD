@@ -18,6 +18,7 @@ pooya_cc_library(
     hdrs = glob(["*.hpp"]),
     deps = [
         "//src/signal",
+        "//src/shared",
     ],
     visibility = ["//visibility:public"],
 )

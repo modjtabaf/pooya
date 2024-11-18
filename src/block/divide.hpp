@@ -32,8 +32,8 @@ template <typename T>
 class DivideT : public MulDivT<T>
 {
 public:
-    DivideT(const std::string& given_name, const T &initial = 1.0)
-            : MulDivT<T>(given_name, "*/", initial) {}
+    DivideT(const ValidName& name, const T &initial = 1.0)
+            : MulDivT<T>(name, "*/", initial) {}
 };
 
 using Divide = DivideT<double>;

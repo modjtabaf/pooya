@@ -34,14 +34,14 @@ class MultiplyT : public MulDivT<T>
 protected:
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + MulDivT<T>::full_name());
+        pooya_trace("block: " + MulDivT<T>::full_name().str());
         MulDivT<T>::_operators = std::string(ibus->size(), '*');
         return MulDivT<T>::init(parent, ibus, obus);
     }
 
 public:
-    MultiplyT(const std::string& given_name, const T &initial = 1.0)
-            : MulDivT<T>(given_name, "", initial) {}
+    MultiplyT(const ValidName& name, const T &initial = 1.0)
+            : MulDivT<T>(name, "", initial) {}
 };
 
 using Multiply = MultiplyT<double>;

@@ -12,35 +12,21 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SO_HPP__
-#define __POOYA_BLOCK_SO_HPP__
-
-#include "block.hpp"
+#include "named_object.hpp"
 
 namespace pooya
 {
 
-template<typename T, class Base=Block>
-class SingleOutputT : public Base
+std::string ValidName::make_valid_name(const std::string& name)
 {
-protected:
-    typename Types<T>::SignalId _s_out{nullptr};
-
-    SingleOutputT(const ValidName& name, uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=1) :
-        Base(name, num_iports, num_oports)
+    std::string ret;
+    ret.reserve(name.length());
+    for (auto c: name)
     {
-        pooya_verify(num_oports == 1, "One and only one output expected!");
+        ret += (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')) || (c == '_') ?
+            c : '_';
     }
-
-public:
-    bool init(Submodel* parent, BusId ibus, BusId obus) override
-    {
-        if (!Base::init(parent, ibus, obus)) {return false;}
-        _s_out = std::move(Types<T>::as_signal_id(Base::_obus->at(0).second));
-        return true;
-    }
-};
-
+    return ret;
 }
 
-#endif // __POOYA_BLOCK_SO_HPP__
+}

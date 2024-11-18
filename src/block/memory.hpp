@@ -35,12 +35,12 @@ protected:
     T _value;
 
 public:
-    MemoryT(const std::string& given_name, const T &ic = T(0))
-            : SingleInputOutputT<T>(given_name, 1, 1), _value(ic) {}
+    MemoryT(const ValidName& name, const T &ic = T(0))
+            : SingleInputOutputT<T>(name, 1, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         _value = SingleInputOutputT<T>::_s_in->get();
     }
 
@@ -55,7 +55,7 @@ public:
 
     uint _process(double /*t*/, bool /*go_deep*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         if (SingleInputOutputT<T>::_processed) {return 0;}
 
         pooya_trace_update0;

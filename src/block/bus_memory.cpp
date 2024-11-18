@@ -31,15 +31,15 @@ namespace pooya {
 
 void BusMemory::post_init()
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     BusBlockBuilder::post_init();
-    pooya_verify(_init_values.empty(), full_name() + ": Some initial values of bus memory block were not used!");
+    pooya_verify(_init_values.empty(), full_name().str() + ": Some initial values of bus memory block were not used!");
 }
 
 void BusMemory::block_builder(const std::string& full_label, const BusSpec::WireInfo &wi,
   SignalId sig_in, SignalId sig_out)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     auto it = _init_values.find(full_label);
 
     std::shared_ptr<Block> block;

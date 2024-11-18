@@ -32,11 +32,11 @@ template <typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    SinT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    SinT(const ValidName& name) : SingleInputOutputT<T>(name, 1, 1) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get().sin());
     }
 };

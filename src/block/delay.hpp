@@ -43,12 +43,12 @@ protected:
     typename Types<T>::SignalId _s_initial; // initial
 
 public:
-    DelayT(const std::string& given_name, double lifespan = 10.0)
-            : SingleOutputT<T>(given_name, 3, 1), _lifespan(lifespan) {}
+    DelayT(const ValidName& name, double lifespan = 10.0)
+            : SingleOutputT<T>(name, 3, 1), _lifespan(lifespan) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
         // input signals
@@ -61,7 +61,7 @@ public:
 
     void post_step(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         if (!_t.empty())
         {
             double t1 = t - _lifespan;
@@ -82,7 +82,7 @@ public:
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         if (_t.empty())
         {
             SingleOutputT<T>::_s_out->set(_s_initial->get());

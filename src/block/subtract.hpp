@@ -32,8 +32,8 @@ template <typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
-    SubtractT(const std::string& given_name, const T &initial = 0.0)
-            : AddSubT<T>(given_name, "+-", initial) {}
+    SubtractT(const ValidName& name, const T &initial = 0.0)
+            : AddSubT<T>(name, "+-", initial) {}
 };
 
 using Subtract = SubtractT<double>;

@@ -38,12 +38,12 @@ protected:
     ActFunction _act_func;
 
 public:
-    SOFunctionT(const std::string& given_name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
-            : SingleOutputT<T>(given_name, num_iports, 1), _act_func(act_func) {}
+    SOFunctionT(const ValidName& name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
+            : SingleOutputT<T>(name, num_iports, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         SingleOutputT<T>::_s_out->set(_act_func(t, SingleOutputT<T>::_ibus));
     }
 };

@@ -108,11 +108,11 @@ void History::export_csv(const std::string& filename)
             {
                 auto sig = h.first->as_array();
                 for (std::size_t k=0; k < sig.size(); k++)
-                    {ofs << "," << h.first->_full_name << "[" << k << "]";}
+                    {ofs << "," << h.first->name().str() << "[" << k << "]";}
             }
             else
             {
-                ofs << "," << h.first->_full_name;
+                ofs << "," << h.first->name().str();
             }
         }
     }

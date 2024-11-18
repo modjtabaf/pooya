@@ -36,11 +36,11 @@ protected:
     bool _init{true};
 
 public:
-    InitialValueT(const std::string& given_name) : SingleInputOutputT<T>(given_name, 1, 1) {}
+    InitialValueT(const ValidName& name) : SingleInputOutputT<T>(name, 1, 1) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         if (_init)
         {
             _value = SingleInputOutputT<T>::_s_in->get();

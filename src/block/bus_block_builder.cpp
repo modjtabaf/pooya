@@ -25,7 +25,7 @@ namespace pooya {
 
 bool BusBlockBuilder::init(Submodel* parent, BusId ibus, BusId obus)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     pooya_verify(parent, "Bus block builder needs a parent.");
     if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus)) {return false;}
 
@@ -36,7 +36,7 @@ bool BusBlockBuilder::init(Submodel* parent, BusId ibus, BusId obus)
 
 void BusBlockBuilder::post_init()
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     const auto &bus_spec = _s_in->spec();
     _blocks.reserve(bus_spec.total_size());
     traverse_bus("", bus_spec);
@@ -44,7 +44,7 @@ void BusBlockBuilder::post_init()
 
 void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec& bus_spec)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
 
     if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end()) {return;}
 

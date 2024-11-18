@@ -36,11 +36,11 @@ protected:
     bool _triggered{false};
 
 public:
-    TriggeredIntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 2, 1) {}
+    TriggeredIntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 2, 1) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
         if (!IntegratorBaseT<T>::init(parent, ibus, obus)) {return false;}
 
         _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
@@ -50,7 +50,7 @@ public:
 
     void pre_step(double t) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
         if (_triggered)
         {
             if constexpr (std::is_same_v<T, Array>)
@@ -64,7 +64,7 @@ public:
 
     uint _process(double t, bool go_deep=true) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name());
+        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
         if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned()) {return 0;}
 
         if (!_triggered) {_triggered = _trigger->get();}

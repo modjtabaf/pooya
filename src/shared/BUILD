@@ -13,13 +13,8 @@
 load("//:pooya_rules.bzl", "pooya_cc_library")
 
 pooya_cc_library(
-    name = "signal",
+    name = "shared",
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
-    deps = [
-        "@eigen",
-        "//src/helper",
-        "//src/shared",
-    ],
     visibility = ["//visibility:public"],
 )

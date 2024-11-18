@@ -31,7 +31,7 @@ bool arange(uint k, double& t, double t_init, double t_end, double dt)
 Simulator::Simulator(Block& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order) :
     _model(model), _inputs_cb(inputs_cb), _reuse_order(reuse_order)
 {
-    pooya_trace("model: " + model.full_name());
+    pooya_trace("model: " + model.full_name().str());
     if (stepper)
 #if defined(POOYA_USE_SMART_PTRS)
         {_stepper = *stepper;}
@@ -131,13 +131,13 @@ uint Simulator::_process(double t)
     if (unprocessed.size())
     {
         std::cout << "\n-- unprocessed blocks detected:\n";
-        for (const auto& c: unprocessed)
+        for (const auto* c: unprocessed)
         {
-            std::cout << "- " << c->full_name() << "\n";
+            std::cout << "- " << c->full_name().str() << "\n";
             for (auto& sig_type: c->associated_signals())
             {
                 if ((sig_type.second != Block::SignalAssociationType::Input) || sig_type.first->is_assigned()) {continue;}
-                std::cout << "  - " << sig_type.first->_full_name << "\n";
+                std::cout << "  - " << sig_type.first->name().str() << "\n";
             }
         }
     }

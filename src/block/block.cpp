@@ -25,35 +25,37 @@ namespace pooya
 
 bool Block::init(Submodel* parent, BusId ibus, BusId obus)
 {
-    pooya_trace(_given_name);
+    pooya_trace(_name.str());
 
-    assert(!_parent);
-    if (_parent) {return false;}
+    if (_initialized)
+    {
+        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reinitialize a block!");
+    }
+
     _parent = parent;
 
-    pooya_verify(!parent || parent->is_initialized(), _given_name + ": parent block is not initialized yet!");
-
-    _given_name = make_valid_given_name(_given_name);
-    if (_full_name.empty())
+    if (parent && !parent->is_initialized())
     {
-        _full_name = (parent ? parent->full_name() : "") + "/" + _given_name;
+        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
     }
+
+    _full_name = (parent ? parent->full_name() : ValidName()) + _name.str();
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
-            _full_name + " cannot take any input." :
-            _full_name + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+            _full_name.str() + " cannot take any input." :
+            _full_name.str() + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
     pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
         _num_oports == 0 ?
-            _full_name + " cannot generate any output." :
-            _full_name + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+            _full_name.str() + " cannot generate any output." :
+            _full_name.str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
     _associated_signals.reserve((ibus ? ibus->size() : 0) + (obus ? obus->size() : 0));
 
     if (ibus)
     {
-        for (auto sig: *ibus)
+        for (auto& sig: *ibus)
         {
             if (sig.second->is_value())
             {
@@ -64,7 +66,7 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
 
     if (obus)
     {
-        for (auto sig: *obus)
+        for (auto& sig: *obus)
         {
             if (sig.second->is_value())
             {
@@ -84,7 +86,7 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
 
 bool Block::register_associated_signal(ValueSignalId signal, SignalAssociationType type)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     pooya_verify_valid_signal(signal);
     auto it = std::find_if(_associated_signals.begin(), _associated_signals.end(),
         [&](const SignalAssociationPair& sig_type) -> bool
@@ -107,7 +109,7 @@ void Block::_mark_unprocessed()
 
 uint Block::_process(double t, bool /*go_deep*/)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     if (_processed) {return 0;}
     for (auto& sig: _associated_signals)
     {
@@ -118,42 +120,6 @@ uint Block::_process(double t, bool /*go_deep*/)
 
     _processed = true;
     return 1;
-}
-
-std::string Block::make_valid_given_name(const std::string& given_name)
-{
-    pooya_trace(given_name);
-
-    std::string ret;
-    if (given_name.empty())
-    {
-        ret = "unnamed_block";
-    }
-    else
-    {
-        ret = given_name;
-        std::replace(ret.begin(), ret.end(), ' ', '_');
-        std::replace(ret.begin(), ret.end(), '~', '_');
-        std::replace(ret.begin(), ret.end(), '/', '_');
-    }
-
-    if (_parent)
-    {
-        uint n = 0;
-
-        std::string foo{ret};
-        auto pooya_verify_unique_name_cb = [&] (const pooya::Block& c, uint32_t level) -> bool
-        {
-            return (level == 0) || (c.given_name() != foo);
-        };
-
-        while (!_parent->traverse(pooya_verify_unique_name_cb, 0, 1))
-            {foo = ret + "_" + std::to_string(n++);}
-
-        ret = foo;
-    }
-
-    return ret;
 }
 
 }

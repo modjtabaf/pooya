@@ -34,14 +34,14 @@ class AddT : public AddSubT<T>
 protected:
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {
-        pooya_trace("block: " + AddSubT<T>::full_name());
+        pooya_trace("block: " + AddSubT<T>::full_name().str());
         AddSubT<T>::_operators = std::string(ibus->size(), '+');
         return AddSubT<T>::init(parent, ibus, obus);
     }
 
 public:
-    AddT(const std::string& given_name, const T &initial = 0.0)
-            : AddSubT<T>(given_name, "", initial) {}
+    AddT(const ValidName& name, const T &initial = 0.0)
+            : AddSubT<T>(name, "", initial) {}
 };
 
 using Add = AddT<double>;

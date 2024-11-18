@@ -38,12 +38,12 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(const std::string& given_name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
-        : Block(given_name, num_iports, num_oports), _act_func(act_func) {}
+    Function(const ValidName& name, ActFunction act_func, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit)
+        : Block(name, num_iports, num_oports), _act_func(act_func) {}
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + full_name().str());
         _act_func(t, _ibus, _obus);
     }
 };

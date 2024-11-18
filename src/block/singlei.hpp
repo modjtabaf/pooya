@@ -26,8 +26,8 @@ class SingleInputT : public Block
 protected:
     typename Types<T>::SignalId _s_in{nullptr};
 
-    SingleInputT(const std::string& given_name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, num_iports, num_oports)
+    SingleInputT(const ValidName& name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
+        Block(name, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }

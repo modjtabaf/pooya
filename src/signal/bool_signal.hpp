@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_bool_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_bool(), (sig)->_full_name + ": bool signal expected!");
+    pooya_verify((sig)->is_bool(), (sig)->name().str() + ": bool signal expected!");
 
 namespace pooya
 {
@@ -35,25 +35,25 @@ protected:
     bool _bool_value;
 
 public:
-    BoolSignalInfo(Protected, const std::string& full_name)
-        : ValueSignalInfo(full_name, BoolType) {}
+    BoolSignalInfo(Protected, const ValidName& name)
+        : ValueSignalInfo(name, BoolType) {}
 
-    static BoolSignalId create_new(const std::string& full_name="")
+    static BoolSignalId create_new(const ValidName& name="")
     {
-        return std::make_shared<BoolSignalInfo>(Protected(), full_name);
+        return std::make_shared<BoolSignalInfo>(Protected(), name);
     } 
 
     bool get() const
     {
         pooya_trace0;
-        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _bool_value;
     }
 
     void set(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
         _bool_value = value;
         _assigned = true;
     }
@@ -78,14 +78,14 @@ class BoolSignal : public ValueSignal<BoolSignal, bool>
     using Base = ValueSignal<BoolSignal, bool>;
 
 public:
-    explicit BoolSignal(const std::string& full_name="") : Base(BoolSignalInfo::create_new(full_name)) {}
+    explicit BoolSignal(const ValidName& name="") : Base(BoolSignalInfo::create_new(name)) {}
     BoolSignal(const BoolSignalId& sid) : Base(sid) {}
 
     BoolSignal& operator=(const BoolSignal&) = delete;
 
-    void reset(const std::string& full_name="")
+    void reset(const ValidName& name="")
     {
-        _sid = BoolSignalInfo::create_new(full_name);
+        _sid = BoolSignalInfo::create_new(name);
     }
 
     using Signal<BoolSignal, bool>::operator=;

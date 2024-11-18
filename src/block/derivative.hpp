@@ -38,12 +38,12 @@ protected:
     T _y;
 
 public:
-    DerivativeT(const std::string& given_name, const T &y0 = 0)
-            : SingleInputOutputT<T>(given_name, 1, 1), _y(y0) {}
+    DerivativeT(const ValidName& name, const T &y0 = 0)
+            : SingleInputOutputT<T>(name, 1, 1), _y(y0) {}
 
     void post_step(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         _t = t;
         _x = *SingleInputOutputT<T>::_s_in;
         _y = _x;
@@ -52,7 +52,7 @@ public:
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         if (_first_step)
         {
             _t = t;

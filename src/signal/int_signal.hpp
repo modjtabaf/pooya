@@ -26,7 +26,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_int_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_int(), (sig)->_full_name + ": int signal expected!");
+    pooya_verify((sig)->is_int(), (sig)->name().str() + ": int signal expected!");
 
 namespace pooya
 {
@@ -37,25 +37,25 @@ protected:
     int _int_value;
 
 public:
-    IntSignalInfo(Protected, const std::string& full_name)
-        : ValueSignalInfo(full_name, IntType) {}
+    IntSignalInfo(Protected, const ValidName& name)
+        : ValueSignalInfo(name, IntType) {}
 
-    static IntSignalId create_new(const std::string& full_name="")
+    static IntSignalId create_new(const ValidName& name="")
     {
-        return std::make_shared<IntSignalInfo>(Protected(), full_name);
+        return std::make_shared<IntSignalInfo>(Protected(), name);
     } 
 
     int get() const
     {
         pooya_trace0;
-        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _int_value;
     }
 
     void set(int value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
         _int_value = value;
         _assigned = true;
     }
@@ -80,14 +80,14 @@ class IntSignal : public ValueSignal<IntSignal, int>
     using Base = ValueSignal<IntSignal, int>;
 
 public:
-    explicit IntSignal(const std::string& full_name="") : Base(IntSignalInfo::create_new(full_name)) {}
+    explicit IntSignal(const ValidName& name="") : Base(IntSignalInfo::create_new(name)) {}
     IntSignal(const IntSignalId& sid) : Base(sid) {}
 
     IntSignal& operator=(const IntSignal&) = delete;
 
-    void reset(const std::string& full_name="")
+    void reset(const ValidName& name="")
     {
-        _sid = IntSignalInfo::create_new(full_name);
+        _sid = IntSignalInfo::create_new(name);
     }
 
     using Signal<IntSignal, int>::operator=;

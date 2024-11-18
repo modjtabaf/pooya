@@ -35,12 +35,12 @@ protected:
     T _value;
 
 public:
-    ConstT(const std::string& given_name, const T &value)
-            : SingleOutputT<T>(given_name, 0, 1), _value(value) {}
+    ConstT(const ValidName& name, const T &value)
+            : SingleOutputT<T>(name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         SingleOutputT<T>::_s_out->set(_value);
     }
 };

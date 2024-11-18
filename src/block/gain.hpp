@@ -35,11 +35,11 @@ protected:
     GainType _k;
 
 public:
-    GainT(const std::string& given_name, GainType k) : SingleInputOutputT<T>(given_name, 1, 1), _k(k) {}
+    GainT(const ValidName& name, GainType k) : SingleInputOutputT<T>(name, 1, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         SingleInputOutputT<T>::_s_out->set(_k * SingleInputOutputT<T>::_s_in->get());
     }
 

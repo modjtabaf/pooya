@@ -31,14 +31,14 @@ protected:
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
 public:
-    Submodel(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        Block(given_name, num_iports, num_oports) {}
+    Submodel(const ValidName& name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        Block(name, num_iports, num_oports) {}
 
     bool add_block(Block& component, const LabelSignals& iports={}, const LabelSignals& oports={});
 
     void pre_step(double t) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + full_name().str());
 #if defined(POOYA_USE_SMART_PTRS)
         for (auto& component: _components) {component.get().pre_step(t);}
 #else // defined(POOYA_USE_SMART_PTRS)
@@ -48,7 +48,7 @@ public:
 
     void post_step(double t) override
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + full_name().str());
 #if defined(POOYA_USE_SMART_PTRS)
         for (auto& component: _components) {component.get().post_step(t);}
 #else // defined(POOYA_USE_SMART_PTRS)

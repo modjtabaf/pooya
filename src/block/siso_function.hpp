@@ -38,12 +38,12 @@ protected:
     ActFunction _act_func;
 
 public:
-    SISOFunctionT(const std::string& given_name, ActFunction act_func)
-            : SingleInputOutputT<T>(given_name, 1, 1), _act_func(act_func) {}
+    SISOFunctionT(const ValidName& name, ActFunction act_func)
+            : SingleInputOutputT<T>(name, 1, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name());
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
         SingleInputOutputT<T>::_s_out->set(_act_func(t, SingleInputOutputT<T>::_s_in->get()));
     }
 };

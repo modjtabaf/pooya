@@ -21,9 +21,8 @@
 * use gtest and cc_test
 * Deprecate Model
 * Merge Submodel into Submodel
+* Named object
 
-- Remove Block::_parent
-- Unify given_name and full_name of signals
 - Define pooya_assert_* and pooya_verify_* where pooya_assert_* macros are debug-only and a preprocessor directive is used to exclude pooya_verify_* macros from the release build
 - Use static_assert() in pooya_assert_* macros
 - Deprecate BusSpec
@@ -45,3 +44,5 @@
 <!-- - Make _assigned a debug-only flag (No. It is essential.) -->
 <!-- - support auto state variables (not necessary, use pooya::Integrator instead) -->
 <!-- - Make model mandatory -->
+<!-- - Unify given_name and name of signals -->
+<!-- - Remove Block::_parent -->

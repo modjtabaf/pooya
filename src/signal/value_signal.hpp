@@ -23,7 +23,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define  pooya_verify_value_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_value(), (sig)->_full_name + ": value signal expected!");
+    pooya_verify((sig)->is_value(), (sig)->name().str() + ": value signal expected!");
 
 namespace pooya
 {
@@ -33,8 +33,8 @@ class ValueSignalInfo : public SignalInfo
 protected:
     bool _assigned{false};             // has the value been assigned?
 
-    ValueSignalInfo(const std::string& full_name, uint32_t type) :
-        SignalInfo(full_name, type | ValueType) {}
+    ValueSignalInfo(const ValidName& name, uint32_t type) :
+        SignalInfo(name, type | ValueType) {}
 
 public:
     double get_as_scalar() const;

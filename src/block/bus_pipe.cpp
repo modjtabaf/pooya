@@ -32,7 +32,7 @@ namespace pooya {
 void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo &wi,
     SignalId sig_in, SignalId sig_out)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     std::shared_ptr<Block> block;
     if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
     {

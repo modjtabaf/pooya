@@ -32,7 +32,7 @@ template <typename T>
 class IntegratorT : public IntegratorBaseT<T>
 {
 public:
-    IntegratorT(const std::string& given_name, T ic = T(0.0)) : IntegratorBaseT<T>(given_name, ic, 1, 1) {}
+    IntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 1, 1) {}
 };
 
 using Integrator = IntegratorT<double>;

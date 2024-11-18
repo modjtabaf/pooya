@@ -38,12 +38,12 @@ protected:
     SourceFunction _src_func;
 
 public:
-    SourceT(const std::string& given_name, SourceFunction src_func) :
-        SingleOutputT<T>(given_name, Block::NoIOLimit, 1), _src_func(src_func) {}
+    SourceT(const ValidName& name, SourceFunction src_func) :
+        SingleOutputT<T>(name, Block::NoIOLimit, 1), _src_func(src_func) {}
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name());
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         SingleOutputT<T>::_s_out->set(_src_func(t));
     }
 };

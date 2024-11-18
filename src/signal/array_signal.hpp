@@ -23,11 +23,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_array_signal(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_array(), (sig)->_full_name + ": array signal expected!");
+    pooya_verify((sig)->is_array(), (sig)->name().str() + ": array signal expected!");
 
 #define pooya_verify_array_signal_size(sig, size_) \
     pooya_verify_array_signal(sig); \
-    pooya_verify((sig)->as_array().size() == size_, (sig)->_full_name + ": array size mismatch!");
+    pooya_verify((sig)->as_array().size() == size_, (sig)->name().str() + ": array size mismatch!");
 
 namespace pooya
 {
@@ -38,28 +38,28 @@ protected:
     Array _array_value;
 
 public:
-    ArraySignalInfo(Protected, std::size_t size, const std::string& full_name)
-        : FloatSignalInfo(full_name, ArrayType, size), _array_value(size) {}
+    ArraySignalInfo(Protected, std::size_t size, const ValidName& name)
+        : FloatSignalInfo(name, ArrayType, size), _array_value(size) {}
 
-    static ArraySignalId create_new(std::size_t size, const std::string& full_name="")
+    static ArraySignalId create_new(std::size_t size, const ValidName& name="")
     {
-        return std::make_shared<ArraySignalInfo>(Protected(), size, full_name);
+        return std::make_shared<ArraySignalInfo>(Protected(), size, name);
     } 
 
     const Array& get() const
     {
         pooya_trace0;
-        pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to retrieve the value of an uninitialized array signal!");
-        pooya_verify(is_assigned(), _full_name + ": attempting to access an unassigned value!");
+        pooya_verify(_array_value.rows() == int(_size), name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
+        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _array_value;
     }
 
     void set(const Array& value)
     {
-        pooya_verify(_array_value.rows() == int(_size), _full_name + ": attempting to assign the value of an uninitialized array signal!");
-        pooya_verify(!is_assigned(), _full_name + ": re-assignment is prohibited!");
+        pooya_verify(_array_value.rows() == int(_size), name().str() + ": attempting to assign the value of an uninitialized array signal!");
+        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
         pooya_verify(value.rows() == int(_size),
-            std::string("size mismatch (id=") + _full_name + ")(" + std::to_string(_size) +
+            std::string("size mismatch (id=") + name().str() + ")(" + std::to_string(_size) +
             " vs " + std::to_string(value.rows()) + ")!");
         _array_value = value;
         _assigned = true;
@@ -83,14 +83,14 @@ class ArraySignal : public FloatSignal<ArraySignal, Array>
     using Base = FloatSignal<ArraySignal, Array>;
 
 public:
-    explicit ArraySignal(std::size_t size=1, const std::string& full_name="") : Base(ArraySignalInfo::create_new(size, full_name)) {}
+    explicit ArraySignal(std::size_t size=1, const ValidName& name="") : Base(ArraySignalInfo::create_new(size, name)) {}
     ArraySignal(const ArraySignalId& sid) : Base(sid) {}
 
     ArraySignal& operator=(const ArraySignal&) = delete;
 
-    void reset(std::size_t size, const std::string& full_name="")
+    void reset(std::size_t size, const ValidName& name="")
     {
-        _sid = ArraySignalInfo::create_new(size, full_name);
+        _sid = ArraySignalInfo::create_new(size, name);
     }
 
     using Signal<ArraySignal, Array>::operator=;

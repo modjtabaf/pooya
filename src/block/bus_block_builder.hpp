@@ -44,8 +44,8 @@ protected:
         SignalId sig_in, SignalId sig_out) = 0;
 
 public:
-    BusBlockBuilder(const std::string& given_name, const std::initializer_list<std::string>& excluded_labels={})
-        : SingleInputOutputT<BusSpec>(given_name, 1, 1), _excluded_labels(excluded_labels) {}
+    BusBlockBuilder(const ValidName& name, const std::initializer_list<std::string>& excluded_labels={})
+        : SingleInputOutputT<BusSpec>(name, 1, 1), _excluded_labels(excluded_labels) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override;
     void post_init() override;

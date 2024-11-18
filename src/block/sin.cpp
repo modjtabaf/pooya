@@ -27,7 +27,7 @@ namespace pooya {
 template <>
 void SinT<double>::activation_function(double /*t*/)
 {
-    pooya_trace("block: " + full_name());
+    pooya_trace("block: " + full_name().str());
     _s_out->set(std::sin(_s_in->get()));
 }
 

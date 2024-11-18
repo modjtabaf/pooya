@@ -21,6 +21,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <optional>
 #include <unordered_set>
 
+#include "src/shared/named_object.hpp"
 #include "src/signal/trait.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/signal/int_signal.hpp"
@@ -37,7 +38,7 @@ class Submodel;
 using TraverseCallback = std::function<bool(Block&, uint32_t level)>;
 using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
 
-class Block
+class Block : public NamedObject
 {
     friend class Submodel;
     friend class Simulator; // a dirty workaround so Simulator::init can call Block::init. Should be resolved!
@@ -57,21 +58,19 @@ public:
 
 protected:
     bool _initialized{false};
+    ValidName _full_name;
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<SignalAssociationPair> _associated_signals;
     Submodel* _parent{nullptr};
-    std::string _given_name;
-    std::string _full_name;
     uint16_t _num_iports{NoIOLimit};
     uint16_t _num_oports{NoIOLimit};
-    std::size_t _unnamed_signal_counter{0};
 
     bool _processed{false};
     bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
 
-    Block(const std::string& given_name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
-        _given_name(given_name), _num_iports(num_iports), _num_oports(num_oports) {}
+    Block(const ValidName& name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        NamedObject(name), _num_iports(num_iports), _num_oports(num_oports) {}
 
     virtual bool init(Submodel* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
     virtual void post_init() {}
@@ -87,8 +86,6 @@ public:
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
-    const std::string& given_name() const {return _given_name;}
-    const std::string& full_name() const {return _full_name;}
     BusId ibus() const {return _ibus;}
     BusId obus() const {return _obus;}
     auto associated_signals() const -> const auto& {return _associated_signals;}
@@ -183,16 +180,16 @@ public:
 
     virtual bool traverse(TraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max())
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + full_name().str());
         return (level > max_level) || cb(*this, level);
     }
     virtual bool const_traverse(ConstTraverseCallback cb, uint32_t level, uint32_t max_level=std::numeric_limits<uint32_t>::max()) const
     {
-        pooya_trace("block: " + full_name());
+        pooya_trace("block: " + full_name().str());
         return (level > max_level) || cb(*this, level);
     }
 
-    std::string make_valid_given_name(const std::string& given_name);
+    const ValidName& full_name() const {return _full_name;}
 }; // class Block
 
 }

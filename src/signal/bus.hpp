@@ -34,11 +34,11 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #define pooya_verify_bus(sig) \
     pooya_verify_valid_signal(sig); \
-    pooya_verify((sig)->is_bus(), (sig)->_full_name + ": bus signal expected!");
+    pooya_verify((sig)->is_bus(), (sig)->name().str() + ": bus signal expected!");
 
 #define pooya_verify_bus_spec(sig, spec_) \
     pooya_verify_bus(sig); \
-    pooya_verify((sig)->as_bus().spec() == spec_, (sig)->_full_name + ": bus spec mismatch!");
+    pooya_verify((sig)->as_bus().spec() == spec_, (sig)->name().str() + ": bus spec mismatch!");
 
 namespace pooya
 {
@@ -135,10 +135,10 @@ protected:
 
 public:
     template<typename Iter>
-    BusInfo(Protected, const std::string& full_name, const BusSpec& spec, Iter begin_, Iter end_)
-        : SignalInfo(full_name, BusType), _spec(spec)
+    BusInfo(Protected, const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
+        : SignalInfo(name, BusType), _spec(spec)
     {
-        pooya_trace("fullname: " + full_name);
+        pooya_trace("fullname: " + name.str());
         pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(spec._wires.size());
         for(const auto& wi: spec._wires)
@@ -154,9 +154,9 @@ public:
     }
 
     template<typename Iter>
-    static BusId create_new(const std::string& full_name, const BusSpec& spec, Iter begin_, Iter end_)
+    static BusId create_new(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
     {
-        pooya_trace("bus: " + full_name);
+        pooya_trace("bus: " + name.str());
         auto size = spec._wires.size();
         pooya_verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
@@ -174,7 +174,7 @@ public:
         {
             if (!ls.second)
             {
-                std::string name = full_name + "." + wit->label();
+                ValidName name(name + wit->label());
                 if (wit->_bus)
                     {ls.second = BusInfo::create_new(name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
@@ -186,24 +186,24 @@ public:
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
                     {ls.second = BoolSignalInfo::create_new(name);}
                 else
-                    {pooya_verify(false, name + ": unknown wire type!");}
+                    {pooya_verify(false, name.str() + ": unknown wire type!");}
             }
             wit++;
         }
 
-        return std::make_shared<BusInfo>(Protected(), full_name, spec, label_signals.begin(), label_signals.end());
+        return std::make_shared<BusInfo>(Protected(), name, spec, label_signals.begin(), label_signals.end());
     }
 
-    static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
     {
-        pooya_trace("create_new: " + full_name);
+        pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
-        return create_new(full_name, spec, l.begin(), l.end());
+        return create_new(name, spec, l.begin(), l.end());
     }
 
-    static BusId create_new(const std::string& full_name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
+    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
     {
-        pooya_trace("create_new: " + full_name);
+        pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
         LabelSignalIdList label_signals;
@@ -216,7 +216,7 @@ public:
             wit++;
         }
 
-        return create_new(full_name, spec, label_signals.begin(), label_signals.end());
+        return create_new(name, spec, label_signals.begin(), label_signals.end());
     }
 
     const BusSpec& spec() const {return _spec;}

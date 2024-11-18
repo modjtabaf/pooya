@@ -16,8 +16,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_SIGNAL_SIGNAL_HPP__
 
 #include <cstdint>
-#include <string>
 
+#include "src/shared/named_object.hpp"
 #include "src/helper/util.hpp"
 #include "trait.hpp"
 #include "signal_id.hpp"
@@ -25,13 +25,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo : public std::enable_shared_from_this<SignalInfo>
+class SignalInfo : public std::enable_shared_from_this<SignalInfo>, public NamedObject
 {
 protected:
     struct Protected {};
 
 public:
-    const std::string _full_name; // full name of the signal
     const uint32_t _type;
 
     enum SignalTypes
@@ -47,7 +46,7 @@ public:
     };
 
 protected:
-    SignalInfo(const std::string& full_name, uint32_t type) : _full_name(full_name), _type(type) {}
+    SignalInfo(const ValidName& name, uint32_t type) : NamedObject(name), _type(type) {}
 
 public:
     bool is_value() const {return _type & ValueType;}

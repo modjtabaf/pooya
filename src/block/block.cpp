@@ -39,7 +39,7 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
     }
 
-    _full_name = (parent ? parent->full_name() : ValidName()) + _name.str();
+    _full_name = (parent ? parent->full_name() : ValidName()) / _name.str();
 
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?

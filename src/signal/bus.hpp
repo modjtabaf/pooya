@@ -174,19 +174,19 @@ public:
         {
             if (!ls.second)
             {
-                ValidName name(name + wit->label());
+                ValidName new_name(name | wit->label());
                 if (wit->_bus)
-                    {ls.second = BusInfo::create_new(name, (*wit->_bus).get());}
+                    {ls.second = BusInfo::create_new(new_name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
-                    {ls.second = ArraySignalInfo::create_new(wit->_array_size, name);}
+                    {ls.second = ArraySignalInfo::create_new(wit->_array_size, new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
-                    {ls.second = ScalarSignalInfo::create_new(name);}
+                    {ls.second = ScalarSignalInfo::create_new(new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
-                    {ls.second = IntSignalInfo::create_new(name);}
+                    {ls.second = IntSignalInfo::create_new(new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
-                    {ls.second = BoolSignalInfo::create_new(name);}
+                    {ls.second = BoolSignalInfo::create_new(new_name);}
                 else
-                    {pooya_verify(false, name.str() + ": unknown wire type!");}
+                    {pooya_verify(false, new_name.str() + ": unknown wire type!");}
             }
             wit++;
         }

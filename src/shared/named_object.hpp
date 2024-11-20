@@ -25,18 +25,27 @@ class ValidName
 protected:
     std::string _name;
 
-public:
-    ValidName() = default;
-    ValidName(const char* name) : _name(make_valid_name(name)) {}
-    ValidName(const std::string& name) : _name(make_valid_name(name)) {}
-    ValidName(const ValidName& root) = default;
-
-    const std::string& str() const {return _name;}
-    ValidName operator+(const std::string& name) const
+    ValidName append(const std::string& name, const std::string& sep) const
     {
         ValidName ret;
-        ret._name = _name + "/" + make_valid_name(name);
+        ret._name = _name + sep + make_valid_name(name);
         return ret;
+    }
+
+public:
+    ValidName() = default;
+    ValidName(const ValidName&) = default;
+    ValidName(const char* name) : _name(make_valid_name(name)) {}
+    ValidName(const std::string& name) : _name(make_valid_name(name)) {}
+
+    const std::string& str() const {return _name;}
+    ValidName operator|(const std::string& name) const
+    {
+        return append(name, ".");
+    }
+    ValidName operator/(const std::string& name) const
+    {
+        return append(name, "/");
     }
 
     static std::string make_valid_name(const std::string& name);

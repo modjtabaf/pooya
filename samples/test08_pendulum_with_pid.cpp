@@ -80,8 +80,8 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{"Add"};
-    pooya::Derivative _deriv{"dx"};
+    pooya::Add _add;
+    pooya::Derivative _deriv;
     pooya::Gain _gain_d;
 
 public:

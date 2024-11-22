@@ -35,12 +35,13 @@ TEST_F(TestGain, ScalarGain)
 {
     // test parameters
     const double x = 3.7;
+    constexpr double gain_value{2.0};
 
     // model setup
-    pooya::Submodel model("");
-    pooya::Gain gain("gain", 2.0);
-    pooya::ScalarSignal s_x("x");
-    pooya::ScalarSignal s_y("y");
+    pooya::Submodel model;
+    pooya::Gain gain(gain_value);
+    pooya::ScalarSignal s_x;
+    pooya::ScalarSignal s_y;
     model.add_block(gain, s_x, s_y);
 
     // simulator setup
@@ -54,7 +55,7 @@ TEST_F(TestGain, ScalarGain)
     sim.init(0.0);
 
     // verify the results
-    EXPECT_NEAR(gain.gain() * x, s_y, 1e-10);
+    EXPECT_NEAR(gain_value * x, s_y, 1e-10);
 }
 
 TEST_F(TestGain, ArrayGain)
@@ -62,12 +63,13 @@ TEST_F(TestGain, ArrayGain)
     // test parameters
     constexpr std::size_t N = 4;
     const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
+    constexpr double gain_value{-5.89};
 
     // model setup
-    pooya::Submodel model("");
-    pooya::GainA gain("gain", -5.89);
-    pooya::ArraySignal s_x(N, "x");
-    pooya::ArraySignal s_y(N, "y");
+    pooya::Submodel model;
+    pooya::GainA gain(gain_value);
+    pooya::ArraySignal s_x(N);
+    pooya::ArraySignal s_y(N);
     model.add_block(gain, s_x, s_y);
 
     // simulator setup
@@ -81,9 +83,8 @@ TEST_F(TestGain, ArrayGain)
     sim.init(0.0);
 
     // verify the results
-    auto des_y = gain.gain() * x;
     for (std::size_t k=0; k < N; k++)
     {
-        EXPECT_NEAR(des_y[k], s_y[k], 1e-10);
+        EXPECT_NEAR(gain_value * s_x[k], s_y[k], 1e-10);
     }
 }

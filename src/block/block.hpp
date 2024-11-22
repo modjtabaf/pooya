@@ -58,7 +58,6 @@ public:
 
 protected:
     bool _initialized{false};
-    ValidName _full_name;
     BusId _ibus{nullptr};
     BusId _obus{nullptr};
     std::vector<SignalAssociationPair> _associated_signals;
@@ -69,6 +68,8 @@ protected:
     bool _processed{false};
     bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
 
+    Block(uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        _num_iports(num_iports), _num_oports(num_oports) {}
     Block(const ValidName& name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         NamedObject(name), _num_iports(num_iports), _num_oports(num_oports) {}
 
@@ -189,7 +190,7 @@ public:
         return (level > max_level) || cb(*this, level);
     }
 
-    const ValidName& full_name() const {return _full_name;}
+    ValidName full_name() const;
 }; // class Block
 
 }

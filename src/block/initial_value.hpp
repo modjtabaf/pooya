@@ -36,7 +36,7 @@ protected:
     bool _init{true};
 
 public:
-    InitialValueT(const ValidName& name) : SingleInputOutputT<T>(name, 1, 1) {}
+    explicit InitialValueT(const ValidName& name="") : SingleInputOutputT<T>(name, 1) {}
 
     void activation_function(double /*t*/) override
     {

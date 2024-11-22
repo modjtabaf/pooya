@@ -36,6 +36,7 @@ protected:
     bool _triggered{false};
 
 public:
+    explicit TriggeredIntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 2, 1) {}
     TriggeredIntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 2, 1) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override

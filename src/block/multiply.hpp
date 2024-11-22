@@ -40,8 +40,10 @@ protected:
     }
 
 public:
+    explicit MultiplyT(const T &initial = 1.0)
+        : MulDivT<T>(initial) {}
     MultiplyT(const ValidName& name, const T &initial = 1.0)
-            : MulDivT<T>(name, "", initial) {}
+        : MulDivT<T>(name, "", initial) {}
 };
 
 using Multiply = MultiplyT<double>;

@@ -38,8 +38,10 @@ protected:
     SourceFunction _src_func;
 
 public:
+    explicit SourceT(SourceFunction src_func) :
+        SingleOutputT<T>(Block::NoIOLimit), _src_func(src_func) {}
     SourceT(const ValidName& name, SourceFunction src_func) :
-        SingleOutputT<T>(name, Block::NoIOLimit, 1), _src_func(src_func) {}
+        SingleOutputT<T>(name, Block::NoIOLimit), _src_func(src_func) {}
 
     void activation_function(double t) override
     {

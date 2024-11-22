@@ -34,7 +34,7 @@ protected:
     double _scalar_value;
 
 public:
-    ScalarSignalInfo(Protected, const ValidName& name)
+    ScalarSignalInfo(Protected, const ValidName& name="")
         : FloatSignalInfo(name, ScalarType) {}
 
     static ScalarSignalId create_new(const ValidName& name="")

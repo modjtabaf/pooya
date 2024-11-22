@@ -40,8 +40,10 @@ protected:
     }
 
 public:
+    explicit AddT(const T &initial = 0.0)
+        : AddSubT<T>("", initial) {}
     AddT(const ValidName& name, const T &initial = 0.0)
-            : AddSubT<T>(name, "", initial) {}
+        : AddSubT<T>(name, "", initial) {}
 };
 
 using Add = AddT<double>;

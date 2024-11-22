@@ -38,12 +38,16 @@ protected:
     Array _array_value;
 
 public:
-    ArraySignalInfo(Protected, std::size_t size, const ValidName& name)
+    ArraySignalInfo(Protected, const ValidName& name, std::size_t size)
         : FloatSignalInfo(name, ArrayType, size), _array_value(size) {}
 
-    static ArraySignalId create_new(std::size_t size, const ValidName& name="")
+    static ArraySignalId create_new(std::size_t size)
     {
-        return std::make_shared<ArraySignalInfo>(Protected(), size, name);
+        return std::make_shared<ArraySignalInfo>(Protected(), "", size);
+    } 
+    static ArraySignalId create_new(const ValidName& name, std::size_t size)
+    {
+        return std::make_shared<ArraySignalInfo>(Protected(), name, size);
     } 
 
     const Array& get() const
@@ -83,14 +87,19 @@ class ArraySignal : public FloatSignal<ArraySignal, Array>
     using Base = FloatSignal<ArraySignal, Array>;
 
 public:
-    explicit ArraySignal(std::size_t size=1, const ValidName& name="") : Base(ArraySignalInfo::create_new(size, name)) {}
+    explicit ArraySignal(std::size_t size=1) : Base(ArraySignalInfo::create_new(size)) {}
+    ArraySignal(const ValidName& name, std::size_t size=1) : Base(ArraySignalInfo::create_new(name, size)) {}
     ArraySignal(const ArraySignalId& sid) : Base(sid) {}
 
     ArraySignal& operator=(const ArraySignal&) = delete;
 
-    void reset(std::size_t size, const ValidName& name="")
+    void reset(std::size_t size)
     {
-        _sid = ArraySignalInfo::create_new(size, name);
+        _sid = ArraySignalInfo::create_new(size);
+    }
+    void reset(const ValidName& name, std::size_t size)
+    {
+        _sid = ArraySignalInfo::create_new(name, size);
     }
 
     using Signal<ArraySignal, Array>::operator=;

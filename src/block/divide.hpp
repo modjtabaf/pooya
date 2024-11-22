@@ -32,6 +32,8 @@ template <typename T>
 class DivideT : public MulDivT<T>
 {
 public:
+    explicit DivideT(const T &initial = 1.0)
+            : MulDivT<T>("*/", initial) {}
     DivideT(const ValidName& name, const T &initial = 1.0)
             : MulDivT<T>(name, "*/", initial) {}
 };

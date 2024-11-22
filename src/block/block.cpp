@@ -39,17 +39,15 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
     }
 
-    _full_name = (parent ? parent->full_name() : ValidName()) / _name.str();
-
     pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
         _num_iports == 0 ?
-            _full_name.str() + " cannot take any input." :
-            _full_name.str() + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+            full_name().str() + " cannot take any input." :
+            full_name().str() + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
     pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
         _num_oports == 0 ?
-            _full_name.str() + " cannot generate any output." :
-            _full_name.str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+            full_name().str() + " cannot generate any output." :
+            full_name().str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
     _associated_signals.reserve((ibus ? ibus->size() : 0) + (obus ? obus->size() : 0));
 
@@ -82,6 +80,11 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
 
     _initialized = true;
     return true;
+}
+
+ValidName Block::full_name() const
+{
+    return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
 bool Block::register_associated_signal(ValueSignalId signal, SignalAssociationType type)

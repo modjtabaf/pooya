@@ -14,7 +14,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 #include <iostream>
 #include <memory>
-#include <unordered_set>
+#include <set>
 
 #include "src/helper/util.hpp"
 #include "simulator.hpp"
@@ -157,9 +157,9 @@ void Simulator::init(double t0)
 
     std::size_t state_variables_size{0};
 
-    std::unordered_set<ValueSignalId> value_signals;
-    std::unordered_set<ScalarSignalId> scalar_state_signals;
-    std::unordered_set<ArraySignalId> array_state_signals;
+    std::set<ValueSignalId> value_signals;
+    std::set<ScalarSignalId> scalar_state_signals;
+    std::set<ArraySignalId> array_state_signals;
 
     _model.traverse(
         [&](Block& block, uint32_t /*level*/) -> bool

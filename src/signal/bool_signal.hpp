@@ -35,7 +35,7 @@ protected:
     bool _bool_value;
 
 public:
-    BoolSignalInfo(Protected, const ValidName& name)
+    BoolSignalInfo(Protected, const ValidName& name="")
         : ValueSignalInfo(name, BoolType) {}
 
     static BoolSignalId create_new(const ValidName& name="")

@@ -54,7 +54,7 @@ int main()
 
     // create buses (signals)
 
-    auto x = pooya::BusInfo::create_new("x", bus_spec); // assign bus wires implicitely
+    auto x = pooya::Bus("x", bus_spec); // assign bus wires implicitely
     /*
     // alternative 1
     auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
@@ -74,20 +74,20 @@ int main()
     });
     */
 
-    auto y = pooya::BusInfo::create_new("y", bus_spec);
+    auto y = pooya::Bus("y", bus_spec);
 
     // setup the model
     model.add_block(bus_memory, x, y);
 
-    pooya::ScalarSignal x_x0 = x->scalar_at("x0");
-    pooya::ScalarSignal x_x1 = x->scalar_at("x1");
-    pooya::ScalarSignal x_x2 = x->scalar_at("x2");
-    pooya::ScalarSignal x_z3 = x->scalar_at("Z.z3");
+    pooya::ScalarSignal x_x0 = x.scalar_at("x0");
+    pooya::ScalarSignal x_x1 = x.scalar_at("x1");
+    pooya::ScalarSignal x_x2 = x.scalar_at("x2");
+    pooya::ScalarSignal x_z3 = x.scalar_at("Z.z3");
 
-    pooya::ScalarSignal y_x0 = y->scalar_at("x0");
-    pooya::ScalarSignal y_x1 = y->scalar_at("x1");
-    pooya::ScalarSignal y_x2 = y->scalar_at("x2");
-    pooya::ScalarSignal y_z3 = y->scalar_at("Z.z3");
+    pooya::ScalarSignal y_x0 = y.scalar_at("x0");
+    pooya::ScalarSignal y_x1 = y.scalar_at("x1");
+    pooya::ScalarSignal y_x2 = y.scalar_at("x2");
+    pooya::ScalarSignal y_z3 = y.scalar_at("Z.z3");
 
     pooya::Simulator sim(
         model, [&](pooya::Block&, double t) -> void

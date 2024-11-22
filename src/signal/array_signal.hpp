@@ -102,7 +102,7 @@ public:
         _sid = ArraySignalInfo::create_new(name, size);
     }
 
-    using Signal<ArraySignal, Array>::operator=;
+    using ValueSignal<ArraySignal, Array>::operator=;
     using Signal<ArraySignal, Array>::reset;
 
     double operator[](std::size_t index) const {return _sid->get()[index];}

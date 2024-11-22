@@ -86,7 +86,7 @@ public:
         _sid = ScalarSignalInfo::create_new(name);
     }
 
-    using Signal<ScalarSignal, double>::operator=;
+    using ValueSignal<ScalarSignal, double>::operator=;
     using Signal<ScalarSignal, double>::reset;
 };
 

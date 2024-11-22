@@ -22,6 +22,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "value_signal.hpp"
 #include <memory>
 
+#define  pooya_verify_float_signal(sig) \
+    pooya_verify_valid_signal(sig); \
+    pooya_verify((sig)->is_float(), (sig)->name().str() + ": float signal expected!");
+
 namespace pooya
 {
 

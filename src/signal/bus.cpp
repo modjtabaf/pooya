@@ -47,115 +47,6 @@ BusSpec::WireInfo::WireInfo(const std::string& coded_label)
     }
 }
 
-ValueSignalId BusInfo::value_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_value_signal(sig);
-    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
-}
-
-ScalarSignalId BusInfo::scalar_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_scalar_signal(sig);
-    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
-}
-
-IntSignalId BusInfo::int_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_int_signal(sig);
-    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
-}
-
-BoolSignalId BusInfo::bool_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_bool_signal(sig);
-    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
-}
-
-ArraySignalId BusInfo::array_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_array_signal(sig);
-    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
-}
-
-BusId BusInfo::bus_at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    SignalId sig = at(label);
-    pooya_verify_bus(sig);
-    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
-}
-
-ValueSignalId BusInfo::value_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_value_signal(sig);
-    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
-}
-
-ScalarSignalId BusInfo::scalar_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_scalar_signal(sig);
-    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
-}
-
-IntSignalId BusInfo::int_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_int_signal(sig);
-    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
-}
-
-BoolSignalId BusInfo::bool_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_bool_signal(sig);
-    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
-}
-
-ArraySignalId BusInfo::array_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_array_signal(sig);
-    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
-}
-
-BusId BusInfo::bus_at(std::size_t index) const
-{
-    pooya_trace("index: " + index);
-    SignalId sig = at(index).second;
-    pooya_verify_bus(sig);
-    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
-}
-
-SignalId BusInfo::at(const std::string& label) const
-{
-    pooya_trace("label: " + label);
-    auto pos = label.find(".");
-    auto index = static_cast<const BusSpec&>(_spec).index_of(pos == std::string::npos ? label : label.substr(0, pos));
-    pooya_verify(index < static_cast<const BusSpec&>(_spec)._wires.size(), label + ": label not found in bus!");
-    auto sig = at(index).second;
-    if (pos == std::string::npos) {return sig;}
-
-    pooya_verify_bus(sig);
-    return sig->as_bus().at(label.substr(pos + 1));
-}
-
 void BusInfo::_set(std::size_t index, SignalId sig)
 {
     pooya_trace("index: " + std::to_string(index));
@@ -188,6 +79,19 @@ void BusInfo::_set(std::size_t index, SignalId sig)
     ns.second = sig;
 }
 
+SignalId BusInfo::at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    auto pos = label.find(".");
+    auto index = static_cast<const BusSpec&>(_spec).index_of(pos == std::string::npos ? label : label.substr(0, pos));
+    pooya_verify(index < static_cast<const BusSpec&>(_spec)._wires.size(), label + ": label not found in bus!");
+    auto sig = at(index).second;
+    if (pos == std::string::npos) {return sig;}
+
+    pooya_verify_bus(sig);
+    return sig->as_bus().at(label.substr(pos + 1));
+}
+
 SignalId BusInfo::operator[](const std::string& label) const
 {
     pooya_trace("label: " + label);
@@ -198,6 +102,118 @@ SignalId BusInfo::operator[](const std::string& label) const
     auto sig = operator[](static_cast<const BusSpec&>(_spec).index_of(label.substr(0, pos))).second;
     pooya_verify_bus(sig);
     return sig->as_bus()[label.substr(pos + 1)];
+}
+
+ValueSignalId Bus::value_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_value_signal(sig);
+    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
+}
+
+FloatSignalId Bus::float_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_float_signal(sig);
+    return std::static_pointer_cast<FloatSignalInfo>(sig->shared_from_this());
+}
+
+ScalarSignalId Bus::scalar_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_scalar_signal(sig);
+    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
+}
+
+IntSignalId Bus::int_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_int_signal(sig);
+    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
+}
+
+BoolSignalId Bus::bool_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_bool_signal(sig);
+    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
+}
+
+ArraySignalId Bus::array_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_array_signal(sig);
+    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
+}
+
+BusId Bus::bus_at(const std::string& label) const
+{
+    pooya_trace("label: " + label);
+    SignalId sig = _sid->at(label);
+    pooya_verify_bus(sig);
+    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
+}
+
+ValueSignalId Bus::value_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_value_signal(sig);
+    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
+}
+
+FloatSignalId Bus::float_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_float_signal(sig);
+    return std::static_pointer_cast<FloatSignalInfo>(sig->shared_from_this());
+}
+
+ScalarSignalId Bus::scalar_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_scalar_signal(sig);
+    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
+}
+
+IntSignalId Bus::int_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_int_signal(sig);
+    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
+}
+
+BoolSignalId Bus::bool_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_bool_signal(sig);
+    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
+}
+
+ArraySignalId Bus::array_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_array_signal(sig);
+    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
+}
+
+BusId Bus::bus_at(std::size_t index) const
+{
+    pooya_trace("index: " + index);
+    SignalId sig = _sid->at(index).second;
+    pooya_verify_bus(sig);
+    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
 }
 
 }

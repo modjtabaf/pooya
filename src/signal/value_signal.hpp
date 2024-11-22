@@ -59,8 +59,19 @@ inline const ValueSignalInfo& SignalInfo::as_value() const
 template<typename Derived, typename T>
 class ValueSignal : public Signal<Derived, T>
 {
+    using Base = Signal<Derived, T>;
+
 public:
     explicit ValueSignal(const typename Types<T>::SignalId& sid) : Signal<Derived, T>(sid) {}
+
+    operator typename Types<T>::GetValue() const {return Base::_sid->get();}
+    typename Types<T>::GetValue operator*() const {return Base::_sid->get();}
+
+    typename Types<T>::GetValue operator=(typename Types<T>::SetValue value) const
+    {
+        Base::_sid->set(value);
+        return value;
+    }
 
     ValueSignal& operator=(const ValueSignal&) = delete;
 

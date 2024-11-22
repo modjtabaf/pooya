@@ -88,7 +88,7 @@ public:
         _sid = BoolSignalInfo::create_new(name);
     }
 
-    using Signal<BoolSignal, bool>::operator=;
+    using ValueSignal<BoolSignal, bool>::operator=;
     using Signal<BoolSignal, bool>::reset;
 };
 

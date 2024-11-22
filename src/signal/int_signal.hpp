@@ -90,7 +90,7 @@ public:
         _sid = IntSignalInfo::create_new(name);
     }
 
-    using Signal<IntSignal, int>::operator=;
+    using ValueSignal<IntSignal, int>::operator=;
     using Signal<IntSignal, int>::reset;
 };
 

@@ -99,16 +99,8 @@ public:
         _sid = sid;
     }
 
-    operator typename Types<T>::GetValue() const {return _sid->get();}
-    typename Types<T>::GetValue operator*() const {return _sid->get();}
     const typename Types<T>::SignalId operator->() const {return _sid;}
     typename Types<T>::SignalId operator->() {return _sid;}
-
-    typename Types<T>::GetValue operator=(typename Types<T>::SetValue value) const
-    {
-        _sid->set(value);
-        return value;
-    }
 
     const typename Types<T>::SignalId& id() const {return _sid;}
     typename Types<T>::SignalId& id() {return _sid;}

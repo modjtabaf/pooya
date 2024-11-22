@@ -122,10 +122,10 @@ public:
 
 class BusInfo : public SignalInfo
 {
-public:
-    std::reference_wrapper<const BusSpec> _spec;
+    friend class Bus;
 
 protected:
+    std::reference_wrapper<const BusSpec> _spec;
     LabelSignalIdList _signals;
 
     void _set(std::size_t index, SignalId sig);
@@ -252,18 +252,6 @@ public:
 
     SignalId operator[](const std::string& label) const;
     SignalId at(const std::string& label) const;
-    ValueSignalId value_at(const std::string& label) const;
-    ScalarSignalId scalar_at(const std::string& label) const;
-    IntSignalId int_at(const std::string& label) const;
-    BoolSignalId bool_at(const std::string& label) const;
-    ArraySignalId array_at(const std::string& label) const;
-    BusId bus_at(const std::string& label) const;
-    ValueSignalId value_at(std::size_t index) const;
-    ScalarSignalId scalar_at(std::size_t index) const;
-    IntSignalId int_at(std::size_t index) const;
-    BoolSignalId bool_at(std::size_t index) const;
-    ArraySignalId array_at(std::size_t index) const;
-    BusId bus_at(std::size_t index) const;
 };
 
 inline BusInfo& SignalInfo::as_bus()
@@ -277,6 +265,77 @@ inline const BusInfo& SignalInfo::as_bus() const
     pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
     return *static_cast<const BusInfo*>(this);
 }
+
+class Bus : public Signal<Bus, BusSpec>
+{
+    using Base = Signal<Bus, BusSpec>;
+
+public:
+    template<typename Iter>
+    Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(spec, begin_, end_)) {}
+    template<typename Iter>
+    Bus(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(name, spec, begin_, end_)) {}
+    Bus(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
+    Bus(const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(name, spec, l)) {}
+    Bus(const BusId& sid) : Base(sid) {}
+
+    Bus& operator=(const Bus&) = delete;
+
+    template<typename Iter>
+    void reset(const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        _sid = BusInfo::create_new(spec, begin_, end_);
+    }
+    template<typename Iter>
+    void reset(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        _sid = BusInfo::create_new(name, spec, begin_, end_);
+    }
+    void reset(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    {
+        _sid = BusInfo::create_new(spec, l);
+    }
+    void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    {
+        _sid = BusInfo::create_new(name, spec, l);
+    }
+    void reset(const BusSpec& spec, const std::initializer_list<SignalId>& l)
+    {
+        _sid = BusInfo::create_new(spec, l);
+    }
+    void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l)
+    {
+        _sid = BusInfo::create_new(name, spec, l);
+    }
+
+    const BusSpec& spec() const {return _sid->spec();}
+    std::size_t size() const {return _sid->size();}
+    LabelSignalIdList::const_iterator begin() const noexcept {return _sid->begin();}
+    LabelSignalIdList::const_iterator end() const noexcept {return _sid->end();}
+    const LabelSignalId& operator[](std::size_t index) const {return (*_sid)[index];}
+    const LabelSignalId& at(std::size_t index) const {return _sid->at(index);}
+    SignalId operator[](const std::string& label) const {return (*_sid)[label];}
+    SignalId at(const std::string& label) const {return _sid->at(label);}
+
+    ValueSignalId value_at(const std::string& label) const;
+    FloatSignalId float_at(const std::string& label) const;
+    ScalarSignalId scalar_at(const std::string& label) const;
+    IntSignalId int_at(const std::string& label) const;
+    BoolSignalId bool_at(const std::string& label) const;
+    ArraySignalId array_at(const std::string& label) const;
+    BusId bus_at(const std::string& label) const;
+    ValueSignalId value_at(std::size_t index) const;
+    FloatSignalId float_at(std::size_t index) const;
+    ScalarSignalId scalar_at(std::size_t index) const;
+    IntSignalId int_at(std::size_t index) const;
+    BoolSignalId bool_at(std::size_t index) const;
+    ArraySignalId array_at(std::size_t index) const;
+    BusId bus_at(std::size_t index) const;
+
+    using Signal<Bus, BusSpec>::reset;
+};
 
 }
 

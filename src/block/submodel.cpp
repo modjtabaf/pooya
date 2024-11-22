@@ -134,7 +134,7 @@ bool Submodel::add_block(Block& component, const LabelSignals& iports, const Lab
             else if (ls.second->is_array())
                 {wire_infos.emplace_back(ls.first, ls.second->as_array().size());}
             else if (ls.second->is_bus())
-                {wire_infos.emplace_back(ls.first, ls.second->as_bus()._spec);}
+                {wire_infos.emplace_back(ls.first, ls.second->as_bus().spec());}
             else
                 {pooya_verify(false, "unknown signal type!");}
             

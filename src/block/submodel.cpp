@@ -141,7 +141,7 @@ bool Submodel::add_block(Block& component, const LabelSignals& iports, const Lab
             wires.emplace_back(ls.first, ls.second);
         }
         _interface_bus_specs.emplace_back(std::make_unique<BusSpec>(wire_infos.begin(), wire_infos.end()));
-        return BusInfo::create_new("", *_interface_bus_specs.back(), wires.begin(), wires.end());
+        return BusInfo::create_new(*_interface_bus_specs.back(), wires.begin(), wires.end());
     };
 
     if (!component.init(this, make_bus(iports), make_bus(oports))) {return false;}

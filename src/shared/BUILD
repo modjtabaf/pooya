@@ -16,5 +16,8 @@ pooya_cc_library(
     name = "shared",
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
+    deps = [
+        "//src/helper",
+    ],
     visibility = ["//visibility:public"],
 )

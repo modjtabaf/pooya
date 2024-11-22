@@ -36,6 +36,8 @@ protected:
     SourcesFunction _src_func;
 
 public:
+    Sources(SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
+        Block(0, num_oports), _src_func(src_func) {}
     Sources(const ValidName& name, SourcesFunction src_func, uint16_t num_oports=NoIOLimit) :
         Block(name, 0, num_oports), _src_func(src_func) {}
 

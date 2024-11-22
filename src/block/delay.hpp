@@ -43,8 +43,10 @@ protected:
     typename Types<T>::SignalId _s_initial; // initial
 
 public:
-    DelayT(const ValidName& name, double lifespan = 10.0)
-            : SingleOutputT<T>(name, 3, 1), _lifespan(lifespan) {}
+    explicit DelayT(double lifespan)
+        : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
+    DelayT(const ValidName& name, double lifespan)
+        : SingleOutputT<T>(name, 3, 1), _lifespan(lifespan) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {

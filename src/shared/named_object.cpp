@@ -12,20 +12,24 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include<algorithm>
+
 #include "named_object.hpp"
 
 namespace pooya
 {
 
-std::string ValidName::make_valid_name(const std::string& name)
+std::string ValidName::emend(const std::string& name)
 {
-    std::string ret;
-    ret.reserve(name.length());
-    for (auto c: name)
-    {
-        ret += (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')) || (c == '_') ?
-            c : '_';
-    }
+    std::string ret(name);
+    std::for_each(ret.begin(), ret.end(),
+        [](char& c) -> void
+        {
+            if (!((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')) || (c == '_')))
+            {
+                c = '_';
+            }
+        });
     return ret;
 }
 

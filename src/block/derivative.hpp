@@ -38,8 +38,10 @@ protected:
     T _y;
 
 public:
+    explicit DerivativeT(const T &y0 = 0)
+        : SingleInputOutputT<T>(1), _y(y0) {}
     DerivativeT(const ValidName& name, const T &y0 = 0)
-            : SingleInputOutputT<T>(name, 1, 1), _y(y0) {}
+        : SingleInputOutputT<T>(name, 1), _y(y0) {}
 
     void post_step(double t) override
     {

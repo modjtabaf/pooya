@@ -34,8 +34,10 @@ protected:
     T _value;
 
 public:
+    IntegratorBaseT(T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
+        : SingleOutputT<T>(num_iports, num_oports), _value(ic) {}
     IntegratorBaseT(const ValidName& name, T ic = T(0.0), uint16_t num_iports=Block::NoIOLimit, uint16_t num_oports=Block::NoIOLimit)
-            : SingleOutputT<T>(name, num_iports, num_oports), _value(ic) {}
+        : SingleOutputT<T>(name, num_iports, num_oports), _value(ic) {}
 
     bool init(Submodel* parent, BusId ibus, BusId obus) override
     {

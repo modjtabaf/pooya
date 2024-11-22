@@ -27,28 +27,28 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Source _source{"Source",
+    pooya::Source _source{
         [](double t) -> double
         {
             pooya_trace0;
             return std::sin(M_PI * t / 5);
         }};
-    pooya::Const _const1{"TimeDelay", 2.7435};
-    pooya::Const _const2{"Initial", 0.0};
-    pooya::Delay _delay{"Delay"};
+    pooya::Const _const1{2.7435};
+    pooya::Const _const2{0.0};
+    pooya::Delay _delay{10.0};
 
 public:
-    pooya::ScalarSignal _s_x{"x"};
-    pooya::ScalarSignal _s_y{"y"};
+    pooya::ScalarSignal _s_x;
+    pooya::ScalarSignal _s_y;
 
 public:
-    MyModel() : pooya::Submodel("delay_block")
+    MyModel()
     {
         pooya_trace0;
 
         // create pooya signals
-        pooya::ScalarSignal time_delay("time_delay");
-        pooya::ScalarSignal initial("initial");
+        pooya::ScalarSignal time_delay;
+        pooya::ScalarSignal initial;
 
         // setup the submodel
         add_block(_source, {}, _s_x);

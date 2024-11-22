@@ -31,6 +31,8 @@ protected:
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
 public:
+    Submodel(uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
+        Block(num_iports, num_oports) {}
     Submodel(const ValidName& name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         Block(name, num_iports, num_oports) {}
 

@@ -49,7 +49,9 @@ protected:
     }
 
 public:
-    MulDivT(const ValidName& name, const char *operators, const T &initial = 1.0)
+    MulDivT(const std::string& operators, const T &initial = 1.0)
+            : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
+    MulDivT(const ValidName& name, const std::string& operators, const T &initial = 1.0)
             : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/) override

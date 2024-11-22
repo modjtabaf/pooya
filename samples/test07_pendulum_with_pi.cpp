@@ -31,19 +31,17 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{"tau_ml2", "*///"};
-    pooya::Subtract _sub{"err"};
-    pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{"phi"};
-    pooya::Sin _sin{"sin_phi"};
-    pooya::MulDiv _muldiv2{"g_l", "**/"};
+    pooya::MulDiv _muldiv1{"*///"};
+    pooya::Subtract _sub;
+    pooya::Integrator _integ1;
+    pooya::Integrator _integ2;
+    pooya::Sin _sin;
+    pooya::MulDiv _muldiv2{"**/"};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
-
-    pooya::ScalarSignal _m{"m"};
-    pooya::ScalarSignal _g{"g"};
-    pooya::ScalarSignal _l{"l"};
+    pooya::ScalarSignal _m;
+    pooya::ScalarSignal _g;
+    pooya::ScalarSignal _l;
 
     bool init(pooya::Submodel* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -53,7 +51,7 @@ public:
             return false;
 
         // create pooya signals
-        pooya::ScalarSignal dphi("dphi");
+        pooya::ScalarSignal dphi;
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
@@ -80,15 +78,10 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{"Add"};
+    pooya::Add _add;
 
 public:
-    PI(double Kp, double Ki, double x0=0.0) :
-        pooya::Submodel("PI"),
-        _gain_p("Kp", Kp),
-        _integ("ix", x0),
-        _gain_i("Ki", Ki)
-    {}
+    PI(double Kp, double Ki, double x0=0.0) : _gain_p(Kp), _integ(x0), _gain_i(Ki) {}
 
     bool init(pooya::Submodel* parent, pooya::BusId ibus, pooya::BusId obus) override
     {
@@ -117,17 +110,15 @@ public:
 class PendulumWithPI : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{"Sub"};
+    pooya::Subtract _sub;
     PI _pi{40.0, 20.0};
 
 public:
-    PendulumWithPI() : pooya::Submodel("pendulum_with_PI") {}
-
     Pendulum _pend;
-    pooya::ScalarSignal _des_phi{"des_phi"};
-    pooya::ScalarSignal _phi{"phi"};
-    pooya::ScalarSignal _tau{"tau"};
-    pooya::ScalarSignal _err{"err"};
+    pooya::ScalarSignal _des_phi;
+    pooya::ScalarSignal _phi;
+    pooya::ScalarSignal _tau;
+    pooya::ScalarSignal _err;
 
     bool init(pooya::Submodel* parent, pooya::BusId, pooya::BusId) override
     {
@@ -153,7 +144,7 @@ int main()
     auto  start = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test07");
+    pooya::Submodel model;
     PendulumWithPI pendulum_with_pi;
 
     // setup the model

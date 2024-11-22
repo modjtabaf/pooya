@@ -35,8 +35,10 @@ protected:
     T _value;
 
 public:
+    explicit MemoryT(const T &ic = T(0))
+        : SingleInputOutputT<T>(1), _value(ic) {}
     MemoryT(const ValidName& name, const T &ic = T(0))
-            : SingleInputOutputT<T>(name, 1, 1), _value(ic) {}
+        : SingleInputOutputT<T>(name, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
     {

@@ -178,7 +178,7 @@ public:
                 if (wit->_bus)
                     {ls.second = BusInfo::create_new(new_name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
-                    {ls.second = ArraySignalInfo::create_new(wit->_array_size, new_name);}
+                    {ls.second = ArraySignalInfo::create_new(new_name, wit->_array_size);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
                     {ls.second = ScalarSignalInfo::create_new(new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
@@ -194,11 +194,22 @@ public:
         return std::make_shared<BusInfo>(Protected(), name, spec, label_signals.begin(), label_signals.end());
     }
 
+    template<typename Iter>
+    static BusId create_new(const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        return create_new("", spec, begin_, end_);
+    }
+
     static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
     {
         pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
         return create_new(name, spec, l.begin(), l.end());
+    }
+
+    static BusId create_new(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    {
+        return create_new("", spec, l);
     }
 
     static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
@@ -217,6 +228,11 @@ public:
         }
 
         return create_new(name, spec, label_signals.begin(), label_signals.end());
+    }
+
+    static BusId create_new(const BusSpec& spec, const std::initializer_list<SignalId>& l={})
+    {
+        return create_new("", spec, l);
     }
 
     const BusSpec& spec() const {return _spec;}

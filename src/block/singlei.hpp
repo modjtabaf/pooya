@@ -26,7 +26,16 @@ class SingleInputT : public Block
 protected:
     typename Types<T>::SignalId _s_in{nullptr};
 
-    SingleInputT(const ValidName& name, uint16_t num_iports=1, uint16_t num_oports=NoIOLimit) :
+    explicit SingleInputT(uint16_t num_oports=NoIOLimit) :
+        Block(1, num_oports) {}
+    SingleInputT(const ValidName& name, uint16_t num_oports=NoIOLimit) :
+        Block(name, 1, num_oports) {}
+    SingleInputT(uint16_t num_iports, uint16_t num_oports) :
+        Block(num_iports, num_oports)
+    {
+        pooya_verify(num_iports == 1, "One and only one input expected!");
+    }
+    SingleInputT(const ValidName& name, uint16_t num_iports, uint16_t num_oports) :
         Block(name, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");

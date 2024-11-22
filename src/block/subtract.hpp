@@ -32,6 +32,8 @@ template <typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
+    explicit SubtractT(const T &initial = 0.0)
+            : AddSubT<T>("+-", initial) {}
     SubtractT(const ValidName& name, const T &initial = 0.0)
             : AddSubT<T>(name, "+-", initial) {}
 };

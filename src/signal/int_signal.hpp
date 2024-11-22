@@ -37,7 +37,7 @@ protected:
     int _int_value;
 
 public:
-    IntSignalInfo(Protected, const ValidName& name)
+    IntSignalInfo(Protected, const ValidName& name="")
         : ValueSignalInfo(name, IntType) {}
 
     static IntSignalId create_new(const ValidName& name="")

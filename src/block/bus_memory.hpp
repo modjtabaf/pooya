@@ -68,8 +68,10 @@ protected:
     LabelValueMap _init_values;
 
 public:
+    BusMemory(const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
+        : BusBlockBuilder(excluded_labels), _init_values(l) {}
     BusMemory(const ValidName& name, const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
-            : BusBlockBuilder(name, excluded_labels), _init_values(l) {}
+        : BusBlockBuilder(name, excluded_labels), _init_values(l) {}
 
 protected:
     void block_builder(const std::string& full_label, const BusSpec::WireInfo &wi, SignalId sig_in, SignalId sig_out) override;

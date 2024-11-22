@@ -32,7 +32,7 @@ template <typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    SinT(const ValidName& name) : SingleInputOutputT<T>(name, 1, 1) {}
+    explicit SinT(const ValidName& name="") : SingleInputOutputT<T>(name, 1) {}
 
     void activation_function(double /*t*/) override
     {

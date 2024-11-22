@@ -25,30 +25,34 @@ class ValidName
 protected:
     std::string _name;
 
-    ValidName append(const std::string& name, const std::string& sep) const
+    template<typename T>
+    ValidName append(const T& name, const std::string& sep) const
     {
         ValidName ret;
-        ret._name = _name + sep + make_valid_name(name);
+        ret._name = _name + sep + emend(name);
         return ret;
     }
 
 public:
     ValidName() = default;
     ValidName(const ValidName&) = default;
-    ValidName(const char* name) : _name(make_valid_name(name)) {}
-    ValidName(const std::string& name) : _name(make_valid_name(name)) {}
+    ValidName(const char* name) : _name(emend(std::string(name))) {}
+    ValidName(const std::string& name) : _name(emend(name)) {}
 
-    const std::string& str() const {return _name;}
-    ValidName operator|(const std::string& name) const
+    std::string str() const {return _name;}
+    template<typename T>
+    ValidName operator|(const T& name) const
     {
         return append(name, ".");
     }
-    ValidName operator/(const std::string& name) const
+    template<typename T>
+    ValidName operator/(const T& name) const
     {
         return append(name, "/");
     }
 
-    static std::string make_valid_name(const std::string& name);
+    static std::string emend(const std::string& name);
+    static std::string emend(const ValidName& name) {return name._name;}
 };
 
 class NamedObject
@@ -57,9 +61,12 @@ protected:
     ValidName _name;
 
 public:
-    NamedObject(const ValidName& name) : _name(name) {}
+    explicit NamedObject(const ValidName& name="") : _name(name) {}
 
     const ValidName& name() const {return _name;}
+
+    template<typename T>
+    void rename(const T& name) {_name = emend(name);}
 }; // class NamedObject
 
 }

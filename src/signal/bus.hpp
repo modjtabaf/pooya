@@ -24,13 +24,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "scalar_signal.hpp"
 #include "array_signal.hpp"
 #include "bool_signal.hpp"
-#include "signal_id.hpp"
+#include "label_signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
-#include "src/signal/signal.hpp"
-#include "src/signal/signal_id.hpp"
-#include "src/signal/label_signal.hpp"
 
 #define pooya_verify_bus(sig) \
     pooya_verify_valid_signal(sig); \

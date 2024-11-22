@@ -15,20 +15,30 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_TRAIT_HPP__
 #define __POOYA_SIGNAL_TRAIT_HPP__
 
+#include <memory>
+
 #include "src/helper/verify.hpp"
 #include "array.hpp"
-#include "signal_id.hpp"
 
 namespace pooya
 {
 
-class BusSpec;
+class SignalInfo;
+using SignalId = std::shared_ptr<SignalInfo>;
+
+class ValueSignalInfo;
+using ValueSignalId = std::shared_ptr<ValueSignalInfo>;
+
+class FloatSignalInfo;
+using FloatSignalId = std::shared_ptr<FloatSignalInfo>;
 
 template<typename T>
 struct Types
 {
 };
 
+class ArraySignalInfo;
+using ArraySignalId = std::shared_ptr<ArraySignalInfo>;
 class ArraySignal;
 
 template<>
@@ -52,6 +62,8 @@ struct Types<Array>
     }
 };
 
+class ScalarSignalInfo;
+using ScalarSignalId = std::shared_ptr<ScalarSignalInfo>;
 class ScalarSignal;
 
 template<>
@@ -74,6 +86,8 @@ struct Types<double>
     }
 };
 
+class IntSignalInfo;
+using IntSignalId = std::shared_ptr<IntSignalInfo>;
 class IntSignal;
 
 template<>
@@ -96,6 +110,8 @@ struct Types<int>
     }
 };
 
+class BoolSignalInfo;
+using BoolSignalId = std::shared_ptr<BoolSignalInfo>;
 class BoolSignal;
 
 template<>
@@ -117,6 +133,10 @@ struct Types<bool>
         return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
     }
 };
+
+class BusInfo;
+using BusId = std::shared_ptr<BusInfo>;
+class BusSpec;
 
 template<>
 struct Types<BusSpec>

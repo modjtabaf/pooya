@@ -15,7 +15,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #ifndef __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 
-#include "signal_id.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"

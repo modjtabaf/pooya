@@ -20,7 +20,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "src/shared/named_object.hpp"
 #include "src/helper/util.hpp"
 #include "trait.hpp"
-#include "signal_id.hpp"
 
 namespace pooya
 {

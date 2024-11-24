@@ -28,16 +28,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-template <typename T>
+template <typename T, typename Tic=T>
 class MemoryT : public SingleInputOutputT<T>
 {
 protected:
     T _value;
 
 public:
-    explicit MemoryT(const T &ic = T(0))
+    explicit MemoryT(const Tic &ic = Tic(0))
         : SingleInputOutputT<T>(1), _value(ic) {}
-    MemoryT(const ValidName& name, const T &ic = T(0))
+    MemoryT(const ValidName& name, const Tic &ic = Tic(0))
         : SingleInputOutputT<T>(name, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
@@ -67,9 +67,17 @@ public:
     }
 };
 
+class Bool
+{
+public:
+    explicit Bool(bool b=false) : _b(b) {}
+    bool _b{false};
+    operator bool() const {return _b;}
+};
+
 using Memory = MemoryT<double>;
 using MemoryI = MemoryT<int>;
-using MemoryB = MemoryT<bool>;
+using MemoryB = MemoryT<bool, Bool>;
 using MemoryA = MemoryT<Array>;
 
 } // namespace pooya

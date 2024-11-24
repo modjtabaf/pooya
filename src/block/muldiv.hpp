@@ -36,22 +36,22 @@ protected:
     T _initial;
     T _ret;
 
-    bool init(Submodel* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
 
-        pooya_verify(ibus->size() >= 1, "MulDivT requires 1 or more input signals.");
-        pooya_verify(_operators.size() == ibus->size(),
+        pooya_verify(ibus.size() >= 1, "MulDivT requires 1 or more input signals.");
+        pooya_verify(_operators.size() == ibus.size(),
                      SingleOutputT<T>::full_name().str() + ": mismatch between input signals and operators.");
 
         return true;
     }
 
 public:
-    MulDivT(const std::string& operators, const T &initial = 1.0)
+    MulDivT(const std::string& operators, const T& initial = 1.0)
             : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
-    MulDivT(const ValidName& name, const std::string& operators, const T &initial = 1.0)
+    MulDivT(const ValidName& name, const std::string& operators, const T& initial = 1.0)
             : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
 
     void activation_function(double /*t*/) override
@@ -59,9 +59,9 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         _ret = _initial;
         const char *p = _operators.c_str();
-        for (const auto &ls: *SingleOutputT<T>::_ibus)
+        for (const auto& ls: SingleOutputT<T>::_ibus)
         {
-            const auto &v = Types<T>::as_signal_info(ls.second).get();
+            const auto& v = Types<T>::as_signal_info(ls.second).get();
             if (*p == '*') {_ret *= v;}
             else if (*p == '/') {_ret /= v;}
             else {assert(false);}

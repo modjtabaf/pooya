@@ -41,10 +41,10 @@ protected:
     }
 
 public:
-    bool init(Submodel* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         if (!Base::init(parent, ibus, obus)) {return false;}
-        _s_out = std::move(Types<T>::as_signal_id(Base::_obus->at(0).second));
+        _s_out = std::move(Types<T>::as_signal_id(Base::_obus.at(0).second));
         return true;
     }
 };

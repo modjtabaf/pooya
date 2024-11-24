@@ -19,7 +19,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include <functional>
 #include <memory>
 #include <optional>
-#include <unordered_set>
 
 #include "src/shared/named_object.hpp"
 #include "src/signal/trait.hpp"
@@ -58,8 +57,8 @@ public:
 
 protected:
     bool _initialized{false};
-    BusId _ibus{nullptr};
-    BusId _obus{nullptr};
+    Bus _ibus;
+    Bus _obus;
     std::vector<SignalAssociationPair> _associated_signals;
     Submodel* _parent{nullptr};
     uint16_t _num_iports{NoIOLimit};
@@ -73,7 +72,7 @@ protected:
     Block(const ValidName& name, uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         NamedObject(name), _num_iports(num_iports), _num_oports(num_oports) {}
 
-    virtual bool init(Submodel* parent=nullptr, BusId ibus=BusId(), BusId obus=BusId());
+    virtual bool init(Submodel* parent=nullptr, const Bus& ibus=Bus(), const Bus& obus=Bus());
     virtual void post_init() {}
 
 public:
@@ -87,8 +86,8 @@ public:
     auto parent() -> auto {return _parent;}
     bool processed() const {return _processed;}
     bool is_initialized() const {return _initialized;}
-    BusId ibus() const {return _ibus;}
-    BusId obus() const {return _obus;}
+    const Bus& ibus() const {return _ibus;}
+    const Bus& obus() const {return _obus;}
     auto associated_signals() const -> const auto& {return _associated_signals;}
 
     template<typename T, typename Key>

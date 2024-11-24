@@ -23,7 +23,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-bool Block::init(Submodel* parent, BusId ibus, BusId obus)
+bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
 {
     pooya_trace(_name.str());
 
@@ -39,44 +39,38 @@ bool Block::init(Submodel* parent, BusId ibus, BusId obus)
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
     }
 
-    pooya_verify((_num_iports == NoIOLimit) || (!ibus && _num_iports == 0) || (ibus && ibus->size() == _num_iports),
+    pooya_verify((_num_iports == NoIOLimit) || (ibus.size() == _num_iports),
         _num_iports == 0 ?
             full_name().str() + " cannot take any input." :
             full_name().str() + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
-    pooya_verify((_num_oports == NoIOLimit) || (!obus && _num_oports == 0) || (obus && obus->size() == _num_oports),
+    pooya_verify((_num_oports == NoIOLimit) || (obus.size() == _num_oports),
         _num_oports == 0 ?
             full_name().str() + " cannot generate any output." :
             full_name().str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
-    _associated_signals.reserve((ibus ? ibus->size() : 0) + (obus ? obus->size() : 0));
+    _associated_signals.reserve(ibus.size() + obus.size());
 
-    if (ibus)
+    for (auto& sig: ibus)
     {
-        for (auto& sig: *ibus)
+        if (sig.second->is_value())
         {
-            if (sig.second->is_value())
-            {
-                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Input);
-            }
+            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Input);
         }
     }
 
-    if (obus)
+    for (auto& sig: obus)
     {
-        for (auto& sig: *obus)
+        if (sig.second->is_value())
         {
-            if (sig.second->is_value())
-            {
-                register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Output);
-            }
+            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Output);
         }
     }
 
     _associated_signals.shrink_to_fit();
 
-    _ibus = ibus;
-    _obus = obus;
+    _ibus.reset(ibus);
+    _obus.reset(obus);
 
     _initialized = true;
     return true;

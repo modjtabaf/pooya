@@ -32,10 +32,10 @@ template <typename T>
 class MultiplyT : public MulDivT<T>
 {
 protected:
-    bool init(Submodel* parent, BusId ibus, BusId obus) override
+    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + MulDivT<T>::full_name().str());
-        MulDivT<T>::_operators = std::string(ibus->size(), '*');
+        MulDivT<T>::_operators = std::string(ibus.size(), '*');
         return MulDivT<T>::init(parent, ibus, obus);
     }
 

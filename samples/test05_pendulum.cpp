@@ -48,7 +48,7 @@ public:
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
 
-    bool init(pooya::Submodel* parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 

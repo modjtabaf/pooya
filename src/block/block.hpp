@@ -45,7 +45,7 @@ class Block : public NamedObject
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
 
-    enum class SignalAssociationType
+    enum class SignalLinkType
     {
         Input,
         Output,
@@ -53,19 +53,19 @@ public:
         Unknown,
     };
 
-    using SignalAssociationPair = std::pair<ValueSignalId, SignalAssociationType>;
+    using SignalLinkPair = std::pair<ValueSignalId, SignalLinkType>;
 
 protected:
     bool _initialized{false};
     Bus _ibus;
     Bus _obus;
-    std::vector<SignalAssociationPair> _associated_signals;
+    std::vector<SignalLinkPair> _linked_signals;
     Submodel* _parent{nullptr};
     uint16_t _num_iports{NoIOLimit};
     uint16_t _num_oports{NoIOLimit};
 
     bool _processed{false};
-    bool register_associated_signal(ValueSignalId sig, SignalAssociationType type);
+    bool link_signal(ValueSignalId sig, SignalLinkType type);
 
     Block(uint16_t num_iports=NoIOLimit, uint16_t num_oports=NoIOLimit) :
         _num_iports(num_iports), _num_oports(num_oports) {}
@@ -88,10 +88,10 @@ public:
     bool is_initialized() const {return _initialized;}
     const Bus& ibus() const {return _ibus;}
     const Bus& obus() const {return _obus;}
-    auto associated_signals() const -> const auto& {return _associated_signals;}
+    auto linked_signals() const -> const auto& {return _linked_signals;}
 
     template<typename T, typename Key>
-    typename Types<T>::SignalId io_at(BusId bus, Key key, std::optional<SignalAssociationType> type)
+    typename Types<T>::SignalId io_at(BusId bus, Key key, std::optional<SignalLinkType> type)
     {
         pooya_verify_bus(bus);
         SignalId sig;
@@ -105,74 +105,74 @@ public:
         if (type.has_value())
         {
             pooya_verify_value_signal(sig);
-            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()), *type);
+            link_signal(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this()), *type);
         }
         return Types<T>::as_signal_id(sig);
     }
 
     ScalarSignalId scalar_input_at(const std::string& label)
     {
-        return io_at<double, const std::string&>(_ibus, label, SignalAssociationType::Input);
+        return io_at<double, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
     IntSignalId int_input_at(const std::string& label)
     {
-        return io_at<int, const std::string&>(_ibus, label, SignalAssociationType::Input);
+        return io_at<int, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
     BoolSignalId bool_input_at(const std::string& label)
     {
-        return io_at<bool, const std::string&>(_ibus, label, SignalAssociationType::Input);
+        return io_at<bool, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
     ArraySignalId array_input_at(const std::string& label)
     {
-        return io_at<Array, const std::string&>(_ibus, label, SignalAssociationType::Input);
+        return io_at<Array, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
     ScalarSignalId scalar_input_at(std::size_t index)
     {
-        return io_at<double, std::size_t>(_ibus, index, SignalAssociationType::Input);
+        return io_at<double, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
     IntSignalId int_input_at(std::size_t index)
     {
-        return io_at<int, std::size_t>(_ibus, index, SignalAssociationType::Input);
+        return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
     BoolSignalId bool_input_at(std::size_t index)
     {
-        return io_at<bool, std::size_t>(_ibus, index, SignalAssociationType::Input);
+        return io_at<bool, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
     ArraySignalId array_input_at(std::size_t index)
     {
-        return io_at<Array, std::size_t>(_ibus, index, SignalAssociationType::Input);
+        return io_at<Array, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
     ScalarSignalId scalar_output_at(const std::string& label)
     {
-        return io_at<double, const std::string&>(_obus, label, SignalAssociationType::Output);
+        return io_at<double, const std::string&>(_obus, label, SignalLinkType::Output);
     }
     IntSignalId int_output_at(const std::string& label)
     {
-        return io_at<int, const std::string&>(_obus, label, SignalAssociationType::Output);
+        return io_at<int, const std::string&>(_obus, label, SignalLinkType::Output);
     }
     BoolSignalId bool_output_at(const std::string& label)
     {
-        return io_at<bool, const std::string&>(_obus, label, SignalAssociationType::Output);
+        return io_at<bool, const std::string&>(_obus, label, SignalLinkType::Output);
     }
     ArraySignalId array_output_at(const std::string& label)
     {
-        return io_at<Array, const std::string&>(_obus, label, SignalAssociationType::Output);
+        return io_at<Array, const std::string&>(_obus, label, SignalLinkType::Output);
     }
     ScalarSignalId scalar_output_at(std::size_t index)
     {
-        return io_at<double, std::size_t>(_obus, index, SignalAssociationType::Output);
+        return io_at<double, std::size_t>(_obus, index, SignalLinkType::Output);
     }
     IntSignalId int_output_at(std::size_t index)
     {
-        return io_at<int, std::size_t>(_obus, index, SignalAssociationType::Output);
+        return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output);
     }
     BoolSignalId bool_output_at(std::size_t index)
     {
-        return io_at<bool, std::size_t>(_obus, index, SignalAssociationType::Output);
+        return io_at<bool, std::size_t>(_obus, index, SignalLinkType::Output);
     }
     ArraySignalId array_output_at(std::size_t index)
     {
-        return io_at<Array, std::size_t>(_obus, index, SignalAssociationType::Output);
+        return io_at<Array, std::size_t>(_obus, index, SignalLinkType::Output);
     }
 
     virtual void _mark_unprocessed();

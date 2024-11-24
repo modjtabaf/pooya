@@ -52,9 +52,9 @@ public:
         _s_x.set_deriv_signal(_s_xd);
         _s_xd.set_deriv_signal(_s_xdd);
 
-        register_associated_signal(_s_x, SignalAssociationType::Input);
-        register_associated_signal(_s_xd, SignalAssociationType::Input);
-        register_associated_signal(_s_xdd, SignalAssociationType::Internal);
+        link_signal(_s_x, SignalLinkType::Input);
+        link_signal(_s_xd, SignalLinkType::Input);
+        link_signal(_s_xdd, SignalLinkType::Internal);
 
         return true;
     }

@@ -49,13 +49,13 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
             full_name().str() + " cannot generate any output." :
             full_name().str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
-    _associated_signals.reserve(ibus.size() + obus.size());
+    _linked_signals.reserve(ibus.size() + obus.size());
 
     for (auto& sig: ibus)
     {
         if (sig.second->is_value())
         {
-            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Input);
+            link_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalLinkType::Input);
         }
     }
 
@@ -63,11 +63,11 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
     {
         if (sig.second->is_value())
         {
-            register_associated_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalAssociationType::Output);
+            link_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalLinkType::Output);
         }
     }
 
-    _associated_signals.shrink_to_fit();
+    _linked_signals.shrink_to_fit();
 
     _ibus.reset(ibus);
     _obus.reset(obus);
@@ -81,18 +81,18 @@ ValidName Block::full_name() const
     return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
-bool Block::register_associated_signal(ValueSignalId signal, SignalAssociationType type)
+bool Block::link_signal(ValueSignalId signal, SignalLinkType type)
 {
     pooya_trace("block: " + full_name().str());
     pooya_verify_valid_signal(signal);
-    auto it = std::find_if(_associated_signals.begin(), _associated_signals.end(),
-        [&](const SignalAssociationPair& sig_type) -> bool
+    auto it = std::find_if(_linked_signals.begin(), _linked_signals.end(),
+        [&](const SignalLinkPair& sig_type) -> bool
         {
             return sig_type.first == signal;
         });
-    if (it == _associated_signals.end())
+    if (it == _linked_signals.end())
     {
-        _associated_signals.emplace_back(signal, type);
+        _linked_signals.emplace_back(signal, type);
         return true;
     }
 
@@ -108,9 +108,9 @@ uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name().str());
     if (_processed) {return 0;}
-    for (auto& sig: _associated_signals)
+    for (auto& sig: _linked_signals)
     {
-        if ((sig.second == SignalAssociationType::Input) && !sig.first->is_assigned()) {return 0;}
+        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned()) {return 0;}
     }
 
     activation_function(t);

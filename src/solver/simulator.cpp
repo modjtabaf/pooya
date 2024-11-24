@@ -134,9 +134,9 @@ uint Simulator::_process(double t)
         for (const auto* c: unprocessed)
         {
             std::cout << "- " << c->full_name().str() << "\n";
-            for (auto& sig_type: c->associated_signals())
+            for (auto& sig_type: c->linked_signals())
             {
-                if ((sig_type.second != Block::SignalAssociationType::Input) || sig_type.first->is_assigned()) {continue;}
+                if ((sig_type.second != Block::SignalLinkType::Input) || sig_type.first->is_assigned()) {continue;}
                 std::cout << "  - " << sig_type.first->name().str() << "\n";
             }
         }
@@ -164,7 +164,7 @@ void Simulator::init(double t0)
     _model.traverse(
         [&](Block& block, uint32_t /*level*/) -> bool
         {
-            const auto& signals = block.associated_signals();
+            const auto& signals = block.linked_signals();
             for(auto& sig: signals)
             {
                 value_signals.insert(sig.first);

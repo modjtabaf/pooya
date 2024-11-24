@@ -59,7 +59,7 @@ void BusMemory::block_builder(const std::string& full_label, const BusSpec::Wire
     {
         block = (it == _init_values.end())
             ? std::make_shared<MemoryB>("memory")
-            : std::make_shared<MemoryB>("memory", it->second.as_scalar() != 0);
+            : std::make_shared<MemoryB>("memory", Bool(it->second.as_scalar() != 0));
     }
     else if (wi._array_size > 0)
     {

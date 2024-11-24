@@ -32,7 +32,7 @@ namespace pooya
 class Function : public Block
 {
 public:
-    using ActFunction = std::function<void(double, BusId ibus, BusId obus)>;
+    using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
 
 protected:
     ActFunction _act_func;

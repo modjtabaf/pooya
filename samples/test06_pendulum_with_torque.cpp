@@ -41,14 +41,14 @@ protected:
     //         return std::sin(x);
     //     }};
     // pooya::SOFunction _sin{"sin_phi",
-    //     [](double /*t*/, pooya::BusId ibus) -> double
+    //     [](double /*t*/, const pooya::Bus& ibus) -> double
     //     {
-    //         return std::sin(ibus->scalar_at(0)->get());
+    //         return std::sin(ibus.scalar_at(0)->get());
     //     }};
     // pooya::Function _sin{"sin_phi",
-    //     [](double /*t*/, pooya::BusId ibus, pooya::BusId obus) -> void
+    //     [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
     //     {
-    //         obus->scalar_at(0)->set(std::sin(ibus->scalar_at(0)->get()));
+    //         obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get()));
     //     }};
     pooya::Sin _sin{"sin(phi)"};
     pooya::MulDiv _muldiv1{"g_l", "**/"};
@@ -66,7 +66,7 @@ public:
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
 
-    bool init(pooya::Submodel* parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 

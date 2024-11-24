@@ -32,7 +32,7 @@ template <typename T>
 class SOFunctionT : public SingleOutputT<T>
 {
 public:
-    using ActFunction = std::function<typename Types<T>::SetValue(double, BusId ibus)>;
+    using ActFunction = std::function<typename Types<T>::SetValue(double, const pooya::Bus& ibus)>;
 
 protected:
     ActFunction _act_func;

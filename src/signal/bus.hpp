@@ -122,8 +122,6 @@ public:
 
 class BusInfo : public SignalInfo
 {
-    friend class Bus;
-
 protected:
     std::reference_wrapper<const BusSpec> _spec;
     LabelSignalIdList _signals;
@@ -275,7 +273,7 @@ public:
     Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(spec, begin_, end_)) {}
     template<typename Iter>
     Bus(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(name, spec, begin_, end_)) {}
-    Bus(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
     Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
     Bus(const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(spec, l)) {}
     Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(name, spec, l)) {}

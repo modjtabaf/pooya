@@ -16,7 +16,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #define __POOYA_SOLVER_SIMULATOR_HPP__
 
 #include <functional>
-#include <unordered_set>
 #include <vector>
 
 #include "src/signal/array.hpp"

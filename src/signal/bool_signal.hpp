@@ -29,18 +29,18 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class BoolSignalInfo : public ValueSignalInfo
+class BoolSignalImpl : public ValueSignalImpl
 {
 protected:
     bool _bool_value;
 
 public:
-    BoolSignalInfo(Protected, const ValidName& name="")
-        : ValueSignalInfo(name, BoolType) {}
+    BoolSignalImpl(Protected, const ValidName& name="")
+        : ValueSignalImpl(name, BoolType) {}
 
-    static BoolSignalId create_new(const ValidName& name="")
+    static BoolSignalImplPtr create_new(const ValidName& name="")
     {
-        return std::make_shared<BoolSignalInfo>(Protected(), name);
+        return std::make_shared<BoolSignalImpl>(Protected(), name);
     } 
 
     bool get() const
@@ -61,16 +61,16 @@ public:
     operator bool() const {return get();}
 };
 
-inline BoolSignalInfo& SignalInfo::as_bool()
+inline BoolSignalImpl& SignalImpl::as_bool()
 {
     pooya_verify(_type & BoolType, "Illegal attempt to dereference a non-bool as a bool.");
-    return *static_cast<BoolSignalInfo*>(this);
+    return *static_cast<BoolSignalImpl*>(this);
 }
 
-inline const BoolSignalInfo& SignalInfo::as_bool() const
+inline const BoolSignalImpl& SignalImpl::as_bool() const
 {
     pooya_verify(_type & BoolType, "Illegal attempt to dereference a non-bool as a bool.");
-    return *static_cast<const BoolSignalInfo*>(this);
+    return *static_cast<const BoolSignalImpl*>(this);
 }
 
 class BoolSignal : public ValueSignal<BoolSignal, bool>
@@ -78,14 +78,14 @@ class BoolSignal : public ValueSignal<BoolSignal, bool>
     using Base = ValueSignal<BoolSignal, bool>;
 
 public:
-    explicit BoolSignal(const ValidName& name="") : Base(BoolSignalInfo::create_new(name)) {}
-    BoolSignal(const BoolSignalId& sid) : Base(sid) {}
+    explicit BoolSignal(const ValidName& name="") : Base(BoolSignalImpl::create_new(name)) {}
+    BoolSignal(const BoolSignalImplPtr& sid) : Base(sid) {}
 
     BoolSignal& operator=(const BoolSignal&) = delete;
 
     void reset(const ValidName& name="")
     {
-        _sid = BoolSignalInfo::create_new(name);
+        _sid = BoolSignalImpl::create_new(name);
     }
 
     using ValueSignal<BoolSignal, bool>::operator=;

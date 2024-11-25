@@ -120,24 +120,24 @@ public:
     bool operator==(const BusSpec& other) const {return this == &other;}
 };
 
-class BusInfo : public SignalInfo
+class BusInfo : public SignalImpl
 {
 protected:
     std::reference_wrapper<const BusSpec> _spec;
-    LabelSignalIdList _signals;
+    LabelSignalImplPtrList _signals;
 
-    void _set(std::size_t index, SignalId sig);
+    void _set(std::size_t index, SignalImplPtr sig);
 
 public:
     template<typename Iter>
     BusInfo(Protected, const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
-        : SignalInfo(name, BusType), _spec(spec)
+        : SignalImpl(name, BusType), _spec(spec)
     {
         pooya_trace("fullname: " + name.str());
         pooya_verify(std::size_t(std::distance(begin_, end_)) == spec._wires.size(), "incorrect number of signals: " + std::to_string(std::size_t(std::distance(begin_, end_))));
         _signals.reserve(spec._wires.size());
         for(const auto& wi: spec._wires)
-            {_signals.push_back({wi.label(), SignalId()});}
+            {_signals.push_back({wi.label(), SignalImplPtr()});}
         for (auto& it = begin_; it != end_; it++)
             {_set(spec.index_of(it->first), it->second);}
 #if defined(POOYA_DEBUG)
@@ -155,9 +155,9 @@ public:
         auto size = spec._wires.size();
         pooya_verify(std::distance(begin_, end_) <= int(size), "Too many entries in the initializer list!");
 
-        std::vector<LabelSignalId> label_signals;
+        std::vector<LabelSignalImplPtr> label_signals;
         label_signals.reserve(size);
-        for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), SignalId()});}
+        for (const auto& wi: spec._wires) {label_signals.push_back({wi.label(), SignalImplPtr()});}
         for (auto it=begin_; it != end_; it++)
         {
             auto index = spec.index_of(it->first);
@@ -173,13 +173,13 @@ public:
                 if (wit->_bus)
                     {ls.second = BusInfo::create_new(new_name, (*wit->_bus).get());}
                 else if (wit->_array_size > 0)
-                    {ls.second = ArraySignalInfo::create_new(new_name, wit->_array_size);}
+                    {ls.second = ArraySignalImpl::create_new(new_name, wit->_array_size);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Scalar)
-                    {ls.second = ScalarSignalInfo::create_new(new_name);}
+                    {ls.second = ScalarSignalImpl::create_new(new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Int)
-                    {ls.second = IntSignalInfo::create_new(new_name);}
+                    {ls.second = IntSignalImpl::create_new(new_name);}
                 else if (wit->single_value_type() == BusSpec::SingleValueType::Bool)
-                    {ls.second = BoolSignalInfo::create_new(new_name);}
+                    {ls.second = BoolSignalImpl::create_new(new_name);}
                 else
                     {pooya_verify(false, new_name.str() + ": unknown wire type!");}
             }
@@ -195,24 +195,24 @@ public:
         return create_new("", spec, begin_, end_);
     }
 
-    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalImplPtr>& l)
     {
         pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
         return create_new(name, spec, l.begin(), l.end());
     }
 
-    static BusId create_new(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    static BusId create_new(const BusSpec& spec, const std::initializer_list<LabelSignalImplPtr>& l)
     {
         return create_new("", spec, l);
     }
 
-    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l={})
+    static BusId create_new(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l={})
     {
         pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
 
-        LabelSignalIdList label_signals;
+        LabelSignalImplPtrList label_signals;
         label_signals.reserve(l.size());
 
         auto wit = spec._wires.begin();
@@ -225,40 +225,40 @@ public:
         return create_new(name, spec, label_signals.begin(), label_signals.end());
     }
 
-    static BusId create_new(const BusSpec& spec, const std::initializer_list<SignalId>& l={})
+    static BusId create_new(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l={})
     {
         return create_new("", spec, l);
     }
 
     const BusSpec& spec() const {return _spec;}
     std::size_t size() const {return _signals.size();}
-    LabelSignalIdList::const_iterator begin() const noexcept {return _signals.begin();}
-    LabelSignalIdList::const_iterator end() const noexcept {return _signals.end();}
+    LabelSignalImplPtrList::const_iterator begin() const noexcept {return _signals.begin();}
+    LabelSignalImplPtrList::const_iterator end() const noexcept {return _signals.end();}
 
-    const LabelSignalId& operator[](std::size_t index) const
+    const LabelSignalImplPtr& operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         pooya_verify(index < _signals.size(), "index out of range!");
         return _signals[index];
     }
 
-    const LabelSignalId& at(std::size_t index) const
+    const LabelSignalImplPtr& at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         return _signals.at(index);
     }
 
-    SignalId operator[](const std::string& label) const;
-    SignalId at(const std::string& label) const;
+    SignalImplPtr operator[](const std::string& label) const;
+    SignalImplPtr at(const std::string& label) const;
 };
 
-inline BusInfo& SignalInfo::as_bus()
+inline BusInfo& SignalImpl::as_bus()
 {
     pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
     return *static_cast<BusInfo*>(this);
 }
 
-inline const BusInfo& SignalInfo::as_bus() const
+inline const BusInfo& SignalImpl::as_bus() const
 {
     pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
     return *static_cast<const BusInfo*>(this);
@@ -269,10 +269,10 @@ class Bus : public Signal<Bus, BusSpec>
     using Base = Signal<Bus, BusSpec>;
 
 public:
-    Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
-    Bus(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
-    Bus(const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(spec, l)) {}
-    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(name, spec, l)) {}
+    Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l={}) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
+    Bus(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l) : Base(BusInfo::create_new(name, spec, l)) {}
     template<typename Iter>
     Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(spec, begin_, end_)) {}
     template<typename Iter>
@@ -281,19 +281,19 @@ public:
 
     Bus& operator=(const Bus&) = delete;
 
-    void reset(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={})
+    void reset(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l={})
     {
         _sid = BusInfo::create_new(spec, l);
     }
-    void reset(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={})
+    void reset(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l={})
     {
         _sid = BusInfo::create_new(name, spec, l);
     }
-    void reset(const BusSpec& spec, const std::initializer_list<SignalId>& l)
+    void reset(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l)
     {
         _sid = BusInfo::create_new(spec, l);
     }
-    void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l)
+    void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l)
     {
         _sid = BusInfo::create_new(name, spec, l);
     }
@@ -310,26 +310,26 @@ public:
 
     const BusSpec& spec() const {return _sid->spec();}
     std::size_t size() const {return _sid->size();}
-    LabelSignalIdList::const_iterator begin() const noexcept {return _sid->begin();}
-    LabelSignalIdList::const_iterator end() const noexcept {return _sid->end();}
-    const LabelSignalId& operator[](std::size_t index) const {return (*_sid)[index];}
-    const LabelSignalId& at(std::size_t index) const {return _sid->at(index);}
-    SignalId operator[](const std::string& label) const {return (*_sid)[label];}
-    SignalId at(const std::string& label) const {return _sid->at(label);}
+    LabelSignalImplPtrList::const_iterator begin() const noexcept {return _sid->begin();}
+    LabelSignalImplPtrList::const_iterator end() const noexcept {return _sid->end();}
+    const LabelSignalImplPtr& operator[](std::size_t index) const {return (*_sid)[index];}
+    const LabelSignalImplPtr& at(std::size_t index) const {return _sid->at(index);}
+    SignalImplPtr operator[](const std::string& label) const {return (*_sid)[label];}
+    SignalImplPtr at(const std::string& label) const {return _sid->at(label);}
 
-    ValueSignalId value_at(const std::string& label) const;
-    FloatSignalId float_at(const std::string& label) const;
-    ScalarSignalId scalar_at(const std::string& label) const;
-    IntSignalId int_at(const std::string& label) const;
-    BoolSignalId bool_at(const std::string& label) const;
-    ArraySignalId array_at(const std::string& label) const;
+    ValueSignalImplPtr value_at(const std::string& label) const;
+    FloatSignalImplPtr float_at(const std::string& label) const;
+    ScalarSignalImplPtr scalar_at(const std::string& label) const;
+    IntSignalImplPtr int_at(const std::string& label) const;
+    BoolSignalImplPtr bool_at(const std::string& label) const;
+    ArraySignalImplPtr array_at(const std::string& label) const;
     BusId bus_at(const std::string& label) const;
-    ValueSignalId value_at(std::size_t index) const;
-    FloatSignalId float_at(std::size_t index) const;
-    ScalarSignalId scalar_at(std::size_t index) const;
-    IntSignalId int_at(std::size_t index) const;
-    BoolSignalId bool_at(std::size_t index) const;
-    ArraySignalId array_at(std::size_t index) const;
+    ValueSignalImplPtr value_at(std::size_t index) const;
+    FloatSignalImplPtr float_at(std::size_t index) const;
+    ScalarSignalImplPtr scalar_at(std::size_t index) const;
+    IntSignalImplPtr int_at(std::size_t index) const;
+    BoolSignalImplPtr bool_at(std::size_t index) const;
+    ArraySignalImplPtr array_at(std::size_t index) const;
     BusId bus_at(std::size_t index) const;
 
     using Signal<Bus, BusSpec>::reset;

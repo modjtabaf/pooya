@@ -47,7 +47,7 @@ BusSpec::WireInfo::WireInfo(const std::string& coded_label)
     }
 }
 
-void BusInfo::_set(std::size_t index, SignalId sig)
+void BusInfo::_set(std::size_t index, SignalImplPtr sig)
 {
     pooya_trace("index: " + std::to_string(index));
     pooya_verify(index < _signals.size(), "bus wire index out of range!");
@@ -79,7 +79,7 @@ void BusInfo::_set(std::size_t index, SignalId sig)
     ns.second = sig;
 }
 
-SignalId BusInfo::at(const std::string& label) const
+SignalImplPtr BusInfo::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
@@ -92,7 +92,7 @@ SignalId BusInfo::at(const std::string& label) const
     return sig->as_bus().at(label.substr(pos + 1));
 }
 
-SignalId BusInfo::operator[](const std::string& label) const
+SignalImplPtr BusInfo::operator[](const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
@@ -104,114 +104,114 @@ SignalId BusInfo::operator[](const std::string& label) const
     return sig->as_bus()[label.substr(pos + 1)];
 }
 
-ValueSignalId Bus::value_at(const std::string& label) const
+ValueSignalImplPtr Bus::value_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_value_signal(sig);
-    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
 }
 
-FloatSignalId Bus::float_at(const std::string& label) const
+FloatSignalImplPtr Bus::float_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_float_signal(sig);
-    return std::static_pointer_cast<FloatSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<FloatSignalImpl>(sig->shared_from_this());
 }
 
-ScalarSignalId Bus::scalar_at(const std::string& label) const
+ScalarSignalImplPtr Bus::scalar_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_scalar_signal(sig);
-    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this());
 }
 
-IntSignalId Bus::int_at(const std::string& label) const
+IntSignalImplPtr Bus::int_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_int_signal(sig);
-    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<IntSignalImpl>(sig->shared_from_this());
 }
 
-BoolSignalId Bus::bool_at(const std::string& label) const
+BoolSignalImplPtr Bus::bool_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_bool_signal(sig);
-    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<BoolSignalImpl>(sig->shared_from_this());
 }
 
-ArraySignalId Bus::array_at(const std::string& label) const
+ArraySignalImplPtr Bus::array_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_array_signal(sig);
-    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
 BusId Bus::bus_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalId sig = _sid->at(label);
+    SignalImplPtr sig = _sid->at(label);
     pooya_verify_bus(sig);
     return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
 }
 
-ValueSignalId Bus::value_at(std::size_t index) const
+ValueSignalImplPtr Bus::value_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_value_signal(sig);
-    return std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
 }
 
-FloatSignalId Bus::float_at(std::size_t index) const
+FloatSignalImplPtr Bus::float_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_float_signal(sig);
-    return std::static_pointer_cast<FloatSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<FloatSignalImpl>(sig->shared_from_this());
 }
 
-ScalarSignalId Bus::scalar_at(std::size_t index) const
+ScalarSignalImplPtr Bus::scalar_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_scalar_signal(sig);
-    return std::static_pointer_cast<ScalarSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this());
 }
 
-IntSignalId Bus::int_at(std::size_t index) const
+IntSignalImplPtr Bus::int_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_int_signal(sig);
-    return std::static_pointer_cast<IntSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<IntSignalImpl>(sig->shared_from_this());
 }
 
-BoolSignalId Bus::bool_at(std::size_t index) const
+BoolSignalImplPtr Bus::bool_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_bool_signal(sig);
-    return std::static_pointer_cast<BoolSignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<BoolSignalImpl>(sig->shared_from_this());
 }
 
-ArraySignalId Bus::array_at(std::size_t index) const
+ArraySignalImplPtr Bus::array_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_array_signal(sig);
-    return std::static_pointer_cast<ArraySignalInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
 BusId Bus::bus_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
-    SignalId sig = _sid->at(index).second;
+    SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_bus(sig);
     return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
 }

@@ -28,13 +28,13 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class ValueSignalInfo : public SignalInfo
+class ValueSignalImpl : public SignalImpl
 {
 protected:
     bool _assigned{false};             // has the value been assigned?
 
-    ValueSignalInfo(const ValidName& name, uint32_t type) :
-        SignalInfo(name, type | ValueType) {}
+    ValueSignalImpl(const ValidName& name, uint32_t type) :
+        SignalImpl(name, type | ValueType) {}
 
 public:
     double get_as_scalar() const;
@@ -44,16 +44,16 @@ public:
     bool is_assigned() const {return _assigned;}
 };
 
-inline ValueSignalInfo& SignalInfo::as_value()
+inline ValueSignalImpl& SignalImpl::as_value()
 {
     pooya_verify(_type & ValueType, "Illegal attempt to dereference a non-value as a value.");
-    return *static_cast<ValueSignalInfo*>(this);
+    return *static_cast<ValueSignalImpl*>(this);
 }
 
-inline const ValueSignalInfo& SignalInfo::as_value() const
+inline const ValueSignalImpl& SignalImpl::as_value() const
 {
     pooya_verify(_type & ValueType, "Illegal attempt to dereference a non-value as a value.");
-    return *static_cast<const ValueSignalInfo*>(this);
+    return *static_cast<const ValueSignalImpl*>(this);
 }
 
 template<typename Derived, typename T>
@@ -62,7 +62,7 @@ class ValueSignal : public Signal<Derived, T>
     using Base = Signal<Derived, T>;
 
 public:
-    explicit ValueSignal(const typename Types<T>::SignalId& sid) : Signal<Derived, T>(sid) {}
+    explicit ValueSignal(const typename Types<T>::SignalImplPtr& sid) : Signal<Derived, T>(sid) {}
 
     operator typename Types<T>::GetValue() const {return Base::_sid->get();}
     typename Types<T>::GetValue operator*() const {return Base::_sid->get();}
@@ -75,7 +75,7 @@ public:
 
     ValueSignal& operator=(const ValueSignal&) = delete;
 
-    operator ValueSignalId() const {return std::static_pointer_cast<ValueSignalInfo>(static_cast<const Derived*>(this)->id()->shared_from_this());}
+    operator ValueSignalImplPtr() const {return std::static_pointer_cast<ValueSignalImpl>(static_cast<const Derived*>(this)->id()->shared_from_this());}
 };
 
 }

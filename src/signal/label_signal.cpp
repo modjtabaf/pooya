@@ -18,25 +18,25 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-void LabelSignals::_init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_)
+void LabelSignals::_init(LabelSignalImplPtrList::const_iterator begin_, LabelSignalImplPtrList::const_iterator end_)
 {
     pooya_trace0;
     for (auto it=begin_; it != end_; it++) {push_back(*it);}
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<SignalId>& il)
+LabelSignals::LabelSignals(const std::initializer_list<SignalImplPtr>& il)
 {
     pooya_trace0;
-    LabelSignalIdList lsl;
+    LabelSignalImplPtrList lsl;
     std::size_t index=0;
     for (const auto& sig: il) {lsl.push_back({_make_auto_label(index++), sig});}
     _init(lsl.begin(), lsl.end());
 }
 
-LabelSignals::LabelSignals(const std::initializer_list<LabelSignalId>& il)
+LabelSignals::LabelSignals(const std::initializer_list<LabelSignalImplPtr>& il)
 {
     pooya_trace0;
-    LabelSignalIdList lsl(il);
+    LabelSignalImplPtrList lsl(il);
     _init(lsl.begin(), lsl.end());
 }
 

@@ -24,7 +24,7 @@ template<typename T>
 class SingleInputT : public Block
 {
 protected:
-    typename Types<T>::SignalId _s_in{nullptr};
+    typename Types<T>::SignalImplPtr _s_in{nullptr};
 
     explicit SingleInputT(uint16_t num_oports=NoIOLimit) :
         Block(1, num_oports) {}

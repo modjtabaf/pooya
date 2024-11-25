@@ -23,114 +23,114 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo;
-using SignalId = std::shared_ptr<SignalInfo>;
+class SignalImpl;
+using SignalImplPtr = std::shared_ptr<SignalImpl>;
 
-class ValueSignalInfo;
-using ValueSignalId = std::shared_ptr<ValueSignalInfo>;
+class ValueSignalImpl;
+using ValueSignalImplPtr = std::shared_ptr<ValueSignalImpl>;
 
-class FloatSignalInfo;
-using FloatSignalId = std::shared_ptr<FloatSignalInfo>;
+class FloatSignalImpl;
+using FloatSignalImplPtr = std::shared_ptr<FloatSignalImpl>;
 
 template<typename T>
 struct Types
 {
 };
 
-class ArraySignalInfo;
-using ArraySignalId = std::shared_ptr<ArraySignalInfo>;
+class ArraySignalImpl;
+using ArraySignalImplPtr = std::shared_ptr<ArraySignalImpl>;
 class ArraySignal;
 
 template<>
 struct Types<Array>
 {
     using SignalWrapper = ArraySignal;
-    using SignalInfo = ArraySignalInfo;
-    using SignalId = ArraySignalId;
+    using SignalImpl = ArraySignalImpl;
+    using SignalImplPtr = ArraySignalImplPtr;
     using GetValue = const Array&;
     using SetValue = const Array&;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
-    static void verify_signal_type(pooya::SignalId sig, std::size_t size);
+    static void verify_signal_type(pooya::SignalImplPtr sig);
+    static void verify_signal_type(pooya::SignalImplPtr sig, std::size_t size);
 #endif // defined(POOYA_DEBUG)
     template<typename T> static bool is_same_type(const T& sig) {return sig->is_array();}
-    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_array();}
-    template<typename T> static SignalId as_signal_id(const T& sig)
+    template<typename T> static SignalImpl& as_signal_info(const T& sig) {return sig->as_array();}
+    template<typename T> static SignalImplPtr as_signal_id(const T& sig)
     {
         pooya_verify(sig->is_array(), "Illegal attempt to dereference a non-array as an array.");
-        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+        return std::static_pointer_cast<SignalImpl>(sig->shared_from_this());
     }
 };
 
-class ScalarSignalInfo;
-using ScalarSignalId = std::shared_ptr<ScalarSignalInfo>;
+class ScalarSignalImpl;
+using ScalarSignalImplPtr = std::shared_ptr<ScalarSignalImpl>;
 class ScalarSignal;
 
 template<>
 struct Types<double>
 {
     using SignalWrapper = ScalarSignal;
-    using SignalInfo = ScalarSignalInfo;
-    using SignalId = ScalarSignalId;
+    using SignalImpl = ScalarSignalImpl;
+    using SignalImplPtr = ScalarSignalImplPtr;
     using GetValue = double;
     using SetValue = double;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
+    static void verify_signal_type(pooya::SignalImplPtr sig);
 #endif // defined(POOYA_DEBUG)
     template<typename T> static bool is_same_type(const T& sig) {return sig->is_scalar();}
-    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_scalar();}
-    template<typename T> static SignalId as_signal_id(const T& sig)
+    template<typename T> static SignalImpl& as_signal_info(const T& sig) {return sig->as_scalar();}
+    template<typename T> static SignalImplPtr as_signal_id(const T& sig)
     {
         pooya_verify(sig->is_scalar(), "Illegal attempt to dereference a non-scalar as a scalar.");
-        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+        return std::static_pointer_cast<SignalImpl>(sig->shared_from_this());
     }
 };
 
-class IntSignalInfo;
-using IntSignalId = std::shared_ptr<IntSignalInfo>;
+class IntSignalImpl;
+using IntSignalImplPtr = std::shared_ptr<IntSignalImpl>;
 class IntSignal;
 
 template<>
 struct Types<int>
 {
     using SignalWrapper = IntSignal;
-    using SignalInfo = IntSignalInfo;
-    using SignalId = IntSignalId;
+    using SignalImpl = IntSignalImpl;
+    using SignalImplPtr = IntSignalImplPtr;
     using GetValue = int;
     using SetValue = int;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
+    static void verify_signal_type(pooya::SignalImplPtr sig);
 #endif // defined(POOYA_DEBUG)
     template<typename T> static bool is_same_type(const T& sig) {return sig->is_int();}
-    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_int();}
-    template<typename T> static SignalId as_signal_id(const T& sig)
+    template<typename T> static SignalImpl& as_signal_info(const T& sig) {return sig->as_int();}
+    template<typename T> static SignalImplPtr as_signal_id(const T& sig)
     {
         pooya_verify(sig->is_int(), "Illegal attempt to dereference a non-int as an int.");
-        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+        return std::static_pointer_cast<SignalImpl>(sig->shared_from_this());
     }
 };
 
-class BoolSignalInfo;
-using BoolSignalId = std::shared_ptr<BoolSignalInfo>;
+class BoolSignalImpl;
+using BoolSignalImplPtr = std::shared_ptr<BoolSignalImpl>;
 class BoolSignal;
 
 template<>
 struct Types<bool>
 {
     using SignalWrapper = BoolSignal;
-    using SignalInfo = BoolSignalInfo;
-    using SignalId = BoolSignalId;
+    using SignalImpl = BoolSignalImpl;
+    using SignalImplPtr = BoolSignalImplPtr;
     using GetValue = bool;
     using SetValue = bool;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig);
+    static void verify_signal_type(pooya::SignalImplPtr sig);
 #endif // defined(POOYA_DEBUG)
     template<typename T> static bool is_same_type(const T& sig) {return sig->is_bool();}
-    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bool();}
-    template<typename T> static SignalId as_signal_id(const T& sig)
+    template<typename T> static SignalImpl& as_signal_info(const T& sig) {return sig->as_bool();}
+    template<typename T> static SignalImplPtr as_signal_id(const T& sig)
     {
         pooya_verify(sig->is_bool(), "Illegal attempt to dereference a non-bool as a bool.");
-        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+        return std::static_pointer_cast<SignalImpl>(sig->shared_from_this());
     }
 };
 
@@ -141,17 +141,17 @@ class BusSpec;
 template<>
 struct Types<BusSpec>
 {
-    using SignalInfo = BusInfo;
-    using SignalId = BusId;
+    using SignalImpl = BusInfo;
+    using SignalImplPtr = BusId;
 #if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalId sig, const BusSpec& spec);
+    static void verify_signal_type(pooya::SignalImplPtr sig, const BusSpec& spec);
 #endif // defined(POOYA_DEBUG)
     template<typename T> static bool is_same_type(const T& sig) {return sig->is_bus();}
-    template<typename T> static SignalInfo& as_signal_info(const T& sig) {return sig->as_bus();}
-    template<typename T> static SignalId as_signal_id(const T& sig)
+    template<typename T> static SignalImpl& as_signal_info(const T& sig) {return sig->as_bus();}
+    template<typename T> static SignalImplPtr as_signal_id(const T& sig)
     {
         pooya_verify(sig->is_bus(), "Illegal attempt to dereference a non-bus as a bus.");
-        return std::static_pointer_cast<SignalInfo>(sig->shared_from_this());
+        return std::static_pointer_cast<SignalImpl>(sig->shared_from_this());
     }
 };
 

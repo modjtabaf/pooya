@@ -55,7 +55,7 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
     {
         if (sig.second->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalLinkType::Input);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()), SignalLinkType::Input);
         }
     }
 
@@ -63,7 +63,7 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
     {
         if (sig.second->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalInfo>(sig.second->shared_from_this()), SignalLinkType::Output);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()), SignalLinkType::Output);
         }
     }
 
@@ -81,7 +81,7 @@ ValidName Block::full_name() const
     return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
-bool Block::link_signal(ValueSignalId signal, SignalLinkType type)
+bool Block::link_signal(ValueSignalImplPtr signal, SignalLinkType type)
 {
     pooya_trace("block: " + full_name().str());
     pooya_verify_valid_signal(signal);

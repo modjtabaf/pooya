@@ -37,7 +37,7 @@ public:
 
 protected:
     void block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo &wi,
-        SignalId sig_in, SignalId sig_out) override;
+        SignalImplPtr sig_in, SignalImplPtr sig_out) override;
 };
 
 } // namespace pooya

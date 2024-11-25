@@ -24,7 +24,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class SignalInfo : public std::enable_shared_from_this<SignalInfo>, public NamedObject
+class SignalImpl : public std::enable_shared_from_this<SignalImpl>, public NamedObject
 {
 protected:
     struct Protected {};
@@ -45,7 +45,7 @@ public:
     };
 
 protected:
-    SignalInfo(const ValidName& name, uint32_t type) : NamedObject(name), _type(type) {}
+    SignalImpl(const ValidName& name, uint32_t type) : NamedObject(name), _type(type) {}
 
 public:
     bool is_value() const {return _type & ValueType;}
@@ -56,20 +56,20 @@ public:
     bool is_array() const {return _type & ArrayType;}
     bool is_bus() const {return _type & BusType;}
 
-    ValueSignalInfo&   as_value();
-    FloatSignalInfo&   as_float();
-    ScalarSignalInfo& as_scalar();
-    IntSignalInfo&       as_int();
-    BoolSignalInfo&     as_bool();
-    ArraySignalInfo&   as_array();
+    ValueSignalImpl&   as_value();
+    FloatSignalImpl&   as_float();
+    ScalarSignalImpl& as_scalar();
+    IntSignalImpl&       as_int();
+    BoolSignalImpl&     as_bool();
+    ArraySignalImpl&   as_array();
     BusInfo&             as_bus();
 
-    const ValueSignalInfo&   as_value() const;
-    const FloatSignalInfo&   as_float() const;
-    const ScalarSignalInfo& as_scalar() const;
-    const IntSignalInfo&       as_int() const;
-    const BoolSignalInfo&     as_bool() const;
-    const ArraySignalInfo&   as_array() const;
+    const ValueSignalImpl&   as_value() const;
+    const FloatSignalImpl&   as_float() const;
+    const ScalarSignalImpl& as_scalar() const;
+    const IntSignalImpl&       as_int() const;
+    const BoolSignalImpl&     as_bool() const;
+    const ArraySignalImpl&   as_array() const;
     const BusInfo&             as_bus() const;
 };
 
@@ -77,36 +77,36 @@ template<typename Derived, typename T>
 class Signal
 {
 protected:
-    typename Types<T>::SignalId _sid;
+    typename Types<T>::SignalImplPtr _sid;
 
-    static void fail_if_invalid_signal(const SignalId& sid)
+    static void fail_if_invalid_signal(const SignalImplPtr& sid)
     {
         if (!sid)
             helper::pooya_throw_exception(__FILE__, __LINE__, "invalid signal id!");
     }
 
 public:
-    explicit Signal(const typename Types<T>::SignalId& sid)
+    explicit Signal(const typename Types<T>::SignalImplPtr& sid)
     {
         reset(sid);
     }
 
     Signal<Derived, T>& operator=(const Signal<Derived, T>&) = delete;
 
-    void reset(const typename Types<T>::SignalId& sid)
+    void reset(const typename Types<T>::SignalImplPtr& sid)
     {
         fail_if_invalid_signal(sid);
         _sid = sid;
     }
 
-    const typename Types<T>::SignalId operator->() const {return _sid;}
-    typename Types<T>::SignalId operator->() {return _sid;}
+    const typename Types<T>::SignalImplPtr operator->() const {return _sid;}
+    typename Types<T>::SignalImplPtr operator->() {return _sid;}
 
-    const typename Types<T>::SignalId& id() const {return _sid;}
-    typename Types<T>::SignalId& id() {return _sid;}
+    const typename Types<T>::SignalImplPtr& id() const {return _sid;}
+    typename Types<T>::SignalImplPtr& id() {return _sid;}
 
-    operator const typename Types<T>::SignalId&() const {return _sid;}
-    operator SignalId() const {return _sid->shared_from_this();}
+    operator const typename Types<T>::SignalImplPtr&() const {return _sid;}
+    operator SignalImplPtr() const {return _sid->shared_from_this();}
 };
 
 }

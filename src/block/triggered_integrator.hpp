@@ -32,7 +32,7 @@ template <typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
 {
 protected:
-    BoolSignalId _trigger;
+    BoolSignalImplPtr _trigger;
     bool _triggered{false};
 
 public:

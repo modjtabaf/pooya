@@ -74,7 +74,7 @@ public:
         : BusBlockBuilder(name, excluded_labels), _init_values(l) {}
 
 protected:
-    void block_builder(const std::string& full_label, const BusSpec::WireInfo &wi, SignalId sig_in, SignalId sig_out) override;
+    void block_builder(const std::string& full_label, const BusSpec::WireInfo &wi, SignalImplPtr sig_in, SignalImplPtr sig_out) override;
     void post_init() override;
 };
 

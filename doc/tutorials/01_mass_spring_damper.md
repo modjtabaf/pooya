@@ -49,13 +49,13 @@ Here is the implementation:
 
 ```cpp
 // create signals
-pooya::ScalarSignalId s_F     = model.create_scalar_signal("F");
-pooya::ScalarSignalId s_F_m   = model.create_scalar_signal("F_m");
-pooya::ScalarSignalId s_xdd   = model.create_scalar_signal("xdd");
-pooya::ScalarSignalId s_xd    = model.create_scalar_signal("xd");
-pooya::ScalarSignalId s_x     = model.create_scalar_signal("x");
-pooya::ScalarSignalId s_kx_m  = model.create_scalar_signal("kx_m");
-pooya::ScalarSignalId s_cxd_m = model.create_scalar_signal("cxd_m");
+pooya::ScalarSignalImplPtr s_F     = model.create_scalar_signal("F");
+pooya::ScalarSignalImplPtr s_F_m   = model.create_scalar_signal("F_m");
+pooya::ScalarSignalImplPtr s_xdd   = model.create_scalar_signal("xdd");
+pooya::ScalarSignalImplPtr s_xd    = model.create_scalar_signal("xd");
+pooya::ScalarSignalImplPtr s_x     = model.create_scalar_signal("x");
+pooya::ScalarSignalImplPtr s_kx_m  = model.create_scalar_signal("kx_m");
+pooya::ScalarSignalImplPtr s_cxd_m = model.create_scalar_signal("cxd_m");
 ```
 
 Now that all blocks and signals are defined, the model could be set up by adding the blocks and defining input and output signals:

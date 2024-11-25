@@ -20,7 +20,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-double ValueSignalInfo::get_as_scalar() const
+double ValueSignalImpl::get_as_scalar() const
 {
     if (is_scalar())
     {
@@ -37,7 +37,7 @@ double ValueSignalInfo::get_as_scalar() const
     }
 }
 
-void ValueSignalInfo::set_as_scalar(double value)
+void ValueSignalImpl::set_as_scalar(double value)
 {
     if (is_scalar())
     {

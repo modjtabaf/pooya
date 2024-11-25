@@ -38,9 +38,9 @@ protected:
     std::vector<T> _x;
 
     // input signals
-    typename Types<T>::SignalId _s_x;       // in
-    ScalarSignalId _s_delay;                // delay
-    typename Types<T>::SignalId _s_initial; // initial
+    typename Types<T>::SignalImplPtr _s_x;       // in
+    ScalarSignalImplPtr _s_delay;                // delay
+    typename Types<T>::SignalImplPtr _s_initial; // initial
 
 public:
     explicit DelayT(double lifespan)

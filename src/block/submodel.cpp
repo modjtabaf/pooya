@@ -121,7 +121,7 @@ bool Submodel::add_block(Block& component, const LabelSignals& iports, const Lab
     auto make_bus = [&](const LabelSignals& ports) -> BusId
     {
         std::vector<BusSpec::WireInfo> wire_infos;
-        LabelSignalIdList wires;
+        LabelSignalImplPtrList wires;
         for (const auto& ls: ports)
         {
             pooya_verify_valid_signal(ls.second);

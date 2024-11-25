@@ -33,9 +33,9 @@ protected:
     Block& _model;
     double _t_prev{0};
     InputCallback _inputs_cb;
-    std::vector<ValueSignalId> value_signals_;
-    std::vector<ScalarSignalId> scalar_state_signals_;
-    std::vector<ArraySignalId> array_state_signals_;
+    std::vector<ValueSignalImplPtr> value_signals_;
+    std::vector<ScalarSignalImplPtr> scalar_state_signals_;
+    std::vector<ArraySignalImplPtr> array_state_signals_;
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;

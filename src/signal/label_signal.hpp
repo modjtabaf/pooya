@@ -26,19 +26,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-using LabelSignalId = std::pair<std::string, SignalId>;
-using LabelSignalIdList = std::vector<LabelSignalId>;
-using LabelSignalIdMap = std::map<LabelSignalId::first_type, LabelSignalId::second_type>;
+using LabelSignalImplPtr = std::pair<std::string, SignalImplPtr>;
+using LabelSignalImplPtrList = std::vector<LabelSignalImplPtr>;
+using LabelSignalImplPtrMap = std::map<LabelSignalImplPtr::first_type, LabelSignalImplPtr::second_type>;
 
 class LabelSignals
 {
 protected:
-    LabelSignalIdMap _label_signals_map;
-    LabelSignalIdList _label_signals_list;
+    LabelSignalImplPtrMap _label_signals_map;
+    LabelSignalImplPtrList _label_signals_list;
 
     std::string _make_auto_label(std::size_t index) const {return "sig" + std::to_string(index);}
 
-    void _init(LabelSignalIdList::const_iterator begin_, LabelSignalIdList::const_iterator end_);
+    void _init(LabelSignalImplPtrList::const_iterator begin_, LabelSignalImplPtrList::const_iterator end_);
 
 public:
     LabelSignals() = default;
@@ -48,12 +48,12 @@ public:
         pooya_trace0;
         if constexpr(std::is_pointer_v<T>)
         {
-            LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
+            LabelSignalImplPtrList lsl({{_make_auto_label(0), signal->shared_from_this()}});
             _init(lsl.begin(), lsl.end());
         }
         else
         {
-            LabelSignalIdList lsl({{_make_auto_label(0), signal.id()->shared_from_this()}});
+            LabelSignalImplPtrList lsl({{_make_auto_label(0), signal.id()->shared_from_this()}});
             _init(lsl.begin(), lsl.end());
         }
     }
@@ -61,26 +61,26 @@ public:
     LabelSignals(const std::shared_ptr<T>& signal)
     {
         pooya_trace0;
-        LabelSignalIdList lsl({{_make_auto_label(0), signal->shared_from_this()}});
+        LabelSignalImplPtrList lsl({{_make_auto_label(0), signal->shared_from_this()}});
         _init(lsl.begin(), lsl.end());
     }
-    LabelSignals(const std::initializer_list<SignalId>& il);
-    LabelSignals(const std::initializer_list<LabelSignalId>& il);
+    LabelSignals(const std::initializer_list<SignalImplPtr>& il);
+    LabelSignals(const std::initializer_list<LabelSignalImplPtr>& il);
 
-    using const_iterator = LabelSignalIdList::const_iterator;
+    using const_iterator = LabelSignalImplPtrList::const_iterator;
 
-    SignalId operator[](std::size_t index) const {return _label_signals_list[index].second;}
-    SignalId operator[](const std::string& label) const {return _label_signals_map.at(label);}
+    SignalImplPtr operator[](std::size_t index) const {return _label_signals_list[index].second;}
+    SignalImplPtr operator[](const std::string& label) const {return _label_signals_map.at(label);}
     std::size_t size() const noexcept
     {
         return _label_signals_list.size();
     }
     const_iterator begin() const noexcept {return _label_signals_list.begin();}
     const_iterator end() const noexcept {return _label_signals_list.end();}
-    bool push_back(const LabelSignalId& ls)
+    bool push_back(const LabelSignalImplPtr& ls)
     {
         pooya_trace0;
-        pooya_verify(!ls.first.empty(), "SignalId label can not be empty!");
+        pooya_verify(!ls.first.empty(), "SignalImplPtr label can not be empty!");
         pooya_verify(ls.second, ls.first + ": invalid signal!");
         if (ls.first.empty() || (ls.second == nullptr)) {return false;}
 

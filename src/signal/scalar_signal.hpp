@@ -27,18 +27,18 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class ScalarSignalInfo : public FloatSignalInfo
+class ScalarSignalImpl : public FloatSignalImpl
 {
 protected:
     double _scalar_value;
 
 public:
-    ScalarSignalInfo(Protected, const ValidName& name="")
-        : FloatSignalInfo(name, ScalarType) {}
+    ScalarSignalImpl(Protected, const ValidName& name="")
+        : FloatSignalImpl(name, ScalarType) {}
 
-    static ScalarSignalId create_new(const ValidName& name="")
+    static ScalarSignalImplPtr create_new(const ValidName& name="")
     {
-        return std::make_shared<ScalarSignalInfo>(Protected(), name);
+        return std::make_shared<ScalarSignalImpl>(Protected(), name);
     } 
 
     double get() const
@@ -59,16 +59,16 @@ public:
     operator double() const {return get();}
 };
 
-inline ScalarSignalInfo& SignalInfo::as_scalar()
+inline ScalarSignalImpl& SignalImpl::as_scalar()
 {
     pooya_verify(_type & ScalarType, "Illegal attempt to dereference a non-scalar as a scalar.");
-    return *static_cast<ScalarSignalInfo*>(this);
+    return *static_cast<ScalarSignalImpl*>(this);
 }
 
-inline const ScalarSignalInfo& SignalInfo::as_scalar() const
+inline const ScalarSignalImpl& SignalImpl::as_scalar() const
 {
     pooya_verify(_type & ScalarType, "Illegal attempt to dereference a non-scalar as a scalar.");
-    return *static_cast<const ScalarSignalInfo*>(this);
+    return *static_cast<const ScalarSignalImpl*>(this);
 }
 
 class ScalarSignal : public FloatSignal<ScalarSignal, double>
@@ -76,14 +76,14 @@ class ScalarSignal : public FloatSignal<ScalarSignal, double>
     using Base = FloatSignal<ScalarSignal, double>;
 
 public:
-    explicit ScalarSignal(const ValidName& name="") : Base(ScalarSignalInfo::create_new(name)) {}
-    ScalarSignal(const ScalarSignalId& sid) : Base(sid) {}
+    explicit ScalarSignal(const ValidName& name="") : Base(ScalarSignalImpl::create_new(name)) {}
+    ScalarSignal(const ScalarSignalImplPtr& sid) : Base(sid) {}
 
     ScalarSignal& operator=(const ScalarSignal&) = delete;
 
     void reset(const ValidName& name="")
     {
-        _sid = ScalarSignalInfo::create_new(name);
+        _sid = ScalarSignalImpl::create_new(name);
     }
 
     using ValueSignal<ScalarSignal, double>::operator=;

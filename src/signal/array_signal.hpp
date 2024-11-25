@@ -32,22 +32,22 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class ArraySignalInfo : public FloatSignalInfo
+class ArraySignalImpl : public FloatSignalImpl
 {
 protected:
     Array _array_value;
 
 public:
-    ArraySignalInfo(Protected, const ValidName& name, std::size_t size)
-        : FloatSignalInfo(name, ArrayType, size), _array_value(size) {}
+    ArraySignalImpl(Protected, const ValidName& name, std::size_t size)
+        : FloatSignalImpl(name, ArrayType, size), _array_value(size) {}
 
-    static ArraySignalId create_new(std::size_t size)
+    static ArraySignalImplPtr create_new(std::size_t size)
     {
-        return std::make_shared<ArraySignalInfo>(Protected(), "", size);
+        return std::make_shared<ArraySignalImpl>(Protected(), "", size);
     } 
-    static ArraySignalId create_new(const ValidName& name, std::size_t size)
+    static ArraySignalImplPtr create_new(const ValidName& name, std::size_t size)
     {
-        return std::make_shared<ArraySignalInfo>(Protected(), name, size);
+        return std::make_shared<ArraySignalImpl>(Protected(), name, size);
     } 
 
     const Array& get() const
@@ -70,16 +70,16 @@ public:
     }
 };
 
-inline ArraySignalInfo& SignalInfo::as_array()
+inline ArraySignalImpl& SignalImpl::as_array()
 {
     pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
-    return *static_cast<ArraySignalInfo*>(this);
+    return *static_cast<ArraySignalImpl*>(this);
 }
 
-inline const ArraySignalInfo& SignalInfo::as_array() const
+inline const ArraySignalImpl& SignalImpl::as_array() const
 {
     pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
-    return *static_cast<const ArraySignalInfo*>(this);
+    return *static_cast<const ArraySignalImpl*>(this);
 }
 
 class ArraySignal : public FloatSignal<ArraySignal, Array>
@@ -87,19 +87,19 @@ class ArraySignal : public FloatSignal<ArraySignal, Array>
     using Base = FloatSignal<ArraySignal, Array>;
 
 public:
-    explicit ArraySignal(std::size_t size=1) : Base(ArraySignalInfo::create_new(size)) {}
-    ArraySignal(const ValidName& name, std::size_t size=1) : Base(ArraySignalInfo::create_new(name, size)) {}
-    ArraySignal(const ArraySignalId& sid) : Base(sid) {}
+    explicit ArraySignal(std::size_t size=1) : Base(ArraySignalImpl::create_new(size)) {}
+    ArraySignal(const ValidName& name, std::size_t size=1) : Base(ArraySignalImpl::create_new(name, size)) {}
+    ArraySignal(const ArraySignalImplPtr& sid) : Base(sid) {}
 
     ArraySignal& operator=(const ArraySignal&) = delete;
 
     void reset(std::size_t size)
     {
-        _sid = ArraySignalInfo::create_new(size);
+        _sid = ArraySignalImpl::create_new(size);
     }
     void reset(const ValidName& name, std::size_t size)
     {
-        _sid = ArraySignalInfo::create_new(name, size);
+        _sid = ArraySignalImpl::create_new(name, size);
     }
 
     using ValueSignal<ArraySignal, Array>::operator=;

@@ -28,21 +28,21 @@ namespace pooya
 
 class Block;
 
-class History : public std::unordered_map<SignalId, Eigen::MatrixXd>
+class History : public std::unordered_map<SignalImplPtr, Eigen::MatrixXd>
 {
 protected:
     const Block& _model;
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
     Array _time;
-    std::vector<ValueSignalId> _signals;
+    std::vector<ValueSignalImplPtr> _signals;
 
 public:
     History(const Block& model, uint nrows_grow = 1000) :
         _model(model), _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
-    void track(SignalId sig);
-    void untrack(SignalId sig);
+    void track(SignalImplPtr sig);
+    void untrack(SignalImplPtr sig);
     void update(uint k, double t);
     void export_csv(const std::string& filename);
     void shrink_to_fit();

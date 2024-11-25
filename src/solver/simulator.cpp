@@ -157,9 +157,9 @@ void Simulator::init(double t0)
 
     std::size_t state_variables_size{0};
 
-    std::unordered_set<ValueSignalId> value_signals;
-    std::unordered_set<ScalarSignalId> scalar_state_signals;
-    std::unordered_set<ArraySignalId> array_state_signals;
+    std::unordered_set<ValueSignalImplPtr> value_signals;
+    std::unordered_set<ScalarSignalImplPtr> scalar_state_signals;
+    std::unordered_set<ArraySignalImplPtr> array_state_signals;
 
     _model.traverse(
         [&](Block& block, uint32_t /*level*/) -> bool
@@ -172,14 +172,14 @@ void Simulator::init(double t0)
                 if (!sig.first->is_float() || !sig.first->as_float().is_state_variable()) {continue;}
                 if (sig.first->is_scalar())
                 {
-                    if (scalar_state_signals.insert(std::static_pointer_cast<ScalarSignalInfo>(sig.first->shared_from_this())).second)
+                    if (scalar_state_signals.insert(std::static_pointer_cast<ScalarSignalImpl>(sig.first->shared_from_this())).second)
                     {
                         state_variables_size++;
                     }
                 }
                 else if (sig.first->is_array())
                 {
-                    if (array_state_signals.insert(std::static_pointer_cast<ArraySignalInfo>(sig.first->shared_from_this())).second)
+                    if (array_state_signals.insert(std::static_pointer_cast<ArraySignalImpl>(sig.first->shared_from_this())).second)
                     {
                         state_variables_size += sig.first->as_array().size();
                     }

@@ -22,15 +22,15 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-void History::track(SignalId sig)
+void History::track(SignalImplPtr sig)
 {
     pooya_verify(empty(), "track should be called before the history is updated!");
     pooya_verify_value_signal(sig);
     if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
-        {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalInfo>(sig->shared_from_this())));}
+        {_signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this())));}
 }
 
-void History::untrack(SignalId sig)
+void History::untrack(SignalImplPtr sig)
 {
     pooya_verify(empty(), "untrack should be called before the history is updated!");
     pooya_verify_value_signal(sig);

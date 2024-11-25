@@ -41,7 +41,7 @@ protected:
     void traverse_bus(const std::string& path_name, const BusSpec &bus_spec);
 
     virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo &wi,
-        SignalId sig_in, SignalId sig_out) = 0;
+        SignalImplPtr sig_in, SignalImplPtr sig_out) = 0;
 
 public:
     explicit BusBlockBuilder(const std::initializer_list<std::string>& excluded_labels={})

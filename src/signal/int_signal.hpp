@@ -31,18 +31,18 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-class IntSignalInfo : public ValueSignalInfo
+class IntSignalImpl : public ValueSignalImpl
 {
 protected:
     int _int_value;
 
 public:
-    IntSignalInfo(Protected, const ValidName& name="")
-        : ValueSignalInfo(name, IntType) {}
+    IntSignalImpl(Protected, const ValidName& name="")
+        : ValueSignalImpl(name, IntType) {}
 
-    static IntSignalId create_new(const ValidName& name="")
+    static IntSignalImplPtr create_new(const ValidName& name="")
     {
-        return std::make_shared<IntSignalInfo>(Protected(), name);
+        return std::make_shared<IntSignalImpl>(Protected(), name);
     } 
 
     int get() const
@@ -63,16 +63,16 @@ public:
     operator int() const {return get();}
 };
 
-inline IntSignalInfo& SignalInfo::as_int()
+inline IntSignalImpl& SignalImpl::as_int()
 {
     pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
-    return *static_cast<IntSignalInfo*>(this);
+    return *static_cast<IntSignalImpl*>(this);
 }
 
-inline const IntSignalInfo& SignalInfo::as_int() const
+inline const IntSignalImpl& SignalImpl::as_int() const
 {
     pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
-    return *static_cast<const IntSignalInfo*>(this);
+    return *static_cast<const IntSignalImpl*>(this);
 }
 
 class IntSignal : public ValueSignal<IntSignal, int>
@@ -80,14 +80,14 @@ class IntSignal : public ValueSignal<IntSignal, int>
     using Base = ValueSignal<IntSignal, int>;
 
 public:
-    explicit IntSignal(const ValidName& name="") : Base(IntSignalInfo::create_new(name)) {}
-    IntSignal(const IntSignalId& sid) : Base(sid) {}
+    explicit IntSignal(const ValidName& name="") : Base(IntSignalImpl::create_new(name)) {}
+    IntSignal(const IntSignalImplPtr& sid) : Base(sid) {}
 
     IntSignal& operator=(const IntSignal&) = delete;
 
     void reset(const ValidName& name="")
     {
-        _sid = IntSignalInfo::create_new(name);
+        _sid = IntSignalImpl::create_new(name);
     }
 
     using ValueSignal<IntSignal, int>::operator=;

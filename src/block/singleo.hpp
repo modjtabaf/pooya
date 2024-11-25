@@ -24,7 +24,7 @@ template<typename T, class Base=Block>
 class SingleOutputT : public Base
 {
 protected:
-    typename Types<T>::SignalId _s_out{nullptr};
+    typename Types<T>::SignalImplPtr _s_out{nullptr};
 
     explicit SingleOutputT(uint16_t num_iports=Block::NoIOLimit) : Base(num_iports, 1) {}
     SingleOutputT(const ValidName& name, uint16_t num_iports=Block::NoIOLimit) :

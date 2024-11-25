@@ -26,32 +26,32 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 namespace pooya
 {
 
-void Types<Array>::verify_signal_type(pooya::SignalId sig)
+void Types<Array>::verify_signal_type(pooya::SignalImplPtr sig)
 {
     pooya_verify_array_signal(sig);
 }
 
-void Types<Array>::verify_signal_type(pooya::SignalId sig, std::size_t size)
+void Types<Array>::verify_signal_type(pooya::SignalImplPtr sig, std::size_t size)
 {
     pooya_verify_array_signal_size(sig, size);
 }
 
-void Types<double>::verify_signal_type(pooya::SignalId sig)
+void Types<double>::verify_signal_type(pooya::SignalImplPtr sig)
 {
     pooya_verify_scalar_signal(sig);
 }
 
-void Types<int>::verify_signal_type(pooya::SignalId sig)
+void Types<int>::verify_signal_type(pooya::SignalImplPtr sig)
 {
     pooya_verify_int_signal(sig);
 }
 
-void Types<bool>::verify_signal_type(pooya::SignalId sig)
+void Types<bool>::verify_signal_type(pooya::SignalImplPtr sig)
 {
     pooya_verify_bool_signal(sig);
 }
 
-void Types<BusSpec>::verify_signal_type(pooya::SignalId sig, const BusSpec& spec)
+void Types<BusSpec>::verify_signal_type(pooya::SignalImplPtr sig, const BusSpec& spec)
 {
     pooya_verify_bus_spec(sig, spec);
 }

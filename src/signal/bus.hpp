@@ -269,33 +269,23 @@ class Bus : public Signal<Bus, BusSpec>
     using Base = Signal<Bus, BusSpec>;
 
 public:
+    Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
+    Bus(const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(name, spec, l)) {}
     template<typename Iter>
     Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(spec, begin_, end_)) {}
     template<typename Iter>
     Bus(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(name, spec, begin_, end_)) {}
-    Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(spec, l)) {}
-    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l={}) : Base(BusInfo::create_new(name, spec, l)) {}
-    Bus(const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(spec, l)) {}
-    Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l) : Base(BusInfo::create_new(name, spec, l)) {}
     Bus(const BusId& sid) : Base(sid) {}
 
     Bus& operator=(const Bus&) = delete;
 
-    template<typename Iter>
-    void reset(const BusSpec& spec, Iter begin_, Iter end_)
-    {
-        _sid = BusInfo::create_new(spec, begin_, end_);
-    }
-    template<typename Iter>
-    void reset(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
-    {
-        _sid = BusInfo::create_new(name, spec, begin_, end_);
-    }
-    void reset(const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    void reset(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={})
     {
         _sid = BusInfo::create_new(spec, l);
     }
-    void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<LabelSignalId>& l)
+    void reset(const ValidName& name, const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalId>& l={})
     {
         _sid = BusInfo::create_new(name, spec, l);
     }
@@ -306,6 +296,16 @@ public:
     void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalId>& l)
     {
         _sid = BusInfo::create_new(name, spec, l);
+    }
+    template<typename Iter>
+    void reset(const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        _sid = BusInfo::create_new(spec, begin_, end_);
+    }
+    template<typename Iter>
+    void reset(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
+    {
+        _sid = BusInfo::create_new(name, spec, begin_, end_);
     }
 
     const BusSpec& spec() const {return _sid->spec();}

@@ -56,13 +56,13 @@ inline const ValueSignalImpl& SignalImpl::as_value() const
     return *static_cast<const ValueSignalImpl*>(this);
 }
 
-template<typename Derived, typename T>
-class ValueSignal : public Signal<Derived, T>
+template<typename T>
+class ValueSignal : public Signal<T>
 {
-    using Base = Signal<Derived, T>;
+    using Base = Signal<T>;
 
 public:
-    explicit ValueSignal(const typename Types<T>::SignalImplPtr& sid) : Signal<Derived, T>(sid) {}
+    explicit ValueSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
 
     operator typename Types<T>::GetValue() const {return Base::_sid->get();}
     typename Types<T>::GetValue operator*() const {return Base::_sid->get();}
@@ -75,7 +75,7 @@ public:
 
     ValueSignal& operator=(const ValueSignal&) = delete;
 
-    operator ValueSignalImplPtr() const {return std::static_pointer_cast<ValueSignalImpl>(static_cast<const Derived*>(this)->id()->shared_from_this());}
+    operator ValueSignalImplPtr() const {return std::static_pointer_cast<ValueSignalImpl>(static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());}
 };
 
 }

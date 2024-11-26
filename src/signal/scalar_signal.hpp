@@ -71,9 +71,9 @@ inline const ScalarSignalImpl& SignalImpl::as_scalar() const
     return *static_cast<const ScalarSignalImpl*>(this);
 }
 
-class ScalarSignal : public FloatSignal<ScalarSignal, double>
+class ScalarSignal : public FloatSignal<double>
 {
-    using Base = FloatSignal<ScalarSignal, double>;
+    using Base = FloatSignal<double>;
 
 public:
     explicit ScalarSignal(const ValidName& name="") : Base(ScalarSignalImpl::create_new(name)) {}
@@ -86,8 +86,8 @@ public:
         _sid = ScalarSignalImpl::create_new(name);
     }
 
-    using ValueSignal<ScalarSignal, double>::operator=;
-    using Signal<ScalarSignal, double>::reset;
+    using ValueSignal<double>::operator=;
+    using Signal<double>::reset;
 };
 
 }

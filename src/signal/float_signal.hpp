@@ -65,17 +65,19 @@ inline const FloatSignalImpl& SignalImpl::as_float() const
     return *static_cast<const FloatSignalImpl*>(this);
 }
 
-template<typename Derived, typename T>
-class FloatSignal : public ValueSignal<Derived, T>
+template<typename T>
+class FloatSignal : public ValueSignal<T>
 {
+    using Base = ValueSignal<T>;
+
 public:
-    explicit FloatSignal(const typename Types<T>::SignalImplPtr& sid) : ValueSignal<Derived, T>(sid) {}
+    explicit FloatSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
 
     FloatSignal& operator=(const FloatSignal&) = delete;
 
-    void set_deriv_signal(FloatSignalImplPtr deriv_sig) {static_cast<Derived*>(this)->id()->set_deriv_signal(deriv_sig);}
+    void set_deriv_signal(FloatSignalImplPtr deriv_sig) {static_cast<typename Types<T>::SignalWrapper*>(this)->id()->set_deriv_signal(deriv_sig);}
 
-    operator FloatSignalImplPtr() const {return std::static_pointer_cast<FloatSignalImpl>(static_cast<const Derived*>(this)->id()->shared_from_this());}
+    operator FloatSignalImplPtr() const {return std::static_pointer_cast<FloatSignalImpl>(static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());}
 };
 
 }

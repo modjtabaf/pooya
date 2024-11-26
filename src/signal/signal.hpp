@@ -73,7 +73,7 @@ public:
     const BusInfo&             as_bus() const;
 };
 
-template<typename Derived, typename T>
+template<typename T>
 class Signal
 {
 protected:
@@ -91,7 +91,7 @@ public:
         reset(sid);
     }
 
-    Signal<Derived, T>& operator=(const Signal<Derived, T>&) = delete;
+    Signal<T>& operator=(const Signal<T>&) = delete;
 
     void reset(const typename Types<T>::SignalImplPtr& sid)
     {

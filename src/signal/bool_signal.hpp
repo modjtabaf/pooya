@@ -73,9 +73,9 @@ inline const BoolSignalImpl& SignalImpl::as_bool() const
     return *static_cast<const BoolSignalImpl*>(this);
 }
 
-class BoolSignal : public ValueSignal<BoolSignal, bool>
+class BoolSignal : public ValueSignal<bool>
 {
-    using Base = ValueSignal<BoolSignal, bool>;
+    using Base = ValueSignal<bool>;
 
 public:
     explicit BoolSignal(const ValidName& name="") : Base(BoolSignalImpl::create_new(name)) {}
@@ -88,8 +88,8 @@ public:
         _sid = BoolSignalImpl::create_new(name);
     }
 
-    using ValueSignal<BoolSignal, bool>::operator=;
-    using Signal<BoolSignal, bool>::reset;
+    using ValueSignal<bool>::operator=;
+    using Signal<bool>::reset;
 };
 
 }

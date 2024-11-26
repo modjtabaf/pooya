@@ -22,21 +22,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_CONST_HPP__
 #define __POOYA_BLOCK_CONST_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleo.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class ConstT : public SingleOutputT<T>
 {
 protected:
     T _value;
 
 public:
-    explicit ConstT(const T &value) : SingleOutputT<T>(0, 1), _value(value) {}
-    ConstT(const ValidName& name, const T &value) : SingleOutputT<T>(name, 0, 1), _value(value) {}
+    explicit ConstT(const T& value) : SingleOutputT<T>(0, 1), _value(value) {}
+    ConstT(const ValidName& name, const T& value) : SingleOutputT<T>(name, 0, 1), _value(value) {}
 
     void activation_function(double /*t*/) override
     {
@@ -45,7 +45,7 @@ public:
     }
 };
 
-using Const = ConstT<double>;
+using Const  = ConstT<double>;
 using ConstA = ConstT<Array>;
 
 } // namespace pooya

@@ -19,12 +19,13 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "src/signal/scalar_signal.hpp"
 #include "sin.hpp"
+#include "src/signal/scalar_signal.hpp"
 
-namespace pooya {
+namespace pooya
+{
 
-template <>
+template<>
 void SinT<double>::activation_function(double /*t*/)
 {
     pooya_trace("block: " + full_name().str());

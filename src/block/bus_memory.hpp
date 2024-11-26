@@ -24,8 +24,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <map>
 
-#include "src/signal/array.hpp"
 #include "bus_block_builder.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
@@ -41,7 +41,7 @@ public:
     Value(double v) : _scalar(v) {}
     Value(const Array& v) : _is_scalar(false), _array(v) {}
 
-    bool is_scalar() const {return _is_scalar;}
+    bool is_scalar() const { return _is_scalar; }
 
     double as_scalar() const
     {
@@ -62,19 +62,26 @@ class BusMemory : public BusBlockBuilder
 {
 public:
     using LabelValueMap = std::map<std::string, Value>;
-    using LabelValue = LabelValueMap::value_type;
+    using LabelValue    = LabelValueMap::value_type;
 
 protected:
     LabelValueMap _init_values;
 
 public:
-    BusMemory(const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
-        : BusBlockBuilder(excluded_labels), _init_values(l) {}
-    BusMemory(const ValidName& name, const std::initializer_list<LabelValue> &l = {}, const std::initializer_list<std::string>& excluded_labels={})
-        : BusBlockBuilder(name, excluded_labels), _init_values(l) {}
+    BusMemory(const std::initializer_list<LabelValue>& l                = {},
+              const std::initializer_list<std::string>& excluded_labels = {})
+        : BusBlockBuilder(excluded_labels), _init_values(l)
+    {
+    }
+    BusMemory(const ValidName& name, const std::initializer_list<LabelValue>& l = {},
+              const std::initializer_list<std::string>& excluded_labels = {})
+        : BusBlockBuilder(name, excluded_labels), _init_values(l)
+    {
+    }
 
 protected:
-    void block_builder(const std::string& full_label, const BusSpec::WireInfo &wi, SignalImplPtr sig_in, SignalImplPtr sig_out) override;
+    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, SignalImplPtr sig_in,
+                       SignalImplPtr sig_out) override;
     void post_init() override;
 };
 

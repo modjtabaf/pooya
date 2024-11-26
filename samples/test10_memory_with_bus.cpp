@@ -20,22 +20,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <chrono>
-#include <math.h>
 #include <iostream>
+#include <math.h>
 
-#include "src/helper/trace.hpp"
 #include "src/block/bus_memory.hpp"
 #include "src/block/submodel.hpp"
-#include "src/solver/simulator.hpp"
-#include "src/solver/history.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
+#include "src/solver/history.hpp"
+#include "src/solver/simulator.hpp"
 
 int main()
 {
     pooya_trace0;
 
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
     pooya::Submodel model("test10");
@@ -89,14 +89,14 @@ int main()
     pooya::ScalarSignal y_x2 = y.scalar_at("x2");
     pooya::ScalarSignal y_z3 = y.scalar_at("Z.z3");
 
-    pooya::Simulator sim(
-        model, [&](pooya::Block&, double t) -> void
-        {
-            pooya_trace0;
-            x_x0 = std::sin(M_PI * t / 3);
-            x_x2 = std::sin(M_PI * t / 7);
-            x_z3 = std::sin(M_PI * t / 9);
-        });
+    pooya::Simulator sim(model,
+                         [&](pooya::Block&, double t) -> void
+                         {
+                             pooya_trace0;
+                             x_x0 = std::sin(M_PI * t / 3);
+                             x_x2 = std::sin(M_PI * t / 7);
+                             x_z3 = std::sin(M_PI * t / 9);
+                         });
 
     pooya::History history(model);
     history.track(x_x0);
@@ -118,25 +118,18 @@ int main()
     }
 
     auto finish = std::chrono::high_resolution_clock::now();
-    std::cout << "It took "
-              << std::chrono::duration_cast<milli>(finish - start).count()
-              << " milliseconds\n";
+    std::cout << "It took " << std::chrono::duration_cast<milli>(finish - start).count() << " milliseconds\n";
 
     history.shrink_to_fit();
 
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
-    gp << "plot"
-        << gp.file1d(history[x_x0]) << "with lines title 'x0',"
-        << gp.file1d(history[y_x0]) << "with lines title 'y0',"
-        << gp.file1d(history[x_x1]) << "with lines title 'x1',"
-        << gp.file1d(history[y_x1]) << "with lines title 'y1',"
-        << gp.file1d(history[x_x2]) << "with lines title 'x2',"
-        << gp.file1d(history[y_x2]) << "with lines title 'y2',"
-        << gp.file1d(history[x_z3]) << "with lines title 'x3',"
-        << gp.file1d(history[y_z3]) << "with lines title 'y3',"
-        << "\n";
+    gp << "plot" << gp.file1d(history[x_x0]) << "with lines title 'x0'," << gp.file1d(history[y_x0])
+       << "with lines title 'y0'," << gp.file1d(history[x_x1]) << "with lines title 'x1'," << gp.file1d(history[y_x1])
+       << "with lines title 'y1'," << gp.file1d(history[x_x2]) << "with lines title 'x2'," << gp.file1d(history[y_x2])
+       << "with lines title 'y2'," << gp.file1d(history[x_z3]) << "with lines title 'x3'," << gp.file1d(history[y_z3])
+       << "with lines title 'y3'," << "\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

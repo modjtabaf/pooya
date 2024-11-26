@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_GAIN_HPP__
 #define __POOYA_BLOCK_GAIN_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T, typename GainType>
+template<typename T, typename GainType>
 class GainT : public SingleInputOutputT<T>
 {
 protected:
@@ -44,10 +44,10 @@ public:
         SingleInputOutputT<T>::_s_out->set(_k * SingleInputOutputT<T>::_s_in->get());
     }
 
-    typename Types<GainType>::GetValue gain() const {return _k;}
+    typename Types<GainType>::GetValue gain() const { return _k; }
 };
 
-using Gain = GainT<double, double>;
+using Gain  = GainT<double, double>;
 using GainI = GainT<int, int>;
 using GainA = GainT<Array, double>;
 

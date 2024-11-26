@@ -22,12 +22,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_BUS_BLOCK_BUILDER_HPP__
 #define __POOYA_BLOCK_BUS_BLOCK_BUILDER_HPP__
 
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include "singleio.hpp"
 #include "src/signal/array.hpp"
 #include "src/signal/bus.hpp"
-#include "singleio.hpp"
 
 namespace pooya
 {
@@ -38,16 +38,20 @@ protected:
     std::vector<std::shared_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
 
-    void traverse_bus(const std::string& path_name, const BusSpec &bus_spec);
+    void traverse_bus(const std::string& path_name, const BusSpec& bus_spec);
 
-    virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo &wi,
-        SignalImplPtr sig_in, SignalImplPtr sig_out) = 0;
+    virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo& wi, SignalImplPtr sig_in,
+                               SignalImplPtr sig_out) = 0;
 
 public:
-    explicit BusBlockBuilder(const std::initializer_list<std::string>& excluded_labels={})
-        : SingleInputOutputT<BusSpec>(1), _excluded_labels(excluded_labels) {}
-    BusBlockBuilder(const ValidName& name, const std::initializer_list<std::string>& excluded_labels={})
-        : SingleInputOutputT<BusSpec>(name, 1), _excluded_labels(excluded_labels) {}
+    explicit BusBlockBuilder(const std::initializer_list<std::string>& excluded_labels = {})
+        : SingleInputOutputT<BusSpec>(1), _excluded_labels(excluded_labels)
+    {
+    }
+    BusBlockBuilder(const ValidName& name, const std::initializer_list<std::string>& excluded_labels = {})
+        : SingleInputOutputT<BusSpec>(name, 1), _excluded_labels(excluded_labels)
+    {
+    }
 
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override;
     void post_init() override;

@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_ADDSUB_HPP__
 #define __POOYA_BLOCK_ADDSUB_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleo.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class AddSubT : public SingleOutputT<T>
 {
 protected:
@@ -39,10 +39,12 @@ protected:
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        {
+            return false;
+        }
 
-        pooya_verify(ibus.size() >= 1,
-                     SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
+        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
         pooya_verify(_operators.size() == ibus.size(),
                      SingleOutputT<T>::full_name().str() + ": mismatch between input signals and operators.");
 
@@ -50,29 +52,42 @@ protected:
     }
 
 public:
-    AddSubT(const std::string& operators, const T &initial = 0.0)
-            : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
-    AddSubT(const ValidName& name, const std::string& operators, const T &initial = 0.0)
-            : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial) {}
+    AddSubT(const std::string& operators, const T& initial = 0.0)
+        : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    {
+    }
+    AddSubT(const ValidName& name, const std::string& operators, const T& initial = 0.0)
+        : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    {
+    }
 
     void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        _ret = _initial;
-        const char *p = _operators.c_str();
-        for (const auto& ls: SingleOutputT<T>::_ibus)
+        _ret          = _initial;
+        const char* p = _operators.c_str();
+        for (const auto& ls : SingleOutputT<T>::_ibus)
         {
-            const auto &v = Types<T>::as_signal_info(ls.second);
-            if (*p == '+') {_ret += v;}
-            else if (*p == '-') {_ret -= v;}
-            else {assert(false);}
+            const auto& v = Types<T>::as_signal_info(ls.second);
+            if (*p == '+')
+            {
+                _ret += v;
+            }
+            else if (*p == '-')
+            {
+                _ret -= v;
+            }
+            else
+            {
+                assert(false);
+            }
             p++;
         }
         SingleOutputT<T>::_s_out->set(_ret);
     }
 };
 
-using AddSub = AddSubT<double>;
+using AddSub  = AddSubT<double>;
 using AddSubA = AddSubT<Array>;
 
 } // namespace pooya

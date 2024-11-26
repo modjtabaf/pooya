@@ -1,15 +1,18 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstddef>
@@ -34,7 +37,7 @@ public:
 TEST_F(TestMemory, ScalarMemory)
 {
     // test parameters
-    const double x = 3.7;
+    const double x  = 3.7;
     const double x0 = -4.8;
 
     // model setup
@@ -45,11 +48,7 @@ TEST_F(TestMemory, ScalarMemory)
     model.add_block(memory, s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model,
-        [&](pooya::Block&, double /*t*/) -> void
-        {
-            s_x = x;
-        });
+    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -73,17 +72,13 @@ TEST_F(TestMemory, ArrayMemory)
     model.add_block(memory, s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model,
-        [&](pooya::Block&, double /*t*/) -> void
-        {
-            s_x = x;
-        });
+    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    for (std::size_t k=0; k < N; k++)
+    for (std::size_t k = 0; k < N; k++)
     {
         EXPECT_EQ(s_y[k], x0[k]);
     }

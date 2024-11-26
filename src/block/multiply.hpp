@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_MULTIPLY_HPP__
 #define __POOYA_BLOCK_MULTIPLY_HPP__
 
-#include "src/signal/array.hpp"
 #include "muldiv.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class MultiplyT : public MulDivT<T>
 {
 protected:
@@ -40,13 +40,11 @@ protected:
     }
 
 public:
-    explicit MultiplyT(const T &initial = 1.0)
-        : MulDivT<T>(initial) {}
-    MultiplyT(const ValidName& name, const T &initial = 1.0)
-        : MulDivT<T>(name, "", initial) {}
+    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
+    MultiplyT(const ValidName& name, const T& initial = 1.0) : MulDivT<T>(name, "", initial) {}
 };
 
-using Multiply = MultiplyT<double>;
+using Multiply  = MultiplyT<double>;
 using MultiplyA = MultiplyT<Array>;
 
 } // namespace pooya

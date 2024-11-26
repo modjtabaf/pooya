@@ -28,27 +28,27 @@ int main()
     constexpr double m{0.25}, c{0.3}, k{0.7};
 
     // create pooya blocks
-    pooya::Submodel   model("model");
-    pooya::Source     src_F("F(t)",
+    pooya::Submodel   model;
+    pooya::Source     src_F(
         [](double t) -> double
         {
             return t < 1 ? 0 : 1;
         });
-    pooya::Gain       gain_1_m("1_m", 1 / m);
-    pooya::AddSub     addsub_rhs("rhs", "+--");
-    pooya::Integrator int_xdd("xdd");
-    pooya::Integrator int_xd("xd");
-    pooya::Gain       gain_c_m("c_m", c / m);
-    pooya::Gain       gain_k_m("k_m", k / m);
+    pooya::Gain       gain_1_m(1 / m);
+    pooya::AddSub     addsub_rhs("+--");
+    pooya::Integrator int_xdd;
+    pooya::Integrator int_xd;
+    pooya::Gain       gain_c_m(c / m);
+    pooya::Gain       gain_k_m(k / m);
 
     // create pooya signals
-    pooya::ScalarSignal s_F("F");
-    pooya::ScalarSignal s_F_m("F_m");
-    pooya::ScalarSignal s_xdd("xdd");
-    pooya::ScalarSignal s_xd("xd");
-    pooya::ScalarSignal s_x("x");
-    pooya::ScalarSignal s_kx_m("kx_m");
-    pooya::ScalarSignal s_cxd_m("cxd_m");
+    pooya::ScalarSignal s_F;
+    pooya::ScalarSignal s_F_m;
+    pooya::ScalarSignal s_xdd;
+    pooya::ScalarSignal s_xd;
+    pooya::ScalarSignal s_x;
+    pooya::ScalarSignal s_kx_m;
+    pooya::ScalarSignal s_cxd_m;
 
     // set up the model
     model.add_block(src_F, {}, s_F);

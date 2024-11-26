@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SISO_FUNCTION_HPP__
 #define __POOYA_BLOCK_SISO_FUNCTION_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class SISOFunctionT : public SingleInputOutputT<T>
 {
 public:
@@ -38,10 +38,8 @@ protected:
     ActFunction _act_func;
 
 public:
-    explicit SISOFunctionT(ActFunction act_func)
-        : SingleInputOutputT<T>(1), _act_func(act_func) {}
-    SISOFunctionT(const ValidName& name, ActFunction act_func)
-        : SingleInputOutputT<T>(name, 1), _act_func(act_func) {}
+    explicit SISOFunctionT(ActFunction act_func) : SingleInputOutputT<T>(1), _act_func(act_func) {}
+    SISOFunctionT(const ValidName& name, ActFunction act_func) : SingleInputOutputT<T>(name, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {
@@ -50,7 +48,7 @@ public:
     }
 };
 
-using SISOFunction = SISOFunctionT<double>;
+using SISOFunction  = SISOFunctionT<double>;
 using SISOFunctionA = SISOFunctionT<Array>;
 
 } // namespace pooya

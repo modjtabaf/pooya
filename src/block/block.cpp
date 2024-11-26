@@ -1,24 +1,27 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
 #include <memory>
 
 #include "block.hpp"
-#include "submodel.hpp"
-#include "src/signal/value_signal.hpp"
 #include "src/helper/util.hpp"
+#include "src/signal/value_signal.hpp"
+#include "submodel.hpp"
 
 namespace pooya
 {
@@ -40,30 +43,32 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
     }
 
     pooya_verify((_num_iports == NoIOLimit) || (ibus.size() == _num_iports),
-        _num_iports == 0 ?
-            full_name().str() + " cannot take any input." :
-            full_name().str() + " requires " + std::to_string(_num_iports) + std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
+                 _num_iports == 0 ? full_name().str() + " cannot take any input."
+                                  : full_name().str() + " requires " + std::to_string(_num_iports) +
+                                        std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
     pooya_verify((_num_oports == NoIOLimit) || (obus.size() == _num_oports),
-        _num_oports == 0 ?
-            full_name().str() + " cannot generate any output." :
-            full_name().str() + " requires " + std::to_string(_num_oports) + std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
+                 _num_oports == 0 ? full_name().str() + " cannot generate any output."
+                                  : full_name().str() + " requires " + std::to_string(_num_oports) +
+                                        std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
     _linked_signals.reserve(ibus.size() + obus.size());
 
-    for (auto& sig: ibus)
+    for (auto& sig : ibus)
     {
         if (sig.second->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()), SignalLinkType::Input);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
+                        SignalLinkType::Input);
         }
     }
 
-    for (auto& sig: obus)
+    for (auto& sig : obus)
     {
         if (sig.second->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()), SignalLinkType::Output);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
+                        SignalLinkType::Output);
         }
     }
 
@@ -86,10 +91,7 @@ bool Block::link_signal(ValueSignalImplPtr signal, SignalLinkType type)
     pooya_trace("block: " + full_name().str());
     pooya_verify_valid_signal(signal);
     auto it = std::find_if(_linked_signals.begin(), _linked_signals.end(),
-        [&](const SignalLinkPair& sig_type) -> bool
-        {
-            return sig_type.first == signal;
-        });
+                           [&](const SignalLinkPair& sig_type) -> bool { return sig_type.first == signal; });
     if (it == _linked_signals.end())
     {
         _linked_signals.emplace_back(signal, type);
@@ -107,10 +109,16 @@ void Block::_mark_unprocessed()
 uint Block::_process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name().str());
-    if (_processed) {return 0;}
-    for (auto& sig: _linked_signals)
+    if (_processed)
     {
-        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned()) {return 0;}
+        return 0;
+    }
+    for (auto& sig : _linked_signals)
+    {
+        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned())
+        {
+            return 0;
+        }
     }
 
     activation_function(t);
@@ -119,4 +127,4 @@ uint Block::_process(double t, bool /*go_deep*/)
     return 1;
 }
 
-}
+} // namespace pooya

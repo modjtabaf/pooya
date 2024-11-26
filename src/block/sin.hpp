@@ -22,17 +22,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SIN_HPP__
 #define __POOYA_BLOCK_SIN_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    explicit SinT(const ValidName& name="") : SingleInputOutputT<T>(name, 1) {}
+    explicit SinT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
 
     void activation_function(double /*t*/) override
     {
@@ -44,7 +44,7 @@ public:
 template<>
 void SinT<double>::activation_function(double);
 
-using Sin = SinT<double>;
+using Sin  = SinT<double>;
 using SinA = SinT<Array>;
 
 } // namespace pooya

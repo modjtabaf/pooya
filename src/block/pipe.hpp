@@ -22,17 +22,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_GAIN_HPP__
 #define __POOYA_BLOCK_GAIN_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    explicit PipeT(const ValidName& name="") : SingleInputOutputT<T>(name, 1) {}
+    explicit PipeT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
 
     void activation_function(double /*t*/) override
     {
@@ -41,7 +41,7 @@ public:
     }
 };
 
-using Pipe = PipeT<double>;
+using Pipe  = PipeT<double>;
 using PipeI = PipeT<int>;
 using PipeB = PipeT<bool>;
 using PipeA = PipeT<Array>;

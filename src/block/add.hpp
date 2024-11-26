@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_ADD_HPP__
 #define __POOYA_BLOCK_ADD_HPP__
 
-#include "src/signal/array.hpp"
 #include "addsub.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class AddT : public AddSubT<T>
 {
 protected:
@@ -40,13 +40,11 @@ protected:
     }
 
 public:
-    explicit AddT(const T &initial = 0.0)
-        : AddSubT<T>("", initial) {}
-    AddT(const ValidName& name, const T &initial = 0.0)
-        : AddSubT<T>(name, "", initial) {}
+    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
+    AddT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "", initial) {}
 };
 
-using Add = AddT<double>;
+using Add  = AddT<double>;
 using AddA = AddT<Array>;
 
 } // namespace pooya

@@ -22,13 +22,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SO_FUNCTION_HPP__
 #define __POOYA_BLOCK_SO_FUNCTION_HPP__
 
-#include "src/signal/array.hpp"
 #include "singleo.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class SOFunctionT : public SingleOutputT<T>
 {
 public:
@@ -38,10 +38,14 @@ protected:
     ActFunction _act_func;
 
 public:
-    SOFunctionT(ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
-        : SingleOutputT<T>(num_iports), _act_func(act_func) {}
-    SOFunctionT(const ValidName& name, ActFunction act_func, uint16_t num_iports=Block::NoIOLimit)
-        : SingleOutputT<T>(name, num_iports), _act_func(act_func) {}
+    SOFunctionT(ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+        : SingleOutputT<T>(num_iports), _act_func(act_func)
+    {
+    }
+    SOFunctionT(const ValidName& name, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+        : SingleOutputT<T>(name, num_iports), _act_func(act_func)
+    {
+    }
 
     void activation_function(double t) override
     {
@@ -50,7 +54,7 @@ public:
     }
 };
 
-using SOFunction = SOFunctionT<double>;
+using SOFunction  = SOFunctionT<double>;
 using SOFunctionA = SOFunctionT<Array>;
 
 } // namespace pooya

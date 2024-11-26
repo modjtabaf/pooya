@@ -22,23 +22,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SUBTRACT_HPP__
 #define __POOYA_BLOCK_SUBTRACT_HPP__
 
-#include "src/signal/array.hpp"
 #include "addsub.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
-    explicit SubtractT(const T &initial = 0.0)
-            : AddSubT<T>("+-", initial) {}
-    SubtractT(const ValidName& name, const T &initial = 0.0)
-            : AddSubT<T>(name, "+-", initial) {}
+    explicit SubtractT(const T& initial = 0.0) : AddSubT<T>("+-", initial) {}
+    SubtractT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "+-", initial) {}
 };
 
-using Subtract = SubtractT<double>;
+using Subtract  = SubtractT<double>;
 using SubtractA = SubtractT<Array>;
 
 } // namespace pooya

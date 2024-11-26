@@ -22,14 +22,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_DELAY_HPP__
 #define __POOYA_BLOCK_DELAY_HPP__
 
+#include "singleio.hpp"
 #include "src/signal/array.hpp"
 #include "src/signal/scalar_signal.hpp"
-#include "singleio.hpp"
 
 namespace pooya
 {
 
-template <typename T>
+template<typename T>
 class DelayT : public SingleOutputT<T>
 {
 protected:
@@ -43,19 +43,20 @@ protected:
     typename Types<T>::SignalImplPtr _s_initial; // initial
 
 public:
-    explicit DelayT(double lifespan)
-        : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
-    DelayT(const ValidName& name, double lifespan)
-        : SingleOutputT<T>(name, 3, 1), _lifespan(lifespan) {}
+    explicit DelayT(double lifespan) : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
+    DelayT(const ValidName& name, double lifespan) : SingleOutputT<T>(name, 3, 1), _lifespan(lifespan) {}
 
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus)) {return false;}
+        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        {
+            return false;
+        }
 
         // input signals
-        _s_x = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
-        _s_delay = SingleOutputT<T>::scalar_input_at("delay");
+        _s_x       = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
+        _s_delay   = SingleOutputT<T>::scalar_input_at("delay");
         _s_initial = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
 
         return true;
@@ -67,10 +68,13 @@ public:
         if (!_t.empty())
         {
             double t1 = t - _lifespan;
-            int k = 0;
-            for (const auto &v : _t)
+            int k     = 0;
+            for (const auto& v : _t)
             {
-                if (v >= t1) {break;}
+                if (v >= t1)
+                {
+                    break;
+                }
                 k++;
             }
             _t.erase(_t.begin(), _t.begin() + k);
@@ -103,9 +107,12 @@ public:
         else
         {
             int k = 0;
-            for (const auto &v : _t)
+            for (const auto& v : _t)
             {
-                if (v >= t) {break;}
+                if (v >= t)
+                {
+                    break;
+                }
                 k++;
             }
 
@@ -114,7 +121,7 @@ public:
     }
 };
 
-using Delay = DelayT<double>;
+using Delay  = DelayT<double>;
 using DelayA = DelayT<Array>;
 
 } // namespace pooya

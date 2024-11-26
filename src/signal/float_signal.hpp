@@ -1,15 +1,18 @@
 /*
 Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__
@@ -22,8 +25,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 #include "value_signal.hpp"
 #include <memory>
 
-#define  pooya_verify_float_signal(sig) \
-    pooya_verify_valid_signal(sig); \
+#define pooya_verify_float_signal(sig)                                                                                 \
+    pooya_verify_valid_signal(sig);                                                                                    \
     pooya_verify((sig)->is_float(), (sig)->name().str() + ": float signal expected!");
 
 namespace pooya
@@ -35,12 +38,14 @@ protected:
     FloatSignalImplPtr _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     const std::size_t _size;
 
-    FloatSignalImpl(const ValidName& name, uint32_t type, std::size_t size=1) :
-        ValueSignalImpl(name, type | FloatType), _size(size) {}
+    FloatSignalImpl(const ValidName& name, uint32_t type, std::size_t size = 1)
+        : ValueSignalImpl(name, type | FloatType), _size(size)
+    {
+    }
 
 public:
-    bool is_state_variable() const {return static_cast<bool>(_deriv_sig);}
-    std::size_t size() const {return _size;}
+    bool is_state_variable() const { return static_cast<bool>(_deriv_sig); }
+    std::size_t size() const { return _size; }
     void set_deriv_signal(FloatSignalImplPtr deriv_sig)
     {
         pooya_verify_valid_signal(deriv_sig);
@@ -49,8 +54,8 @@ public:
 
         _deriv_sig = deriv_sig;
     }
-    FloatSignalImplPtr& deriv_signal() {return _deriv_sig;}
-    const FloatSignalImplPtr& deriv_signal() const {return _deriv_sig;}
+    FloatSignalImplPtr& deriv_signal() { return _deriv_sig; }
+    const FloatSignalImplPtr& deriv_signal() const { return _deriv_sig; }
 };
 
 inline FloatSignalImpl& SignalImpl::as_float()
@@ -75,11 +80,18 @@ public:
 
     FloatSignal& operator=(const FloatSignal&) = delete;
 
-    void set_deriv_signal(FloatSignalImplPtr deriv_sig) {static_cast<typename Types<T>::SignalWrapper*>(this)->id()->set_deriv_signal(deriv_sig);}
+    void set_deriv_signal(FloatSignalImplPtr deriv_sig)
+    {
+        static_cast<typename Types<T>::SignalWrapper*>(this)->id()->set_deriv_signal(deriv_sig);
+    }
 
-    operator FloatSignalImplPtr() const {return std::static_pointer_cast<FloatSignalImpl>(static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());}
+    operator FloatSignalImplPtr() const
+    {
+        return std::static_pointer_cast<FloatSignalImpl>(
+            static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());
+    }
 };
 
-}
+} // namespace pooya
 
 #endif // __POOYA_SIGNAL_FLOAT_SIGNAL_HPP__

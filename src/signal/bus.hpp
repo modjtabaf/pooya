@@ -264,9 +264,9 @@ inline const BusInfo& SignalImpl::as_bus() const
     return *static_cast<const BusInfo*>(this);
 }
 
-class Bus : public Signal<Bus, BusSpec>
+class Bus : public Signal<BusSpec>
 {
-    using Base = Signal<Bus, BusSpec>;
+    using Base = Signal<BusSpec>;
 
 public:
     Bus(const BusSpec& spec=BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l={}) : Base(BusInfo::create_new(spec, l)) {}
@@ -332,7 +332,7 @@ public:
     ArraySignalImplPtr array_at(std::size_t index) const;
     BusId bus_at(std::size_t index) const;
 
-    using Signal<Bus, BusSpec>::reset;
+    using Signal<BusSpec>::reset;
 };
 
 }

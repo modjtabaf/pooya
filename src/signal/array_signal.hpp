@@ -82,9 +82,9 @@ inline const ArraySignalImpl& SignalImpl::as_array() const
     return *static_cast<const ArraySignalImpl*>(this);
 }
 
-class ArraySignal : public FloatSignal<ArraySignal, Array>
+class ArraySignal : public FloatSignal<Array>
 {
-    using Base = FloatSignal<ArraySignal, Array>;
+    using Base = FloatSignal<Array>;
 
 public:
     explicit ArraySignal(std::size_t size=1) : Base(ArraySignalImpl::create_new(size)) {}
@@ -102,8 +102,8 @@ public:
         _sid = ArraySignalImpl::create_new(name, size);
     }
 
-    using ValueSignal<ArraySignal, Array>::operator=;
-    using Signal<ArraySignal, Array>::reset;
+    using ValueSignal<Array>::operator=;
+    using Signal<Array>::reset;
 
     double operator[](std::size_t index) const {return _sid->get()[index];}
 };

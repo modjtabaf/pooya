@@ -75,9 +75,9 @@ inline const IntSignalImpl& SignalImpl::as_int() const
     return *static_cast<const IntSignalImpl*>(this);
 }
 
-class IntSignal : public ValueSignal<IntSignal, int>
+class IntSignal : public ValueSignal<int>
 {
-    using Base = ValueSignal<IntSignal, int>;
+    using Base = ValueSignal<int>;
 
 public:
     explicit IntSignal(const ValidName& name="") : Base(IntSignalImpl::create_new(name)) {}
@@ -90,8 +90,8 @@ public:
         _sid = IntSignalImpl::create_new(name);
     }
 
-    using ValueSignal<IntSignal, int>::operator=;
-    using Signal<IntSignal, int>::reset;
+    using ValueSignal<int>::operator=;
+    using Signal<int>::reset;
 };
 
 }

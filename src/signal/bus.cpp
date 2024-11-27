@@ -50,7 +50,7 @@ BusSpec::WireInfo::WireInfo(const std::string& coded_label)
     }
 }
 
-void BusInfo::_set(std::size_t index, SignalImplPtr sig)
+void BusImpl::_set(std::size_t index, SignalImplPtr sig)
 {
     pooya_trace("index: " + std::to_string(index));
     pooya_verify(index < _signals.size(), "bus wire index out of range!");
@@ -82,7 +82,7 @@ void BusInfo::_set(std::size_t index, SignalImplPtr sig)
     ns.second = sig;
 }
 
-SignalImplPtr BusInfo::at(const std::string& label) const
+SignalImplPtr BusImpl::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos   = label.find(".");
@@ -98,7 +98,7 @@ SignalImplPtr BusInfo::at(const std::string& label) const
     return sig->as_bus().at(label.substr(pos + 1));
 }
 
-SignalImplPtr BusInfo::operator[](const std::string& label) const
+SignalImplPtr BusImpl::operator[](const std::string& label) const
 {
     pooya_trace("label: " + label);
     auto pos = label.find(".");
@@ -160,12 +160,12 @@ ArraySignalImplPtr Bus::array_at(const std::string& label) const
     return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
-BusId Bus::bus_at(const std::string& label) const
+Bus Bus::bus_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     SignalImplPtr sig = _sid->at(label);
     pooya_verify_bus(sig);
-    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<BusImpl>(sig->shared_from_this());
 }
 
 ValueSignalImplPtr Bus::value_at(std::size_t index) const
@@ -216,12 +216,12 @@ ArraySignalImplPtr Bus::array_at(std::size_t index) const
     return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
-BusId Bus::bus_at(std::size_t index) const
+Bus Bus::bus_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
     SignalImplPtr sig = _sid->at(index).second;
     pooya_verify_bus(sig);
-    return std::static_pointer_cast<BusInfo>(sig->shared_from_this());
+    return std::static_pointer_cast<BusImpl>(sig->shared_from_this());
 }
 
 } // namespace pooya

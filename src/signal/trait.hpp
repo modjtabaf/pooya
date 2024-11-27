@@ -173,15 +173,15 @@ struct Types<bool>
     }
 };
 
-class BusInfo;
-using BusId = std::shared_ptr<BusInfo>;
+class BusImpl;
+using BusImplPtr = std::shared_ptr<BusImpl>;
 class BusSpec;
 
 template<>
 struct Types<BusSpec>
 {
-    using SignalImpl    = BusInfo;
-    using SignalImplPtr = BusId;
+    using SignalImpl    = BusImpl;
+    using SignalImplPtr = BusImplPtr;
 #if defined(POOYA_DEBUG)
     static void verify_signal_type(pooya::SignalImplPtr sig, const BusSpec& spec);
 #endif // defined(POOYA_DEBUG)

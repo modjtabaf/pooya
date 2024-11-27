@@ -45,7 +45,7 @@ namespace pooya
 
 class BusSpec
 {
-    friend class BusInfo;
+    friend class BusImpl;
 
 public:
     enum class SingleValueType
@@ -122,7 +122,7 @@ public:
     bool operator==(const BusSpec& other) const { return this == &other; }
 };
 
-class BusInfo : public SignalImpl
+class BusImpl : public SignalImpl
 {
 protected:
     std::reference_wrapper<const BusSpec> _spec;
@@ -132,7 +132,7 @@ protected:
 
 public:
     template<typename Iter>
-    BusInfo(Protected, const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
+    BusImpl(Protected, const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
         : SignalImpl(name, BusType), _spec(spec)
     {
         pooya_trace("fullname: " + name.str());
@@ -156,7 +156,7 @@ public:
     }
 
     template<typename Iter>
-    static BusId create_new(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
+    static BusImplPtr create_new(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
     {
         pooya_trace("bus: " + name.str());
         auto size = spec._wires.size();
@@ -182,7 +182,7 @@ public:
                 ValidName new_name(name | wit->label());
                 if (wit->_bus)
                 {
-                    ls.second = BusInfo::create_new(new_name, (*wit->_bus).get());
+                    ls.second = BusImpl::create_new(new_name, (*wit->_bus).get());
                 }
                 else if (wit->_array_size > 0)
                 {
@@ -208,16 +208,16 @@ public:
             wit++;
         }
 
-        return std::make_shared<BusInfo>(Protected(), name, spec, label_signals.begin(), label_signals.end());
+        return std::make_shared<BusImpl>(Protected(), name, spec, label_signals.begin(), label_signals.end());
     }
 
     template<typename Iter>
-    static BusId create_new(const BusSpec& spec, Iter begin_, Iter end_)
+    static BusImplPtr create_new(const BusSpec& spec, Iter begin_, Iter end_)
     {
         return create_new("", spec, begin_, end_);
     }
 
-    static BusId create_new(const ValidName& name, const BusSpec& spec,
+    static BusImplPtr create_new(const ValidName& name, const BusSpec& spec,
                             const std::initializer_list<LabelSignalImplPtr>& l)
     {
         pooya_trace("create_new: " + name.str());
@@ -225,12 +225,12 @@ public:
         return create_new(name, spec, l.begin(), l.end());
     }
 
-    static BusId create_new(const BusSpec& spec, const std::initializer_list<LabelSignalImplPtr>& l)
+    static BusImplPtr create_new(const BusSpec& spec, const std::initializer_list<LabelSignalImplPtr>& l)
     {
         return create_new("", spec, l);
     }
 
-    static BusId create_new(const ValidName& name, const BusSpec& spec,
+    static BusImplPtr create_new(const ValidName& name, const BusSpec& spec,
                             const std::initializer_list<SignalImplPtr>& l = {})
     {
         pooya_trace("create_new: " + name.str());
@@ -249,7 +249,7 @@ public:
         return create_new(name, spec, label_signals.begin(), label_signals.end());
     }
 
-    static BusId create_new(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l = {})
+    static BusImplPtr create_new(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l = {})
     {
         return create_new("", spec, l);
     }
@@ -276,16 +276,16 @@ public:
     SignalImplPtr at(const std::string& label) const;
 };
 
-inline BusInfo& SignalImpl::as_bus()
+inline BusImpl& SignalImpl::as_bus()
 {
     pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
-    return *static_cast<BusInfo*>(this);
+    return *static_cast<BusImpl*>(this);
 }
 
-inline const BusInfo& SignalImpl::as_bus() const
+inline const BusImpl& SignalImpl::as_bus() const
 {
     pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
-    return *static_cast<const BusInfo*>(this);
+    return *static_cast<const BusImpl*>(this);
 }
 
 class Bus : public Signal<BusSpec>
@@ -294,57 +294,57 @@ class Bus : public Signal<BusSpec>
 
 public:
     Bus(const BusSpec& spec = BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l = {})
-        : Base(BusInfo::create_new(spec, l))
+        : Base(BusImpl::create_new(spec, l))
     {
     }
     Bus(const ValidName& name, const BusSpec& spec = BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l = {})
-        : Base(BusInfo::create_new(name, spec, l))
+        : Base(BusImpl::create_new(name, spec, l))
     {
     }
-    Bus(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l) : Base(BusInfo::create_new(spec, l)) {}
+    Bus(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l) : Base(BusImpl::create_new(spec, l)) {}
     Bus(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l)
-        : Base(BusInfo::create_new(name, spec, l))
+        : Base(BusImpl::create_new(name, spec, l))
     {
     }
     template<typename Iter>
-    Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusInfo::create_new(spec, begin_, end_))
+    Bus(const BusSpec& spec, Iter begin_, Iter end_) : Base(BusImpl::create_new(spec, begin_, end_))
     {
     }
     template<typename Iter>
     Bus(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
-        : Base(BusInfo::create_new(name, spec, begin_, end_))
+        : Base(BusImpl::create_new(name, spec, begin_, end_))
     {
     }
-    Bus(const BusId& sid) : Base(sid) {}
+    Bus(const BusImplPtr& sid) : Base(sid) {}
 
     Bus& operator=(const Bus&) = delete;
 
     void reset(const BusSpec& spec = BusSpec(), const std::initializer_list<LabelSignalImplPtr>& l = {})
     {
-        _sid = BusInfo::create_new(spec, l);
+        _sid = BusImpl::create_new(spec, l);
     }
     void reset(const ValidName& name, const BusSpec& spec = BusSpec(),
                const std::initializer_list<LabelSignalImplPtr>& l = {})
     {
-        _sid = BusInfo::create_new(name, spec, l);
+        _sid = BusImpl::create_new(name, spec, l);
     }
     void reset(const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l)
     {
-        _sid = BusInfo::create_new(spec, l);
+        _sid = BusImpl::create_new(spec, l);
     }
     void reset(const ValidName& name, const BusSpec& spec, const std::initializer_list<SignalImplPtr>& l)
     {
-        _sid = BusInfo::create_new(name, spec, l);
+        _sid = BusImpl::create_new(name, spec, l);
     }
     template<typename Iter>
     void reset(const BusSpec& spec, Iter begin_, Iter end_)
     {
-        _sid = BusInfo::create_new(spec, begin_, end_);
+        _sid = BusImpl::create_new(spec, begin_, end_);
     }
     template<typename Iter>
     void reset(const ValidName& name, const BusSpec& spec, Iter begin_, Iter end_)
     {
-        _sid = BusInfo::create_new(name, spec, begin_, end_);
+        _sid = BusImpl::create_new(name, spec, begin_, end_);
     }
 
     const BusSpec& spec() const { return _sid->spec(); }
@@ -362,14 +362,14 @@ public:
     IntSignalImplPtr int_at(const std::string& label) const;
     BoolSignalImplPtr bool_at(const std::string& label) const;
     ArraySignalImplPtr array_at(const std::string& label) const;
-    BusId bus_at(const std::string& label) const;
+    Bus bus_at(const std::string& label) const;
     ValueSignalImplPtr value_at(std::size_t index) const;
     FloatSignalImplPtr float_at(std::size_t index) const;
     ScalarSignalImplPtr scalar_at(std::size_t index) const;
     IntSignalImplPtr int_at(std::size_t index) const;
     BoolSignalImplPtr bool_at(std::size_t index) const;
     ArraySignalImplPtr array_at(std::size_t index) const;
-    BusId bus_at(std::size_t index) const;
+    Bus bus_at(std::size_t index) const;
 
     using Signal<BusSpec>::reset;
 };

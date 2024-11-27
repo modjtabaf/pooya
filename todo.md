@@ -25,6 +25,7 @@
 * Bus wrapper
 * Fix <bool> specialization
 
+- Call shared_from_this() only when necessary
 - Convert current samples to tests (hybrid)
 - Define pooya_assert_* and pooya_verify_* where pooya_assert_* macros are debug-only and a preprocessor directive is used to exclude pooya_verify_* macros from the release build
 - Use static_assert() in pooya_assert_* macros

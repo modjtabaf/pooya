@@ -98,9 +98,8 @@ public:
     auto linked_signals() const -> const auto& { return _linked_signals; }
 
     template<typename T, typename Key>
-    typename Types<T>::SignalImplPtr io_at(BusId bus, Key key, std::optional<SignalLinkType> type)
+    typename Types<T>::SignalImplPtr io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
     {
-        pooya_verify_bus(bus);
         SignalImplPtr sig;
         if constexpr (std::is_same_v<Key, std::size_t>)
         {

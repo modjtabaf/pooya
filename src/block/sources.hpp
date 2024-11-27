@@ -30,7 +30,7 @@ namespace pooya
 class Sources : public Block
 {
 public:
-    using SourcesFunction = std::function<void(BusId, double)>;
+    using SourcesFunction = std::function<void(const Bus&, double)>;
 
 protected:
     SourcesFunction _src_func;

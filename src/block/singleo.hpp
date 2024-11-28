@@ -27,7 +27,7 @@ template<typename T, class Base = Block>
 class SingleOutputT : public Base
 {
 protected:
-    typename Types<T>::SignalImplPtr _s_out{nullptr};
+    typename Types<T>::Signal _s_out;
 
     explicit SingleOutputT(uint16_t num_iports = Block::NoIOLimit) : Base(num_iports, 1) {}
     SingleOutputT(const ValidName& name, uint16_t num_iports = Block::NoIOLimit) : Base(name, num_iports, 1) {}
@@ -47,7 +47,7 @@ public:
         {
             return false;
         }
-        _s_out = std::move(Types<T>::as_signal_id(Base::_obus.at(0).second));
+        _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0).second));
         return true;
     }
 };

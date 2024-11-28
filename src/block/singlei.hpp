@@ -27,7 +27,7 @@ template<typename T>
 class SingleInputT : public Block
 {
 protected:
-    typename Types<T>::SignalImplPtr _s_in{nullptr};
+    typename Types<T>::Signal _s_in;
 
     explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Block(1, num_oports) {}
     SingleInputT(const ValidName& name, uint16_t num_oports = NoIOLimit) : Block(name, 1, num_oports) {}
@@ -47,7 +47,7 @@ public:
         {
             return false;
         }
-        _s_in = std::move(Types<T>::as_signal_id(_ibus.at(0).second));
+        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0).second));
         return true;
     }
 };

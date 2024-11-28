@@ -37,8 +37,8 @@ void BusMemory::post_init()
     pooya_verify(_init_values.empty(), full_name().str() + ": Some initial values of bus memory block were not used!");
 }
 
-void BusMemory::block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, SignalImplPtr sig_in,
-                              SignalImplPtr sig_out)
+void BusMemory::block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+                              const SignalImplPtr& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     auto it = _init_values.find(full_label);

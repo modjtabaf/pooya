@@ -79,6 +79,7 @@ class ScalarSignal : public FloatSignal<double>
 
 public:
     explicit ScalarSignal(const ValidName& name = "") : Base(ScalarSignalImpl::create_new(name)) {}
+    explicit ScalarSignal(const SignalImplPtr& sid) : Base(sid && sid->is_scalar() ? std::static_pointer_cast<ScalarSignalImpl>(sid) : nullptr) {}
     ScalarSignal(const ScalarSignalImplPtr& sid) : Base(sid) {}
 
     ScalarSignal& operator=(const ScalarSignal&) = delete;

@@ -96,6 +96,7 @@ class ArraySignal : public FloatSignal<Array>
 public:
     explicit ArraySignal(std::size_t size = 1) : Base(ArraySignalImpl::create_new(size)) {}
     ArraySignal(const ValidName& name, std::size_t size = 1) : Base(ArraySignalImpl::create_new(name, size)) {}
+    explicit ArraySignal(const SignalImplPtr& sid) : Base(sid && sid->is_array() ? std::static_pointer_cast<ArraySignalImpl>(sid) : nullptr) {}
     ArraySignal(const ArraySignalImplPtr& sid) : Base(sid) {}
 
     ArraySignal& operator=(const ArraySignal&) = delete;

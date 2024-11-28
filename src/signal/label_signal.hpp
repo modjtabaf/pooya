@@ -56,7 +56,7 @@ public:
         }
         else
         {
-            LabelSignalImplPtrList lsl({{_make_auto_label(0), signal.id()->shared_from_this()}});
+            LabelSignalImplPtrList lsl({{_make_auto_label(0), signal->shared_from_this()}});
             _init(lsl.begin(), lsl.end());
         }
     }

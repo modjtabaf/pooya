@@ -47,15 +47,11 @@ class ArraySignal;
 template<>
 struct Types<Array>
 {
-    using SignalWrapper = ArraySignal;
+    using Signal = ArraySignal;
     using SignalImpl    = ArraySignalImpl;
     using SignalImplPtr = ArraySignalImplPtr;
     using GetValue      = const Array&;
     using SetValue      = const Array&;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalImplPtr sig);
-    static void verify_signal_type(pooya::SignalImplPtr sig, std::size_t size);
-#endif // defined(POOYA_DEBUG)
     template<typename T>
     static bool is_same_type(const T& sig)
     {
@@ -81,14 +77,11 @@ class ScalarSignal;
 template<>
 struct Types<double>
 {
-    using SignalWrapper = ScalarSignal;
+    using Signal = ScalarSignal;
     using SignalImpl    = ScalarSignalImpl;
     using SignalImplPtr = ScalarSignalImplPtr;
     using GetValue      = double;
     using SetValue      = double;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalImplPtr sig);
-#endif // defined(POOYA_DEBUG)
     template<typename T>
     static bool is_same_type(const T& sig)
     {
@@ -114,14 +107,11 @@ class IntSignal;
 template<>
 struct Types<int>
 {
-    using SignalWrapper = IntSignal;
+    using Signal = IntSignal;
     using SignalImpl    = IntSignalImpl;
     using SignalImplPtr = IntSignalImplPtr;
     using GetValue      = int;
     using SetValue      = int;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalImplPtr sig);
-#endif // defined(POOYA_DEBUG)
     template<typename T>
     static bool is_same_type(const T& sig)
     {
@@ -147,14 +137,11 @@ class BoolSignal;
 template<>
 struct Types<bool>
 {
-    using SignalWrapper = BoolSignal;
+    using Signal = BoolSignal;
     using SignalImpl    = BoolSignalImpl;
     using SignalImplPtr = BoolSignalImplPtr;
     using GetValue      = bool;
     using SetValue      = bool;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalImplPtr sig);
-#endif // defined(POOYA_DEBUG)
     template<typename T>
     static bool is_same_type(const T& sig)
     {
@@ -173,18 +160,17 @@ struct Types<bool>
     }
 };
 
-class BusInfo;
-using BusId = std::shared_ptr<BusInfo>;
+class BusImpl;
+using BusImplPtr = std::shared_ptr<BusImpl>;
 class BusSpec;
+class Bus;
 
 template<>
 struct Types<BusSpec>
 {
-    using SignalImpl    = BusInfo;
-    using SignalImplPtr = BusId;
-#if defined(POOYA_DEBUG)
-    static void verify_signal_type(pooya::SignalImplPtr sig, const BusSpec& spec);
-#endif // defined(POOYA_DEBUG)
+    using Signal = Bus;
+    using SignalImpl    = BusImpl;
+    using SignalImplPtr = BusImplPtr;
     template<typename T>
     static bool is_same_type(const T& sig)
     {

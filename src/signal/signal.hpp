@@ -67,7 +67,7 @@ public:
     IntSignalImpl& as_int();
     BoolSignalImpl& as_bool();
     ArraySignalImpl& as_array();
-    BusInfo& as_bus();
+    BusImpl& as_bus();
 
     const ValueSignalImpl& as_value() const;
     const FloatSignalImpl& as_float() const;
@@ -75,7 +75,7 @@ public:
     const IntSignalImpl& as_int() const;
     const BoolSignalImpl& as_bool() const;
     const ArraySignalImpl& as_array() const;
-    const BusInfo& as_bus() const;
+    const BusImpl& as_bus() const;
 };
 
 template<typename T>
@@ -102,9 +102,6 @@ public:
 
     const typename Types<T>::SignalImplPtr operator->() const { return _sid; }
     typename Types<T>::SignalImplPtr operator->() { return _sid; }
-
-    const typename Types<T>::SignalImplPtr& id() const { return _sid; }
-    typename Types<T>::SignalImplPtr& id() { return _sid; }
 
     operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
     operator SignalImplPtr() const { return _sid->shared_from_this(); }

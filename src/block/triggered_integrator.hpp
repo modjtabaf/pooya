@@ -32,7 +32,7 @@ template<typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
 {
 protected:
-    BoolSignalImplPtr _trigger;
+    BoolSignal _trigger;
     bool _triggered{false};
 
 public:
@@ -47,7 +47,7 @@ public:
             return false;
         }
 
-        _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
+        _trigger.reset(IntegratorBaseT<T>::bool_input_at("trigger"));
 
         return true;
     }

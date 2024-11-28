@@ -103,9 +103,6 @@ public:
     const typename Types<T>::SignalImplPtr operator->() const { return _sid; }
     typename Types<T>::SignalImplPtr operator->() { return _sid; }
 
-    const typename Types<T>::SignalImplPtr& id() const { return _sid; }
-    typename Types<T>::SignalImplPtr& id() { return _sid; }
-
     operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
     operator SignalImplPtr() const { return _sid->shared_from_this(); }
 };

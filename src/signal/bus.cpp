@@ -160,7 +160,7 @@ ArraySignalImplPtr Bus::array_at(const std::string& label) const
     return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
-Bus Bus::bus_at(const std::string& label) const
+BusImplPtr Bus::bus_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
     SignalImplPtr sig = _sid->at(label);
@@ -216,7 +216,7 @@ ArraySignalImplPtr Bus::array_at(std::size_t index) const
     return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
 }
 
-Bus Bus::bus_at(std::size_t index) const
+BusImplPtr Bus::bus_at(std::size_t index) const
 {
     pooya_trace("index: " + index);
     SignalImplPtr sig = _sid->at(index).second;

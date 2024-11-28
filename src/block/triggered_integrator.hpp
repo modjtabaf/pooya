@@ -47,7 +47,7 @@ public:
             return false;
         }
 
-        _trigger = IntegratorBaseT<T>::bool_input_at("trigger");
+        _trigger.reset(IntegratorBaseT<T>::bool_input_at("trigger"));
 
         return true;
     }

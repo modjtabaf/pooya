@@ -30,8 +30,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo& wi, SignalImplPtr sig_in,
-                            SignalImplPtr sig_out)
+void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+                            const SignalImplPtr& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     std::shared_ptr<Block> block;

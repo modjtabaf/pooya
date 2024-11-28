@@ -80,8 +80,8 @@ public:
     }
 
 protected:
-    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, SignalImplPtr sig_in,
-                       SignalImplPtr sig_out) override;
+    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+                       const SignalImplPtr& sig_out) override;
     void post_init() override;
 };
 

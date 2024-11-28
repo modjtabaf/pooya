@@ -363,14 +363,14 @@ public:
     IntSignalImplPtr int_at(const std::string& label) const;
     BoolSignalImplPtr bool_at(const std::string& label) const;
     ArraySignalImplPtr array_at(const std::string& label) const;
-    Bus bus_at(const std::string& label) const;
+    BusImplPtr bus_at(const std::string& label) const;
     ValueSignalImplPtr value_at(std::size_t index) const;
     FloatSignalImplPtr float_at(std::size_t index) const;
     ScalarSignalImplPtr scalar_at(std::size_t index) const;
     IntSignalImplPtr int_at(std::size_t index) const;
     BoolSignalImplPtr bool_at(std::size_t index) const;
     ArraySignalImplPtr array_at(std::size_t index) const;
-    Bus bus_at(std::size_t index) const;
+    BusImplPtr bus_at(std::size_t index) const;
 
     using Signal<BusSpec>::reset;
 };

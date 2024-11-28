@@ -80,7 +80,7 @@ public:
     operator ValueSignalImplPtr() const
     {
         return std::static_pointer_cast<ValueSignalImpl>(
-            static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());
+            static_cast<const typename Types<T>::Signal*>(this)->id()->shared_from_this());
     }
 };
 

@@ -38,9 +38,9 @@ protected:
     std::vector<T> _x;
 
     // input signals
-    typename Types<T>::SignalImplPtr _s_x;       // in
-    ScalarSignalImplPtr _s_delay;                // delay
-    typename Types<T>::SignalImplPtr _s_initial; // initial
+    typename Types<T>::Signal _s_x;       // in
+    ScalarSignal _s_delay;                // delay
+    typename Types<T>::Signal _s_initial; // initial
 
 public:
     explicit DelayT(double lifespan) : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
@@ -55,9 +55,9 @@ public:
         }
 
         // input signals
-        _s_x       = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
-        _s_delay   = SingleOutputT<T>::scalar_input_at("delay");
-        _s_initial = std::move(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
+        _s_x.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
+        _s_delay.reset(SingleOutputT<T>::scalar_input_at("delay"));
+        _s_initial.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
 
         return true;
     }

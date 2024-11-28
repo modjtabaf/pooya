@@ -86,7 +86,7 @@ ValidName Block::full_name() const
     return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
-bool Block::link_signal(ValueSignalImplPtr signal, SignalLinkType type)
+bool Block::link_signal(const ValueSignalImplPtr& signal, SignalLinkType type)
 {
     pooya_trace("block: " + full_name().str());
     pooya_verify_valid_signal(signal);

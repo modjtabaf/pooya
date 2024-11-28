@@ -315,6 +315,7 @@ public:
         : Base(BusImpl::create_new(name, spec, begin_, end_))
     {
     }
+    explicit Bus(const SignalImplPtr& sid) : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr) {}
     Bus(const BusImplPtr& sid) : Base(sid) {}
 
     Bus& operator=(const Bus&) = delete;

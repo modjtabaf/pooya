@@ -82,13 +82,13 @@ public:
 
     void set_deriv_signal(FloatSignalImplPtr deriv_sig)
     {
-        static_cast<typename Types<T>::SignalWrapper*>(this)->id()->set_deriv_signal(deriv_sig);
+        static_cast<typename Types<T>::Signal*>(this)->id()->set_deriv_signal(deriv_sig);
     }
 
     operator FloatSignalImplPtr() const
     {
         return std::static_pointer_cast<FloatSignalImpl>(
-            static_cast<const typename Types<T>::SignalWrapper*>(this)->id()->shared_from_this());
+            static_cast<const typename Types<T>::Signal*>(this)->id()->shared_from_this());
     }
 };
 

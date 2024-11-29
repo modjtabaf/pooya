@@ -37,8 +37,8 @@ namespace pooya
 class Block;
 class Submodel;
 
-using TraverseCallback      = std::function<bool(Block&, uint32_t level)>;
-using ConstTraverseCallback = std::function<bool(const Block&, uint32_t level)>;
+using VisitorCallback      = std::function<bool(Block&, uint32_t level)>;
+using ConstVisitorCallback = std::function<bool(const Block&, uint32_t level)>;
 
 class Block : public NamedObject
 {
@@ -137,10 +137,7 @@ public:
     {
         return io_at<double, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
-    IntSignal int_input_at(std::size_t index)
-    {
-        return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input);
-    }
+    IntSignal int_input_at(std::size_t index) { return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input); }
     BoolSignal bool_input_at(std::size_t index)
     {
         return io_at<bool, std::size_t>(_ibus, index, SignalLinkType::Input);
@@ -169,10 +166,7 @@ public:
     {
         return io_at<double, std::size_t>(_obus, index, SignalLinkType::Output);
     }
-    IntSignal int_output_at(std::size_t index)
-    {
-        return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output);
-    }
+    IntSignal int_output_at(std::size_t index) { return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output); }
     BoolSignal bool_output_at(std::size_t index)
     {
         return io_at<bool, std::size_t>(_obus, index, SignalLinkType::Output);
@@ -185,14 +179,13 @@ public:
     virtual void _mark_unprocessed();
     virtual uint _process(double t, bool go_deep = true) = 0;
 
-    virtual bool traverse(TraverseCallback cb, uint32_t level,
-                          uint32_t max_level = std::numeric_limits<uint32_t>::max())
+    virtual bool visit(VisitorCallback cb, uint32_t level, uint32_t max_level = std::numeric_limits<uint32_t>::max())
     {
         pooya_trace("block: " + full_name().str());
         return (level > max_level) || cb(*this, level);
     }
-    virtual bool const_traverse(ConstTraverseCallback cb, uint32_t level,
-                                uint32_t max_level = std::numeric_limits<uint32_t>::max()) const
+    virtual bool const_visit(ConstVisitorCallback cb, uint32_t level,
+                             uint32_t max_level = std::numeric_limits<uint32_t>::max()) const
     {
         pooya_trace("block: " + full_name().str());
         return (level > max_level) || cb(*this, level);

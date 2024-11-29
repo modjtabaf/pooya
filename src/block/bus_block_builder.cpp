@@ -43,10 +43,10 @@ void BusBlockBuilder::post_init()
     pooya_trace("block: " + full_name().str());
     const auto& bus_spec = _s_in->spec();
     _blocks.reserve(bus_spec.total_size());
-    traverse_bus("", bus_spec);
+    visit_bus("", bus_spec);
 }
 
-void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec& bus_spec)
+void BusBlockBuilder::visit_bus(const std::string& full_label, const BusSpec& bus_spec)
 {
     pooya_trace("block: " + full_name().str());
 
@@ -59,7 +59,7 @@ void BusBlockBuilder::traverse_bus(const std::string& full_label, const BusSpec&
     {
         if (wi._bus)
         {
-            traverse_bus(full_label + wi.label() + ".", *wi._bus);
+            visit_bus(full_label + wi.label() + ".", *wi._bus);
         }
         else
         {

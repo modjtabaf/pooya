@@ -81,7 +81,10 @@ class BoolSignal : public ValueSignal<bool>
 
 public:
     explicit BoolSignal(const ValidName& name = "") : Base(BoolSignalImpl::create_new(name)) {}
-    explicit BoolSignal(const SignalImplPtr& sid) : Base(sid && sid->is_bool() ? std::static_pointer_cast<BoolSignalImpl>(sid) : nullptr) {}
+    explicit BoolSignal(const SignalImplPtr& sid)
+        : Base(sid && sid->is_bool() ? std::static_pointer_cast<BoolSignalImpl>(sid) : nullptr)
+    {
+    }
     BoolSignal(const BoolSignalImplPtr& sid) : Base(sid) {}
 
     BoolSignal& operator=(const BoolSignal&) = delete;

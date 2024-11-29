@@ -38,7 +38,7 @@ protected:
     std::vector<std::shared_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
 
-    void traverse_bus(const std::string& path_name, const BusSpec& bus_spec);
+    void visit_bus(const std::string& path_name, const BusSpec& bus_spec);
 
     virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
                                const SignalImplPtr& sig_out) = 0;

@@ -147,7 +147,7 @@ uint Simulator::_process(double t)
         return true;
     };
 
-    _model.traverse(find_unprocessed_cb, 0);
+    _model.visit(find_unprocessed_cb, 0);
     if (unprocessed.size())
     {
         std::cout << "\n-- unprocessed blocks detected:\n";
@@ -184,7 +184,7 @@ void Simulator::init(double t0)
     std::unordered_set<ScalarSignalImplPtr> scalar_state_signals;
     std::unordered_set<ArraySignalImplPtr> array_state_signals;
 
-    _model.traverse(
+    _model.visit(
         [&](Block& block, uint32_t /*level*/) -> bool
         {
             const auto& signals = block.linked_signals();
@@ -259,7 +259,7 @@ void Simulator::init(double t0)
                 num_blocks++;
                 return true;
             };
-            _model.traverse(enum_blocks_cb, 0);
+            _model.visit(enum_blocks_cb, 0);
 
             _processing_order1.reserve(num_blocks);
             _processing_order2.reserve(num_blocks);
@@ -273,7 +273,7 @@ void Simulator::init(double t0)
 #endif // defined(POOYA_USE_SMART_PTRS)
                 return true;
             };
-            _model.traverse(add_blocks_cb, 0);
+            _model.visit(add_blocks_cb, 0);
 
 #if defined(POOYA_USE_SMART_PTRS)
             _current_po = _processing_order1;

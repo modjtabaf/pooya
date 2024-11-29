@@ -71,7 +71,7 @@ uint Submodel::_process(double t, bool go_deep)
     return n_processed;
 }
 
-bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max_level)
+bool Submodel::visit(VisitorCallback cb, uint32_t level, decltype(level) max_level)
 {
     pooya_trace("block: " + full_name().str());
     if (level > max_level)
@@ -79,7 +79,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
         return true;
     }
 
-    if (!Block::traverse(cb, level, max_level))
+    if (!Block::visit(cb, level, max_level))
     {
         return false;
     }
@@ -89,7 +89,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
 #if defined(POOYA_USE_SMART_PTRS)
         for (auto& c : _components)
         {
-            if (!c.get().traverse(cb, level + 1, max_level))
+            if (!c.get().visit(cb, level + 1, max_level))
             {
                 return false;
             }
@@ -97,7 +97,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
 #else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* c : _components)
         {
-            if (!c->traverse(cb, level + 1, max_level))
+            if (!c->visit(cb, level + 1, max_level))
             {
                 return false;
             }
@@ -108,7 +108,7 @@ bool Submodel::traverse(TraverseCallback cb, uint32_t level, decltype(level) max
     return true;
 }
 
-bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype(level) max_level) const
+bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(level) max_level) const
 {
     pooya_trace("block: " + full_name().str());
     if (level > max_level)
@@ -116,7 +116,7 @@ bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype
         return true;
     }
 
-    if (!Block::const_traverse(cb, level, max_level))
+    if (!Block::const_visit(cb, level, max_level))
     {
         return false;
     }
@@ -126,7 +126,7 @@ bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype
 #if defined(POOYA_USE_SMART_PTRS)
         for (auto& c : _components)
         {
-            if (!c.get().const_traverse(cb, level + 1, max_level))
+            if (!c.get().const_visit(cb, level + 1, max_level))
             {
                 return false;
             }
@@ -134,7 +134,7 @@ bool Submodel::const_traverse(ConstTraverseCallback cb, uint32_t level, decltype
 #else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* c : _components)
         {
-            if (!c->const_traverse(cb, level + 1, max_level))
+            if (!c->const_visit(cb, level + 1, max_level))
             {
                 return false;
             }

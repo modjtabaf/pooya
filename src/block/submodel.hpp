@@ -76,10 +76,9 @@ public:
 
     void _mark_unprocessed() override;
     uint _process(double t, bool go_deep = true) override;
-    bool traverse(TraverseCallback cb, uint32_t level,
-                  uint32_t max_level = std::numeric_limits<uint32_t>::max()) override;
-    bool const_traverse(ConstTraverseCallback cb, uint32_t level,
-                        uint32_t max_level = std::numeric_limits<uint32_t>::max()) const override;
+    bool visit(VisitorCallback cb, uint32_t level, uint32_t max_level = std::numeric_limits<uint32_t>::max()) override;
+    bool const_visit(ConstVisitorCallback cb, uint32_t level,
+                     uint32_t max_level = std::numeric_limits<uint32_t>::max()) const override;
 }; // class Submodel
 
 } // namespace pooya

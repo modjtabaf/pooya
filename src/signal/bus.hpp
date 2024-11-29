@@ -218,7 +218,7 @@ public:
     }
 
     static BusImplPtr create_new(const ValidName& name, const BusSpec& spec,
-                            const std::initializer_list<LabelSignalImplPtr>& l)
+                                 const std::initializer_list<LabelSignalImplPtr>& l)
     {
         pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
@@ -231,7 +231,7 @@ public:
     }
 
     static BusImplPtr create_new(const ValidName& name, const BusSpec& spec,
-                            const std::initializer_list<SignalImplPtr>& l = {})
+                                 const std::initializer_list<SignalImplPtr>& l = {})
     {
         pooya_trace("create_new: " + name.str());
         pooya_verify(l.size() <= spec._wires.size(), "Too many entries in the initializer list!");
@@ -315,7 +315,10 @@ public:
         : Base(BusImpl::create_new(name, spec, begin_, end_))
     {
     }
-    explicit Bus(const SignalImplPtr& sid) : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr) {}
+    explicit Bus(const SignalImplPtr& sid)
+        : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr)
+    {
+    }
     Bus(const BusImplPtr& sid) : Base(sid) {}
 
     Bus& operator=(const Bus&) = delete;

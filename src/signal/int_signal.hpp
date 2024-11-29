@@ -83,7 +83,10 @@ class IntSignal : public ValueSignal<int>
 
 public:
     explicit IntSignal(const ValidName& name = "") : Base(IntSignalImpl::create_new(name)) {}
-    explicit IntSignal(const SignalImplPtr& sid) : Base(sid && sid->is_int() ? std::static_pointer_cast<IntSignalImpl>(sid) : nullptr) {}
+    explicit IntSignal(const SignalImplPtr& sid)
+        : Base(sid && sid->is_int() ? std::static_pointer_cast<IntSignalImpl>(sid) : nullptr)
+    {
+    }
     IntSignal(const IntSignalImplPtr& sid) : Base(sid) {}
 
     IntSignal& operator=(const IntSignal&) = delete;

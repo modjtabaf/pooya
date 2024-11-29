@@ -27,7 +27,10 @@ class Leaf : public Block
 {
 protected:
     Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
-    Leaf(const ValidName& name, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(name, num_iports, num_oports) {}
+    Leaf(const ValidName& name, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+        : Block(name, num_iports, num_oports)
+    {
+    }
 
 public:
     virtual ~Leaf() = default;

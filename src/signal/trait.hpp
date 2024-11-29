@@ -47,7 +47,7 @@ class ArraySignal;
 template<>
 struct Types<Array>
 {
-    using Signal = ArraySignal;
+    using Signal        = ArraySignal;
     using SignalImpl    = ArraySignalImpl;
     using SignalImplPtr = ArraySignalImplPtr;
     using GetValue      = const Array&;
@@ -77,7 +77,7 @@ class ScalarSignal;
 template<>
 struct Types<double>
 {
-    using Signal = ScalarSignal;
+    using Signal        = ScalarSignal;
     using SignalImpl    = ScalarSignalImpl;
     using SignalImplPtr = ScalarSignalImplPtr;
     using GetValue      = double;
@@ -107,7 +107,7 @@ class IntSignal;
 template<>
 struct Types<int>
 {
-    using Signal = IntSignal;
+    using Signal        = IntSignal;
     using SignalImpl    = IntSignalImpl;
     using SignalImplPtr = IntSignalImplPtr;
     using GetValue      = int;
@@ -137,7 +137,7 @@ class BoolSignal;
 template<>
 struct Types<bool>
 {
-    using Signal = BoolSignal;
+    using Signal        = BoolSignal;
     using SignalImpl    = BoolSignalImpl;
     using SignalImplPtr = BoolSignalImplPtr;
     using GetValue      = bool;
@@ -168,7 +168,7 @@ class Bus;
 template<>
 struct Types<BusSpec>
 {
-    using Signal = Bus;
+    using Signal        = Bus;
     using SignalImpl    = BusImpl;
     using SignalImplPtr = BusImplPtr;
     template<typename T>

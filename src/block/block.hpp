@@ -88,7 +88,6 @@ public:
     virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
-    virtual void activation_function(double /*t*/) {}
 
     auto parent() -> auto { return _parent; }
     bool processed() const { return _processed; }
@@ -184,7 +183,7 @@ public:
     }
 
     virtual void _mark_unprocessed();
-    virtual uint _process(double t, bool go_deep = true);
+    virtual uint _process(double t, bool go_deep = true) = 0;
 
     virtual bool traverse(TraverseCallback cb, uint32_t level,
                           uint32_t max_level = std::numeric_limits<uint32_t>::max())

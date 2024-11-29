@@ -18,6 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
+#include "src/block/leaf.hpp"
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -25,7 +26,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/solver/history.hpp"
 #include "src/solver/simulator.hpp"
 
-class MassSpringDamper : public pooya::Block
+class MassSpringDamper : public pooya::Leaf
 {
 protected:
     double _m;
@@ -36,7 +37,7 @@ protected:
 
 public:
     MassSpringDamper(const pooya::ValidName& name, double m, double k, double c, double x0, double xd0)
-        : pooya::Block(name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
+        : pooya::Leaf(name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
     {
     }
 
@@ -49,7 +50,7 @@ public:
     {
         pooya_trace0;
 
-        if (!pooya::Block::init(parent, ibus)) return false;
+        if (!pooya::Leaf::init(parent, ibus)) return false;
 
         _s_tau.reset(scalar_input_at(0));
 

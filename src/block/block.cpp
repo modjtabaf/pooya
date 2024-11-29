@@ -106,25 +106,4 @@ void Block::_mark_unprocessed()
     _processed = false;
 }
 
-uint Block::_process(double t, bool /*go_deep*/)
-{
-    pooya_trace("block: " + full_name().str());
-    if (_processed)
-    {
-        return 0;
-    }
-    for (auto& sig : _linked_signals)
-    {
-        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned())
-        {
-            return 0;
-        }
-    }
-
-    activation_function(t);
-
-    _processed = true;
-    return 1;
-}
-
 } // namespace pooya

@@ -24,12 +24,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <functional>
 
-#include "block.hpp"
+#include "leaf.hpp"
 
 namespace pooya
 {
 
-class Function : public Block
+class Function : public Leaf
 {
 public:
     using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
@@ -39,12 +39,12 @@ protected:
 
 public:
     Function(ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Block(num_iports, num_oports), _act_func(act_func)
+        : Leaf(num_iports, num_oports), _act_func(act_func)
     {
     }
     Function(const ValidName& name, ActFunction act_func, uint16_t num_iports = NoIOLimit,
              uint16_t num_oports = NoIOLimit)
-        : Block(name, num_iports, num_oports), _act_func(act_func)
+        : Leaf(name, num_iports, num_oports), _act_func(act_func)
     {
     }
 

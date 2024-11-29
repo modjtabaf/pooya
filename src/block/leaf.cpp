@@ -15,43 +15,30 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SI_HPP__
-#define __POOYA_BLOCK_SI_HPP__
-
 #include "leaf.hpp"
 
 namespace pooya
 {
 
-template<typename T>
-class SingleInputT : public Leaf
+uint Leaf::_process(double t, bool /*go_deep*/)
 {
-protected:
-    typename Types<T>::Signal _s_in;
-
-    explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
-    SingleInputT(const ValidName& name, uint16_t num_oports = NoIOLimit) : Leaf(name, 1, num_oports) {}
-    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
+    pooya_trace("block: " + full_name().str());
+    if (_processed)
     {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
+        return 0;
     }
-    SingleInputT(const ValidName& name, uint16_t num_iports, uint16_t num_oports) : Leaf(name, num_iports, num_oports)
+    for (auto& sig : _linked_signals)
     {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
-    }
-
-public:
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
-    {
-        if (!Leaf::init(parent, ibus, obus))
+        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned())
         {
-            return false;
+            return 0;
         }
-        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0).second));
-        return true;
     }
-};
+
+    activation_function(t);
+
+    _processed = true;
+    return 1;
+}
 
 } // namespace pooya
-
-#endif // __POOYA_BLOCK_SI_HPP__

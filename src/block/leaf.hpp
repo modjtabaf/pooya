@@ -15,43 +15,28 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SI_HPP__
-#define __POOYA_BLOCK_SI_HPP__
+#ifndef __POOYA_BLOCK_LEAF_HPP__
+#define __POOYA_BLOCK_LEAF_HPP__
 
-#include "leaf.hpp"
+#include "block.hpp"
 
 namespace pooya
 {
 
-template<typename T>
-class SingleInputT : public Leaf
+class Leaf : public Block
 {
 protected:
-    typename Types<T>::Signal _s_in;
-
-    explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
-    SingleInputT(const ValidName& name, uint16_t num_oports = NoIOLimit) : Leaf(name, 1, num_oports) {}
-    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
-    {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
-    }
-    SingleInputT(const ValidName& name, uint16_t num_iports, uint16_t num_oports) : Leaf(name, num_iports, num_oports)
-    {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
-    }
+    Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
+    Leaf(const ValidName& name, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(name, num_iports, num_oports) {}
 
 public:
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
-    {
-        if (!Leaf::init(parent, ibus, obus))
-        {
-            return false;
-        }
-        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0).second));
-        return true;
-    }
-};
+    virtual ~Leaf() = default;
+
+    uint _process(double t, bool go_deep = true) override;
+
+    virtual void activation_function(double /*t*/) {}
+}; // class Leaf
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SI_HPP__
+#endif // __POOYA_BLOCK_LEAF_HPP__

@@ -22,12 +22,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SOURCES_HPP__
 #define __POOYA_BLOCK_SOURCES_HPP__
 
-#include "block.hpp"
+#include "leaf.hpp"
 
 namespace pooya
 {
 
-class Sources : public Block
+class Sources : public Leaf
 {
 public:
     using SourcesFunction = std::function<void(const Bus&, double)>;
@@ -36,9 +36,9 @@ protected:
     SourcesFunction _src_func;
 
 public:
-    Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit) : Block(0, num_oports), _src_func(src_func) {}
+    Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit) : Leaf(0, num_oports), _src_func(src_func) {}
     Sources(const ValidName& name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
-        : Block(name, 0, num_oports), _src_func(src_func)
+        : Leaf(name, 0, num_oports), _src_func(src_func)
     {
     }
 

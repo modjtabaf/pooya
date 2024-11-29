@@ -18,12 +18,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_SO_HPP__
 #define __POOYA_BLOCK_SO_HPP__
 
-#include "block.hpp"
+#include "leaf.hpp"
 
 namespace pooya
 {
 
-template<typename T, class Base = Block>
+template<typename T, class Base = Leaf>
 class SingleOutputT : public Base
 {
 protected:

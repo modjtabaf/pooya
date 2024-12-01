@@ -31,17 +31,16 @@ namespace pooya
 template<typename T>
 class MultiplyT : public MulDivT<T>
 {
-protected:
+public:
+    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
+    MultiplyT(const ValidName& name, const T& initial = 1.0) : MulDivT<T>(name, "", initial) {}
+
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + MulDivT<T>::full_name().str());
         MulDivT<T>::_operators = std::string(ibus.size(), '*');
         return MulDivT<T>::init(parent, ibus, obus);
     }
-
-public:
-    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
-    MultiplyT(const ValidName& name, const T& initial = 1.0) : MulDivT<T>(name, "", initial) {}
 };
 
 using Multiply  = MultiplyT<double>;

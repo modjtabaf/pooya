@@ -31,17 +31,16 @@ namespace pooya
 template<typename T>
 class AddT : public AddSubT<T>
 {
-protected:
+public:
+    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
+    AddT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "", initial) {}
+
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + AddSubT<T>::full_name().str());
         AddSubT<T>::_operators = std::string(ibus.size(), '+');
         return AddSubT<T>::init(parent, ibus, obus);
     }
-
-public:
-    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "", initial) {}
 };
 
 using Add  = AddT<double>;

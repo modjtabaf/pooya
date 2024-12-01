@@ -42,9 +42,6 @@ using ConstVisitorCallback = std::function<bool(const Block&, uint32_t level)>;
 
 class Block : public NamedObject
 {
-    friend class Submodel;
-    friend class Simulator; // a dirty workaround so Simulator::init can call Block::init. Should be resolved!
-
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
 
@@ -79,12 +76,11 @@ protected:
     {
     }
 
-    virtual bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus());
-    virtual void post_init() {}
-
 public:
     virtual ~Block() = default;
 
+    virtual bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus());
+    virtual void post_init() {}
     virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}

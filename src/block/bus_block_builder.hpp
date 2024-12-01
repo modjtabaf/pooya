@@ -54,7 +54,6 @@ public:
     }
 
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override;
-    void post_init() override;
 };
 
 } // namespace pooya

@@ -30,11 +30,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-void BusMemory::post_init()
+bool BusMemory::init(Submodel* parent, const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
-    BusBlockBuilder::post_init();
+    if (!BusBlockBuilder::init(parent, ibus, obus))
+    {
+        return false;
+    }
+
     pooya_verify(_init_values.empty(), full_name().str() + ": Some initial values of bus memory block were not used!");
+
+    return true;
 }
 
 void BusMemory::block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,

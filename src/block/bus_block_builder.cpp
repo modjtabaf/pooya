@@ -35,15 +35,11 @@ bool BusBlockBuilder::init(Submodel* parent, const Bus& ibus, const Bus& obus)
 
     pooya_verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
 
-    return true;
-}
-
-void BusBlockBuilder::post_init()
-{
-    pooya_trace("block: " + full_name().str());
     const auto& bus_spec = _s_in->spec();
     _blocks.reserve(bus_spec.total_size());
     visit_bus("", bus_spec);
+
+    return true;
 }
 
 void BusBlockBuilder::visit_bus(const std::string& full_label, const BusSpec& bus_spec)

@@ -36,6 +36,16 @@ protected:
     T _initial;
     T _ret;
 
+public:
+    AddSubT(const std::string& operators, const T& initial = 0.0)
+        : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    {
+    }
+    AddSubT(const ValidName& name, const std::string& operators, const T& initial = 0.0)
+        : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    {
+    }
+
     bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
@@ -49,16 +59,6 @@ protected:
                      SingleOutputT<T>::full_name().str() + ": mismatch between input signals and operators.");
 
         return true;
-    }
-
-public:
-    AddSubT(const std::string& operators, const T& initial = 0.0)
-        : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
-    {
-    }
-    AddSubT(const ValidName& name, const std::string& operators, const T& initial = 0.0)
-        : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
-    {
     }
 
     void activation_function(double /*t*/) override

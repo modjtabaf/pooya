@@ -80,7 +80,6 @@ public:
     virtual ~Block() = default;
 
     virtual bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus());
-    virtual void post_init() {}
     virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}

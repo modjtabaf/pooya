@@ -82,7 +82,7 @@ public:
 protected:
     void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
                        const SignalImplPtr& sig_out) override;
-    void post_init() override;
+    bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 };
 
 } // namespace pooya

@@ -202,7 +202,7 @@ bool Submodel::add_block(Block& component, const LabelSignals& iports, const Lab
 #else  // defined(POOYA_USE_SMART_PTRS)
     _components.push_back(&component);
 #endif // defined(POOYA_USE_SMART_PTRS)
-    component.post_init();
+
     return true;
 }
 

@@ -313,7 +313,7 @@ void Simulator::init(double t0)
 void Simulator::run(double t, double min_time_step, double max_time_step)
 {
     pooya_trace("t: " + std::to_string(t));
-    auto stepper_callback = [&](double t, const Array& state_variables) -> const Array&
+    auto minor_solver_step_cb = [&](double t, const Array& state_variables) -> const Array&
     {
         pooya_trace("t: " + std::to_string(t));
         reset_with_state_variables(state_variables);
@@ -409,7 +409,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
 #else  // defined(POOYA_USE_SMART_PTRS)step
                 _stepper->step
 #endif // defined(POOYA_USE_SMART_PTRS)
-                    (stepper_callback, t1, _state_variables_orig, t2, _state_variables, new_h);
+                    (minor_solver_step_cb, t1, _state_variables_orig, t2, _state_variables, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))

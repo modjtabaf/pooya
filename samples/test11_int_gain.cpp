@@ -35,7 +35,7 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model("test11");
-    pooya::GainI gain("gain", 2);
+    pooya::GainI gain("gain", &model, 2);
 
     // create pooya signals
     pooya::IntSignal x("x");
@@ -51,7 +51,7 @@ int main()
                              x = std::round(std::sin(M_PI * t / 5));
                          });
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x);
     history.track(y);
 

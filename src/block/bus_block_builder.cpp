@@ -24,11 +24,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-bool BusBlockBuilder::init(Submodel* parent, const Bus& ibus, const Bus& obus)
+bool BusBlockBuilder::init(const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
-    pooya_verify(parent, "Bus block builder needs a parent.");
-    if (!Leaf::init(parent, ibus, obus))
+    // pooya_verify(parent, "Bus block builder needs a parent.");
+    if (!Leaf::init(ibus, obus))
     {
         return false;
     }

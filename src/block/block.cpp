@@ -26,7 +26,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
+bool Block::init(const Bus& ibus, const Bus& obus)
 {
     pooya_trace(_name.str());
 
@@ -35,9 +35,7 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reinitialize a block!");
     }
 
-    _parent = parent;
-
-    if (parent && !parent->is_initialized())
+    if (_parent && !_parent->is_initialized())
     {
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
     }

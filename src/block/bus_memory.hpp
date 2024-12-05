@@ -68,21 +68,21 @@ protected:
     LabelValueMap _init_values;
 
 public:
-    BusMemory(const std::initializer_list<LabelValue>& l                = {},
+    BusMemory(Submodel& parent, const std::initializer_list<LabelValue>& l = {},
               const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(excluded_labels), _init_values(l)
+        : BusBlockBuilder(parent, excluded_labels), _init_values(l)
     {
     }
-    BusMemory(const ValidName& name, const std::initializer_list<LabelValue>& l = {},
+    BusMemory(const ValidName& name, Submodel& parent, const std::initializer_list<LabelValue>& l = {},
               const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(name, excluded_labels), _init_values(l)
+        : BusBlockBuilder(name, parent, excluded_labels), _init_values(l)
     {
     }
 
 protected:
     void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
                        const SignalImplPtr& sig_out) override;
-    bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
+    bool init(const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 };
 
 } // namespace pooya

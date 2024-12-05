@@ -34,20 +34,21 @@ protected:
     T _value;
 
 public:
-    IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(num_iports, num_oports), _value(ic)
+    explicit IntegratorBaseT(Submodel* parent = nullptr, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+                             uint16_t num_oports = Block::NoIOLimit)
+        : SingleOutputT<T>(parent, num_iports, num_oports), _value(ic)
     {
     }
-    IntegratorBaseT(const ValidName& name, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                    uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(name, num_iports, num_oports), _value(ic)
+    IntegratorBaseT(const ValidName& name, Submodel* parent = nullptr, T ic = T(0.0),
+                    uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = Block::NoIOLimit)
+        : SingleOutputT<T>(name, parent, num_iports, num_oports), _value(ic)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool init(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        if (!SingleOutputT<T>::init(ibus, obus))
         {
             return false;
         }

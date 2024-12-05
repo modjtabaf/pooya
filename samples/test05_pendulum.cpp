@@ -18,12 +18,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-#include "src/block/sin.hpp"
-#include "src/block/submodel.hpp"
-#include "src/helper/trace.hpp"
-// #include "src/block/siso_function.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/muldiv.hpp"
+#include "src/block/sin.hpp"
+// #include "src/block/siso_function.hpp"
+#include "src/block/submodel.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rk4.hpp"
@@ -32,30 +32,24 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{"phi", M_PI_4};
-    // pooya::SISOFunction _sin{"sin(phi)",
-    //     [](double /*t*/, double x) -> double
-    //     {
-    //         return std::sin(x);
-    //     }};
-    pooya::Sin _sin{"sin(phi)"};
-    pooya::MulDiv _muldiv{"-g\\l", "**/", -1};
+    pooya::Integrator _integ1{"dphi", this};
+    pooya::Integrator _integ2{"phi", this, M_PI_4};
+    // pooya::SISOFunction _sin("sin(phi)", this, [](double /*t*/, double x) -> double { return std::sin(x); });
+    pooya::Sin _sin{"sin(phi)", this};
+    pooya::MulDiv _muldiv{"-g\\l", this, "**/", -1};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
-
     pooya::ScalarSignal _phi{"phi"};
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
+    bool init(const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent)) return false;
+        if (!pooya::Submodel::init()) return false;
 
         pooya::ScalarSignal s10;
 
@@ -77,15 +71,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test05");
     Pendulum pendulum;
-
-    // setup the model
-    model.add_block(pendulum);
 
     pooya::Rk4 stepper;
     pooya::Simulator sim(
-        model,
+        pendulum,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
@@ -94,7 +84,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(pendulum._phi);
 
     uint k = 0;

@@ -32,7 +32,8 @@ template<typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    explicit SinT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
+    explicit SinT(Submodel* parent = nullptr) : SingleInputOutputT<T>(parent, 1) {}
+    SinT(const ValidName& name, Submodel* parent) : SingleInputOutputT<T>(name, parent, 1) {}
 
     void activation_function(double /*t*/) override
     {

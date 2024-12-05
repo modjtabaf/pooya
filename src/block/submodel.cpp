@@ -148,13 +148,14 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
 bool Submodel::add_block(Block& component, const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
+    pooya_verify(component.parent() == this, component.full_name().str() + " is not my child!");
 
     if (!_initialized && !init())
     {
         return false;
     }
 
-    if (!component.init(this, ibus, obus))
+    if (!component.init(ibus, obus))
     {
         return false;
     }

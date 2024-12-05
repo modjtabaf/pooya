@@ -32,14 +32,17 @@ template<typename T>
 class AddT : public AddSubT<T>
 {
 public:
-    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "", initial) {}
+    explicit AddT(Submodel* parent = nullptr, const T& initial = 0.0) : AddSubT<T>(parent, "", initial) {}
+    AddT(const ValidName& name, Submodel* parent = nullptr, const T& initial = 0.0)
+        : AddSubT<T>(name, parent, "", initial)
+    {
+    }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool init(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + AddSubT<T>::full_name().str());
         AddSubT<T>::_operators = std::string(ibus.size(), '+');
-        return AddSubT<T>::init(parent, ibus, obus);
+        return AddSubT<T>::init(ibus, obus);
     }
 };
 

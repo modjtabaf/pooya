@@ -32,13 +32,13 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model;
-    pooya::Source src_F([](double t) -> double { return t < 1 ? 0 : 1; });
-    pooya::Gain gain_1_m(1 / m);
-    pooya::AddSub addsub_rhs("+--");
-    pooya::Integrator int_xdd;
-    pooya::Integrator int_xd;
-    pooya::Gain gain_c_m(c / m);
-    pooya::Gain gain_k_m(k / m);
+    pooya::Source src_F(&model, [](double t) -> double { return t < 1 ? 0 : 1; });
+    pooya::Gain gain_1_m(&model, 1 / m);
+    pooya::AddSub addsub_rhs(&model, "+--");
+    pooya::Integrator int_xdd(&model);
+    pooya::Integrator int_xd(&model);
+    pooya::Gain gain_c_m(&model, c / m);
+    pooya::Gain gain_k_m(&model, k / m);
 
     // create pooya signals
     pooya::ScalarSignal s_F;
@@ -62,7 +62,7 @@ int main()
     pooya::Rk4 solver;
     pooya::Simulator sim(model, nullptr, &solver);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(s_x);
     history.track(s_xd);
 

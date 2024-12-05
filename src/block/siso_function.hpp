@@ -38,8 +38,14 @@ protected:
     ActFunction _act_func;
 
 public:
-    explicit SISOFunctionT(ActFunction act_func) : SingleInputOutputT<T>(1), _act_func(act_func) {}
-    SISOFunctionT(const ValidName& name, ActFunction act_func) : SingleInputOutputT<T>(name, 1), _act_func(act_func) {}
+    explicit SISOFunctionT(Submodel* parent, ActFunction act_func)
+        : SingleInputOutputT<T>(parent, 1), _act_func(act_func)
+    {
+    }
+    SISOFunctionT(const ValidName& name, Submodel* parent, ActFunction act_func)
+        : SingleInputOutputT<T>(name, parent, 1), _act_func(act_func)
+    {
+    }
 
     void activation_function(double t) override
     {

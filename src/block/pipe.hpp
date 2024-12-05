@@ -32,7 +32,8 @@ template<typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    explicit PipeT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
+    explicit PipeT(Submodel* parent = nullptr) : SingleInputOutputT<T>(parent, 1) {}
+    PipeT(const ValidName& name, Submodel* parent = nullptr) : SingleInputOutputT<T>(name, parent, 1) {}
 
     void activation_function(double /*t*/) override
     {

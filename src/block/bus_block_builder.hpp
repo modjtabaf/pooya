@@ -44,16 +44,17 @@ protected:
                                const SignalImplPtr& sig_out) = 0;
 
 public:
-    explicit BusBlockBuilder(const std::initializer_list<std::string>& excluded_labels = {})
-        : _excluded_labels(excluded_labels)
+    explicit BusBlockBuilder(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+        : Leaf(&parent), _excluded_labels(excluded_labels)
     {
     }
-    BusBlockBuilder(const ValidName& name, const std::initializer_list<std::string>& excluded_labels = {})
-        : Leaf(name), _excluded_labels(excluded_labels)
+    BusBlockBuilder(const ValidName& name, Submodel& parent,
+                    const std::initializer_list<std::string>& excluded_labels = {})
+        : Leaf(name, &parent), _excluded_labels(excluded_labels)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override;
+    bool init(const Bus& ibus, const Bus& obus) override;
     void _mark_unprocessed() override;
 };
 

@@ -37,19 +37,19 @@ protected:
     T _ret;
 
 public:
-    MulDivT(const std::string& operators, const T& initial = 1.0)
-        : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    MulDivT(Submodel* parent, const std::string& operators, const T& initial = 1.0)
+        : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
-    MulDivT(const ValidName& name, const std::string& operators, const T& initial = 1.0)
-        : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    MulDivT(const ValidName& name, Submodel* parent, const std::string& operators, const T& initial = 1.0)
+        : SingleOutputT<T>(name, parent, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool init(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        if (!SingleOutputT<T>::init(ibus, obus))
         {
             return false;
         }

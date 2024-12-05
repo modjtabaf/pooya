@@ -29,21 +29,22 @@ class SingleOutputT : public Base
 protected:
     typename Types<T>::Signal _s_out;
 
-    explicit SingleOutputT(uint16_t num_iports = Block::NoIOLimit) : Base(num_iports, 1) {}
-    SingleOutputT(const ValidName& name, uint16_t num_iports = Block::NoIOLimit) : Base(name, num_iports, 1) {}
-    SingleOutputT(uint16_t num_iports, uint16_t num_oports) : Base(num_iports, num_oports)
+    explicit SingleOutputT(Submodel* parent = nullptr, uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
+        : Base(parent, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
-    SingleOutputT(const ValidName& name, uint16_t num_iports, uint16_t num_oports) : Base(name, num_iports, num_oports)
+    SingleOutputT(const ValidName& name, Submodel* parent = nullptr, uint16_t num_iports = Block::NoIOLimit,
+                  uint16_t num_oports = 1)
+        : Base(name, parent, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
 
 public:
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool init(const Bus& ibus, const Bus& obus) override
     {
-        if (!Base::init(parent, ibus, obus))
+        if (!Base::init(ibus, obus))
         {
             return false;
         }

@@ -60,26 +60,27 @@ protected:
     Bus _ibus;
     Bus _obus;
     std::vector<SignalLinkPair> _linked_signals;
-    Submodel* _parent{nullptr};
+    Submodel* const _parent{nullptr};
     uint16_t _num_iports{NoIOLimit};
     uint16_t _num_oports{NoIOLimit};
 
     bool _processed{false};
     bool link_signal(const ValueSignalImplPtr& sig, SignalLinkType type);
 
-    Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : _num_iports(num_iports), _num_oports(num_oports)
+    Block(Submodel* parent = nullptr, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+        : _parent(parent), _num_iports(num_iports), _num_oports(num_oports)
     {
     }
-    Block(const ValidName& name, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : NamedObject(name), _num_iports(num_iports), _num_oports(num_oports)
+    Block(const ValidName& name, Submodel* parent = nullptr, uint16_t num_iports = NoIOLimit,
+          uint16_t num_oports = NoIOLimit)
+        : NamedObject(name), _parent(parent), _num_iports(num_iports), _num_oports(num_oports)
     {
     }
 
 public:
     virtual ~Block() = default;
 
-    virtual bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus());
+    virtual bool init(const Bus& ibus = Bus(), const Bus& obus = Bus());
     virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}

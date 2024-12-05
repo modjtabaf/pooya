@@ -30,24 +30,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
                             const SignalImplPtr& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     std::shared_ptr<Block> block;
-    if (wi.single_value_type() == BusSpec::SingleValueType::Scalar)
+    if (sig_in->is_scalar())
     {
         block = std::make_shared<Pipe>("pipe");
     }
-    else if (wi.single_value_type() == BusSpec::SingleValueType::Int)
+    else if (sig_in->is_int())
     {
         block = std::make_shared<PipeI>("pipe");
     }
-    else if (wi.single_value_type() == BusSpec::SingleValueType::Bool)
+    else if (sig_in->is_bool())
     {
         block = std::make_shared<PipeB>("pipe");
     }
-    else if (wi._array_size > 0)
+    else if (sig_in->is_array())
     {
         block = std::make_shared<PipeA>("pipe");
     }
@@ -56,7 +56,7 @@ void BusPipe::block_builder(const std::string& /*full_label*/, const BusSpec::Wi
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+    _parent->add_block(*block, Bus(sig_in), Bus(sig_out));
     _blocks.emplace_back(std::move(block));
 }
 

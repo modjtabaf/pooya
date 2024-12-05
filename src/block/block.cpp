@@ -54,21 +54,21 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
 
     _linked_signals.reserve(ibus.size() + obus.size());
 
-    for (auto& sig : ibus)
+    for (const auto& sig_key : ibus)
     {
-        if (sig.second->is_value())
+        const auto& sig = ibus[sig_key];
+        if (sig->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
-                        SignalLinkType::Input);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Input);
         }
     }
 
-    for (auto& sig : obus)
+    for (const auto& sig_key : obus)
     {
-        if (sig.second->is_value())
+        const auto& sig = obus[sig_key];
+        if (sig->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
-                        SignalLinkType::Output);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Output);
         }
     }
 

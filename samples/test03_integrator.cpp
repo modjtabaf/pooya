@@ -43,8 +43,6 @@ int main()
     pooya::ScalarSignal xd("xd");
     pooya::BoolSignal trigger("trigger");
 
-    pooya::BusSpec spec{{"z"}};
-
     // setup the model
     model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);
 

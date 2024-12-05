@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <chrono>
 #include <iostream>
 #include <math.h>
+#include <string>
 
 #include "src/block/bus_memory.hpp"
 #include "src/block/submodel.hpp"
@@ -29,6 +30,26 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/simulator.hpp"
+
+class MyBus : public pooya::Bus
+{
+public:
+    MyBus(const std::string& name)
+        : pooya::Bus( //
+              name,   //
+              {
+                  {"x0", pooya::ScalarSignal("x0")},
+                  {"x1", pooya::ScalarSignal("x1")},
+                  {"Z", pooya::Bus( //
+                            "Z",    //
+                            {
+                                {"z3", pooya::ScalarSignal("z3")},
+                            })},
+                  {"x2", pooya::ScalarSignal("x2")},
+              })
+    {
+    }
+};
 
 int main()
 {
@@ -41,40 +62,9 @@ int main()
     pooya::Submodel model("test10");
     pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
 
-    pooya::BusSpec internal_bus_spec({
-        {"z3"}, // wire 0 labeled "z3" carries a scalar signal
-    });
-
-    pooya::BusSpec bus_spec({
-        {"x0"},                   // wire 0 labeled "x0" carries a scalar signal
-        {"x1"},                   // wire 1 labeled "x1" carries a scalar signal
-        {"Z", internal_bus_spec}, // wire 2 labeled "Z" carries a bus
-        {"x2"},                   // wire 3 labeled "x2" carries a scalar signal
-    });
-
     // create buses (signals)
-
-    auto x = pooya::Bus("x", bus_spec); // assign bus wires implicitely
-    /*
-    // alternative 1
-    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
-        model.signal("x0"), model.signal("x1"),
-        model.bus("any_name_you_like", internal_bus_spec, {model.signal("z3")}),
-        model.signal("x2"),
-    });
-    */
-    /*
-    // alternative 2
-    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely while
-    specifying wire labels (order does not matter)
-        {"x2", model.signal("x2"),},
-        {"x0", model.signal("x0"),},
-        {"x1", model.signal("x1"),},
-        {"Z", model.bus("any_name_you_like", internal_bus_spec)},
-    });
-    */
-
-    auto y = pooya::Bus("y", bus_spec);
+    MyBus x("x");
+    MyBus y("y");
 
     // setup the model
     model.add_block(bus_memory, x, y);

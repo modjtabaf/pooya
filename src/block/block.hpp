@@ -94,15 +94,7 @@ public:
     template<typename T, typename Key>
     typename Types<T>::Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
     {
-        SignalImplPtr ptr;
-        if constexpr (std::is_same_v<Key, std::size_t>)
-        {
-            ptr = bus->at(key).second;
-        }
-        else
-        {
-            ptr = bus->at(key);
-        }
+        SignalImplPtr ptr = bus->at(key);
         typename Types<T>::Signal sig(ptr);
         if (type.has_value())
         {

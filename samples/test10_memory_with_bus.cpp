@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the “Software”), to deal in
@@ -23,20 +23,22 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <math.h>
 
-#include "src/core/helper.hpp"
-#include "src/core/pooya.hpp"
-#include "src/core/solver.hpp"
+#include "src/block/bus_memory.hpp"
+#include "src/block/submodel.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
+#include "src/solver/history.hpp"
+#include "src/solver/simulator.hpp"
 
 int main()
 {
     pooya_trace0;
 
     using milli = std::chrono::milliseconds;
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test10");
+    pooya::Submodel model("test10");
     pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
 
     pooya::BusSpec internal_bus_spec({
@@ -52,11 +54,11 @@ int main()
 
     // create buses (signals)
 
-    auto x = model.bus("x", bus_spec); // assign bus wires implicitely
+    auto x = pooya::Bus("x", bus_spec); // assign bus wires implicitely
     /*
     // alternative 1
-    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without
-    specifying wire labels (order matters) model.signal("x0"), model.signal("x1"),
+    auto x = model.bus("x", bus_spec, { // assign bus wires explicitely without specifying wire labels (order matters)
+        model.signal("x0"), model.signal("x1"),
         model.bus("any_name_you_like", internal_bus_spec, {model.signal("z3")}),
         model.signal("x2"),
     });
@@ -72,27 +74,39 @@ int main()
     });
     */
 
-    auto y = model.bus("y", bus_spec);
+    auto y = pooya::Bus("y", bus_spec);
 
     // setup the model
     model.add_block(bus_memory, x, y);
 
-    auto x_x0 = x->scalar_at("x0");
-    auto x_x1 = x->scalar_at("x1");
-    auto x_x2 = x->scalar_at("x2");
-    auto x_z3 = x->scalar_at("Z.z3");
+    pooya::ScalarSignal x_x0 = x.scalar_at("x0");
+    pooya::ScalarSignal x_x1 = x.scalar_at("x1");
+    pooya::ScalarSignal x_x2 = x.scalar_at("x2");
+    pooya::ScalarSignal x_z3 = x.scalar_at("Z.z3");
 
-    pooya::Simulator sim(
-        model, [&](pooya::Model &, double t) -> void
-        {
-            pooya_trace0;
-            x_x0->set(std::sin(M_PI * t / 3));
-            x_x1->set(std::sin(M_PI * t / 5));
-            x_x2->set(std::sin(M_PI * t / 7));
-            x_z3->set(std::sin(M_PI * t / 9));
-        });
+    pooya::ScalarSignal y_x0 = y.scalar_at("x0");
+    pooya::ScalarSignal y_x1 = y.scalar_at("x1");
+    pooya::ScalarSignal y_x2 = y.scalar_at("x2");
+    pooya::ScalarSignal y_z3 = y.scalar_at("Z.z3");
+
+    pooya::Simulator sim(model,
+                         [&](pooya::Block&, double t) -> void
+                         {
+                             pooya_trace0;
+                             x_x0 = std::sin(M_PI * t / 3);
+                             x_x2 = std::sin(M_PI * t / 7);
+                             x_z3 = std::sin(M_PI * t / 9);
+                         });
 
     pooya::History history(model);
+    history.track(x_x0);
+    history.track(x_x1);
+    history.track(x_x2);
+    history.track(x_z3);
+    history.track(y_x0);
+    history.track(y_x1);
+    history.track(y_x2);
+    history.track(y_z3);
 
     uint k = 0;
     double t;
@@ -104,32 +118,20 @@ int main()
     }
 
     auto finish = std::chrono::high_resolution_clock::now();
-    std::cout << "It took "
-              << std::chrono::duration_cast<milli>(finish - start).count()
-              << " milliseconds\n";
+    std::cout << "It took " << std::chrono::duration_cast<milli>(finish - start).count() << " milliseconds\n";
 
     history.shrink_to_fit();
-
-    auto y_x0 = y->scalar_at("x0");
-    auto y_x1 = y->scalar_at("x1");
-    auto y_x2 = y->scalar_at("x2");
-    auto y_z3 = y->scalar_at("Z.z3");
 
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
-    gp << "plot"
-        << gp.file1d(history[x_x0]) << "with lines title 'x0',"
-        << gp.file1d(history[y_x0]) << "with lines title 'y0',"
-        << gp.file1d(history[x_x1]) << "with lines title 'x1',"
-        << gp.file1d(history[y_x1]) << "with lines title 'y1',"
-        << gp.file1d(history[x_x2]) << "with lines title 'x2',"
-        << gp.file1d(history[y_x2]) << "with lines title 'y2',"
-        << gp.file1d(history[x_z3]) << "with lines title 'x3',"
-        << gp.file1d(history[y_z3]) << "with lines title 'y3',"
-        << "\n";
+    gp << "plot" << gp.file1d(history[x_x0]) << "with lines title 'x0'," << gp.file1d(history[y_x0])
+       << "with lines title 'y0'," << gp.file1d(history[x_x1]) << "with lines title 'x1'," << gp.file1d(history[y_x1])
+       << "with lines title 'y1'," << gp.file1d(history[x_x2]) << "with lines title 'x2'," << gp.file1d(history[y_x2])
+       << "with lines title 'y2'," << gp.file1d(history[x_z3]) << "with lines title 'x3'," << gp.file1d(history[y_z3])
+       << "with lines title 'y3'," << "\n";
 
-    assert(pooya::util::pooya_trace_info.size() == 1);
+    assert(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

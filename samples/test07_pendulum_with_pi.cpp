@@ -1,69 +1,74 @@
 /*
-Copyright 2023 Mojtaba (Moji) Fathi
+Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
 
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
-#include "src/core/pooya.hpp"
-#include "src/core/helper.hpp"
-#include "src/core/solver.hpp"
+#include "src/block/add.hpp"
+#include "src/block/gain.hpp"
+#include "src/block/integrator.hpp"
+#include "src/block/muldiv.hpp"
+#include "src/block/sin.hpp"
+#include "src/block/submodel.hpp"
+#include "src/block/subtract.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
+#include "src/solver/history.hpp"
+#include "src/solver/rkf45.hpp"
+#include "src/solver/simulator.hpp"
 
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{"tau_ml2", "*///"};
-    pooya::Subtract _sub{"err"};
-    pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{"phi"};
-    pooya::Sin _sin{"sin_phi"};
-    pooya::MulDiv _muldiv2{"g_l", "**/"};
+    pooya::MulDiv _muldiv1{"*///"};
+    pooya::Subtract _sub;
+    pooya::Integrator _integ1;
+    pooya::Integrator _integ2;
+    pooya::Sin _sin;
+    pooya::MulDiv _muldiv2{"**/"};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
+    pooya::ScalarSignal _m;
+    pooya::ScalarSignal _g;
+    pooya::ScalarSignal _l;
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus))
-            return false;
+        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
 
         // create pooya signals
-        auto dphi = scalar_signal("dphi");
-
-        // choose random names for these internal signals
-        auto s10 = scalar_signal();
-        auto s20 = scalar_signal();
-        auto s30 = scalar_signal();
-        auto s40 = scalar_signal();
-
-        auto& model_ = model_ref();
-        auto m = model_.scalar_signal("m");
-        auto g = model_.scalar_signal("g");
-        auto l = model_.scalar_signal("l");
+        pooya::ScalarSignal dphi;
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s40;
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
 
         // setup the submodel
-        add_block(_muldiv1, {tau, m, l, l},  s10);
+        add_block(_muldiv1, {tau, _m, _l, _l}, s10);
         add_block(_sub, {s10, s20}, s30);
         add_block(_integ1, s30, dphi);
         add_block(_integ2, dphi, phi);
         add_block(_sin, phi, s40);
-        add_block(_muldiv2, {s40, g, l}, s20);
+        add_block(_muldiv2, {s40, _g, _l}, s20);
 
         return true;
     }
@@ -75,27 +80,20 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{"Add"};
+    pooya::Add _add;
 
 public:
-    PI(double Kp, double Ki, double x0=0.0) :
-        pooya::Submodel("PI"),
-        _gain_p("Kp", Kp),
-        _integ("ix", x0),
-        _gain_i("Ki", Ki)
-    {}
+    PI(double Kp, double Ki, double x0 = 0.0) : _gain_p(Kp), _integ(x0), _gain_i(Ki) {}
 
-    bool init(pooya::Parent& parent, pooya::BusId ibus, pooya::BusId obus) override
+    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus))
-            return false;
+        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
 
-        // choose random names for these internal signals
-        auto s10 = scalar_signal();
-        auto s20 = scalar_signal();
-        auto s30 = scalar_signal();
+        pooya::ScalarSignal s10;
+        pooya::ScalarSignal s20;
+        pooya::ScalarSignal s30;
 
         auto x = scalar_input_at(0);
         auto y = scalar_output_at(0);
@@ -113,31 +111,26 @@ public:
 class PendulumWithPI : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{"Sub"};
+    pooya::Subtract _sub;
     PI _pi{40.0, 20.0};
-    Pendulum _pend;
 
 public:
-    PendulumWithPI() : pooya::Submodel("pendulum_with_PI") {}
+    Pendulum _pend;
+    pooya::ScalarSignal _des_phi;
+    pooya::ScalarSignal _phi;
+    pooya::ScalarSignal _tau;
+    pooya::ScalarSignal _err;
 
-    bool init(pooya::Parent& parent, pooya::BusId, pooya::BusId) override
+    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent))
-            return false;
-
-        // signals
-        auto phi = scalar_signal("phi");
-        auto tau = scalar_signal("tau");
-        auto err = scalar_signal("err");
-
-        auto des_phi = model_ref().scalar_signal("des_phi");
+        if (!pooya::Submodel::init(parent)) return false;
 
         // blocks
-        add_block(_sub, {des_phi, phi}, err);
-        add_block(_pi, err, tau);
-        add_block(_pend, tau, phi);
+        add_block(_sub, {_des_phi, _phi}, _err);
+        add_block(_pi, _err, _tau);
+        add_block(_pend, _tau, _phi);
 
         return true;
     }
@@ -148,33 +141,30 @@ int main()
     pooya_trace0;
 
     using milli = std::chrono::milliseconds;
-    auto  start = std::chrono::high_resolution_clock::now();
+    auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Model model("test07");
+    pooya::Submodel model;
     PendulumWithPI pendulum_with_pi;
 
     // setup the model
     model.add_block(pendulum_with_pi);
 
-    auto m = model.scalar_signal("m");
-    auto l = model.scalar_signal("l");
-    auto g = model.scalar_signal("g");
-    auto des_phi = model.scalar_signal("des_phi");
-
     pooya::Rkf45 stepper;
-    pooya::Simulator sim(model,
-        [&](pooya::Model&, double /*t*/) -> void
+    pooya::Simulator sim(
+        model,
+        [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            m->set(0.2);
-            l->set(0.1);
-            g->set(9.81);
-            des_phi->set(M_PI_4);
+            pendulum_with_pi._pend._m = 0.2;
+            pendulum_with_pi._pend._l = 0.1;
+            pendulum_with_pi._pend._g = 9.81;
+            pendulum_with_pi._des_phi = M_PI_4;
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference
 
     pooya::History history(model);
+    history.track(pendulum_with_pi._phi);
 
     uint k = 0;
     double t;
@@ -186,24 +176,21 @@ int main()
     }
 
     auto finish = std::chrono::high_resolution_clock::now();
-    std::cout << "It took "
-              << std::chrono::duration_cast<milli>(finish - start).count()
-              << " milliseconds\n";
-
-    auto phi = model.lookup_signal("~phi");
+    std::cout << "It took " << std::chrono::duration_cast<milli>(finish - start).count() << " milliseconds\n";
 
     history.shrink_to_fit();
 
     Gnuplot gp;
-	gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
+    gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-50:150]\n";
-	gp << "plot" << gp.file1d((history[phi] * (180/M_PI)).eval()) << "with lines title 'phi'"
-        ","
-	    // << gp.file1d(history[sig_reg.lookup_signal(".dphi")]) << "with lines title 'dphi',"
-	    // << gp.file1d(history[sig_reg.lookup_signal(".tau")]) << "with lines title 'tau'"
-        "\n";
+    gp << "plot" << gp.file1d((history[pendulum_with_pi._phi] * (180 / M_PI)).eval())
+       << "with lines title 'phi'"
+          ","
+          // << gp.file1d(history[sig_reg.lookup_signal(".dphi")]) << "with lines title 'dphi',"
+          // << gp.file1d(history[sig_reg.lookup_signal(".tau")]) << "with lines title 'tau'"
+          "\n";
 
-    assert(pooya::util::pooya_trace_info.size() == 1);
+    assert(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

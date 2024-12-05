@@ -27,18 +27,18 @@ Here is the implementation:
 constexpr double m{0.25}, c{0.3}, k{0.7};
 
 // create pooya blocks
-pooya::Model      model("model");
-pooya::Source     src_F("F(t)",
+pooya::Submodel   model;
+pooya::Source     src_F(
     [](double t) -> double
     {
         return t < 1 ? 0 : 1;
     });
-pooya::Gain       gain_1_m("1_m", 1 / m);
-pooya::AddSub     addsub_rhs("rhs", "+--");
-pooya::Integrator int_xdd("xdd");
-pooya::Integrator int_xd("xd");
-pooya::Gain       gain_c_m("c_m", c / m);
-pooya::Gain       gain_k_m("k_m", k / m);
+pooya::Gain       gain_1_m(1 / m);
+pooya::AddSub     addsub_rhs("+--");
+pooya::Integrator int_xdd;
+pooya::Integrator int_xd;
+pooya::Gain       gain_c_m(c / m);
+pooya::Gain       gain_k_m(k / m);
 ```
 
 The second step is to identify the signals and their equivalent **pooya** signal types and label them. The most common signal type is a scalar signal which represents a scalar real number. In this block diagram, all signals are scalars so it is not needed to mention the signal types. In the diagram below, the identified signals are prefixed *s_* and labeled in red:
@@ -49,13 +49,13 @@ Here is the implementation:
 
 ```cpp
 // create signals
-pooya::ScalarSignalId s_F     = model.create_scalar_signal("F");
-pooya::ScalarSignalId s_F_m   = model.create_scalar_signal("F_m");
-pooya::ScalarSignalId s_xdd   = model.create_scalar_signal("xdd");
-pooya::ScalarSignalId s_xd    = model.create_scalar_signal("xd");
-pooya::ScalarSignalId s_x     = model.create_scalar_signal("x");
-pooya::ScalarSignalId s_kx_m  = model.create_scalar_signal("kx_m");
-pooya::ScalarSignalId s_cxd_m = model.create_scalar_signal("cxd_m");
+pooya::ScalarSignal s_F;
+pooya::ScalarSignal s_F_m;
+pooya::ScalarSignal s_xdd;
+pooya::ScalarSignal s_xd;
+pooya::ScalarSignal s_x;
+pooya::ScalarSignal s_kx_m;
+pooya::ScalarSignal s_cxd_m;
 ```
 
 Now that all blocks and signals are defined, the model could be set up by adding the blocks and defining input and output signals:
@@ -75,9 +75,12 @@ The model setup is complete and it is ready to use. The RK4 solver works well fo
 
 ```cpp
 // set up the simulator
-pooya::Rk4 solver(model);
+pooya::Rk4 solver;
 pooya::Simulator sim(model, nullptr, &solver);
+
 pooya::History history(model);
+history.track(s_x);
+history.track(s_xd);
 
 // run the simulation
 double t;

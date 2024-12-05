@@ -30,10 +30,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-bool BusMemory::init(const Bus& ibus, const Bus& obus)
+bool BusMemory::connect(const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
-    if (!BusBlockBuilder::init(ibus, obus))
+    if (!BusBlockBuilder::connect(ibus, obus))
     {
         return false;
     }
@@ -51,26 +51,23 @@ void BusMemory::block_builder(const std::string& full_label, const SignalImplPtr
     std::shared_ptr<Block> block;
     if (sig_in->is_scalar())
     {
-        block = (it == _init_values.end()) ? std::make_shared<Memory>("memory", _parent)
-                                           : std::make_shared<Memory>("memory", _parent, it->second.as_scalar());
+        block = (it == _init_values.end()) ? std::make_shared<Memory>(_parent)
+                                           : std::make_shared<Memory>(_parent, it->second.as_scalar());
     }
     else if (sig_in->is_int())
     {
-        block = (it == _init_values.end())
-                    ? std::make_shared<MemoryI>("memory", _parent)
-                    : std::make_shared<MemoryI>("memory", _parent, std::round(it->second.as_scalar()));
+        block = (it == _init_values.end()) ? std::make_shared<MemoryI>(_parent)
+                                           : std::make_shared<MemoryI>(_parent, std::round(it->second.as_scalar()));
     }
     else if (sig_in->is_bool())
     {
-        block = (it == _init_values.end())
-                    ? std::make_shared<MemoryB>("memory", _parent)
-                    : std::make_shared<MemoryB>("memory", _parent, Bool(it->second.as_scalar() != 0));
+        block = (it == _init_values.end()) ? std::make_shared<MemoryB>(_parent)
+                                           : std::make_shared<MemoryB>(_parent, Bool(it->second.as_scalar() != 0));
     }
     else if (sig_in->is_array())
     {
-        block = (it == _init_values.end())
-                    ? std::make_shared<MemoryA>("memory", _parent, Array::Zero(sig_in->as_array().size()))
-                    : std::make_shared<MemoryA>("memory", _parent, it->second.as_array());
+        block = (it == _init_values.end()) ? std::make_shared<MemoryA>(_parent, Array::Zero(sig_in->as_array().size()))
+                                           : std::make_shared<MemoryA>(_parent, it->second.as_array());
     }
     else
     {
@@ -82,7 +79,7 @@ void BusMemory::block_builder(const std::string& full_label, const SignalImplPtr
         _init_values.erase(it);
     }
 
-    _parent->add_block(*block, sig_in, sig_out);
+    block->connect(sig_in, sig_out);
     _blocks.emplace_back(std::move(block));
 }
 

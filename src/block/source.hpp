@@ -38,11 +38,8 @@ protected:
     SourceFunction _src_func;
 
 public:
-    explicit SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
-    SourceT(const ValidName& name, Submodel* parent, SourceFunction src_func)
-        : SingleOutputT<T>(name, parent), _src_func(src_func)
-    {
-    }
+    explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
+    SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
 
     void activation_function(double t) override
     {

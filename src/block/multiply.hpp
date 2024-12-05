@@ -32,17 +32,14 @@ template<typename T>
 class MultiplyT : public MulDivT<T>
 {
 public:
-    explicit MultiplyT(Submodel* parent = nullptr, const T& initial = 1.0) : MulDivT<T>(parent, initial) {}
-    MultiplyT(const ValidName& name, Submodel* parent = nullptr, const T& initial = 1.0)
-        : MulDivT<T>(name, parent, "", initial)
-    {
-    }
+    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
+    MultiplyT(Submodel* parent, const T& initial = 1.0) : MulDivT<T>(parent, "", initial) {}
 
-    bool init(const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + MulDivT<T>::full_name().str());
         MulDivT<T>::_operators = std::string(ibus.size(), '*');
-        return MulDivT<T>::init(parent, ibus, obus);
+        return MulDivT<T>::connect(parent, ibus, obus);
     }
 };
 

@@ -34,17 +34,16 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test11");
-    pooya::GainI gain("gain", &model, 2);
+    pooya::GainI gain(2);
 
     // create pooya signals
     pooya::IntSignal x("x");
     pooya::IntSignal y("y");
 
     // setup the model
-    model.add_block(gain, x, y);
+    gain.connect(x, y);
 
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(gain,
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;

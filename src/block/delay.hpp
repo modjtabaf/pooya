@@ -43,16 +43,13 @@ protected:
     typename Types<T>::Signal _s_initial; // initial
 
 public:
-    explicit DelayT(Submodel* parent, double lifespan) : SingleOutputT<T>(parent, 3, 1), _lifespan(lifespan) {}
-    DelayT(const ValidName& name, Submodel* parent, double lifespan)
-        : SingleOutputT<T>(name, parent, 3, 1), _lifespan(lifespan)
-    {
-    }
+    explicit DelayT(double lifespan) : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
+    DelayT(Submodel* parent, double lifespan) : SingleOutputT<T>(parent, 3, 1), _lifespan(lifespan) {}
 
-    bool init(const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(ibus, obus))
+        if (!SingleOutputT<T>::connect(ibus, obus))
         {
             return false;
         }

@@ -35,17 +35,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"dphi", this, M_PI_4};
-    pooya::Integrator _integ2{"phi", this};
-    // pooya::SISOFunction _sin("sin_phi", this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    // pooya::SOFunction _sin("sin_phi", this, [](double /*t*/, const pooya::Bus& ibus) -> double
+    pooya::Integrator _integ1{this, M_PI_4};
+    pooya::Integrator _integ2{this};
+    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
+    // pooya::SOFunction _sin(this, [](double /*t*/, const pooya::Bus& ibus) -> double
     //                        { return std::sin(ibus.scalar_at(0)->get()); });
-    // pooya::Function _sin("sin_phi", this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+    // pooya::Function _sin(this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
     //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); });
-    pooya::Sin _sin{"sin(phi)", this};
-    pooya::MulDiv _muldiv1{"g_l", this, "**/"};
-    pooya::MulDiv _muldiv2{"tau_ml2", this, "*///"};
-    pooya::Subtract _sub{"d2phi", this};
+    pooya::Sin _sin{this};
+    pooya::MulDiv _muldiv1{this, "**/"};
+    pooya::MulDiv _muldiv2{this, "*///"};
+    pooya::Subtract _sub{this};
 
 public:
     pooya::ScalarSignal _tau{"tau"};
@@ -56,25 +56,28 @@ public:
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
 
-    bool init(const pooya::Bus&, const pooya::Bus&) override
+    Pendulum()
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init()) return false;
+        _integ1.rename("dphi");
+        _integ2.rename("phi");
+        _sin.rename("sin(phi)");
+        _muldiv1.rename("g_l");
+        _muldiv2.rename("tau_ml2");
+        _sub.rename("d2phi");
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
 
         // setup the submodel
-        add_block(_integ1, _d2phi, _dphi);
-        add_block(_integ2, _dphi, _phi);
-        add_block(_sin, _phi, s10);
-        add_block(_muldiv1, {s10, _g, _l}, s20);
-        add_block(_muldiv2, {_tau, _m, _l, _l}, s30);
-        add_block(_sub, {s30, s20}, _d2phi);
-
-        return true;
+        _integ1.connect(_d2phi, _dphi);
+        _integ2.connect(_dphi, _phi);
+        _sin.connect(_phi, s10);
+        _muldiv1.connect({s10, _g, _l}, s20);
+        _muldiv2.connect({_tau, _m, _l, _l}, s30);
+        _sub.connect({s30, s20}, _d2phi);
     }
 };
 

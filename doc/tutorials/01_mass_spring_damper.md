@@ -62,13 +62,13 @@ Now that all blocks and signals are defined, the model could be set up by adding
 
 ```cpp
 // setup the model
-model.add_block(src_F, {}, s_F);
-model.add_block(gain_1_m, s_F, s_F_m);
-model.add_block(addsub_rhs, {s_F_m, s_cxd_m, s_kx_m}, s_xdd);
-model.add_block(int_xdd, s_xdd, s_xd);
-model.add_block(int_xd, s_xd, s_x);
-model.add_block(gain_c_m, s_xd, s_cxd_m);
-model.add_block(gain_k_m, s_x, s_kx_m);
+src_F.connect({}, s_F);
+gain_1_m.connect(s_F, s_F_m);
+addsub_rhs.connect({s_F_m, s_cxd_m, s_kx_m}, s_xdd);
+int_xdd.connect(s_xdd, s_xd);
+int_xd.connect(s_xd, s_x);
+gain_c_m.connect(s_xd, s_cxd_m);
+gain_k_m.connect(s_x, s_kx_m);
 ```
 
 The model setup is complete and it is ready to use. The RK4 solver works well for this model. A simulator object is needed for simulating along with a history object for recording the signal values. While the history object is optional for simulation, it is useful for post-processing. Here, the simulation starts at `t0 = 0` and is run for 10 seconds with a fixed time step of 0.1 seconds:

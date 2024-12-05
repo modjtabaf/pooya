@@ -46,13 +46,13 @@ public:
     pooya::ScalarSignal _g;
     pooya::ScalarSignal _l;
 
-    explicit Pendulum(pooya::Submodel* parent) : pooya::Submodel("pendulum", parent) {}
+    explicit Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent) { rename("pendulum"); }
 
-    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
+    bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(ibus, obus)) return false;
+        if (!pooya::Submodel::connect(ibus, obus)) return false;
 
         // create pooya signals
         pooya::ScalarSignal dphi;
@@ -65,12 +65,12 @@ public:
         auto phi = scalar_output_at(0);
 
         // setup the submodel
-        add_block(_muldiv1, {tau, _m, _l, _l}, s10);
-        add_block(_sub, {s10, s20}, s30);
-        add_block(_integ1, s30, dphi);
-        add_block(_integ2, dphi, phi);
-        add_block(_sin, phi, s40);
-        add_block(_muldiv2, {s40, _g, _l}, s20);
+        _muldiv1.connect({tau, _m, _l, _l}, s10);
+        _sub.connect({s10, s20}, s30);
+        _integ1.connect(s30, dphi);
+        _integ2.connect(dphi, phi);
+        _sin.connect(phi, s40);
+        _muldiv2.connect({s40, _g, _l}, s20);
 
         return true;
     }
@@ -88,13 +88,14 @@ public:
     PI(pooya::Submodel* parent, double Kp, double Ki, double x0 = 0.0)
         : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki)
     {
+        rename("PI");
     }
 
-    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
+    bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(ibus, obus)) return false;
+        if (!pooya::Submodel::connect(ibus, obus)) return false;
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
@@ -104,10 +105,10 @@ public:
         auto y = scalar_output_at(0);
 
         // blocks
-        add_block(_gain_p, x, s10);
-        add_block(_integ, x, s20);
-        add_block(_gain_i, s20, s30);
-        add_block(_add, {s10, s30}, y);
+        _gain_p.connect(x, s10);
+        _integ.connect(x, s20);
+        _gain_i.connect(s20, s30);
+        _add.connect({s10, s30}, y);
 
         return true;
     }
@@ -126,18 +127,11 @@ public:
     pooya::ScalarSignal _tau;
     pooya::ScalarSignal _err;
 
-    bool init(const pooya::Bus&, const pooya::Bus&) override
+    PendulumWithPI()
     {
-        pooya_trace0;
-
-        if (!pooya::Submodel::init()) return false;
-
-        // blocks
-        add_block(_sub, {_des_phi, _phi}, _err);
-        add_block(_pi, _err, _tau);
-        add_block(_pend, _tau, _phi);
-
-        return true;
+        _sub.connect({_des_phi, _phi}, _err);
+        _pi.connect(_err, _tau);
+        _pend.connect(_tau, _phi);
     }
 };
 

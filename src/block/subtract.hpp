@@ -32,11 +32,8 @@ template<typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
-    explicit SubtractT(Submodel* parent = nullptr, const T& initial = 0.0) : AddSubT<T>(parent, "+-", initial) {}
-    SubtractT(const ValidName& name, Submodel* parent = nullptr, const T& initial = 0.0)
-        : AddSubT<T>(name, parent, "+-", initial)
-    {
-    }
+    explicit SubtractT(const T& initial = 0.0) : AddSubT<T>("+-", initial) {}
+    SubtractT(Submodel* parent, const T& initial = 0.0) : AddSubT<T>(parent, "+-", initial) {}
 };
 
 using Subtract  = SubtractT<double>;

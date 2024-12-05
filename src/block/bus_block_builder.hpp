@@ -48,13 +48,8 @@ public:
         : Leaf(&parent), _excluded_labels(excluded_labels)
     {
     }
-    BusBlockBuilder(const ValidName& name, Submodel& parent,
-                    const std::initializer_list<std::string>& excluded_labels = {})
-        : Leaf(name, &parent), _excluded_labels(excluded_labels)
-    {
-    }
 
-    bool init(const Bus& ibus, const Bus& obus) override;
+    bool connect(const Bus& ibus, const Bus& obus) override;
     void _mark_unprocessed() override;
 };
 

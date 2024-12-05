@@ -59,15 +59,16 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test10");
-    pooya::BusMemory bus_memory("memory", model, {{"Z.z3", 1.0}}, {"x1"});
+    pooya::Submodel model;
+    model.rename("test10");
+    pooya::BusMemory bus_memory(model, {{"Z.z3", 1.0}}, {"x1"});
 
     // create buses (signals)
     MyBus x("x");
     MyBus y("y");
 
     // setup the model
-    model.add_block(bus_memory, x, y);
+    bus_memory.connect(x, y);
 
     pooya::ScalarSignal x_x0 = x.scalar_at("x0");
     pooya::ScalarSignal x_x1 = x.scalar_at("x1");
@@ -119,7 +120,8 @@ int main()
        << "with lines title 'y0'," << gp.file1d(history[x_x1]) << "with lines title 'x1'," << gp.file1d(history[y_x1])
        << "with lines title 'y1'," << gp.file1d(history[x_x2]) << "with lines title 'x2'," << gp.file1d(history[y_x2])
        << "with lines title 'y2'," << gp.file1d(history[x_z3]) << "with lines title 'x3'," << gp.file1d(history[y_z3])
-       << "with lines title 'y3'," << "\n";
+       << "with lines title 'y3',"
+       << "\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

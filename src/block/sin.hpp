@@ -33,7 +33,6 @@ class SinT : public SingleInputOutputT<T>
 {
 public:
     explicit SinT(Submodel* parent = nullptr) : SingleInputOutputT<T>(parent, 1) {}
-    SinT(const ValidName& name, Submodel* parent) : SingleInputOutputT<T>(name, parent, 1) {}
 
     void activation_function(double /*t*/) override
     {

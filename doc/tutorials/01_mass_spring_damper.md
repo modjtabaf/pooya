@@ -78,7 +78,7 @@ The model setup is complete and it is ready to use. The RK4 solver works well fo
 pooya::Rk4 solver;
 pooya::Simulator sim(model, nullptr, &solver);
 
-pooya::History history(model);
+pooya::History history;
 history.track(s_x);
 history.track(s_xd);
 

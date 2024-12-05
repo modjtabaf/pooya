@@ -30,11 +30,12 @@ namespace pooya
 class BusPipe : public BusBlockBuilder
 {
 public:
-    explicit BusPipe(const std::initializer_list<std::string>& excluded_labels = {}) : BusBlockBuilder(excluded_labels)
+    explicit BusPipe(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+        : BusBlockBuilder(parent, excluded_labels)
     {
     }
-    BusPipe(const ValidName& name, const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(name, excluded_labels)
+    BusPipe(const ValidName& name, Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+        : BusBlockBuilder(name, parent, excluded_labels)
     {
     }
 

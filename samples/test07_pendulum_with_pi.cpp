@@ -34,23 +34,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{"*///"};
-    pooya::Subtract _sub;
-    pooya::Integrator _integ1;
-    pooya::Integrator _integ2;
-    pooya::Sin _sin;
-    pooya::MulDiv _muldiv2{"**/"};
+    pooya::MulDiv _muldiv1{this, "*///"};
+    pooya::Subtract _sub{this};
+    pooya::Integrator _integ1{this};
+    pooya::Integrator _integ2{this};
+    pooya::Sin _sin{this};
+    pooya::MulDiv _muldiv2{this, "**/"};
 
 public:
     pooya::ScalarSignal _m;
     pooya::ScalarSignal _g;
     pooya::ScalarSignal _l;
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
+    explicit Pendulum(pooya::Submodel* parent) : pooya::Submodel("pendulum", parent) {}
+
+    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
+        if (!pooya::Submodel::init(ibus, obus)) return false;
 
         // create pooya signals
         pooya::ScalarSignal dphi;
@@ -80,16 +82,19 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add;
+    pooya::Add _add{this};
 
 public:
-    PI(double Kp, double Ki, double x0 = 0.0) : _gain_p(Kp), _integ(x0), _gain_i(Ki) {}
+    PI(pooya::Submodel* parent, double Kp, double Ki, double x0 = 0.0)
+        : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki)
+    {
+    }
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
+    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
+        if (!pooya::Submodel::init(ibus, obus)) return false;
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
@@ -111,21 +116,21 @@ public:
 class PendulumWithPI : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub;
-    PI _pi{40.0, 20.0};
+    pooya::Subtract _sub{this};
+    PI _pi{this, 40.0, 20.0};
 
 public:
-    Pendulum _pend;
+    Pendulum _pend{this};
     pooya::ScalarSignal _des_phi;
     pooya::ScalarSignal _phi;
     pooya::ScalarSignal _tau;
     pooya::ScalarSignal _err;
 
-    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
+    bool init(const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent)) return false;
+        if (!pooya::Submodel::init()) return false;
 
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
@@ -144,15 +149,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model;
     PendulumWithPI pendulum_with_pi;
-
-    // setup the model
-    model.add_block(pendulum_with_pi);
 
     pooya::Rkf45 stepper;
     pooya::Simulator sim(
-        model,
+        pendulum_with_pi,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
@@ -163,7 +164,7 @@ int main()
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(pendulum_with_pi._phi);
 
     uint k = 0;

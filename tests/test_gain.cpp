@@ -42,7 +42,7 @@ TEST_F(TestGain, ScalarGain)
 
     // model setup
     pooya::Submodel model;
-    pooya::Gain gain(gain_value);
+    pooya::Gain gain(&model, gain_value);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
     model.add_block(gain, s_x, s_y);
@@ -66,7 +66,7 @@ TEST_F(TestGain, ArrayGain)
 
     // model setup
     pooya::Submodel model;
-    pooya::GainA gain(gain_value);
+    pooya::GainA gain(&model, gain_value);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
     model.add_block(gain, s_x, s_y);

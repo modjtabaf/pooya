@@ -36,13 +36,16 @@ protected:
     bool _triggered{false};
 
 public:
-    explicit TriggeredIntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 2, 1) {}
-    TriggeredIntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 2, 1) {}
+    explicit TriggeredIntegratorT(Submodel* parent = nullptr, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 2, 1) {}
+    TriggeredIntegratorT(const ValidName& name, Submodel* parent = nullptr, T ic = T(0.0))
+        : IntegratorBaseT<T>(name, parent, ic, 2, 1)
+    {
+    }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool init(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
-        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
+        if (!IntegratorBaseT<T>::init(ibus, obus))
         {
             return false;
         }

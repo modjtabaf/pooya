@@ -15,19 +15,18 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-// #include <math.h>
 #include <chrono>
+#include <iostream>
 
-#include "src/block/submodel.hpp"
-#include "src/helper/trace.hpp"
-// #include "src/block/siso_function.hpp"
-// #include "src/block/so_function.hpp"
 // #include "src/block/function.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/muldiv.hpp"
 #include "src/block/sin.hpp"
+// #include "src/block/siso_function.hpp"
+// #include "src/block/so_function.hpp"
+#include "src/block/submodel.hpp"
 #include "src/block/subtract.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rkf45.hpp"
@@ -36,31 +35,19 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"dphi", M_PI_4};
-    pooya::Integrator _integ2{"phi"};
-    // pooya::SISOFunction _sin{"sin_phi",
-    //     [](double /*t*/, double x) -> double
-    //     {
-    //         return std::sin(x);
-    //     }};
-    // pooya::SOFunction _sin{"sin_phi",
-    //     [](double /*t*/, const pooya::Bus& ibus) -> double
-    //     {
-    //         return std::sin(ibus.scalar_at(0)->get());
-    //     }};
-    // pooya::Function _sin{"sin_phi",
-    //     [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-    //     {
-    //         obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get()));
-    //     }};
-    pooya::Sin _sin{"sin(phi)"};
-    pooya::MulDiv _muldiv1{"g_l", "**/"};
-    pooya::MulDiv _muldiv2{"tau_ml2", "*///"};
-    pooya::Subtract _sub{"d2phi"};
+    pooya::Integrator _integ1{"dphi", this, M_PI_4};
+    pooya::Integrator _integ2{"phi", this};
+    // pooya::SISOFunction _sin("sin_phi", this, [](double /*t*/, double x) -> double { return std::sin(x); });
+    // pooya::SOFunction _sin("sin_phi", this, [](double /*t*/, const pooya::Bus& ibus) -> double
+    //                        { return std::sin(ibus.scalar_at(0)->get()); });
+    // pooya::Function _sin("sin_phi", this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+    //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); });
+    pooya::Sin _sin{"sin(phi)", this};
+    pooya::MulDiv _muldiv1{"g_l", this, "**/"};
+    pooya::MulDiv _muldiv2{"tau_ml2", this, "*///"};
+    pooya::Subtract _sub{"d2phi", this};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
-
     pooya::ScalarSignal _tau{"tau"};
     pooya::ScalarSignal _m{"m"};
     pooya::ScalarSignal _g{"g"};
@@ -69,11 +56,11 @@ public:
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
+    bool init(const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent)) return false;
+        if (!pooya::Submodel::init()) return false;
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
@@ -99,15 +86,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test06");
     Pendulum pendulum;
-
-    // setup the model
-    model.add_block(pendulum);
 
     pooya::Rkf45 stepper;
     pooya::Simulator sim(
-        model,
+        pendulum,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
@@ -118,7 +101,7 @@ int main()
         },
         &stepper, true);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(pendulum._phi);
     history.track(pendulum._dphi);
 

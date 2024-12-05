@@ -32,8 +32,11 @@ template<typename T>
 class IntegratorT : public IntegratorBaseT<T>
 {
 public:
-    explicit IntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 1, 1) {}
-    IntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 1, 1) {}
+    explicit IntegratorT(Submodel* parent = nullptr, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 1, 1) {}
+    IntegratorT(const ValidName& name, Submodel* parent = nullptr, T ic = T(0.0))
+        : IntegratorBaseT<T>(name, parent, ic, 1, 1)
+    {
+    }
 };
 
 using Integrator  = IntegratorT<double>;

@@ -60,7 +60,7 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model("test10");
-    pooya::BusMemory bus_memory("memory", {{"Z.z3", 1.0}}, {"x1"});
+    pooya::BusMemory bus_memory("memory", model, {{"Z.z3", 1.0}}, {"x1"});
 
     // create buses (signals)
     MyBus x("x");
@@ -88,7 +88,7 @@ int main()
                              x_z3 = std::sin(M_PI * t / 9);
                          });
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x_x0);
     history.track(x_x1);
     history.track(x_x2);

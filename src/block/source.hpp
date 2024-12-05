@@ -38,9 +38,9 @@ protected:
     SourceFunction _src_func;
 
 public:
-    explicit SourceT(SourceFunction src_func) : SingleOutputT<T>(Block::NoIOLimit), _src_func(src_func) {}
-    SourceT(const ValidName& name, SourceFunction src_func)
-        : SingleOutputT<T>(name, Block::NoIOLimit), _src_func(src_func)
+    explicit SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
+    SourceT(const ValidName& name, Submodel* parent, SourceFunction src_func)
+        : SingleOutputT<T>(name, parent), _src_func(src_func)
     {
     }
 

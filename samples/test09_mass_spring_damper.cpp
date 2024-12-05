@@ -36,8 +36,9 @@ protected:
     double _xd;
 
 public:
-    MassSpringDamper(const pooya::ValidName& name, double m, double k, double c, double x0, double xd0)
-        : pooya::Leaf(name, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
+    MassSpringDamper(const pooya::ValidName& name, pooya::Submodel* parent, double m, double k, double c, double x0,
+                     double xd0)
+        : pooya::Leaf(name, parent, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
     {
     }
 
@@ -46,11 +47,11 @@ public:
     pooya::ScalarSignal _s_xd{"xd"};
     pooya::ScalarSignal _s_xdd{"xdd"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus&) override
+    bool init(const pooya::Bus& ibus, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Leaf::init(parent, ibus)) return false;
+        if (!pooya::Leaf::init(ibus)) return false;
 
         _s_tau.reset(scalar_input_at(0));
 
@@ -94,7 +95,7 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model("test10");
-    MassSpringDamper msd("msd", 1, 1, 0.1, 0.1, -0.2);
+    MassSpringDamper msd("msd", &model, 1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
     pooya::ScalarSignal tau("tau");
@@ -112,7 +113,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(msd._s_x);
 
     uint k = 0;

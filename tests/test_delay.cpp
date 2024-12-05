@@ -45,7 +45,7 @@ TEST_F(TestDelay, ScalarDelay)
 
     // model setup
     pooya::Submodel model;
-    pooya::Delay delay(10.0);
+    pooya::Delay delay(&model, 10.0);
     pooya::ScalarSignal s_time_delay;
     pooya::ScalarSignal s_initial;
     pooya::ScalarSignal s_x;
@@ -94,7 +94,7 @@ TEST_F(TestDelay, ArrayDelay)
 
     // model setup
     pooya::Submodel model;
-    pooya::DelayA delay(10.0);
+    pooya::DelayA delay(&model, 10.0);
     pooya::ScalarSignal s_time_delay;
     pooya::ArraySignal s_initial(N);
     pooya::ArraySignal s_x(N);

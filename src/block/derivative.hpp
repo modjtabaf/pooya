@@ -38,8 +38,11 @@ protected:
     T _y;
 
 public:
-    explicit DerivativeT(const T& y0 = 0) : SingleInputOutputT<T>(1), _y(y0) {}
-    DerivativeT(const ValidName& name, const T& y0 = 0) : SingleInputOutputT<T>(name, 1), _y(y0) {}
+    explicit DerivativeT(Submodel* parent = nullptr, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
+    DerivativeT(const ValidName& name, Submodel* parent = nullptr, const T& y0 = 0)
+        : SingleInputOutputT<T>(name, parent, 1), _y(y0)
+    {
+    }
 
     void post_step(double t) override
     {

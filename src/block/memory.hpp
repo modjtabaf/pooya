@@ -35,8 +35,13 @@ protected:
     T _value;
 
 public:
-    explicit MemoryT(const Tic& ic = Tic(0)) : SingleInputOutputT<T>(1), _value(ic) {}
-    MemoryT(const ValidName& name, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(name, 1), _value(ic) {}
+    explicit MemoryT(Submodel* parent = nullptr, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic)
+    {
+    }
+    MemoryT(const ValidName& name, Submodel* parent = nullptr, const Tic& ic = Tic(0))
+        : SingleInputOutputT<T>(name, parent, 1), _value(ic)
+    {
+    }
 
     void post_step(double /*t*/) override
     {

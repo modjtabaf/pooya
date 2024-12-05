@@ -36,7 +36,7 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model("test03");
-    pooya::TriggeredIntegrator integ("integ", 1.0);
+    pooya::TriggeredIntegrator integ("integ", &model, 1.0);
 
     // create pooya signals
     pooya::ScalarSignal x("x");
@@ -58,7 +58,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x);
     history.track(xd);
 

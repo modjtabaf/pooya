@@ -35,26 +35,26 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{"tau_ml2", "*///"};
-    pooya::Subtract _sub{"err"};
-    pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{"phi"};
-    pooya::Sin _sin{"sin(phi)"};
-    pooya::MulDiv _muldiv2{"g_l", "**/"};
+    pooya::MulDiv _muldiv1{"tau_ml2", this, "*///"};
+    pooya::Subtract _sub{"err", this};
+    pooya::Integrator _integ1{"dphi", this};
+    pooya::Integrator _integ2{"phi", this};
+    pooya::Sin _sin{"sin(phi)", this};
+    pooya::MulDiv _muldiv2{"g_l", this, "**/"};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
+    Pendulum(pooya::Submodel* parent) : pooya::Submodel("pendulum", parent) {}
 
     pooya::ScalarSignal _m{"m"};
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
     pooya::ScalarSignal _dphi{"dphi"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
+    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
+        if (!pooya::Submodel::init(ibus, obus)) return false;
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
@@ -82,21 +82,22 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add;
-    pooya::Derivative _deriv;
+    pooya::Add _add{this};
+    pooya::Derivative _deriv{this};
     pooya::Gain _gain_d;
 
 public:
-    PID(double Kp, double Ki, double Kd, double x0 = 0.0)
-        : pooya::Submodel("PI"), _gain_p("Kp", Kp), _integ("ix", x0), _gain_i("Ki", Ki), _gain_d("Kd", Kd)
+    PID(pooya::Submodel* parent, double Kp, double Ki, double Kd, double x0 = 0.0)
+        : pooya::Submodel("PI", parent), _gain_p("Kp", this, Kp), _integ("ix", this, x0), _gain_i("Ki", this, Ki),
+          _gain_d("Kd", this, Kd)
     {
     }
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
+    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
+        if (!pooya::Submodel::init(ibus, obus)) return false;
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;
@@ -122,23 +123,23 @@ public:
 class PendulumWithPID : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{"Sub"};
-    PID _pid{40.0, 20.0, 0.05};
+    pooya::Subtract _sub{"Sub", this};
+    PID _pid{this, 40.0, 20.0, 0.05};
 
 public:
     PendulumWithPID() : pooya::Submodel("pendulum_with_PID") {}
 
-    Pendulum _pend;
+    Pendulum _pend{this};
     pooya::ScalarSignal _des_phi{"des_phi"};
     pooya::ScalarSignal _phi{"phi"};
     pooya::ScalarSignal _tau{"tau"};
     pooya::ScalarSignal _err{"err"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
+    bool init(const pooya::Bus&, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent)) return false;
+        if (!pooya::Submodel::init()) return false;
 
         // blocks
         add_block(_sub, {_des_phi, _phi}, _err);
@@ -157,15 +158,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test08");
     PendulumWithPID pendulum_with_pid;
-
-    // setup the model
-    model.add_block(pendulum_with_pid);
 
     pooya::Rkf45 stepper;
     pooya::Simulator sim(
-        model,
+        pendulum_with_pid,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pendulum_with_pid._pend._m = 0.2;
@@ -175,7 +172,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(pendulum_with_pid._phi);
     history.track(pendulum_with_pid._pend._dphi);
     history.track(pendulum_with_pid._tau);

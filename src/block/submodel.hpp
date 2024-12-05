@@ -40,7 +40,7 @@ public:
     {
     }
 
-    bool add_block(Block& component, const LabelSignals& iports = {}, const LabelSignals& oports = {});
+    bool add_block(Block& component, const Bus& ibus = {}, const Bus& obus = {});
 
     void pre_step(double t) override
     {

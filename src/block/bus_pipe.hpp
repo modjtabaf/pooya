@@ -39,7 +39,7 @@ public:
     }
 
 protected:
-    void block_builder(const std::string& /*full_label*/, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+    void block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
                        const SignalImplPtr& sig_out) override;
 };
 

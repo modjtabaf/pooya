@@ -52,7 +52,7 @@ public:
             return false;
         }
 
-        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0).second));
+        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
 
         return true;
     }

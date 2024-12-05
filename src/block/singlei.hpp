@@ -47,7 +47,7 @@ public:
         {
             return false;
         }
-        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0).second));
+        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0)));
         return true;
     }
 };

@@ -30,7 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-class Value // replace with std::variant maybe?
+class Value
 {
 protected:
     const bool _is_scalar{true};
@@ -80,7 +80,7 @@ public:
     }
 
 protected:
-    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+    void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
                        const SignalImplPtr& sig_out) override;
     bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 };

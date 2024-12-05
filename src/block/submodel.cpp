@@ -145,7 +145,7 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
     return true;
 }
 
-bool Submodel::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
+bool Submodel::add_block(Block& component, const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
 
@@ -154,45 +154,7 @@ bool Submodel::add_block(Block& component, const LabelSignals& iports, const Lab
         return false;
     }
 
-    auto make_bus = [&](const LabelSignals& ports) -> Bus
-    {
-        std::vector<BusSpec::WireInfo> wire_infos;
-        LabelSignalImplPtrList wires;
-        for (const auto& ls : ports)
-        {
-            pooya_verify_valid_signal(ls.second);
-            if (ls.second->is_scalar())
-            {
-                wire_infos.emplace_back(ls.first);
-            }
-            else if (ls.second->is_int())
-            {
-                wire_infos.emplace_back("i:" + ls.first);
-            }
-            else if (ls.second->is_bool())
-            {
-                wire_infos.emplace_back("b:" + ls.first);
-            }
-            else if (ls.second->is_array())
-            {
-                wire_infos.emplace_back(ls.first, ls.second->as_array().size());
-            }
-            else if (ls.second->is_bus())
-            {
-                wire_infos.emplace_back(ls.first, ls.second->as_bus().spec());
-            }
-            else
-            {
-                pooya_verify(false, "unknown signal type!");
-            }
-
-            wires.emplace_back(ls.first, ls.second);
-        }
-        _interface_bus_specs.emplace_back(std::make_unique<BusSpec>(wire_infos.begin(), wire_infos.end()));
-        return BusImpl::create_new(*_interface_bus_specs.back(), wires.begin(), wires.end());
-    };
-
-    if (!component.init(this, make_bus(iports), make_bus(oports)))
+    if (!component.init(this, ibus, obus))
     {
         return false;
     }

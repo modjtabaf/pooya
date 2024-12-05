@@ -25,13 +25,14 @@
 * Bus wrapper
 * Fix <bool> specialization
 * Discard id()
+* Deprecate BusSpec
+* In BusInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
 
 - Make sure Simulator evaluates the model only if necessary. Remove any duplicates.
 - Call shared_from_this() only when necessary
 - Convert current samples to tests (hybrid)
 - Define pooya_assert_* and pooya_verify_* where pooya_assert_* macros are debug-only and a preprocessor directive is used to exclude pooya_verify_* macros from the release build
 - Use static_assert() in pooya_assert_* macros
-- Deprecate BusSpec
 - Create an abstraction layer between pooya and Eigen
 - Reduce the usage of POOYA_USE_SMART_PTRS through defining proper macros or helper classes
 - Call pre_step and post_step for minor steps too
@@ -40,8 +41,6 @@
 - Doxygen
 - logging (spdlog)
 - parallel processing
-- move BusBlockBuilder::traverse_bus to BusSpec
-- In BusSignalInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
 
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->
@@ -52,3 +51,4 @@
 <!-- - Make model mandatory -->
 <!-- - Unify given_name and name of signals -->
 <!-- - Remove Block::_parent -->
+<!-- - move BusBlockBuilder::traverse_bus to BusSpec -->

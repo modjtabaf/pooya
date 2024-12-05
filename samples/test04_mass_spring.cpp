@@ -31,29 +31,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"xd", this, 0.1};
-    pooya::Integrator _integ2{"x", this};
-    pooya::Gain _gain{"-k\\m", this, -1.0 / 1.0};
+    pooya::Integrator _integ1{this, 0.1};
+    pooya::Integrator _integ2{this};
+    pooya::Gain _gain{this, -1.0 / 1.0};
 
 public:
-    MyModel() : pooya::Submodel("MyModel") {}
-
     pooya::ScalarSignal _x{"x"};
     pooya::ScalarSignal _xd{"xd"};
     pooya::ScalarSignal _xdd{"xdd"};
 
-    bool init(const pooya::Bus& ibus, const pooya::Bus& obus) override
+    MyModel()
     {
-        pooya_trace0;
+        rename("MyModel");
+        _integ1.rename("xd");
+        _integ2.rename("x");
+        _gain.rename("-k\\m");
 
-        if (!pooya::Submodel::init(ibus, obus)) return false;
-
-        // setup the submodel
-        add_block(_integ1, _xdd, _xd);
-        add_block(_integ2, _xd, _x);
-        add_block(_gain, _x, _xdd);
-
-        return true;
+        _integ1.connect(_xdd, _xd);
+        _integ2.connect(_xd, _x);
+        _gain.connect(_x, _xdd);
     }
 };
 

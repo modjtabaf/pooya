@@ -36,9 +36,8 @@ protected:
     double _xd;
 
 public:
-    MassSpringDamper(const pooya::ValidName& name, pooya::Submodel* parent, double m, double k, double c, double x0,
-                     double xd0)
-        : pooya::Leaf(name, parent, 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
+    MassSpringDamper(double m, double k, double c, double x0, double xd0)
+        : pooya::Leaf(1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
     {
     }
 
@@ -47,11 +46,11 @@ public:
     pooya::ScalarSignal _s_xd{"xd"};
     pooya::ScalarSignal _s_xdd{"xdd"};
 
-    bool init(const pooya::Bus& ibus, const pooya::Bus&) override
+    bool connect(const pooya::Bus& ibus, const pooya::Bus&) override
     {
         pooya_trace0;
 
-        if (!pooya::Leaf::init(ibus)) return false;
+        if (!pooya::Leaf::connect(ibus)) return false;
 
         _s_tau.reset(scalar_input_at(0));
 
@@ -94,14 +93,13 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test10");
-    MassSpringDamper msd("msd", &model, 1, 1, 0.1, 0.1, -0.2);
+    MassSpringDamper model(1, 1, 0.1, 0.1, -0.2);
 
     // create pooya signals
     pooya::ScalarSignal tau("tau");
 
     // setup the model
-    model.add_block(msd, tau);
+    model.connect(tau, {});
 
     pooya::Euler stepper;
     pooya::Simulator sim(
@@ -114,7 +112,7 @@ int main()
         &stepper);
 
     pooya::History history;
-    history.track(msd._s_x);
+    history.track(model._s_x);
 
     uint k = 0;
     double t;
@@ -133,7 +131,7 @@ int main()
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.4:0.5]\n";
-    gp << "plot" << gp.file1d(history[msd._s_x]) << "with lines title 'x'\n";
+    gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

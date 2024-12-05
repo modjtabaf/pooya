@@ -34,10 +34,6 @@ public:
         : BusBlockBuilder(parent, excluded_labels)
     {
     }
-    BusPipe(const ValidName& name, Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(name, parent, excluded_labels)
-    {
-    }
 
 protected:
     void block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,

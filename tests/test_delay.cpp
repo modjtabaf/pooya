@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <gtest/gtest.h>
 
 #include "src/block/delay.hpp"
-#include "src/block/submodel.hpp"
+#include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -44,16 +44,15 @@ TEST_F(TestDelay, ScalarDelay)
     auto func               = [](double t) -> double { return -1.3 * t + 4.92; };
 
     // model setup
-    pooya::Submodel model;
-    pooya::Delay delay(&model, 10.0);
+    pooya::Delay delay(10.0);
     pooya::ScalarSignal s_time_delay;
     pooya::ScalarSignal s_initial;
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    model.add_block(delay, {{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(delay,
                          [&](pooya::Block&, double t) -> void
                          {
                              s_time_delay = time_delay;
@@ -93,16 +92,15 @@ TEST_F(TestDelay, ArrayDelay)
     };
 
     // model setup
-    pooya::Submodel model;
-    pooya::DelayA delay(&model, 10.0);
+    pooya::DelayA delay(10.0);
     pooya::ScalarSignal s_time_delay;
     pooya::ArraySignal s_initial(N);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    model.add_block(delay, {{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(delay,
                          [&](pooya::Block&, double t) -> void
                          {
                              s_time_delay = time_delay;

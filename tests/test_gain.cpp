@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <gtest/gtest.h>
 
 #include "src/block/gain.hpp"
-#include "src/block/submodel.hpp"
+#include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -41,14 +41,13 @@ TEST_F(TestGain, ScalarGain)
     constexpr double gain_value{2.0};
 
     // model setup
-    pooya::Submodel model;
-    pooya::Gain gain(&model, gain_value);
+    pooya::Gain gain(gain_value);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    model.add_block(gain, s_x, s_y);
+    gain.connect(s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -65,14 +64,13 @@ TEST_F(TestGain, ArrayGain)
     constexpr double gain_value{-5.89};
 
     // model setup
-    pooya::Submodel model;
-    pooya::GainA gain(&model, gain_value);
+    pooya::GainA gain(gain_value);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    model.add_block(gain, s_x, s_y);
+    gain.connect(s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);

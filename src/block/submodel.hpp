@@ -27,37 +27,35 @@ class Submodel : public Block
 {
 protected:
 #if defined(POOYA_USE_SMART_PTRS)
-    std::vector<std::reference_wrapper<Block>> _components;
+    std::vector<std::reference_wrapper<Block>> _blocks;
 #else  // defined(POOYA_USE_SMART_PTRS)
-    std::vector<Block*> _components;
+    std::vector<Block*> _blocks;
 #endif // defined(POOYA_USE_SMART_PTRS)
     std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
 public:
-    Submodel(Submodel* parent = nullptr, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
+    {
+    }
+    Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
         : Block(parent, num_iports, num_oports)
     {
     }
-    Submodel(const ValidName& name, Submodel* parent = nullptr, uint16_t num_iports = NoIOLimit,
-             uint16_t num_oports = NoIOLimit)
-        : Block(name, parent, num_iports, num_oports)
-    {
-    }
 
-    bool add_block(Block& component, const Bus& ibus = {}, const Bus& obus = {});
+    bool add_block(Block& block);
 
     void pre_step(double t) override
     {
         pooya_trace("block: " + full_name().str());
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& component : _components)
+        for (auto& block : _blocks)
         {
-            component.get().pre_step(t);
+            block.get().pre_step(t);
         }
 #else  // defined(POOYA_USE_SMART_PTRS)
-        for (auto* component : _components)
+        for (auto* block : _blocks)
         {
-            component->pre_step(t);
+            block->pre_step(t);
         }
 #endif // defined(POOYA_USE_SMART_PTRS)
     }
@@ -66,14 +64,14 @@ public:
     {
         pooya_trace("block: " + full_name().str());
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& component : _components)
+        for (auto& block : _blocks)
         {
-            component.get().post_step(t);
+            block.get().post_step(t);
         }
 #else  // defined(POOYA_USE_SMART_PTRS)
-        for (auto* component : _components)
+        for (auto* block : _blocks)
         {
-            component->post_step(t);
+            block->post_step(t);
         }
 #endif // defined(POOYA_USE_SMART_PTRS)
     }

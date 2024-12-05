@@ -29,25 +29,21 @@ class SingleInputT : public Leaf
 protected:
     typename Types<T>::Signal _s_in;
 
-    explicit SingleInputT(Submodel* parent = nullptr, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
-    SingleInputT(const ValidName& name, Submodel* parent = nullptr, uint16_t num_oports = NoIOLimit)
-        : Leaf(name, parent, 1, num_oports)
+    explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
+    SingleInputT(Submodel* parent, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
+    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
     {
+        pooya_verify(num_iports == 1, "One and only one input expected!");
     }
     SingleInputT(Submodel* parent, uint16_t num_iports, uint16_t num_oports) : Leaf(parent, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
-    SingleInputT(const ValidName& name, Submodel* parent, uint16_t num_iports, uint16_t num_oports)
-        : Leaf(name, parent, num_iports, num_oports)
-    {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
-    }
 
 public:
-    bool init(const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
-        if (!Leaf::init(ibus, obus))
+        if (!Leaf::connect(ibus, obus))
         {
             return false;
         }

@@ -42,10 +42,7 @@ public:
         : SingleInputOutputT<T>(parent, 1), _act_func(act_func)
     {
     }
-    SISOFunctionT(const ValidName& name, Submodel* parent, ActFunction act_func)
-        : SingleInputOutputT<T>(name, parent, 1), _act_func(act_func)
-    {
-    }
+    SISOFunctionT(Submodel* parent, ActFunction act_func) : SingleInputOutputT<T>(parent, 1), _act_func(act_func) {}
 
     void activation_function(double t) override
     {

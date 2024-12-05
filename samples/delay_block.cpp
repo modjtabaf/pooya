@@ -30,7 +30,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Source _source{this, [](double t) -> double
+    pooya::Source _source{this,
+                          [](double t) -> double
                           {
                               pooya_trace0;
                               return std::sin(M_PI * t / 5);
@@ -53,10 +54,10 @@ public:
         pooya::ScalarSignal initial;
 
         // setup the submodel
-        add_block(_source, {}, _s_x);
-        add_block(_const1, {}, time_delay);
-        add_block(_const2, {}, initial);
-        add_block(_delay, {{"delay", time_delay}, {"in", _s_x}, {"initial", initial}}, _s_y);
+        _source.connect({}, _s_x);
+        _const1.connect({}, time_delay);
+        _const2.connect({}, initial);
+        _delay.connect({{"delay", time_delay}, {"in", _s_x}, {"initial", initial}}, _s_y);
     }
 };
 

@@ -35,8 +35,8 @@ protected:
     GainType _k;
 
 public:
+    GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
     GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
-    GainT(const ValidName& name, Submodel* parent, GainType k) : SingleInputOutputT<T>(name, parent, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {

@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <gtest/gtest.h>
 
 #include "src/block/memory.hpp"
-#include "src/block/submodel.hpp"
+#include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
@@ -41,14 +41,13 @@ TEST_F(TestMemory, ScalarMemory)
     const double x0 = -4.8;
 
     // model setup
-    pooya::Submodel model;
-    pooya::Memory memory(&model, x0);
+    pooya::Memory memory(x0);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    model.add_block(memory, s_x, s_y);
+    memory.connect(s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -65,14 +64,13 @@ TEST_F(TestMemory, ArrayMemory)
     const pooya::ArrayN<N> x0{-10.56, 0.18, 7.24, -3.67};
 
     // model setup
-    pooya::Submodel model;
-    pooya::MemoryA memory(&model, x0);
+    pooya::MemoryA memory(x0);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    model.add_block(memory, s_x, s_y);
+    memory.connect(s_x, s_y);
 
     // simulator setup
-    pooya::Simulator sim(model, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
     // do one step
     sim.init(0.0);

@@ -173,11 +173,6 @@ void Simulator::init(double t0)
 {
     pooya_trace("t0: " + std::to_string(t0));
 
-    if (!_model.is_initialized())
-    {
-        _model.init();
-    }
-
     std::size_t state_variables_size{0};
 
     std::unordered_set<ValueSignalImplPtr> value_signals;

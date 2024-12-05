@@ -32,11 +32,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"dphi", this};
-    pooya::Integrator _integ2{"phi", this, M_PI_4};
-    // pooya::SISOFunction _sin("sin(phi)", this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    pooya::Sin _sin{"sin(phi)", this};
-    pooya::MulDiv _muldiv{"-g\\l", this, "**/", -1};
+    pooya::Integrator _integ1{this};
+    pooya::Integrator _integ2{this, M_PI_4};
+    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
+    pooya::Sin _sin{this};
+    pooya::MulDiv _muldiv{this, "**/", -1};
 
 public:
     pooya::ScalarSignal _phi{"phi"};
@@ -45,21 +45,22 @@ public:
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
 
-    bool init(const pooya::Bus&, const pooya::Bus&) override
+    Pendulum()
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init()) return false;
+        _integ1.rename("dphi");
+        _integ2.rename("phi");
+        _sin.rename("sin(phi)");
+        _muldiv.rename("-g\\l");
 
         pooya::ScalarSignal s10;
 
         // setup the submodel
-        add_block(_integ1, _d2phi, _dphi);
-        add_block(_integ2, _dphi, _phi);
-        add_block(_sin, _phi, s10);
-        add_block(_muldiv, {s10, _g, _l}, _d2phi);
-
-        return true;
+        _integ1.connect(_d2phi, _dphi);
+        _integ2.connect(_dphi, _phi);
+        _sin.connect(_phi, s10);
+        _muldiv.connect({s10, _g, _l}, _d2phi);
     }
 };
 

@@ -37,26 +37,26 @@ void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplP
     std::shared_ptr<Block> block;
     if (sig_in->is_scalar())
     {
-        block = std::make_shared<Pipe>("pipe");
+        block = std::make_shared<Pipe>();
     }
     else if (sig_in->is_int())
     {
-        block = std::make_shared<PipeI>("pipe");
+        block = std::make_shared<PipeI>();
     }
     else if (sig_in->is_bool())
     {
-        block = std::make_shared<PipeB>("pipe");
+        block = std::make_shared<PipeB>();
     }
     else if (sig_in->is_array())
     {
-        block = std::make_shared<PipeA>("pipe");
+        block = std::make_shared<PipeA>();
     }
     else
     {
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    _parent->add_block(*block, Bus(sig_in), Bus(sig_out));
+    block->connect(sig_in, sig_out);
     _blocks.emplace_back(std::move(block));
 }
 

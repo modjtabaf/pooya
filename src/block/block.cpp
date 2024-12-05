@@ -26,18 +26,38 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-bool Block::init(const Bus& ibus, const Bus& obus)
+Block::Block(uint16_t num_iports, uint16_t num_oports) : _num_iports(num_iports), _num_oports(num_oports)
+{
+    if (_parent) _parent->add_block(*this);
+}
+
+Block::Block(Submodel* parent, uint16_t num_iports, uint16_t num_oports)
+    : _parent(parent), _num_iports(num_iports), _num_oports(num_oports)
+{
+    if (_parent) _parent->add_block(*this);
+}
+
+bool Block::set_parent(Submodel& parent)
+{
+    if (_parent != nullptr && _parent != &parent)
+    {
+        helper::pooya_show_warning(__FILE__, __LINE__, full_name().str() + ": parent is set already!");
+        return false;
+    }
+
+    _parent = &parent;
+    parent.add_block(*this);
+
+    return true;
+}
+
+bool Block::connect(const Bus& ibus, const Bus& obus)
 {
     pooya_trace(_name.str());
 
-    if (_initialized)
+    if (_connected)
     {
-        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reinitialize a block!");
-    }
-
-    if (_parent && !_parent->is_initialized())
-    {
-        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
+        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reconnecting a block!");
     }
 
     pooya_verify((_num_iports == NoIOLimit) || (ibus.size() == _num_iports),
@@ -75,7 +95,7 @@ bool Block::init(const Bus& ibus, const Bus& obus)
     _ibus.reset(ibus);
     _obus.reset(obus);
 
-    _initialized = true;
+    _connected = true;
     return true;
 }
 

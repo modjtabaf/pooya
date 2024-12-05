@@ -42,9 +42,8 @@ public:
         : Leaf(parent, num_iports, num_oports), _act_func(act_func)
     {
     }
-    Function(const ValidName& name, Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit,
-             uint16_t num_oports = NoIOLimit)
-        : Leaf(name, parent, num_iports, num_oports), _act_func(act_func)
+    Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+        : Leaf(parent, num_iports, num_oports), _act_func(act_func)
     {
     }
 

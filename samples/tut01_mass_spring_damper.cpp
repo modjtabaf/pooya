@@ -32,13 +32,13 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model;
-    pooya::Source src_F([](double t) -> double { return t < 1 ? 0 : 1; });
-    pooya::Gain gain_1_m(1 / m);
-    pooya::AddSub addsub_rhs("+--");
-    pooya::Integrator int_xdd;
-    pooya::Integrator int_xd;
-    pooya::Gain gain_c_m(c / m);
-    pooya::Gain gain_k_m(k / m);
+    pooya::Source src_F(&model, [](double t) -> double { return t < 1 ? 0 : 1; });
+    pooya::Gain gain_1_m(&model, 1 / m);
+    pooya::AddSub addsub_rhs(&model, "+--");
+    pooya::Integrator int_xdd(&model);
+    pooya::Integrator int_xd(&model);
+    pooya::Gain gain_c_m(&model, c / m);
+    pooya::Gain gain_k_m(&model, k / m);
 
     // create pooya signals
     pooya::ScalarSignal s_F;
@@ -50,19 +50,19 @@ int main()
     pooya::ScalarSignal s_cxd_m;
 
     // set up the model
-    model.add_block(src_F, {}, s_F);
-    model.add_block(gain_1_m, s_F, s_F_m);
-    model.add_block(addsub_rhs, {s_F_m, s_cxd_m, s_kx_m}, s_xdd);
-    model.add_block(int_xdd, s_xdd, s_xd);
-    model.add_block(int_xd, s_xd, s_x);
-    model.add_block(gain_c_m, s_xd, s_cxd_m);
-    model.add_block(gain_k_m, s_x, s_kx_m);
+    src_F.connect({}, s_F);
+    gain_1_m.connect(s_F, s_F_m);
+    addsub_rhs.connect({s_F_m, s_cxd_m, s_kx_m}, s_xdd);
+    int_xdd.connect(s_xdd, s_xd);
+    int_xd.connect(s_xd, s_x);
+    gain_c_m.connect(s_xd, s_cxd_m);
+    gain_k_m.connect(s_x, s_kx_m);
 
     // set up the simulator
     pooya::Rk4 solver;
     pooya::Simulator sim(model, nullptr, &solver);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(s_x);
     history.track(s_xd);
 

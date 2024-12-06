@@ -19,7 +19,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <cmath>
 #include <iostream>
 
-#include "src/block/submodel.hpp"
 #include "src/block/triggered_integrator.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -35,23 +34,20 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test03");
-    pooya::TriggeredIntegrator integ("integ", 1.0);
+    pooya::TriggeredIntegrator integ(1.0);
 
     // create pooya signals
     pooya::ScalarSignal x("x");
     pooya::ScalarSignal xd("xd");
     pooya::BoolSignal trigger("trigger");
 
-    pooya::BusSpec spec{{"z"}};
-
     // setup the model
-    model.add_block(integ, {{"in", xd}, {"trigger", trigger}}, x);
+    integ.connect({{"in", xd}, {"trigger", trigger}}, x);
 
     pooya::Euler stepper;
 
     pooya::Simulator sim(
-        model,
+        integ,
         [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
@@ -60,7 +56,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x);
     history.track(xd);
 

@@ -37,12 +37,12 @@ protected:
 
 public:
     explicit TriggeredIntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 2, 1) {}
-    TriggeredIntegratorT(const ValidName& name, T ic = T(0.0)) : IntegratorBaseT<T>(name, ic, 2, 1) {}
+    TriggeredIntegratorT(Submodel* parent, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 2, 1) {}
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
-        if (!IntegratorBaseT<T>::init(parent, ibus, obus))
+        if (!IntegratorBaseT<T>::connect(ibus, obus))
         {
             return false;
         }

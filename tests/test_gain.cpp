@@ -25,85 +25,85 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <gtest/gtest.h>
 
 #include "src/block/gain.hpp"
-#include "src/block/submodel.hpp"
+#include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
 
-class TestGain : public testing::Test {
+class TestGain : public testing::Test
+{
 public:
-  TestGain() {
-    //
-  }
+    TestGain()
+    {
+        //
+    }
 };
 
-TEST_F(TestGain, ScalarGain) {
-  // test parameters
-  const double x = 3.7;
-  constexpr double gain_value{2.0};
+TEST_F(TestGain, ScalarGain)
+{
+    // test parameters
+    const double x = 3.7;
+    constexpr double gain_value{2.0};
 
-  // model setup
-  pooya::Submodel model;
-  pooya::Gain gain(gain_value);
-  pooya::ScalarSignal s_x;
-  pooya::ScalarSignal s_y;
-  model.add_block(gain, s_x, s_y);
+    // model setup
+    pooya::Gain gain(gain_value);
+    pooya::ScalarSignal s_x;
+    pooya::ScalarSignal s_y;
+    gain.connect(s_x, s_y);
 
-  // simulator setup
-  pooya::Simulator sim(model,
-                       [&](pooya::Block &, double /*t*/) -> void { s_x = x; });
+    // simulator setup
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
-  // do one step
-  sim.init(0.0);
+    // do one step
+    sim.init(0.0);
 
-  // verify the results
-  EXPECT_DOUBLE_EQ(gain_value * x, s_y);
+    // verify the results
+    EXPECT_DOUBLE_EQ(gain_value * x, s_y);
 }
 
-TEST_F(TestGain, IntGain) {
-  // test parameters
-  const int x = 3;
-  constexpr int gain_value{2};
+TEST_F(TestGain, IntGain)
+{
+    // test parameters
+    const int x = 3;
+    constexpr int gain_value{2};
 
-  // model setup
-  pooya::Submodel model;
-  pooya::GainT<int, int> gain(gain_value);
-  pooya::IntSignal s_x;
-  pooya::IntSignal s_y;
-  model.add_block(gain, s_x, s_y);
+    // model setup
+    pooya::GainT<int, int> gain(gain_value);
+    pooya::IntSignal s_x;
+    pooya::IntSignal s_y;
+    gain.connect(s_x, s_y);
 
-  // simulator setup
-  pooya::Simulator sim(model,
-                       [&](pooya::Block &, double /*t*/) -> void { s_x = x; });
+    // simulator setup
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
-  // do one step
-  sim.init(0.0);
+    // do one step
+    sim.init(0.0);
 
-  // verify the results
-  EXPECT_EQ(gain_value * x, s_y);
+    // verify the results
+    EXPECT_EQ(gain_value * x, s_y);
 }
 
-TEST_F(TestGain, ArrayGain) {
-  // test parameters
-  constexpr std::size_t N = 4;
-  const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
-  constexpr double gain_value{-5.89};
+TEST_F(TestGain, ArrayGain)
+{
+    // test parameters
+    constexpr std::size_t N = 4;
+    const pooya::ArrayN<N> x{3.7, -2.5, 10.45, 0.0};
+    constexpr double gain_value{-5.89};
 
-  // model setup
-  pooya::Submodel model;
-  pooya::GainA gain(gain_value);
-  pooya::ArraySignal s_x(N);
-  pooya::ArraySignal s_y(N);
-  model.add_block(gain, s_x, s_y);
+    // model setup
+    pooya::GainA gain(gain_value);
+    pooya::ArraySignal s_x(N);
+    pooya::ArraySignal s_y(N);
+    gain.connect(s_x, s_y);
 
-  // simulator setup
-  pooya::Simulator sim(model,
-                       [&](pooya::Block &, double /*t*/) -> void { s_x = x; });
+    // simulator setup
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
 
-  // do one step
-  sim.init(0.0);
+    // do one step
+    sim.init(0.0);
 
-  // verify the results
-  for (std::size_t k = 0; k < N; k++) {
-    EXPECT_NEAR(gain_value * s_x[k], s_y[k], 1e-10);
-  }
+    // verify the results
+    for (std::size_t k = 0; k < N; k++)
+    {
+        EXPECT_NEAR(gain_value * s_x[k], s_y[k], 1e-10);
+    }
 }

@@ -56,7 +56,7 @@ public:
     using SignalLinkPair = std::pair<ValueSignalImplPtr, SignalLinkType>;
 
 protected:
-    bool _initialized{false};
+    bool _connected{false};
     Bus _ibus;
     Bus _obus;
     std::vector<SignalLinkPair> _linked_signals;
@@ -67,26 +67,21 @@ protected:
     bool _processed{false};
     bool link_signal(const ValueSignalImplPtr& sig, SignalLinkType type);
 
-    Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : _num_iports(num_iports), _num_oports(num_oports)
-    {
-    }
-    Block(const ValidName& name, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : NamedObject(name), _num_iports(num_iports), _num_oports(num_oports)
-    {
-    }
+    explicit Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
+    Block(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
 
 public:
     virtual ~Block() = default;
 
-    virtual bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus());
+    virtual bool set_parent(Submodel& parent);
+    virtual bool connect(const Bus& ibus = Bus(), const Bus& obus = Bus());
     virtual void input_cb(double /*t*/) {}
     virtual void pre_step(double /*t*/) {}
     virtual void post_step(double /*t*/) {}
 
     auto parent() -> auto { return _parent; }
     bool processed() const { return _processed; }
-    bool is_initialized() const { return _initialized; }
+    bool is_connected() const { return _connected; }
     const Bus& ibus() const { return _ibus; }
     const Bus& obus() const { return _obus; }
     auto linked_signals() const -> const auto& { return _linked_signals; }
@@ -94,15 +89,7 @@ public:
     template<typename T, typename Key>
     typename Types<T>::Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
     {
-        SignalImplPtr ptr;
-        if constexpr (std::is_same_v<Key, std::size_t>)
-        {
-            ptr = bus->at(key).second;
-        }
-        else
-        {
-            ptr = bus->at(key);
-        }
+        SignalImplPtr ptr = bus->at(key);
         typename Types<T>::Signal sig(ptr);
         if (type.has_value())
         {

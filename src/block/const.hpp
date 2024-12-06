@@ -35,8 +35,8 @@ protected:
     T _value;
 
 public:
-    explicit ConstT(const T& value) : SingleOutputT<T>(0, 1), _value(value) {}
-    ConstT(const ValidName& name, const T& value) : SingleOutputT<T>(name, 0, 1), _value(value) {}
+    explicit ConstT(const T& value) : SingleOutputT<T>(0), _value(value) {}
+    ConstT(Submodel* parent, const T& value) : SingleOutputT<T>(parent, 0), _value(value) {}
 
     void activation_function(double /*t*/) override
     {

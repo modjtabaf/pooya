@@ -41,15 +41,15 @@ public:
         : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
-    MulDivT(const ValidName& name, const std::string& operators, const T& initial = 1.0)
-        : SingleOutputT<T>(name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    MulDivT(Submodel* parent, const std::string& operators, const T& initial = 1.0)
+        : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        if (!SingleOutputT<T>::connect(ibus, obus))
         {
             return false;
         }
@@ -66,9 +66,9 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         _ret          = _initial;
         const char* p = _operators.c_str();
-        for (const auto& ls : SingleOutputT<T>::_ibus)
+        for (const auto& sig_key : SingleOutputT<T>::_ibus)
         {
-            const auto& v = Types<T>::as_signal_info(ls.second).get();
+            const auto& v = Types<T>::as_signal_info(SingleOutputT<T>::_ibus[sig_key]).get();
             if (*p == '*')
             {
                 _ret *= v;

@@ -15,8 +15,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "submodel.hpp"
+#include <algorithm>
+
 #include "src/signal/array_signal.hpp"
+#include "submodel.hpp"
 
 namespace pooya
 {
@@ -27,14 +29,14 @@ void Submodel::_mark_unprocessed()
     Block::_mark_unprocessed();
 
 #if defined(POOYA_USE_SMART_PTRS)
-    for (auto& component : _components)
+    for (auto& block : _blocks)
     {
-        component.get()._mark_unprocessed();
+        block.get()._mark_unprocessed();
     }
 #else  // defined(POOYA_USE_SMART_PTRS)
-    for (auto* component : _components)
+    for (auto* block : _blocks)
     {
-        component->_mark_unprocessed();
+        block->_mark_unprocessed();
     }
 #endif // defined(POOYA_USE_SMART_PTRS)
 }
@@ -48,19 +50,19 @@ uint Submodel::_process(double t, bool go_deep)
         _processed = true;
         if (go_deep)
 #if defined(POOYA_USE_SMART_PTRS)
-            for (auto& component : _components)
+            for (auto& block : _blocks)
             {
-                n_processed += component.get()._process(t);
-                if (not component.get().processed())
+                n_processed += block.get()._process(t);
+                if (not block.get().processed())
                 {
                     _processed = false;
                 }
             }
 #else  // defined(POOYA_USE_SMART_PTRS)
-            for (auto* component : _components)
+            for (auto* block : _blocks)
             {
-                n_processed += component->_process(t);
-                if (not component->processed())
+                n_processed += block->_process(t);
+                if (not block->processed())
                 {
                     _processed = false;
                 }
@@ -87,7 +89,7 @@ bool Submodel::visit(VisitorCallback cb, uint32_t level, decltype(level) max_lev
     if (level < max_level)
     {
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& c : _components)
+        for (auto& c : _blocks)
         {
             if (!c.get().visit(cb, level + 1, max_level))
             {
@@ -95,7 +97,7 @@ bool Submodel::visit(VisitorCallback cb, uint32_t level, decltype(level) max_lev
             }
         }
 #else  // defined(POOYA_USE_SMART_PTRS)
-        for (auto* c : _components)
+        for (auto* c : _blocks)
         {
             if (!c->visit(cb, level + 1, max_level))
             {
@@ -124,7 +126,7 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
     if (level < max_level)
     {
 #if defined(POOYA_USE_SMART_PTRS)
-        for (auto& c : _components)
+        for (auto& c : _blocks)
         {
             if (!c.get().const_visit(cb, level + 1, max_level))
             {
@@ -132,7 +134,7 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
             }
         }
 #else  // defined(POOYA_USE_SMART_PTRS)
-        for (auto* c : _components)
+        for (auto* c : _blocks)
         {
             if (!c->const_visit(cb, level + 1, max_level))
             {
@@ -145,64 +147,31 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
     return true;
 }
 
-bool Submodel::add_block(Block& component, const LabelSignals& iports, const LabelSignals& oports)
+bool Submodel::link_block(Block& block)
 {
     pooya_trace("block: " + full_name().str());
 
-    if (!_initialized && !init())
+    if (block.parent() != this)
     {
-        return false;
-    }
-
-    auto make_bus = [&](const LabelSignals& ports) -> Bus
-    {
-        std::vector<BusSpec::WireInfo> wire_infos;
-        LabelSignalImplPtrList wires;
-        for (const auto& ls : ports)
-        {
-            pooya_verify_valid_signal(ls.second);
-            if (ls.second->is_scalar())
-            {
-                wire_infos.emplace_back(ls.first);
-            }
-            else if (ls.second->is_int())
-            {
-                wire_infos.emplace_back("i:" + ls.first);
-            }
-            else if (ls.second->is_bool())
-            {
-                wire_infos.emplace_back("b:" + ls.first);
-            }
-            else if (ls.second->is_array())
-            {
-                wire_infos.emplace_back(ls.first, ls.second->as_array().size());
-            }
-            else if (ls.second->is_bus())
-            {
-                wire_infos.emplace_back(ls.first, ls.second->as_bus().spec());
-            }
-            else
-            {
-                pooya_verify(false, "unknown signal type!");
-            }
-
-            wires.emplace_back(ls.first, ls.second);
-        }
-        _interface_bus_specs.emplace_back(std::make_unique<BusSpec>(wire_infos.begin(), wire_infos.end()));
-        return BusImpl::create_new(*_interface_bus_specs.back(), wires.begin(), wires.end());
-    };
-
-    if (!component.init(this, make_bus(iports), make_bus(oports)))
-    {
+        helper::pooya_show_warning(__FILE__, __LINE__, block.full_name().str() + " is not my child!");
         return false;
     }
 
 #if defined(POOYA_USE_SMART_PTRS)
-    _components.push_back(component);
+    if (std::find_if(_blocks.begin(), _blocks.end(), [&](const std::reference_wrapper<Block>& ref) -> bool
+                     { return &ref.get() == &block; }) == _blocks.end())
+        _blocks.push_back(block);
 #else  // defined(POOYA_USE_SMART_PTRS)
-    _components.push_back(&component);
+    if (std::find(_blocks.begin(), _blocks.end(), &block) == _blocks.end()) _blocks.push_back(&block);
 #endif // defined(POOYA_USE_SMART_PTRS)
 
+    return true;
+}
+
+bool Submodel::add_block(Block& block, const Bus& ibus, const Bus& obus)
+{
+    if (!block.set_parent(*this)) return false;
+    block.connect(ibus, obus);
     return true;
 }
 

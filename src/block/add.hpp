@@ -33,13 +33,13 @@ class AddT : public AddSubT<T>
 {
 public:
     explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(const ValidName& name, const T& initial = 0.0) : AddSubT<T>(name, "", initial) {}
+    AddT(Submodel* parent, const T& initial = 0.0) : AddSubT<T>(parent, "", initial) {}
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + AddSubT<T>::full_name().str());
         AddSubT<T>::_operators = std::string(ibus.size(), '+');
-        return AddSubT<T>::init(parent, ibus, obus);
+        return AddSubT<T>::connect(ibus, obus);
     }
 };
 

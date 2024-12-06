@@ -24,25 +24,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-bool BusBlockBuilder::init(Submodel* parent, const Bus& ibus, const Bus& obus)
+bool BusBlockBuilder::connect(const Bus& ibus, const Bus& obus)
 {
     pooya_trace("block: " + full_name().str());
-    pooya_verify(parent, "Bus block builder needs a parent.");
-    if (!SingleInputOutputT<BusSpec>::init(parent, ibus, obus))
+    if (!Leaf::connect(ibus, obus))
     {
         return false;
     }
 
-    pooya_verify(_s_in->spec() == _s_out->spec(), "Bus specs don't match!");
-
-    const auto& bus_spec = _s_in->spec();
-    _blocks.reserve(bus_spec.total_size());
-    visit_bus("", bus_spec);
+    _blocks.reserve(ibus->size());
+    visit_bus("", ibus);
 
     return true;
 }
 
-void BusBlockBuilder::visit_bus(const std::string& full_label, const BusSpec& bus_spec)
+void BusBlockBuilder::visit_bus(const std::string& full_label, const Bus& bus)
 {
     pooya_trace("block: " + full_name().str());
 
@@ -51,21 +47,27 @@ void BusBlockBuilder::visit_bus(const std::string& full_label, const BusSpec& bu
         return;
     }
 
-    for (const auto& wi : bus_spec._wires)
+    for (const auto& sig_key : bus)
     {
-        if (wi._bus)
+        const auto& sig = bus[sig_key];
+        if (sig->is_bus())
         {
-            visit_bus(full_label + wi.label() + ".", *wi._bus);
+            visit_bus(full_label + sig_key + ".", Bus(sig->shared_from_this()));
         }
         else
         {
-            auto label = full_label + wi.label();
+            auto label = full_label + sig_key;
             if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
             {
-                block_builder(label, wi, _s_in->at(label), _s_out->at(label));
+                block_builder(label, _ibus.at(label), _obus.at(label));
             }
         }
     }
+}
+
+void BusBlockBuilder::_mark_unprocessed()
+{
+    _processed = true;
 }
 
 } // namespace pooya

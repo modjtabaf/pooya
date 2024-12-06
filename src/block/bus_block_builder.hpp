@@ -25,35 +25,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <memory>
 #include <vector>
 
-#include "singleio.hpp"
+#include "leaf.hpp"
 #include "src/signal/array.hpp"
 #include "src/signal/bus.hpp"
 
 namespace pooya
 {
 
-class BusBlockBuilder : public SingleInputOutputT<BusSpec>
+class BusBlockBuilder : public Leaf
 {
 protected:
     std::vector<std::shared_ptr<Block>> _blocks;
     std::vector<std::string> _excluded_labels;
 
-    void visit_bus(const std::string& path_name, const BusSpec& bus_spec);
+    void visit_bus(const std::string& path_name, const Bus& bus);
 
-    virtual void block_builder(const std::string& path_name, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+    virtual void block_builder(const std::string& path_name, const SignalImplPtr& sig_in,
                                const SignalImplPtr& sig_out) = 0;
 
 public:
-    explicit BusBlockBuilder(const std::initializer_list<std::string>& excluded_labels = {})
-        : SingleInputOutputT<BusSpec>(1), _excluded_labels(excluded_labels)
-    {
-    }
-    BusBlockBuilder(const ValidName& name, const std::initializer_list<std::string>& excluded_labels = {})
-        : SingleInputOutputT<BusSpec>(name, 1), _excluded_labels(excluded_labels)
+    explicit BusBlockBuilder(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+        : Leaf(&parent), _excluded_labels(excluded_labels)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override;
+    bool connect(const Bus& ibus, const Bus& obus) override;
+    void _mark_unprocessed() override;
 };
 
 } // namespace pooya

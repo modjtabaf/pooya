@@ -30,7 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-class Value // replace with std::variant maybe?
+class Value
 {
 protected:
     const bool _is_scalar{true};
@@ -68,21 +68,17 @@ protected:
     LabelValueMap _init_values;
 
 public:
-    BusMemory(const std::initializer_list<LabelValue>& l                = {},
+    BusMemory(Submodel& parent, const std::initializer_list<LabelValue>& l = {},
               const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(excluded_labels), _init_values(l)
-    {
-    }
-    BusMemory(const ValidName& name, const std::initializer_list<LabelValue>& l = {},
-              const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(name, excluded_labels), _init_values(l)
+        : BusBlockBuilder(parent, excluded_labels), _init_values(l)
     {
     }
 
+    bool connect(const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
+
 protected:
-    void block_builder(const std::string& full_label, const BusSpec::WireInfo& wi, const SignalImplPtr& sig_in,
+    void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
                        const SignalImplPtr& sig_out) override;
-    bool init(Submodel* parent = nullptr, const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 };
 
 } // namespace pooya

@@ -29,25 +29,25 @@ class SingleOutputT : public Base
 protected:
     typename Types<T>::Signal _s_out;
 
-    explicit SingleOutputT(uint16_t num_iports = Block::NoIOLimit) : Base(num_iports, 1) {}
-    SingleOutputT(const ValidName& name, uint16_t num_iports = Block::NoIOLimit) : Base(name, num_iports, 1) {}
-    SingleOutputT(uint16_t num_iports, uint16_t num_oports) : Base(num_iports, num_oports)
+    explicit SingleOutputT(uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
+        : Base(num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
-    SingleOutputT(const ValidName& name, uint16_t num_iports, uint16_t num_oports) : Base(name, num_iports, num_oports)
+    SingleOutputT(Submodel* parent, uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
+        : Base(parent, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
 
 public:
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
-        if (!Base::init(parent, ibus, obus))
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
-        _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0).second));
+        _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0)));
         return true;
     }
 };

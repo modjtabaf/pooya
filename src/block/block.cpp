@@ -26,20 +26,38 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
+Block::Block(uint16_t num_iports, uint16_t num_oports) : _num_iports(num_iports), _num_oports(num_oports)
+{
+    if (_parent) _parent->link_block(*this);
+}
+
+Block::Block(Submodel* parent, uint16_t num_iports, uint16_t num_oports)
+    : _parent(parent), _num_iports(num_iports), _num_oports(num_oports)
+{
+    if (_parent) _parent->link_block(*this);
+}
+
+bool Block::set_parent(Submodel& parent)
+{
+    if (_parent != nullptr && _parent != &parent)
+    {
+        helper::pooya_show_warning(__FILE__, __LINE__, full_name().str() + ": parent is set already!");
+        return false;
+    }
+
+    _parent = &parent;
+    parent.link_block(*this);
+
+    return true;
+}
+
+bool Block::connect(const Bus& ibus, const Bus& obus)
 {
     pooya_trace(_name.str());
 
-    if (_initialized)
+    if (_connected)
     {
-        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reinitialize a block!");
-    }
-
-    _parent = parent;
-
-    if (parent && !parent->is_initialized())
-    {
-        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": parent block is not initialized yet!");
+        helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reconnecting a block!");
     }
 
     pooya_verify((_num_iports == NoIOLimit) || (ibus.size() == _num_iports),
@@ -54,21 +72,21 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
 
     _linked_signals.reserve(ibus.size() + obus.size());
 
-    for (auto& sig : ibus)
+    for (const auto& sig_key : ibus)
     {
-        if (sig.second->is_value())
+        const auto& sig = ibus[sig_key];
+        if (sig->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
-                        SignalLinkType::Input);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Input);
         }
     }
 
-    for (auto& sig : obus)
+    for (const auto& sig_key : obus)
     {
-        if (sig.second->is_value())
+        const auto& sig = obus[sig_key];
+        if (sig->is_value())
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig.second->shared_from_this()),
-                        SignalLinkType::Output);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Output);
         }
     }
 
@@ -77,7 +95,7 @@ bool Block::init(Submodel* parent, const Bus& ibus, const Bus& obus)
     _ibus.reset(ibus);
     _obus.reset(obus);
 
-    _initialized = true;
+    _connected = true;
     return true;
 }
 

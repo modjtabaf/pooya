@@ -20,7 +20,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <math.h>
 
 #include "src/block/gain.hpp"
-#include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
@@ -34,24 +33,23 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("gain_block");
-    pooya::Gain gain("gain", 2.0);
+    pooya::Gain gain(2.0);
 
     // create pooya signals
     pooya::ScalarSignal x("x");
     pooya::ScalarSignal y("y");
 
     // setup the model
-    model.add_block(gain, x, y);
+    gain.connect(x, y);
 
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(gain,
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;
                              x = std::sin(M_PI * t / 5);
                          });
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x);
     history.track(y);
 

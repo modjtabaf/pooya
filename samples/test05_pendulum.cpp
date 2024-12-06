@@ -18,12 +18,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-#include "src/block/sin.hpp"
-#include "src/block/submodel.hpp"
-#include "src/helper/trace.hpp"
-// #include "src/block/siso_function.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/muldiv.hpp"
+#include "src/block/sin.hpp"
+// #include "src/block/siso_function.hpp"
+#include "src/block/submodel.hpp"
+#include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rk4.hpp"
@@ -32,40 +32,35 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"dphi"};
-    pooya::Integrator _integ2{"phi", M_PI_4};
-    // pooya::SISOFunction _sin{"sin(phi)",
-    //     [](double /*t*/, double x) -> double
-    //     {
-    //         return std::sin(x);
-    //     }};
-    pooya::Sin _sin{"sin(phi)"};
-    pooya::MulDiv _muldiv{"-g\\l", "**/", -1};
+    pooya::Integrator _integ1{this};
+    pooya::Integrator _integ2{this, M_PI_4};
+    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
+    pooya::Sin _sin{this};
+    pooya::MulDiv _muldiv{this, "**/", -1};
 
 public:
-    Pendulum() : pooya::Submodel("pendulum") {}
-
     pooya::ScalarSignal _phi{"phi"};
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
     pooya::ScalarSignal _g{"g"};
     pooya::ScalarSignal _l{"l"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus&, const pooya::Bus&) override
+    Pendulum()
     {
         pooya_trace0;
 
-        if (!pooya::Submodel::init(parent)) return false;
+        _integ1.rename("dphi");
+        _integ2.rename("phi");
+        _sin.rename("sin(phi)");
+        _muldiv.rename("-g\\l");
 
         pooya::ScalarSignal s10;
 
         // setup the submodel
-        add_block(_integ1, _d2phi, _dphi);
-        add_block(_integ2, _dphi, _phi);
-        add_block(_sin, _phi, s10);
-        add_block(_muldiv, {s10, _g, _l}, _d2phi);
-
-        return true;
+        _integ1.connect(_d2phi, _dphi);
+        _integ2.connect(_dphi, _phi);
+        _sin.connect(_phi, s10);
+        _muldiv.connect({s10, _g, _l}, _d2phi);
     }
 };
 
@@ -77,15 +72,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test05");
     Pendulum pendulum;
-
-    // setup the model
-    model.add_block(pendulum);
 
     pooya::Rk4 stepper;
     pooya::Simulator sim(
-        model,
+        pendulum,
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
@@ -94,7 +85,7 @@ int main()
         },
         &stepper);
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(pendulum._phi);
 
     uint k = 0;

@@ -1,0 +1,15 @@
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: true
+BraceWrapping:
+  BeforeLambdaBody: true
+IndentWidth: 4
+Language: Cpp
+PointerAlignment: Left
+SpaceAfterTemplateKeyword: false
+UseTab: Never

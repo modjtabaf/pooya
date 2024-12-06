@@ -31,29 +31,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{"xd", 0.1};
-    pooya::Integrator _integ2{"x"};
-    pooya::Gain _gain{"-k\\m", -1.0 / 1.0};
+    pooya::Integrator _integ1{this, 0.1};
+    pooya::Integrator _integ2{this};
+    pooya::Gain _gain{this, -1.0 / 1.0};
 
 public:
-    MyModel() : pooya::Submodel("MyModel") {}
-
     pooya::ScalarSignal _x{"x"};
     pooya::ScalarSignal _xd{"xd"};
     pooya::ScalarSignal _xdd{"xdd"};
 
-    bool init(pooya::Submodel* parent, const pooya::Bus& ibus, const pooya::Bus& obus) override
+    MyModel()
     {
-        pooya_trace0;
+        rename("MyModel");
+        _integ1.rename("xd");
+        _integ2.rename("x");
+        _gain.rename("-k\\m");
 
-        if (!pooya::Submodel::init(parent, ibus, obus)) return false;
-
-        // setup the submodel
-        add_block(_integ1, _xdd, _xd);
-        add_block(_integ2, _xd, _x);
-        add_block(_gain, _x, _xdd);
-
-        return true;
+        _integ1.connect(_xdd, _xd);
+        _integ2.connect(_xd, _x);
+        _gain.connect(_x, _xdd);
     }
 };
 
@@ -65,18 +61,14 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("test04");
-    MyModel mymodel;
-
-    // setup the model
-    model.add_block(mymodel);
+    MyModel model;
 
     pooya::Rk4 stepper;
     pooya::Simulator sim(model, nullptr, &stepper);
 
-    pooya::History history(model);
-    history.track(mymodel._x);
-    history.track(mymodel._xd);
+    pooya::History history;
+    history.track(model._x);
+    history.track(model._xd);
 
     uint k = 0;
     double t;
@@ -96,7 +88,7 @@ int main()
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-0.15:0.15]\n";
-    gp << "plot" << gp.file1d(history[mymodel._x]) << "with lines title 'x'," << gp.file1d(history[mymodel._xd])
+    gp << "plot" << gp.file1d(history[model._x]) << "with lines title 'x'," << gp.file1d(history[model._xd])
        << "with lines title 'xd'\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);

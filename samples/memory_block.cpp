@@ -33,24 +33,23 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model("memory_block");
-    pooya::Memory memory("memory");
+    pooya::Memory memory;
 
     // create pooya signals
     pooya::ScalarSignal x("x");
     pooya::ScalarSignal y("y");
 
     // setup the model
-    model.add_block(memory, x, y);
+    memory.connect(x, y);
 
-    pooya::Simulator sim(model,
+    pooya::Simulator sim(memory,
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;
                              x = std::sin(M_PI * t / 5);
                          });
 
-    pooya::History history(model);
+    pooya::History history;
     history.track(x);
     history.track(y);
 

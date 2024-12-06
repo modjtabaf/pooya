@@ -34,25 +34,26 @@ protected:
     T _value;
 
 public:
-    IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = Block::NoIOLimit)
+    explicit IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+                             uint16_t num_oports = Block::NoIOLimit)
         : SingleOutputT<T>(num_iports, num_oports), _value(ic)
     {
     }
-    IntegratorBaseT(const ValidName& name, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+    IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
                     uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(name, num_iports, num_oports), _value(ic)
+        : SingleOutputT<T>(parent, num_iports, num_oports), _value(ic)
     {
     }
 
-    bool init(Submodel* parent, const Bus& ibus, const Bus& obus) override
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::init(parent, ibus, obus))
+        if (!SingleOutputT<T>::connect(ibus, obus))
         {
             return false;
         }
 
-        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0).second));
+        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
 
         return true;
     }

@@ -42,7 +42,8 @@ public:
     {
     }
 
-    bool add_block(Block& block);
+    bool link_block(Block& block);
+    bool add_block(Block& block, const Bus& ibus = {}, const Bus& obus = {});
 
     void pre_step(double t) override
     {

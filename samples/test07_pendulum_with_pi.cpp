@@ -46,7 +46,7 @@ public:
     pooya::ScalarSignal _g;
     pooya::ScalarSignal _l;
 
-    explicit Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent) { rename("pendulum"); }
+    explicit Pendulum() { rename("pendulum"); }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
@@ -85,11 +85,7 @@ protected:
     pooya::Add _add{this};
 
 public:
-    PI(pooya::Submodel* parent, double Kp, double Ki, double x0 = 0.0)
-        : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki)
-    {
-        rename("PI");
-    }
+    PI(double Kp, double Ki, double x0 = 0.0) : _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki) { rename("PI"); }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
@@ -117,11 +113,11 @@ public:
 class PendulumWithPI : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{this};
-    PI _pi{this, 40.0, 20.0};
+    pooya::Subtract _sub;
+    PI _pi{40.0, 20.0};
 
 public:
-    Pendulum _pend{this};
+    Pendulum _pend;
     pooya::ScalarSignal _des_phi;
     pooya::ScalarSignal _phi;
     pooya::ScalarSignal _tau;
@@ -129,9 +125,9 @@ public:
 
     PendulumWithPI()
     {
-        _sub.connect({_des_phi, _phi}, _err);
-        _pi.connect(_err, _tau);
-        _pend.connect(_tau, _phi);
+        add_block(_sub, {_des_phi, _phi}, _err);
+        add_block(_pi, _err, _tau);
+        add_block(_pend, _tau, _phi);
     }
 };
 

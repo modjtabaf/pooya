@@ -15,8 +15,10 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "submodel.hpp"
+#include <algorithm>
+
 #include "src/signal/array_signal.hpp"
+#include "submodel.hpp"
 
 namespace pooya
 {
@@ -145,7 +147,7 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
     return true;
 }
 
-bool Submodel::add_block(Block& block)
+bool Submodel::link_block(Block& block)
 {
     pooya_trace("block: " + full_name().str());
 
@@ -156,11 +158,20 @@ bool Submodel::add_block(Block& block)
     }
 
 #if defined(POOYA_USE_SMART_PTRS)
-    _blocks.push_back(block);
+    if (std::find_if(_blocks.begin(), _blocks.end(), [&](const std::reference_wrapper<Block>& ref) -> bool
+                     { return &ref.get() == &block; }) == _blocks.end())
+        _blocks.push_back(block);
 #else  // defined(POOYA_USE_SMART_PTRS)
-    _blocks.push_back(&block);
+    if (std::find(_blocks.begin(), _blocks.end(), &block) == _blocks.end()) _blocks.push_back(&block);
 #endif // defined(POOYA_USE_SMART_PTRS)
 
+    return true;
+}
+
+bool Submodel::add_block(Block& block, const Bus& ibus, const Bus& obus)
+{
+    if (!block.set_parent(*this)) return false;
+    block.connect(ibus, obus);
     return true;
 }
 

@@ -28,13 +28,13 @@ namespace pooya
 
 Block::Block(uint16_t num_iports, uint16_t num_oports) : _num_iports(num_iports), _num_oports(num_oports)
 {
-    if (_parent) _parent->add_block(*this);
+    if (_parent) _parent->link_block(*this);
 }
 
 Block::Block(Submodel* parent, uint16_t num_iports, uint16_t num_oports)
     : _parent(parent), _num_iports(num_iports), _num_oports(num_oports)
 {
-    if (_parent) _parent->add_block(*this);
+    if (_parent) _parent->link_block(*this);
 }
 
 bool Block::set_parent(Submodel& parent)
@@ -46,7 +46,7 @@ bool Block::set_parent(Submodel& parent)
     }
 
     _parent = &parent;
-    parent.add_block(*this);
+    parent.link_block(*this);
 
     return true;
 }

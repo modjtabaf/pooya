@@ -28,17 +28,10 @@ void Submodel::_mark_unprocessed()
     pooya_trace("block: " + full_name().str());
     Block::_mark_unprocessed();
 
-#if defined(POOYA_USE_SMART_PTRS)
-    for (auto& block : _blocks)
-    {
-        block.get()._mark_unprocessed();
-    }
-#else  // defined(POOYA_USE_SMART_PTRS)
     for (auto* block : _blocks)
     {
         block->_mark_unprocessed();
     }
-#endif // defined(POOYA_USE_SMART_PTRS)
 }
 
 uint Submodel::_process(double t, bool go_deep)
@@ -49,16 +42,6 @@ uint Submodel::_process(double t, bool go_deep)
     {
         _processed = true;
         if (go_deep)
-#if defined(POOYA_USE_SMART_PTRS)
-            for (auto& block : _blocks)
-            {
-                n_processed += block.get()._process(t);
-                if (not block.get().processed())
-                {
-                    _processed = false;
-                }
-            }
-#else  // defined(POOYA_USE_SMART_PTRS)
             for (auto* block : _blocks)
             {
                 n_processed += block->_process(t);
@@ -67,7 +50,6 @@ uint Submodel::_process(double t, bool go_deep)
                     _processed = false;
                 }
             }
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     return n_processed;
@@ -88,15 +70,6 @@ bool Submodel::visit(VisitorCallback cb, uint32_t level, decltype(level) max_lev
 
     if (level < max_level)
     {
-#if defined(POOYA_USE_SMART_PTRS)
-        for (auto& c : _blocks)
-        {
-            if (!c.get().visit(cb, level + 1, max_level))
-            {
-                return false;
-            }
-        }
-#else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* c : _blocks)
         {
             if (!c->visit(cb, level + 1, max_level))
@@ -104,7 +77,6 @@ bool Submodel::visit(VisitorCallback cb, uint32_t level, decltype(level) max_lev
                 return false;
             }
         }
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     return true;
@@ -125,15 +97,6 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
 
     if (level < max_level)
     {
-#if defined(POOYA_USE_SMART_PTRS)
-        for (auto& c : _blocks)
-        {
-            if (!c.get().const_visit(cb, level + 1, max_level))
-            {
-                return false;
-            }
-        }
-#else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* c : _blocks)
         {
             if (!c->const_visit(cb, level + 1, max_level))
@@ -141,7 +104,6 @@ bool Submodel::const_visit(ConstVisitorCallback cb, uint32_t level, decltype(lev
                 return false;
             }
         }
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     return true;
@@ -157,13 +119,7 @@ bool Submodel::link_block(Block& block)
         return false;
     }
 
-#if defined(POOYA_USE_SMART_PTRS)
-    if (std::find_if(_blocks.begin(), _blocks.end(), [&](const std::reference_wrapper<Block>& ref) -> bool
-                     { return &ref.get() == &block; }) == _blocks.end())
-        _blocks.push_back(block);
-#else  // defined(POOYA_USE_SMART_PTRS)
     if (std::find(_blocks.begin(), _blocks.end(), &block) == _blocks.end()) _blocks.push_back(&block);
-#endif // defined(POOYA_USE_SMART_PTRS)
 
     return true;
 }

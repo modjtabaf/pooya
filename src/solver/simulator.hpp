@@ -42,28 +42,15 @@ protected:
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;
-#if defined(POOYA_USE_SMART_PTRS)
-    std::optional<std::reference_wrapper<StepperBase>> _stepper;
-#else  // defined(POOYA_USE_SMART_PTRS)
     StepperBase* _stepper{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
     bool _initialized{false};
 
     const bool _reuse_order;
-#if defined(POOYA_USE_SMART_PTRS)
-    using ProcessingOrder = std::vector<std::reference_wrapper<Block>>;
-#else  // defined(POOYA_USE_SMART_PTRS)
     using ProcessingOrder = std::vector<Block*>;
-#endif // defined(POOYA_USE_SMART_PTRS)
     ProcessingOrder _processing_order1;
     ProcessingOrder _processing_order2;
-#if defined(POOYA_USE_SMART_PTRS)
-    std::reference_wrapper<ProcessingOrder> _current_po{_processing_order1};
-    std::reference_wrapper<ProcessingOrder> _new_po{_processing_order2};
-#else  // defined(POOYA_USE_SMART_PTRS)
     ProcessingOrder* _current_po{nullptr};
     ProcessingOrder* _new_po{nullptr};
-#endif // defined(POOYA_USE_SMART_PTRS)
 
     uint _process(double t);
     void reset_with_state_variables(const Array& state_variables);

@@ -36,15 +36,9 @@ Simulator::Simulator(Block& model, InputCallback inputs_cb, StepperBase* stepper
 {
     pooya_trace("model: " + model.full_name().str());
     if (stepper)
-#if defined(POOYA_USE_SMART_PTRS)
-    {
-        _stepper = *stepper;
-    }
-#else  // defined(POOYA_USE_SMART_PTRS)
     {
         _stepper = stepper;
     }
-#endif // defined(POOYA_USE_SMART_PTRS)
 }
 
 uint Simulator::_process(double t)
@@ -56,31 +50,12 @@ uint Simulator::_process(double t)
 
     if (_reuse_order)
     {
-#if defined(POOYA_USE_SMART_PTRS)
-        _new_po.get().clear();
-#else  // defined(POOYA_USE_SMART_PTRS)
         _new_po->clear();
-#endif // defined(POOYA_USE_SMART_PTRS)
 
         bool any_processed;
         do
         {
             any_processed = false;
-#if defined(POOYA_USE_SMART_PTRS)
-            for (auto& base : _current_po.get())
-            {
-                if (base.get().processed())
-                {
-                    continue;
-                }
-                n_processed += base.get()._process(t, false);
-                if (base.get().processed())
-                {
-                    _new_po.get().emplace_back(base);
-                    any_processed = true;
-                }
-            }
-#else  // defined(POOYA_USE_SMART_PTRS)
             for (auto* base : *_current_po)
             {
                 if (base->processed())
@@ -94,22 +69,8 @@ uint Simulator::_process(double t)
                     any_processed = true;
                 }
             }
-#endif // defined(POOYA_USE_SMART_PTRS)
         } while (any_processed);
 
-#if defined(POOYA_USE_SMART_PTRS)
-        for (auto& base : _current_po.get())
-        {
-            if (!base.get().processed())
-            {
-                _new_po.get().emplace_back(base);
-            }
-        }
-
-        assert(_current_po.get().size() == _new_po.get().size());
-        assert(_current_po.get().size() == _current_po.get().capacity());
-        assert(_new_po.get().size() == _new_po.get().capacity());
-#else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* base : *_current_po)
         {
             if (!base->processed())
@@ -121,7 +82,6 @@ uint Simulator::_process(double t)
         assert(_current_po->size() == _new_po->size());
         assert(_current_po->size() == _current_po->capacity());
         assert(_new_po->size() == _new_po->capacity());
-#endif // defined(POOYA_USE_SMART_PTRS)
 
         std::swap(_current_po, _new_po);
     }
@@ -261,22 +221,13 @@ void Simulator::init(double t0)
 
             auto add_blocks_cb = [&](Block& c, uint32_t /*level*/) -> bool
             {
-#if defined(POOYA_USE_SMART_PTRS)
-                _processing_order1.emplace_back(c);
-#else  // defined(POOYA_USE_SMART_PTRS)
                 _processing_order1.emplace_back(&c);
-#endif // defined(POOYA_USE_SMART_PTRS)
                 return true;
             };
             _model.visit(add_blocks_cb, 0);
 
-#if defined(POOYA_USE_SMART_PTRS)
-            _current_po = _processing_order1;
-            _new_po     = _processing_order2;
-#else  // defined(POOYA_USE_SMART_PTRS)
             _current_po = &_processing_order1;
             _new_po     = &_processing_order2;
-#endif // defined(POOYA_USE_SMART_PTRS)
         }
     }
     else
@@ -399,12 +350,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                 _model.pre_step(t1);
                 get_state_variables(_state_variables_orig);
 
-#if defined(POOYA_USE_SMART_PTRS)
-                _stepper.value().get().step
-#else  // defined(POOYA_USE_SMART_PTRS)step
-                _stepper->step
-#endif // defined(POOYA_USE_SMART_PTRS)
-                    (minor_solver_step_cb, t1, _state_variables_orig, t2, _state_variables, new_h);
+                _stepper->step(minor_solver_step_cb, t1, _state_variables_orig, t2, _state_variables, new_h);
 
                 double h = t2 - t1;
                 if (force_accept || (new_h >= h) || (h <= min_time_step))

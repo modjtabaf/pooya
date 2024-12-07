@@ -26,12 +26,7 @@ namespace pooya
 class Submodel : public Block
 {
 protected:
-#if defined(POOYA_USE_SMART_PTRS)
-    std::vector<std::reference_wrapper<Block>> _blocks;
-#else  // defined(POOYA_USE_SMART_PTRS)
     std::vector<Block*> _blocks;
-#endif // defined(POOYA_USE_SMART_PTRS)
-    std::vector<std::unique_ptr<BusSpec>> _interface_bus_specs;
 
 public:
     explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
@@ -48,33 +43,19 @@ public:
     void pre_step(double t) override
     {
         pooya_trace("block: " + full_name().str());
-#if defined(POOYA_USE_SMART_PTRS)
-        for (auto& block : _blocks)
-        {
-            block.get().pre_step(t);
-        }
-#else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* block : _blocks)
         {
             block->pre_step(t);
         }
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void post_step(double t) override
     {
         pooya_trace("block: " + full_name().str());
-#if defined(POOYA_USE_SMART_PTRS)
-        for (auto& block : _blocks)
-        {
-            block.get().post_step(t);
-        }
-#else  // defined(POOYA_USE_SMART_PTRS)
         for (auto* block : _blocks)
         {
             block->post_step(t);
         }
-#endif // defined(POOYA_USE_SMART_PTRS)
     }
 
     void _mark_unprocessed() override;

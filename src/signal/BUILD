@@ -17,7 +17,7 @@ pooya_cc_library(
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [
-        "@eigen",
+        "@eigen//:eigen",
         "//src/helper",
         "//src/shared",
     ],

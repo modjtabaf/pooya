@@ -9,8 +9,8 @@ http_archive(
   sha256 = "1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4",
 )
 
-maybe(
-  http_archive,
+# maybe(
+http_archive(
   name = "eigen",
   # build_file = "@//:3rdparty/eigen/eigen.BUILD",
   build_file_content = """

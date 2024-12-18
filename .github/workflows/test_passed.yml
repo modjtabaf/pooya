@@ -17,5 +17,5 @@ jobs:
     - name: Run Bazel Tests
       run: |
         bazel clean
-        bazel test //... --enable_workspace --test_output=errors
+        bazel test //... --test_output=errors
 

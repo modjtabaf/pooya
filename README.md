@@ -1,1 +1,1 @@
-Coming Soon!
+Pooya is a lightweight C++ library for block diagram modeling and simulation. Please have a look at this tutorial for more insights into how it can be used: https://github.com/modjtabaf/pooya/blob/main/doc/tutorials/01_mass_spring_damper.md

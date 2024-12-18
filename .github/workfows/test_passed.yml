@@ -1,0 +1,22 @@
+name: Tests Passed
+on:
+  push:
+
+jobs:
+  bazel-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Bazel
+      uses: philwo/setup-bazel@v2
+      with:
+        version: 8.0.0  # Specify the Bazel version you want to use
+
+    - name: Run Bazel Tests
+      run: |
+        bazel clean
+        bazel test //... --test_output=errors
+

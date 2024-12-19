@@ -14,7 +14,7 @@ load("//:pooya_rules.bzl", "pooya_cc_library")
 
 pooya_cc_library(
     name = "misc",
-    srcs = glob(["*.cpp"]),
+    srcs = glob(["*.cpp"], allow_empty = True),
     hdrs = glob(["*.hpp"]),
     deps = [
         "//3rdparty:misc",

@@ -1,21 +1,4 @@
-/*
-Copyright 2024 Mojtaba (Moji) Fathi
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-Software.
-
- THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-#include <chrono>
 #include <iostream>
 
 #include "src/block/add.hpp"
@@ -32,54 +15,40 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/solver/rkf45.hpp"
 #include "src/solver/simulator.hpp"
 
+#define deg2rad(d) (d * (M_PI / 180))
+#define rad2deg(d) (d * (180 / M_PI))
+
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{this, "*///"};
-    pooya::Subtract _sub{this};
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this};
-    pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv2{this, "**/"};
+    double _m{0.2}, _l{0.1}, _g{9.81};
+
+    pooya::Gain _gain1{1 / (_m * _l * _l)};
+    pooya::Sin _sin;
+    pooya::Gain _gain2{_g / _l};
+    pooya::Subtract _sub;
+    pooya::Integrator _integ1;
+    pooya::Integrator _integ2;
 
 public:
-    Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent)
-    {
-        rename("pendulum");
-        _muldiv1.rename("tau_ml2");
-        _sub.rename("err");
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _muldiv2.rename("g_l");
-    }
-
-    pooya::ScalarSignal _m{"m"};
-    pooya::ScalarSignal _g{"g"};
-    pooya::ScalarSignal _l{"l"};
-    pooya::ScalarSignal _dphi{"dphi"};
+    pooya::ScalarSignal _dphi;
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
-        pooya_trace0;
-
         if (!pooya::Submodel::connect(ibus, obus)) return false;
 
-        pooya::ScalarSignal s10;
-        pooya::ScalarSignal s20;
-        pooya::ScalarSignal s30;
-        pooya::ScalarSignal s40;
+        pooya::ScalarSignal tau_scaled, sin_phi, sin_phi_scaled, d2phi;
 
         auto tau = scalar_input_at(0);
         auto phi = scalar_output_at(0);
 
         // setup the submodel
-        _muldiv1.connect({tau, _m, _l, _l}, s10);
-        _sub.connect({s10, s20}, s30);
-        _integ1.connect(s30, _dphi);
-        _integ2.connect(_dphi, phi);
-        _sin.connect(phi, s40);
-        _muldiv2.connect({s40, _g, _l}, s20);
+        add_block(_gain1, tau, tau_scaled);
+        add_block(_sin, phi, sin_phi);
+        add_block(_gain2, sin_phi, sin_phi_scaled);
+        add_block(_sub, {tau_scaled, sin_phi_scaled}, d2phi);
+        add_block(_integ1, d2phi, _dphi);
+        add_block(_integ2, _dphi, phi);
 
         return true;
     }
@@ -91,43 +60,30 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{this};
-    pooya::Derivative _deriv{this};
+    pooya::Derivative _deriv;
     pooya::Gain _gain_d;
+    pooya::Add _add;
 
 public:
-    PID(pooya::Submodel* parent, double Kp, double Ki, double Kd, double x0 = 0.0)
-        : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki), _gain_d(this, Kd)
-    {
-        rename("PI");
-        _gain_p.rename("Kp");
-        _integ.rename("ix");
-        _gain_i.rename("Ki");
-        _gain_d.rename("Kd");
-    }
+    PID(double Kp, double Ki, double Kd, double x0 = 0.0)
+        : _gain_p(Kp), _integ(x0), _gain_i(Ki), _gain_d(Kd) {}
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
-        pooya_trace0;
-
         if (!pooya::Submodel::connect(ibus, obus)) return false;
 
-        pooya::ScalarSignal s10;
-        pooya::ScalarSignal s20;
-        pooya::ScalarSignal s30;
-        pooya::ScalarSignal s40;
-        pooya::ScalarSignal s50;
+        pooya::ScalarSignal kp_x, xi, ki_xi, xd, kd_xd;
 
-        auto x = scalar_input_at(0);
-        auto y = scalar_output_at(0);
+        auto x = scalar_input_at(0);  // e
+        auto y = scalar_output_at(0); // tau
 
         // blocks
-        _gain_p.connect(x, s10);
-        _integ.connect(x, s20);
-        _gain_i.connect(s20, s30);
-        _deriv.connect(x, s40);
-        _gain_d.connect(s40, s50);
-        _add.connect({s10, s30, s50}, y);
+        add_block(_gain_p, x, kp_x);
+        add_block(_integ, x, xi);
+        add_block(_gain_i, xi, ki_xi);
+        add_block(_deriv, x, xd);
+        add_block(_gain_d, xd, kd_xd);
+        add_block(_add, {kp_x, ki_xi, kd_xd}, y);
 
         return true;
     }
@@ -136,75 +92,78 @@ public:
 class PendulumWithPID : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{this};
-    PID _pid{this, 40.0, 20.0, 0.05};
+    pooya::Subtract _sub;
+    PID _pid{40.0, 20.0, 0.05};
 
 public:
-    Pendulum _pend{this};
-    pooya::ScalarSignal _des_phi{"des_phi"};
-    pooya::ScalarSignal _phi{"phi"};
-    pooya::ScalarSignal _tau{"tau"};
-    pooya::ScalarSignal _err{"err"};
+    Pendulum _pend;
+    pooya::ScalarSignal _des_phi, _phi, _tau, _err;
 
     PendulumWithPID()
     {
-        rename("pendulum_with_PID");
-
-        _sub.connect({_des_phi, _phi}, _err);
-        _pid.connect(_err, _tau);
-        _pend.connect(_tau, _phi);
+        add_block(_sub, {_des_phi, _phi}, _err);
+        add_block(_pid, _err, _tau);
+        add_block(_pend, _tau, _phi);
     }
 };
 
 int main()
 {
-    pooya_trace0;
-
-    using milli = std::chrono::milliseconds;
-    auto start  = std::chrono::high_resolution_clock::now();
-
-    // create pooya blocks
+    // instantiate the model
     PendulumWithPID pendulum_with_pid;
 
+    // instantiate simulation helper objects
     pooya::Rkf45 stepper;
     pooya::Simulator sim(
         pendulum_with_pid,
-        [&](pooya::Block&, double /*t*/) -> void
+        [&](pooya::Block&, double t) -> void // input callback
         {
-            pendulum_with_pid._pend._m = 0.2;
-            pendulum_with_pid._pend._l = 0.1;
-            pendulum_with_pid._pend._g = 9.81;
-            pendulum_with_pid._des_phi = M_PI_4;
+            if (t < 1.0)
+                pendulum_with_pid._des_phi = deg2rad(45);
+            else if (t < 2.0)
+                pendulum_with_pid._des_phi = deg2rad(60);
+            else if (t < 3.0)
+                pendulum_with_pid._des_phi = deg2rad(75);
+            else if (t < 4.0)
+                pendulum_with_pid._des_phi = deg2rad(25);
+            else
+                pendulum_with_pid._des_phi = deg2rad(45);
         },
         &stepper);
 
+    // setup the history
     pooya::History history;
+    history.track(pendulum_with_pid._des_phi);
     history.track(pendulum_with_pid._phi);
     history.track(pendulum_with_pid._pend._dphi);
     history.track(pendulum_with_pid._tau);
 
+    // main simulation loop
     uint k = 0;
     double t;
-    while (pooya::arange(k, t, 0, 5, 0.02))
+    while (pooya::arange(k, t, 0, 5, 0.01))
     {
         sim.run(t);
         history.update(k, t);
         k++;
     }
 
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::cout << "It took " << std::chrono::duration_cast<milli>(finish - start).count() << " milliseconds\n";
+    // plot some results
+    Gnuplot gp1;
+    gp1 << "set xrange [0:" << history.nrows() - 1 << "]\n";
+    gp1 << "set yrange [0:90]\n";
+    gp1 << "set grid\n";
+    gp1 << "plot"
+        << gp1.file1d(rad2deg(history[pendulum_with_pid._des_phi]).eval()) << "with lines title 'phi_{des}',"
+        << gp1.file1d(rad2deg(history[pendulum_with_pid._phi]).eval()) << "with lines title 'phi'\n";
 
-    history.shrink_to_fit();
-
-    Gnuplot gp;
-    gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
-    gp << "set yrange [-80:80]\n";
-    gp << "plot" << gp.file1d((history[pendulum_with_pid._phi] * (180 / M_PI)).eval()) << "with lines title 'phi',"
-       << gp.file1d(history[pendulum_with_pid._pend._dphi]) << "with lines title 'dphi',"
-       << gp.file1d(history[pendulum_with_pid._tau]) << "with lines title 'tau'\n";
-
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    Gnuplot gp2;
+    gp2 << "set xrange [0:" << history.nrows() - 1 << "]\n";
+    gp2 << "set yrange [-100:100]\n";
+    gp2 << "set grid\n";
+    gp2 << "plot" << gp2.file1d(rad2deg(history[pendulum_with_pid._des_phi]).eval()) << "with lines title 'phi_{des}',"
+       << gp2.file1d(history[pendulum_with_pid._pend._dphi]) << "with lines title 'dphi',"
+       << gp2.file1d(history[pendulum_with_pid._tau]) << "with lines title 'tau'\n";
 
     return 0;
 }

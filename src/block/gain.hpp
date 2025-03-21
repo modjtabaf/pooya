@@ -36,7 +36,7 @@ protected:
 
 public:
     GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
-    GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
+    GainT(Submodel* parent, std::string_view name, GainType k) : SingleInputOutputT<T>(parent, name, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {

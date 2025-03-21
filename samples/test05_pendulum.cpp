@@ -32,11 +32,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this, M_PI_4};
+    pooya::Integrator _integ1{this, "dphi"};
+    pooya::Integrator _integ2{this, "phi", M_PI_4};
     // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv{this, "**/", -1};
+    pooya::Sin _sin{this, "sin(phi)"};
+    pooya::MulDiv _muldiv{this, "-g\\l", "**/", -1};
 
 public:
     pooya::ScalarSignal _phi{"phi"};
@@ -48,11 +48,6 @@ public:
     Pendulum()
     {
         pooya_trace0;
-
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _muldiv.rename("-g\\l");
 
         pooya::ScalarSignal s10;
 

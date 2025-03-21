@@ -26,9 +26,9 @@ namespace pooya
 class Leaf : public Block
 {
 protected:
-    explicit Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
-    Leaf(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Block(parent, num_iports, num_oports)
+    Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
+    Leaf(Submodel* parent, std::string_view name = "", uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+        : Block(parent, name, num_iports, num_oports)
     {
     }
 

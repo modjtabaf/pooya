@@ -44,7 +44,10 @@ protected:
 
 public:
     explicit DelayT(double lifespan) : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
-    DelayT(Submodel* parent, double lifespan) : SingleOutputT<T>(parent, 3, 1), _lifespan(lifespan) {}
+    DelayT(Submodel* parent, std::string_view name, double lifespan)
+        : SingleOutputT<T>(parent, name, 3, 1), _lifespan(lifespan)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

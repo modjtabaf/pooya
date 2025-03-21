@@ -16,6 +16,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 */
 
 #include <chrono>
+#include <cstddef>
 #include <iostream>
 
 #include "src/block/add.hpp"
@@ -34,19 +35,19 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{this, "*///"};
+    pooya::MulDiv _muldiv1{this, "", "*///"};
     pooya::Subtract _sub{this};
     pooya::Integrator _integ1{this};
     pooya::Integrator _integ2{this};
     pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv2{this, "**/"};
+    pooya::MulDiv _muldiv2{this, "", "**/"};
 
 public:
     pooya::ScalarSignal _m;
     pooya::ScalarSignal _g;
     pooya::ScalarSignal _l;
 
-    explicit Pendulum() { rename("pendulum"); }
+    explicit Pendulum() : pooya::Submodel(nullptr, "pendulum") {}
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
@@ -85,7 +86,10 @@ protected:
     pooya::Add _add{this};
 
 public:
-    PI(double Kp, double Ki, double x0 = 0.0) : _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki) { rename("PI"); }
+    PI(double Kp, double Ki, double x0 = 0.0)
+        : pooya::Submodel(nullptr, "PI"), _gain_p(this, "Kp", Kp), _integ(this, "ix", x0), _gain_i(this, "Ki", Ki)
+    {
+    }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {

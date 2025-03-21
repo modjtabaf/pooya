@@ -36,7 +36,7 @@ protected:
     bool _init{true};
 
 public:
-    explicit InitialValueT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
+    InitialValueT(Submodel* parent = nullptr, std::string_view name = "") : SingleInputOutputT<T>(parent, name, 1) {}
 
     void activation_function(double /*t*/) override
     {

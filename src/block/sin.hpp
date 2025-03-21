@@ -32,7 +32,7 @@ template<typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    explicit SinT(Submodel* parent = nullptr) : SingleInputOutputT<T>(parent, 1) {}
+    SinT(Submodel* parent = nullptr, std::string_view name = "") : SingleInputOutputT<T>(parent, name, 1) {}
 
     void activation_function(double /*t*/) override
     {

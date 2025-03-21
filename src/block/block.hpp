@@ -67,8 +67,9 @@ protected:
     bool _processed{false};
     bool link_signal(const ValueSignalImplPtr& sig, SignalLinkType type);
 
-    explicit Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
-    Block(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
+    Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
+    Block(Submodel* parent, std::string_view name = "", uint16_t num_iports = NoIOLimit,
+          uint16_t num_oports = NoIOLimit);
 
 public:
     virtual ~Block() = default;

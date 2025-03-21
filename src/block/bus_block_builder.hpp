@@ -44,7 +44,7 @@ protected:
                                const SignalImplPtr& sig_out) = 0;
 
 public:
-    explicit BusBlockBuilder(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+    BusBlockBuilder(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
         : Leaf(&parent), _excluded_labels(excluded_labels)
     {
     }

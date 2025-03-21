@@ -35,17 +35,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{this, M_PI_4};
-    pooya::Integrator _integ2{this};
-    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    // pooya::SOFunction _sin(this, [](double /*t*/, const pooya::Bus& ibus) -> double
-    //                        { return std::sin(ibus.scalar_at(0)->get()); });
-    // pooya::Function _sin(this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-    //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); });
-    pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv1{this, "**/"};
-    pooya::MulDiv _muldiv2{this, "*///"};
-    pooya::Subtract _sub{this};
+    pooya::Integrator _integ1{this, "dphi", M_PI_4};
+    pooya::Integrator _integ2{this, "phi"};
+    // pooya::SISOFunction _sin{this, "sin(phi)", [](double /*t*/, double x) -> double { return std::sin(x); }};
+    // pooya::SOFunction _sin{this, "sin(phi)", [](double /*t*/, const pooya::Bus& ibus) -> double
+    //                        { return std::sin(ibus.scalar_at(0)->get()); }};
+    // pooya::Function _sin{this, "sin(phi)", [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+    //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); }};
+    pooya::Sin _sin{this, "sin(phi)"};
+    pooya::MulDiv _muldiv1{this, "g_l", "**/"};
+    pooya::MulDiv _muldiv2{this, "tau_ml2", "*///"};
+    pooya::Subtract _sub{this, "d2phi"};
 
 public:
     pooya::ScalarSignal _tau{"tau"};
@@ -59,13 +59,6 @@ public:
     Pendulum()
     {
         pooya_trace0;
-
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _muldiv1.rename("g_l");
-        _muldiv2.rename("tau_ml2");
-        _sub.rename("d2phi");
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;

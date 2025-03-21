@@ -23,19 +23,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-template<typename T>
-class SingleInputT : public Leaf
+template<typename T, typename Base = Leaf>
+class SingleInputT : public Base
 {
 protected:
     typename Types<T>::Signal _s_in;
 
-    explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
-    SingleInputT(Submodel* parent, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
-    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
+    explicit SingleInputT(uint16_t num_oports = Block::NoIOLimit) : Base(1, num_oports) {}
+    SingleInputT(Submodel* parent, std::string_view name = "", uint16_t num_oports = Block::NoIOLimit)
+        : Base(parent, name, 1, num_oports)
+    {
+    }
+    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Base(num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
-    SingleInputT(Submodel* parent, uint16_t num_iports, uint16_t num_oports) : Leaf(parent, num_iports, num_oports)
+    SingleInputT(Submodel* parent, std::string_view name, uint16_t num_iports, uint16_t num_oports)
+        : Base(parent, name, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
@@ -43,11 +47,11 @@ protected:
 public:
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        if (!Leaf::connect(ibus, obus))
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
-        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0)));
+        _s_in.reset(Types<T>::as_signal_id(Base::_ibus.at(0)));
         return true;
     }
 };

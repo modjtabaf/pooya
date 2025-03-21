@@ -41,8 +41,8 @@ public:
         : SingleOutputT<T>(Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
-    MulDivT(Submodel* parent, const std::string& operators, const T& initial = 1.0)
-        : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
+    MulDivT(Submodel* parent, std::string_view name, const std::string& operators, const T& initial = 1.0)
+        : SingleOutputT<T>(parent, name, Block::NoIOLimit, 1), _operators(operators), _initial(initial)
     {
     }
 

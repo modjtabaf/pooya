@@ -29,11 +29,10 @@ protected:
     std::vector<Block*> _blocks;
 
 public:
-    explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
-    {
-    }
-    Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Block(parent, num_iports, num_oports)
+    Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
+    Submodel(Submodel* parent, std::string_view name = "", uint16_t num_iports = NoIOLimit,
+             uint16_t num_oports = NoIOLimit)
+        : Block(parent, name, num_iports, num_oports)
     {
     }
 

@@ -19,6 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_NAMED_OBJECT_HPP__
 
 #include <string>
+#include <string_view>
 
 namespace pooya
 {
@@ -40,6 +41,7 @@ public:
     ValidName()                 = default;
     ValidName(const ValidName&) = default;
     ValidName(const char* name) : _name(emend(std::string(name))) {}
+    ValidName(std::string_view name) : _name(emend(name)) {}
     ValidName(const std::string& name) : _name(emend(name)) {}
 
     ValidName& operator=(const ValidName&) = default;
@@ -66,7 +68,8 @@ public:
         return append(name, "/");
     }
 
-    static std::string emend(const std::string& name);
+    static std::string emend(std::string_view name);
+    static std::string emend(const std::string& name) { return emend(std::string_view(name)); }
     static std::string emend(const ValidName& name) { return name._name; }
 };
 

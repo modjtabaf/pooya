@@ -35,9 +35,9 @@ protected:
                               pooya_trace0;
                               return std::sin(M_PI * t / 5);
                           }};
-    pooya::Const _const1{this, 2.7435};
-    pooya::Const _const2{this, 0.0};
-    pooya::Delay _delay{this, 10.0};
+    pooya::Const _const1{this, "", 2.7435};
+    pooya::Const _const2{this, "", 0.0};
+    pooya::Delay _delay{this, "", 10.0};
 
 public:
     pooya::ScalarSignal _s_x;

@@ -33,7 +33,10 @@ class DivideT : public MulDivT<T>
 {
 public:
     explicit DivideT(const T& initial = 1.0) : MulDivT<T>("*/", initial) {}
-    DivideT(Submodel* parent, const T& initial = 1.0) : MulDivT<T>(parent, "*/", initial) {}
+    DivideT(Submodel* parent, std::string_view name = "", const T& initial = 1.0)
+        : MulDivT<T>(parent, name, "*/", initial)
+    {
+    }
 };
 
 using Divide  = DivideT<double>;

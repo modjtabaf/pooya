@@ -35,24 +35,15 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{this, "*///"};
-    pooya::Subtract _sub{this};
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this};
-    pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv2{this, "**/"};
+    pooya::MulDiv _muldiv1{this, "tau_ml2", "*///"};
+    pooya::Subtract _sub{this, "err"};
+    pooya::Integrator _integ1{this, "dphi"};
+    pooya::Integrator _integ2{this, "phi"};
+    pooya::Sin _sin{this, "sin(phi)"};
+    pooya::MulDiv _muldiv2{this, "g_l", "**/"};
 
 public:
-    Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent)
-    {
-        rename("pendulum");
-        _muldiv1.rename("tau_ml2");
-        _sub.rename("err");
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _muldiv2.rename("g_l");
-    }
+    Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent, "pendulum") {}
 
     pooya::ScalarSignal _m{"m"};
     pooya::ScalarSignal _g{"g"};
@@ -97,13 +88,9 @@ protected:
 
 public:
     PID(pooya::Submodel* parent, double Kp, double Ki, double Kd, double x0 = 0.0)
-        : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki), _gain_d(this, Kd)
+        : pooya::Submodel(parent, "PI"), _gain_p(this, "Kp", Kp), _integ(this, "ix", x0), _gain_i(this, "Ki", Ki),
+          _gain_d(this, "Kd", Kd)
     {
-        rename("PI");
-        _gain_p.rename("Kp");
-        _integ.rename("ix");
-        _gain_i.rename("Ki");
-        _gain_d.rename("Kd");
     }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
@@ -146,10 +133,8 @@ public:
     pooya::ScalarSignal _tau{"tau"};
     pooya::ScalarSignal _err{"err"};
 
-    PendulumWithPID()
+    PendulumWithPID() : pooya::Submodel(nullptr, "pendulum_with_PID")
     {
-        rename("pendulum_with_PID");
-
         _sub.connect({_des_phi, _phi}, _err);
         _pid.connect(_err, _tau);
         _pend.connect(_tau, _phi);

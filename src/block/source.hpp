@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SOURCE_HPP__
 #define __POOYA_BLOCK_SOURCE_HPP__
 
-#include "singleio.hpp"
+#include "singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
@@ -39,7 +39,10 @@ protected:
 
 public:
     explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
-    SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
+    SourceT(Submodel* parent, std::string_view name, SourceFunction src_func)
+        : SingleOutputT<T>(parent, name), _src_func(src_func)
+    {
+    }
 
     void activation_function(double t) override
     {

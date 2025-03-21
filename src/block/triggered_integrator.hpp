@@ -37,7 +37,10 @@ protected:
 
 public:
     explicit TriggeredIntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 2, 1) {}
-    TriggeredIntegratorT(Submodel* parent, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 2, 1) {}
+    TriggeredIntegratorT(Submodel* parent, std::string_view name, T ic = T(0.0))
+        : IntegratorBaseT<T>(parent, name, ic, 2, 1)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

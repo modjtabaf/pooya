@@ -34,14 +34,13 @@ protected:
     T _value;
 
 public:
-    explicit IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                             uint16_t num_oports = Block::NoIOLimit)
+    IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = Block::NoIOLimit)
         : SingleOutputT<T>(num_iports, num_oports), _value(ic)
     {
     }
-    IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+    IntegratorBaseT(Submodel* parent, std::string_view name = "", T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
                     uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(parent, num_iports, num_oports), _value(ic)
+        : SingleOutputT<T>(parent, name, num_iports, num_oports), _value(ic)
     {
     }
 

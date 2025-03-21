@@ -33,7 +33,10 @@ class MultiplyT : public MulDivT<T>
 {
 public:
     explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
-    MultiplyT(Submodel* parent, const T& initial = 1.0) : MulDivT<T>(parent, "", initial) {}
+    MultiplyT(Submodel* parent, std::string_view name = "", const T& initial = 1.0)
+        : MulDivT<T>(parent, name, "", initial)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

@@ -33,7 +33,9 @@ class AddT : public AddSubT<T>
 {
 public:
     explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(Submodel* parent, const T& initial = 0.0) : AddSubT<T>(parent, "", initial) {}
+    AddT(Submodel* parent, std::string_view name = "", const T& initial = 0.0) : AddSubT<T>(parent, name, "", initial)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

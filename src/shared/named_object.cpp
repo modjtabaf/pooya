@@ -22,7 +22,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-std::string ValidName::emend(const std::string& name)
+std::string ValidName::emend(std::string_view name)
 {
     std::string ret(name);
     std::for_each(

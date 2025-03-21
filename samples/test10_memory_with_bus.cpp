@@ -59,8 +59,7 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Submodel model;
-    model.rename("test10");
+    pooya::Submodel model(nullptr, "test10");
     pooya::BusMemory bus_memory(model, {{"Z.z3", 1.0}}, {"x1"});
 
     // create buses (signals)

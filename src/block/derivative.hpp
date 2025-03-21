@@ -39,7 +39,10 @@ protected:
 
 public:
     explicit DerivativeT(const T& y0 = 0) : SingleInputOutputT<T>(1), _y(y0) {}
-    DerivativeT(Submodel* parent, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
+    DerivativeT(Submodel* parent, std::string_view name = "", const T& y0 = 0)
+        : SingleInputOutputT<T>(parent, name, 1), _y(y0)
+    {
+    }
 
     void post_step(double t) override
     {

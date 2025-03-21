@@ -32,8 +32,7 @@ template<typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    PipeT() : SingleInputOutputT<T>(1) {}
-    PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
+    PipeT(Submodel* parent = nullptr, std::string_view name = "") : SingleInputOutputT<T>(parent, name, 1) {}
 
     void activation_function(double /*t*/) override
     {

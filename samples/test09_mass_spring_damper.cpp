@@ -37,7 +37,12 @@ protected:
 
 public:
     MassSpringDamper(double m, double k, double c, double x0, double xd0)
-        : pooya::Leaf(1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
+#if __cplusplus >= 202002L // C++20
+        : pooya::Leaf({.num_iports = 1, .num_oports = 0}),
+#else  // __cplusplus >= 202002L // C++20
+        : pooya::Leaf(1, 0),
+#endif // __cplusplus >= 202002L // C++20
+          _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
     {
     }
 

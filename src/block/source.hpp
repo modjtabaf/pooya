@@ -32,6 +32,7 @@ template<typename T>
 class SourceT : public SingleOutputT<T>
 {
 public:
+    using Base           = SingleOutputT<T>;
     using SourceFunction = std::function<T(double)>;
 
 protected:
@@ -39,15 +40,21 @@ protected:
 
 public:
     explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
-    SourceT(Submodel* parent, std::string_view name, SourceFunction src_func)
-        : SingleOutputT<T>(parent, name), _src_func(src_func)
+    SourceT(Submodel* parent, std::string_view name, SourceFunction src_func) : Base(parent, name), _src_func(src_func)
     {
     }
 
+#if __cplusplus >= 202002L // C++20
+    explicit SourceT(SourceFunction src_func, Base::Params params = {})
+        : Base((params.num_iports = 0, params)), _src_func(src_func)
+    {
+    }
+#endif // __cplusplus >= 202002L // C++20
+
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_src_func(t));
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out->set(_src_func(t));
     }
 };
 

@@ -32,6 +32,7 @@ namespace pooya
 class Function : public Leaf
 {
 public:
+    using Base        = Leaf;
     using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
 
 protected:
@@ -39,14 +40,18 @@ protected:
 
 public:
     Function(ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Leaf(num_iports, num_oports), _act_func(act_func)
+        : Base(num_iports, num_oports), _act_func(act_func)
     {
     }
     Function(Submodel* parent, std::string_view name, ActFunction act_func, uint16_t num_iports = NoIOLimit,
              uint16_t num_oports = NoIOLimit)
-        : Leaf(parent, name, num_iports, num_oports), _act_func(act_func)
+        : Base(parent, name, num_iports, num_oports), _act_func(act_func)
     {
     }
+
+#if __cplusplus >= 202002L // C++20
+    explicit Function(ActFunction act_func, const Base::Params& params) : Base(params), _act_func(act_func) {}
+#endif // __cplusplus >= 202002L // C++20
 
     void activation_function(double t) override
     {

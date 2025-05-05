@@ -59,7 +59,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
+#if __cplusplus >= 202002L // C++20
+    pooya::Submodel model({.name = "test10"});
+#else  // __cplusplus >= 202002L // C++20
     pooya::Submodel model(nullptr, "test10");
+#endif // __cplusplus >= 202002L // C++20
     pooya::BusMemory bus_memory(model, {{"Z.z3", 1.0}}, {"x1"});
 
     // create buses (signals)

@@ -32,11 +32,14 @@ template<typename T>
 class DivideT : public MulDivT<T>
 {
 public:
-    explicit DivideT(const T& initial = 1.0) : MulDivT<T>("*/", initial) {}
-    DivideT(Submodel* parent, std::string_view name = "", const T& initial = 1.0)
-        : MulDivT<T>(parent, name, "*/", initial)
-    {
-    }
+    using Base = MulDivT<T>;
+
+    explicit DivideT(const T& initial = 1) : Base("*/", initial) {}
+    DivideT(Submodel* parent, std::string_view name = "", const T& initial = 1) : Base(parent, name, "*/", initial) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit DivideT(const Base::Params& params) : Base("*/", params) {}
+#endif // __cplusplus >= 202002L // C++20
 };
 
 using Divide  = DivideT<double>;

@@ -32,25 +32,27 @@ template<typename T>
 class SOFunctionT : public SingleOutputT<T>
 {
 public:
+    using Base        = SingleOutputT<T>;
     using ActFunction = std::function<typename Types<T>::SetValue(double, const pooya::Bus& ibus)>;
 
 protected:
     ActFunction _act_func;
 
 public:
-    SOFunctionT(ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
-        : SingleOutputT<T>(num_iports), _act_func(act_func)
-    {
-    }
+    SOFunctionT(ActFunction act_func, uint16_t num_iports = Block::NoIOLimit) : Base(num_iports), _act_func(act_func) {}
     SOFunctionT(Submodel* parent, std::string_view name, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
-        : SingleOutputT<T>(parent, name, num_iports), _act_func(act_func)
+        : Base(parent, name, num_iports), _act_func(act_func)
     {
     }
 
+#if __cplusplus >= 202002L // C++20
+    explicit SOFunctionT(ActFunction act_func, const Base::Params& params) : Base(params), _act_func(act_func) {}
+#endif // __cplusplus >= 202002L // C++20
+
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_act_func(t, SingleOutputT<T>::_ibus));
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out->set(_act_func(t, Base::_ibus));
     }
 };
 

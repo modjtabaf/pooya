@@ -32,12 +32,18 @@ template<typename T>
 class SinT : public SingleInputOutputT<T>
 {
 public:
-    SinT(Submodel* parent = nullptr, std::string_view name = "") : SingleInputOutputT<T>(parent, name, 1) {}
+    using Base = SingleInputOutputT<T>;
+
+    SinT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit SinT(const Base::Params& params) : Base(params) {}
+#endif // __cplusplus >= 202002L // C++20
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get().sin());
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out->set(Base::_s_in->get().sin());
     }
 };
 

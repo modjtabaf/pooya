@@ -41,7 +41,11 @@ TEST_F(TestMemory, ScalarMemory)
     const double x0 = -4.8;
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::Memory memory({.ic = x0});
+#else  // __cplusplus >= 202002L // C++20
     pooya::Memory memory(x0);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
     memory.connect(s_x, s_y);
@@ -64,7 +68,11 @@ TEST_F(TestMemory, ArrayMemory)
     const pooya::ArrayN<N> x0{-10.56, 0.18, 7.24, -3.67};
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::MemoryA memory({.ic = x0});
+#else  // __cplusplus >= 202002L // C++20
     pooya::MemoryA memory(x0);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
     memory.connect(s_x, s_y);

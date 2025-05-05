@@ -32,6 +32,15 @@ int main()
 
     // create pooya blocks
     pooya::Submodel model;
+#if __cplusplus >= 202002L // C++20
+    pooya::Source src_F([](double t) -> double { return t < 1 ? 0 : 1; }, {.parent = &model});
+    pooya::Gain gain_1_m(1 / m, {.parent = &model});
+    pooya::AddSub addsub_rhs("+--", {.parent = &model});
+    pooya::Integrator int_xdd({.parent = &model});
+    pooya::Integrator int_xd({.parent = &model});
+    pooya::Gain gain_c_m(c / m, {.parent = &model});
+    pooya::Gain gain_k_m(k / m, {.parent = &model});
+#else  // __cplusplus >= 202002L // C++20
     pooya::Source src_F(&model, "", [](double t) -> double { return t < 1 ? 0 : 1; });
     pooya::Gain gain_1_m(&model, "", 1 / m);
     pooya::AddSub addsub_rhs(&model, "", "+--");
@@ -39,6 +48,7 @@ int main()
     pooya::Integrator int_xd(&model);
     pooya::Gain gain_c_m(&model, "", c / m);
     pooya::Gain gain_k_m(&model, "", k / m);
+#endif // __cplusplus >= 202002L // C++20
 
     // create pooya signals
     pooya::ScalarSignal s_F;

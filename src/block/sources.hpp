@@ -30,17 +30,25 @@ namespace pooya
 class Sources : public Leaf
 {
 public:
+    using Base            = Leaf;
     using SourcesFunction = std::function<void(const Bus&, double)>;
 
 protected:
     SourcesFunction _src_func;
 
 public:
-    Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit) : Leaf(0, num_oports), _src_func(src_func) {}
+    Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit) : Base(0, num_oports), _src_func(src_func) {}
     Sources(Submodel* parent, std::string_view name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
-        : Leaf(parent, name, 0, num_oports), _src_func(src_func)
+        : Base(parent, name, 0, num_oports), _src_func(src_func)
     {
     }
+
+#if __cplusplus >= 202002L // C++20
+    explicit Sources(SourcesFunction src_func, Base::Params params = {})
+        : Base((params.num_iports = 0, params)), _src_func(src_func)
+    {
+    }
+#endif // __cplusplus >= 202002L // C++20
 
     void activation_function(double t) override
     {

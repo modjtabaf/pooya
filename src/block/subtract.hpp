@@ -32,11 +32,14 @@ template<typename T>
 class SubtractT : public AddSubT<T>
 {
 public:
-    explicit SubtractT(const T& initial = 0.0) : AddSubT<T>("+-", initial) {}
-    SubtractT(Submodel* parent, std::string_view name = "", const T& initial = 0.0)
-        : AddSubT<T>(parent, name, "+-", initial)
-    {
-    }
+    using Base = AddSubT<T>;
+
+    explicit SubtractT(const T& initial = 0) : Base("+-", initial) {}
+    SubtractT(Submodel* parent, std::string_view name = "", const T& initial = 0) : Base(parent, name, "+-", initial) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit SubtractT(const Base::Params& params) : Base("+-", params) {}
+#endif // __cplusplus >= 202002L // C++20
 };
 
 using Subtract  = SubtractT<double>;

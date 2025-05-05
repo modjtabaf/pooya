@@ -31,19 +31,24 @@ namespace pooya
 template<typename T>
 class ConstT : public SingleOutputT<T>
 {
+public:
+    using Base = SingleOutputT<T>;
+
 protected:
     T _value;
 
 public:
-    explicit ConstT(const T& value) : SingleOutputT<T>(0), _value(value) {}
-    ConstT(Submodel* parent, std::string_view name, const T& value) : SingleOutputT<T>(parent, name, 0), _value(value)
-    {
-    }
+    explicit ConstT(const T& value) : Base(0), _value(value) {}
+    ConstT(Submodel* parent, std::string_view name, const T& value) : Base(parent, name, 0), _value(value) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit ConstT(const T& value, Base::Params params = {}) : Base((params.num_iports = 0, params)), _value(value) {}
+#endif // __cplusplus >= 202002L // C++20
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_value);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out->set(_value);
     }
 };
 

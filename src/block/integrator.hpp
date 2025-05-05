@@ -32,11 +32,25 @@ template<typename T>
 class IntegratorT : public IntegratorBaseT<T>
 {
 public:
-    explicit IntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 1, 1) {}
-    IntegratorT(Submodel* parent, std::string_view name = "", T ic = T(0.0))
-        : IntegratorBaseT<T>(parent, name, ic, 1, 1)
+    using Base = IntegratorBaseT<T>;
+
+    explicit IntegratorT(T ic = T(0.0)) : Base(ic, 1, 1) {}
+    IntegratorT(Submodel* parent, std::string_view name = "", T ic = T(0.0)) : Base(parent, name, ic, 1, 1) {}
+
+#if __cplusplus >= 202002L // C++20
+    struct Params
+    {
+        Submodel* parent{nullptr};
+        std::string_view name{""};
+        T ic{0};
+    };
+    static_assert(std::is_aggregate_v<Params>);
+
+    explicit IntegratorT(const Params& params)
+        : Base({.parent = params.parent, .name = params.name, .ic = params.ic, .num_iports = 1})
     {
     }
+#endif // __cplusplus >= 202002L // C++20
 };
 
 using Integrator  = IntegratorT<double>;

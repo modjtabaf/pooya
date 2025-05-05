@@ -30,6 +30,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
+#if __cplusplus >= 202002L // C++20
+    pooya::Source _source{[](double t) -> double
+                          {
+                              pooya_trace0;
+                              return std::sin(M_PI * t / 5);
+                          },
+                          {.parent = this }};
+    pooya::Const _const1{2.7435, {.parent = this }};
+    pooya::Const _const2{0.0, {.parent = this }};
+    pooya::Delay _delay{10.0, {.parent = this }};
+#else  // __cplusplus >= 202002L // C++20
     pooya::Source _source{this, [](double t) -> double
                           {
                               pooya_trace0;
@@ -38,6 +49,7 @@ protected:
     pooya::Const _const1{this, "", 2.7435};
     pooya::Const _const2{this, "", 0.0};
     pooya::Delay _delay{this, "", 10.0};
+#endif // __cplusplus >= 202002L // C++20
 
 public:
     pooya::ScalarSignal _s_x;

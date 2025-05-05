@@ -35,6 +35,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
+#if __cplusplus >= 202002L // C++20
+    pooya::Integrator _integ1{{.parent = this, .name = "dphi", .ic = M_PI_4 }};
+    pooya::Integrator _integ2{{.parent = this, .name = "phi" }};
+    // pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); },
+    //                          {.parent = this,
+    //                           .name   = "sin(phi)" }};
+    // pooya::SOFunction _sin{[](double /*t*/, const pooya::Bus& ibus) -> double
+    //                        { return std::sin(ibus.scalar_at(0)->get()); },
+    //                        {.parent = this,
+    //                         .name   = "sin(phi)" }};
+    // pooya::Function _sin{[](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+    //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); },
+    //                      {.parent = this,
+    //                       .name   = "sin(phi)" }};
+    pooya::Sin _sin{{.parent = this, .name = "sin(phi)" }};
+    pooya::MulDiv _muldiv1{"**/", {.parent = this, .name = "g_l" }};
+    pooya::MulDiv _muldiv2{"*///", {.parent = this, .name = "tau_ml2" }};
+    pooya::Subtract _sub{{.parent = this, .name = "d2phi" }};
+#else  // __cplusplus >= 202002L // C++20
     pooya::Integrator _integ1{this, "dphi", M_PI_4};
     pooya::Integrator _integ2{this, "phi"};
     // pooya::SISOFunction _sin{this, "sin(phi)", [](double /*t*/, double x) -> double { return std::sin(x); }};
@@ -46,6 +65,7 @@ protected:
     pooya::MulDiv _muldiv1{this, "g_l", "**/"};
     pooya::MulDiv _muldiv2{this, "tau_ml2", "*///"};
     pooya::Subtract _sub{this, "d2phi"};
+#endif // __cplusplus >= 202002L // C++20
 
 public:
     pooya::ScalarSignal _tau{"tau"};

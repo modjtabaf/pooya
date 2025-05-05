@@ -45,7 +45,11 @@ TEST_F(TestGain, ScalarGain)
     constexpr double gain_value{2.0};
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::Gain gain(gain_value, {});
+#else  // __cplusplus >= 202002L // C++20
     pooya::Gain gain(gain_value);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
     gain.connect(s_x, s_y);
@@ -67,7 +71,11 @@ TEST_F(TestGain, IntGain)
     constexpr int gain_value{2};
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::GainT<int, int> gain(gain_value, {});
+#else  // __cplusplus >= 202002L // C++20
     pooya::GainT<int, int> gain(gain_value);
+#endif // __cplusplus >= 202002L // C++20
     pooya::IntSignal s_x;
     pooya::IntSignal s_y;
     gain.connect(s_x, s_y);
@@ -90,7 +98,11 @@ TEST_F(TestGain, ArrayGain)
     constexpr double gain_value{-5.89};
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::GainA gain(gain_value, {});
+#else  // __cplusplus >= 202002L // C++20
     pooya::GainA gain(gain_value);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
     gain.connect(s_x, s_y);

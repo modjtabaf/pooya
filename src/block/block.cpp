@@ -15,7 +15,6 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <cassert>
 #include <memory>
 
 #include "block.hpp"
@@ -36,6 +35,14 @@ Block::Block(Submodel* parent, std::string_view name, uint16_t num_iports, uint1
 {
     if (_parent) _parent->link_block(*this);
 }
+
+#if __cplusplus >= 202002L // C++20
+Block::Block(const Params& params)
+    : NamedObject(params.name), _parent(params.parent), _num_iports(params.num_iports), _num_oports(params.num_oports)
+{
+    if (_parent) _parent->link_block(*this);
+}
+#endif // __cplusplus >= 202002L // C++20
 
 bool Block::set_parent(Submodel& parent)
 {

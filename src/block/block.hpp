@@ -71,6 +71,19 @@ protected:
     Block(Submodel* parent, std::string_view name = "", uint16_t num_iports = NoIOLimit,
           uint16_t num_oports = NoIOLimit);
 
+#if __cplusplus >= 202002L // C++20
+    struct Params
+    {
+        Submodel* parent{nullptr};
+        std::string_view name{""};
+        uint16_t num_iports{NoIOLimit};
+        uint16_t num_oports{NoIOLimit};
+    };
+    static_assert(std::is_aggregate_v<Params>);
+
+    explicit Block(const Params& params);
+#endif // __cplusplus >= 202002L // C++20
+
 public:
     virtual ~Block() = default;
 

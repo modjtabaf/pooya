@@ -31,20 +31,32 @@ namespace pooya
 template<typename T, typename Tic = T>
 class MemoryT : public SingleInputOutputT<T>
 {
+public:
+    using Base = SingleInputOutputT<T>;
+
 protected:
     T _value;
 
 public:
-    explicit MemoryT(const Tic& ic = Tic(0)) : SingleInputOutputT<T>(1), _value(ic) {}
-    MemoryT(Submodel* parent, std::string_view name = "", const Tic& ic = Tic(0))
-        : SingleInputOutputT<T>(parent, name, 1), _value(ic)
+    explicit MemoryT(const Tic& ic = Tic(0)) : Base(1), _value(ic) {}
+    MemoryT(Submodel* parent, std::string_view name = "", const Tic& ic = Tic(0)) : Base(parent, name, 1), _value(ic) {}
+
+#if __cplusplus >= 202002L // C++20
+    struct Params
     {
-    }
+        Submodel* parent{nullptr};
+        std::string_view name{""};
+        Tic ic{0};
+    };
+    static_assert(std::is_aggregate_v<Params>);
+
+    explicit MemoryT(const Params& params) : Base({.parent = params.parent, .name = params.name}), _value(params.ic) {}
+#endif // __cplusplus >= 202002L // C++20
 
     void post_step(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        _value = SingleInputOutputT<T>::_s_in->get();
+        pooya_trace("block: " + Base::full_name().str());
+        _value = Base::_s_in->get();
     }
 
     // # Memory can be implemented either by defining the following activation
@@ -58,15 +70,15 @@ public:
 
     uint _process(double /*t*/, bool /*go_deep*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        if (SingleInputOutputT<T>::_processed)
+        pooya_trace("block: " + Base::full_name().str());
+        if (Base::_processed)
         {
             return 0;
         }
 
         pooya_trace_update0;
-        SingleInputOutputT<T>::_s_out->set(_value);
-        SingleInputOutputT<T>::_processed = true;
+        Base::_s_out->set(_value);
+        Base::_processed = true;
         return 1;
     }
 };

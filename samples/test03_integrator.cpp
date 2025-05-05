@@ -34,7 +34,11 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
+#if __cplusplus >= 202002L // C++20
+    pooya::TriggeredIntegrator integ({.ic = 1.0});
+#else  // __cplusplus >= 202002L // C++20
     pooya::TriggeredIntegrator integ(1.0);
+#endif // __cplusplus >= 202002L // C++20
 
     // create pooya signals
     pooya::ScalarSignal x("x");

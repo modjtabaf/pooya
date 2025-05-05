@@ -31,52 +31,67 @@ namespace pooya
 template<typename T>
 class TriggeredIntegratorT : public IntegratorBaseT<T>
 {
+public:
+    using Base = IntegratorBaseT<T>;
+
 protected:
     BoolSignal _trigger;
     bool _triggered{false};
 
 public:
-    explicit TriggeredIntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 2, 1) {}
-    TriggeredIntegratorT(Submodel* parent, std::string_view name, T ic = T(0.0))
-        : IntegratorBaseT<T>(parent, name, ic, 2, 1)
+    explicit TriggeredIntegratorT(T ic = T(0.0)) : Base(ic, 2, 1) {}
+    TriggeredIntegratorT(Submodel* parent, std::string_view name, T ic = T(0.0)) : Base(parent, name, ic, 2, 1) {}
+
+#if __cplusplus >= 202002L // C++20
+    struct Params
+    {
+        Submodel* parent{nullptr};
+        std::string_view name{""};
+        T ic{0};
+    };
+    static_assert(std::is_aggregate_v<Params>);
+
+    explicit TriggeredIntegratorT(const Params& params)
+        : Base({.parent = params.parent, .name = params.name, .ic = params.ic, .num_iports = 2})
     {
     }
+#endif // __cplusplus >= 202002L // C++20
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
-        if (!IntegratorBaseT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
-        _trigger.reset(IntegratorBaseT<T>::bool_input_at("trigger"));
+        _trigger.reset(Base::bool_input_at("trigger"));
 
         return true;
     }
 
     void pre_step(double t) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         if (_triggered)
         {
             if constexpr (std::is_same_v<T, Array>)
             {
-                IntegratorBaseT<T>::_value.setZero();
+                Base::_value.setZero();
             }
             else
             {
-                IntegratorBaseT<T>::_value = 0;
+                Base::_value = 0;
             }
             _triggered = false;
         }
-        IntegratorBaseT<T>::pre_step(t);
+        Base::pre_step(t);
     }
 
     uint _process(double t, bool go_deep = true) override
     {
-        pooya_trace("block: " + IntegratorBaseT<T>::full_name().str());
-        if (IntegratorBaseT<T>::_processed || !_trigger->is_assigned())
+        pooya_trace("block: " + Base::full_name().str());
+        if (Base::_processed || !_trigger->is_assigned())
         {
             return 0;
         }
@@ -86,7 +101,7 @@ public:
             _triggered = _trigger->get();
         }
 
-        return IntegratorBaseT<T>::_process(t, go_deep);
+        return Base::_process(t, go_deep);
     }
 };
 

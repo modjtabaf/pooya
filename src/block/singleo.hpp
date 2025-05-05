@@ -40,6 +40,10 @@ protected:
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
 
+#if __cplusplus >= 202002L // C++20
+    explicit SingleOutputT(Base::Params params) : Base((params.num_oports = 1, params)) {}
+#endif // __cplusplus >= 202002L // C++20
+
 public:
     bool connect(const Bus& ibus, const Bus& obus) override
     {

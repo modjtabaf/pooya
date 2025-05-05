@@ -36,6 +36,10 @@ public:
     {
     }
 
+#if __cplusplus >= 202002L // C++20
+    explicit Submodel(const Block::Params& params) : Block(params) {}
+#endif // __cplusplus >= 202002L // C++20
+
     bool link_block(Block& block);
     bool add_block(Block& block, const Bus& ibus = {}, const Bus& obus = {});
 

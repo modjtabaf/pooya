@@ -19,6 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_BLOCK_SI_HPP__
 
 #include "leaf.hpp"
+#include <string_view>
 
 namespace pooya
 {
@@ -43,6 +44,10 @@ protected:
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
+
+#if __cplusplus >= 202002L // C++20
+    explicit SingleInputT(Base::Params params) : Base((params.num_iports = 1, params)) {}
+#endif // __cplusplus >= 202002L // C++20
 
 public:
     bool connect(const Bus& ibus, const Bus& obus) override

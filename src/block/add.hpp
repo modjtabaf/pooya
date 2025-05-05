@@ -32,16 +32,20 @@ template<typename T>
 class AddT : public AddSubT<T>
 {
 public:
-    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(Submodel* parent, std::string_view name = "", const T& initial = 0.0) : AddSubT<T>(parent, name, "", initial)
-    {
-    }
+    using Base = AddSubT<T>;
+
+    explicit AddT(const T& initial = 0) : Base("", initial) {}
+    AddT(Submodel* parent, std::string_view name = "", const T& initial = 0) : Base(parent, name, "", initial) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit AddT(const Base::Params& params) : Base("", params) {}
+#endif // __cplusplus >= 202002L // C++20
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + AddSubT<T>::full_name().str());
-        AddSubT<T>::_operators = std::string(ibus.size(), '+');
-        return AddSubT<T>::connect(ibus, obus);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_operators = std::string(ibus.size(), '+');
+        return Base::connect(ibus, obus);
     }
 };
 

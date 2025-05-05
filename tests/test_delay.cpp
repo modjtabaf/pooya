@@ -44,7 +44,11 @@ TEST_F(TestDelay, ScalarDelay)
     auto func               = [](double t) -> double { return -1.3 * t + 4.92; };
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::Delay delay(10.0, {});
+#else  // __cplusplus >= 202002L // C++20
     pooya::Delay delay(10.0);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ScalarSignal s_time_delay;
     pooya::ScalarSignal s_initial;
     pooya::ScalarSignal s_x;
@@ -92,7 +96,11 @@ TEST_F(TestDelay, ArrayDelay)
     };
 
     // model setup
+#if __cplusplus >= 202002L // C++20
+    pooya::DelayA delay(10.0, {});
+#else  // __cplusplus >= 202002L // C++20
     pooya::DelayA delay(10.0);
+#endif // __cplusplus >= 202002L // C++20
     pooya::ScalarSignal s_time_delay;
     pooya::ArraySignal s_initial(N);
     pooya::ArraySignal s_x(N);

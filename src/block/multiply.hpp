@@ -32,17 +32,20 @@ template<typename T>
 class MultiplyT : public MulDivT<T>
 {
 public:
-    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
-    MultiplyT(Submodel* parent, std::string_view name = "", const T& initial = 1.0)
-        : MulDivT<T>(parent, name, "", initial)
-    {
-    }
+    using Base = MulDivT<T>;
+
+    explicit MultiplyT(const T& initial = 1) : Base("", initial) {}
+    MultiplyT(Submodel* parent, std::string_view name = "", const T& initial = 1) : Base(parent, name, "", initial) {}
+
+#if __cplusplus >= 202002L // C++20
+    explicit MultiplyT(const Base::Params& params) : Base("", params) {}
+#endif // __cplusplus >= 202002L // C++20
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + MulDivT<T>::full_name().str());
-        MulDivT<T>::_operators = std::string(ibus.size(), '*');
-        return MulDivT<T>::connect(parent, ibus, obus);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_operators = std::string(ibus.size(), '*');
+        return Base::connect(parent, ibus, obus);
     }
 };
 

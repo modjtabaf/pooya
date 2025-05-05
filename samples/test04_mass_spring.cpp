@@ -31,16 +31,26 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
+#if __cplusplus >= 202002L // C++20
+    pooya::Integrator _integ1{{.parent = this, .name = "xd", .ic = 0.1 }};
+    pooya::Integrator _integ2{{.parent = this, .name = "x" }};
+    pooya::Gain _gain{-1.0 / 1.0, {.parent = this, .name = "-k\\m" }};
+#else  // __cplusplus >= 202002L // C++20
     pooya::Integrator _integ1{this, "xd", 0.1};
     pooya::Integrator _integ2{this, "x"};
     pooya::Gain _gain{this, "-k\\m", -1.0 / 1.0};
+#endif // __cplusplus >= 202002L // C++20
 
 public:
     pooya::ScalarSignal _x{"x"};
     pooya::ScalarSignal _xd{"xd"};
     pooya::ScalarSignal _xdd{"xdd"};
 
-    MyModel(std::string_view name) : pooya::Submodel(nullptr, name)
+#if __cplusplus >= 202002L // C++20
+    MyModel() : pooya::Submodel({.name = "MyModel"})
+#else  // __cplusplus >= 202002L // C++20
+    MyModel() : pooya::Submodel(nullptr, "MyModel")
+#endif // __cplusplus >= 202002L // C++20
     {
         _integ1.connect(_xdd, _xd);
         _integ2.connect(_xd, _x);
@@ -56,7 +66,7 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    MyModel model("MyModel");
+    MyModel model;
 
     pooya::Rk4 stepper;
     pooya::Simulator sim(model, nullptr, &stepper);

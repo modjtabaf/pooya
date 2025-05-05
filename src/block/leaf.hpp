@@ -19,6 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_BLOCK_LEAF_HPP__
 
 #include "block.hpp"
+#include <string_view>
 
 namespace pooya
 {
@@ -31,6 +32,10 @@ protected:
         : Block(parent, name, num_iports, num_oports)
     {
     }
+
+#if __cplusplus >= 202002L // C++20
+    explicit Leaf(const Params& params) : Block(params) {}
+#endif // __cplusplus >= 202002L // C++20
 
 public:
     virtual ~Leaf() = default;

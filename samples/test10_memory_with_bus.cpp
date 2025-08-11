@@ -120,7 +120,8 @@ int main()
        << "with lines title 'y0'," << gp.file1d(history[x_x1]) << "with lines title 'x1'," << gp.file1d(history[y_x1])
        << "with lines title 'y1'," << gp.file1d(history[x_x2]) << "with lines title 'x2'," << gp.file1d(history[y_x2])
        << "with lines title 'y2'," << gp.file1d(history[x_z3]) << "with lines title 'x3'," << gp.file1d(history[y_z3])
-       << "with lines title 'y3'," << "\n";
+       << "with lines title 'y3',"
+       << "\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);
 

@@ -66,9 +66,9 @@ public:
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
         _ret          = _initial;
         const char* p = _operators.c_str();
-        for (const auto& sig_key : SingleOutputT<T>::_ibus)
+        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
         {
-            const auto& v = Types<T>::as_signal_info(SingleOutputT<T>::_ibus[sig_key]);
+            const auto& v = Types<T>::as_signal_info(sig);
             if (*p == '+')
             {
                 _ret += v;

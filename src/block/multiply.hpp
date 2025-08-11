@@ -22,24 +22,48 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_MULTIPLY_HPP__
 #define __POOYA_BLOCK_MULTIPLY_HPP__
 
-#include "muldiv.hpp"
+#include "singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class MultiplyT : public MulDivT<T>
+class MultiplyT : public SingleOutputT<T>
 {
+protected:
+    T _initial;
+    T _ret;
+
 public:
-    explicit MultiplyT(const T& initial = 1.0) : MulDivT<T>(initial) {}
-    MultiplyT(Submodel* parent, const T& initial = 1.0) : MulDivT<T>(parent, "", initial) {}
+    MultiplyT(const T& initial = 1.0) : SingleOutputT<T>(Block::NoIOLimit, 1), _initial(initial) {}
+    MultiplyT(Submodel* parent, const T& initial = 1.0)
+        : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _initial(initial)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + MulDivT<T>::full_name().str());
-        MulDivT<T>::_operators = std::string(ibus.size(), '*');
-        return MulDivT<T>::connect(parent, ibus, obus);
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        if (!SingleOutputT<T>::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
+
+        return true;
+    }
+
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        _ret = _initial;
+        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
+        {
+            _ret *= Types<T>::as_signal_info(sig).get();
+        }
+        SingleOutputT<T>::_s_out->set(_ret);
     }
 };
 

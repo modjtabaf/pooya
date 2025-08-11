@@ -20,9 +20,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include "src/block/add.hpp"
 #include "src/block/derivative.hpp"
+#include "src/block/divide.hpp"
 #include "src/block/gain.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/muldiv.hpp"
+#include "src/block/multiply.hpp"
 #include "src/block/sin.hpp"
 #include "src/block/submodel.hpp"
 #include "src/block/subtract.hpp"
@@ -35,23 +36,27 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::MulDiv _muldiv1{this, "*///"};
+    pooya::Multiply _mul1{this};
+    pooya::Divide _div1{this};
     pooya::Subtract _sub{this};
     pooya::Integrator _integ1{this};
     pooya::Integrator _integ2{this};
     pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv2{this, "**/"};
+    pooya::Multiply _mul2{this};
+    pooya::Divide _div2{this};
 
 public:
     Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent)
     {
         rename("pendulum");
-        _muldiv1.rename("tau_ml2");
+        _mul1.rename("tau");
+        _div1.rename("_ml2");
         _sub.rename("err");
         _integ1.rename("dphi");
         _integ2.rename("phi");
         _sin.rename("sin(phi)");
-        _muldiv2.rename("g_l");
+        _mul2.rename("g");
+        _div2.rename("_l");
     }
 
     pooya::ScalarSignal _m{"m"};
@@ -65,7 +70,9 @@ public:
 
         if (!pooya::Submodel::connect(ibus, obus)) return false;
 
+        pooya::ScalarSignal s05;
         pooya::ScalarSignal s10;
+        pooya::ScalarSignal s15;
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
         pooya::ScalarSignal s40;
@@ -74,12 +81,14 @@ public:
         auto phi = scalar_output_at(0);
 
         // setup the submodel
-        _muldiv1.connect({tau, _m, _l, _l}, s10);
+        _mul1.connect({_m, _l, _l}, s05);
+        _div1.connect({tau, s05}, s10);
         _sub.connect({s10, s20}, s30);
         _integ1.connect(s30, _dphi);
         _integ2.connect(_dphi, phi);
         _sin.connect(phi, s40);
-        _muldiv2.connect({s40, _g, _l}, s20);
+        _mul2.connect({s40, _g}, s15);
+        _div2.connect({s15, _l}, s20);
 
         return true;
     }

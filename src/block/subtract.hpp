@@ -22,18 +22,44 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_SUBTRACT_HPP__
 #define __POOYA_BLOCK_SUBTRACT_HPP__
 
-#include "addsub.hpp"
+#include "singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class SubtractT : public AddSubT<T>
+class SubtractT : public SingleOutputT<T>
 {
+protected:
+    // input signals
+    typename Types<T>::Signal _s_x1; // input 1
+    typename Types<T>::Signal _s_x2; // input 2
+
 public:
-    explicit SubtractT(const T& initial = 0.0) : AddSubT<T>("+-", initial) {}
-    SubtractT(Submodel* parent, const T& initial = 0.0) : AddSubT<T>(parent, "+-", initial) {}
+    SubtractT() : SingleOutputT<T>(2, 1) {}
+    SubtractT(Submodel* parent) : SingleOutputT<T>(parent, 2, 1) {}
+
+    bool connect(const Bus& ibus, const Bus& obus) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        if (!SingleOutputT<T>::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        // input signals
+        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+
+        return true;
+    }
+
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        SingleOutputT<T>::_s_out->set(_s_x1 - _s_x2);
+    }
 };
 
 using Subtract  = SubtractT<double>;

@@ -47,19 +47,18 @@ void BusBlockBuilder::visit_bus(const std::string& full_label, const Bus& bus)
         return;
     }
 
-    for (const auto& sig_key : bus)
+    for (const auto& [label, sig] : bus)
     {
-        const auto& sig = bus[sig_key];
         if (sig->is_bus())
         {
-            visit_bus(full_label + sig_key + ".", Bus(sig->shared_from_this()));
+            visit_bus(full_label + label + ".", Bus(sig->shared_from_this()));
         }
         else
         {
-            auto label = full_label + sig_key;
-            if (std::find(_excluded_labels.begin(), _excluded_labels.end(), label) == _excluded_labels.end())
+            auto new_label = full_label + label;
+            if (std::find(_excluded_labels.begin(), _excluded_labels.end(), new_label) == _excluded_labels.end())
             {
-                block_builder(label, _ibus.at(label), _obus.at(label));
+                block_builder(new_label, _ibus.at(new_label), _obus.at(new_label));
             }
         }
     }

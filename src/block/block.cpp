@@ -72,18 +72,16 @@ bool Block::connect(const Bus& ibus, const Bus& obus)
 
     _linked_signals.reserve(ibus.size() + obus.size());
 
-    for (const auto& sig_key : ibus)
+    for (const auto& [label, sig] : ibus)
     {
-        const auto& sig = ibus[sig_key];
         if (sig->is_value())
         {
             link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Input);
         }
     }
 
-    for (const auto& sig_key : obus)
+    for (const auto& [label, sig] : obus)
     {
-        const auto& sig = obus[sig_key];
         if (sig->is_value())
         {
             link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Output);

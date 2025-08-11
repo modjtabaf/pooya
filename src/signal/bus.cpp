@@ -30,15 +30,21 @@ const SignalImplPtr& BusImpl::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
 
-    auto pos        = label.find(".");
-    const auto& sig = _signals.at(pos == std::string::npos ? label : label.substr(0, pos));
+    auto pos                  = label.find(".");
+    const auto& label_to_find = pos == std::string::npos ? label : label.substr(0, pos);
+    const auto it             = std::find_if(_signals.begin(), _signals.end(),
+                                             [label_to_find](const auto& p) -> bool { return p.first == label_to_find; });
+    if (it == _signals.end())
+    {
+        throw std::out_of_range("Label not found in the bus: " + label);
+    }
     if (pos == std::string::npos)
     {
-        return sig;
+        return it->second;
     }
 
-    pooya_verify_bus(sig);
-    return sig->as_bus().at(label.substr(pos + 1));
+    pooya_verify_bus(it->second);
+    return it->second->as_bus().at(label.substr(pos + 1));
 }
 
 ValueSignalImplPtr Bus::value_at(const std::string& label) const

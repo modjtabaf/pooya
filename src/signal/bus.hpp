@@ -19,7 +19,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_SIGNAL_BUS_HPP__
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "signal.hpp"
@@ -42,12 +41,10 @@ class BusImpl : public SignalImpl
 {
 public:
     using LabelSignalImplPtr = std::pair<std::string, SignalImplPtr>;
-    using Signals            = std::unordered_map<std::string, SignalImplPtr>;
-    using OrderedKeys        = std::vector<std::string>;
+    using Signals            = std::vector<std::pair<std::string, SignalImplPtr>>;
 
 protected:
     Signals _signals;
-    OrderedKeys _ordered_keys;
 
     static std::string _make_auto_label(std::size_t index) { return "sig" + std::to_string(index); }
 
@@ -59,7 +56,6 @@ public:
 
         auto size = std::distance(begin_, end_);
         _signals.reserve(size);
-        _ordered_keys.reserve(size);
 
         for (auto& it = begin_; it != end_; it++)
         {
@@ -68,11 +64,8 @@ public:
             auto label = ValidName(it->first).str();
             if (label.empty()) continue;
 
-            _signals.insert({label, it->second});
-            _ordered_keys.push_back(label);
+            _signals.emplace_back(label, it->second);
         }
-
-        _ordered_keys.shrink_to_fit();
     }
 
     template<typename Iter>
@@ -120,20 +113,20 @@ public:
     static BusImplPtr create_new(const std::initializer_list<LabelSignalImplPtr>& l) { return create_new("", l); }
 
     std::size_t size() const { return _signals.size(); }
-    OrderedKeys::const_iterator begin() const noexcept { return _ordered_keys.begin(); }
-    OrderedKeys::const_iterator end() const noexcept { return _ordered_keys.end(); }
+    Signals::const_iterator begin() const noexcept { return _signals.begin(); }
+    Signals::const_iterator end() const noexcept { return _signals.end(); }
 
     const SignalImplPtr& at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
-        return _signals.at(_ordered_keys.at(index));
+        return _signals.at(index).second;
     }
 
     const SignalImplPtr& operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         pooya_verify(index < _signals.size(), "index out of range!");
-        return _signals.at(_ordered_keys[index]);
+        return _signals[index].second;
     }
 
     const SignalImplPtr& at(const std::string& label) const;
@@ -207,8 +200,8 @@ public:
     }
 
     std::size_t size() const { return _sid->size(); }
-    BusImpl::OrderedKeys::const_iterator begin() const noexcept { return _sid->begin(); }
-    BusImpl::OrderedKeys::const_iterator end() const noexcept { return _sid->end(); }
+    BusImpl::Signals::const_iterator begin() const noexcept { return _sid->begin(); }
+    BusImpl::Signals::const_iterator end() const noexcept { return _sid->end(); }
     const SignalImplPtr& operator[](std::size_t index) const { return (*_sid)[index]; }
     const SignalImplPtr& at(std::size_t index) const { return _sid->at(index); }
     const SignalImplPtr& operator[](const std::string& label) const { return (*_sid)[label]; }

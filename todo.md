@@ -41,6 +41,8 @@
 - Doxygen
 - logging (spdlog)
 - parallel processing
+- Hide SignalImpl shared pointers from the user and use them only when necessary
+- Discard addsub and muldiv
 
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->

@@ -19,8 +19,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <iostream>
 
 // #include "src/block/function.hpp"
+#include "src/block/divide.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/muldiv.hpp"
+#include "src/block/multiply.hpp"
 #include "src/block/sin.hpp"
 // #include "src/block/siso_function.hpp"
 // #include "src/block/so_function.hpp"
@@ -43,8 +44,10 @@ protected:
     // pooya::Function _sin(this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
     //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); });
     pooya::Sin _sin{this};
-    pooya::MulDiv _muldiv1{this, "**/"};
-    pooya::MulDiv _muldiv2{this, "*///"};
+    pooya::Multiply _mul1{this};
+    pooya::Divide _div1{this};
+    pooya::Multiply _mul2{this};
+    pooya::Divide _div2{this};
     pooya::Subtract _sub{this};
 
 public:
@@ -63,20 +66,26 @@ public:
         _integ1.rename("dphi");
         _integ2.rename("phi");
         _sin.rename("sin(phi)");
-        _muldiv1.rename("g_l");
-        _muldiv2.rename("tau_ml2");
+        _mul1.rename("g");
+        _div1.rename("_l");
+        _mul2.rename("ml2");
+        _div2.rename("_ml2");
         _sub.rename("d2phi");
 
         pooya::ScalarSignal s10;
+        pooya::ScalarSignal s15;
         pooya::ScalarSignal s20;
+        pooya::ScalarSignal s25;
         pooya::ScalarSignal s30;
 
         // setup the submodel
         _integ1.connect(_d2phi, _dphi);
         _integ2.connect(_dphi, _phi);
         _sin.connect(_phi, s10);
-        _muldiv1.connect({s10, _g, _l}, s20);
-        _muldiv2.connect({_tau, _m, _l, _l}, s30);
+        _mul1.connect({s10, _g}, s15);
+        _div1.connect({s15, _l}, s20);
+        _mul2.connect({_m, _l, _l}, s25);
+        _div2.connect({_tau, s25}, s30);
         _sub.connect({s30, s20}, _d2phi);
     }
 };

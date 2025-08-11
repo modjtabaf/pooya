@@ -22,24 +22,45 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_ADD_HPP__
 #define __POOYA_BLOCK_ADD_HPP__
 
-#include "addsub.hpp"
+#include "singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class AddT : public AddSubT<T>
+class AddT : public SingleOutputT<T>
 {
+protected:
+    T _initial;
+    T _ret;
+
 public:
-    explicit AddT(const T& initial = 0.0) : AddSubT<T>("", initial) {}
-    AddT(Submodel* parent, const T& initial = 0.0) : AddSubT<T>(parent, "", initial) {}
+    AddT(const T& initial = 0.0) : SingleOutputT<T>(Block::NoIOLimit, 1), _initial(initial) {}
+    AddT(Submodel* parent, const T& initial = 0.0) : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _initial(initial) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + AddSubT<T>::full_name().str());
-        AddSubT<T>::_operators = std::string(ibus.size(), '+');
-        return AddSubT<T>::connect(ibus, obus);
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        if (!SingleOutputT<T>::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
+
+        return true;
+    }
+
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        _ret = _initial;
+        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
+        {
+            _ret += Types<T>::as_signal_info(sig).get();
+        }
+        SingleOutputT<T>::_s_out->set(_ret);
     }
 };
 

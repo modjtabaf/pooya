@@ -27,6 +27,7 @@
 * Discard id()
 * Deprecate BusSpec
 * In BusInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
+* Discard addsub and muldiv
 
 - Make sure Simulator evaluates the model only if necessary. Remove any duplicates.
 - Call shared_from_this() only when necessary
@@ -42,7 +43,6 @@
 - logging (spdlog)
 - parallel processing
 - Hide SignalImpl shared pointers from the user and use them only when necessary
-- Discard addsub and muldiv
 
 <!-- - yaml model definition -->
 <!-- - replace init virtual method with a template -->

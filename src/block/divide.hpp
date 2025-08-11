@@ -22,18 +22,44 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_DIVIDE_HPP__
 #define __POOYA_BLOCK_DIVIDE_HPP__
 
-#include "muldiv.hpp"
+#include "singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class DivideT : public MulDivT<T>
+class DivideT : public SingleOutputT<T>
 {
+protected:
+    // input signals
+    typename Types<T>::Signal _s_x1; // input 1
+    typename Types<T>::Signal _s_x2; // input 2
+
 public:
-    explicit DivideT(const T& initial = 1.0) : MulDivT<T>("*/", initial) {}
-    DivideT(Submodel* parent, const T& initial = 1.0) : MulDivT<T>(parent, "*/", initial) {}
+    DivideT() : SingleOutputT<T>(2, 1) {}
+    DivideT(Submodel* parent) : SingleOutputT<T>(parent, 2, 1) {}
+
+    bool connect(const Bus& ibus, const Bus& obus) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        if (!SingleOutputT<T>::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        // input signals
+        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+
+        return true;
+    }
+
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        SingleOutputT<T>::_s_out->set(_s_x1 / _s_x2);
+    }
 };
 
 using Divide  = DivideT<double>;

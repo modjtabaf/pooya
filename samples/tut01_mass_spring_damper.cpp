@@ -15,11 +15,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "src/block/addsub.hpp"
 #include "src/block/gain.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/source.hpp"
 #include "src/block/submodel.hpp"
+#include "src/block/subtract.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rk4.hpp"
@@ -34,7 +34,8 @@ int main()
     pooya::Submodel model;
     pooya::Source src_F(&model, [](double t) -> double { return t < 1 ? 0 : 1; });
     pooya::Gain gain_1_m(&model, 1 / m);
-    pooya::AddSub addsub_rhs(&model, "+--");
+    pooya::Subtract sub1(&model);
+    pooya::Subtract sub2(&model);
     pooya::Integrator int_xdd(&model);
     pooya::Integrator int_xd(&model);
     pooya::Gain gain_c_m(&model, c / m);
@@ -43,6 +44,7 @@ int main()
     // create pooya signals
     pooya::ScalarSignal s_F;
     pooya::ScalarSignal s_F_m;
+    pooya::ScalarSignal s1;
     pooya::ScalarSignal s_xdd;
     pooya::ScalarSignal s_xd;
     pooya::ScalarSignal s_x;
@@ -52,7 +54,8 @@ int main()
     // set up the model
     src_F.connect({}, s_F);
     gain_1_m.connect(s_F, s_F_m);
-    addsub_rhs.connect({s_F_m, s_cxd_m, s_kx_m}, s_xdd);
+    sub1.connect({s_F_m, s_cxd_m}, s1);
+    sub2.connect({s1, s_kx_m}, s_xdd);
     int_xdd.connect(s_xdd, s_xd);
     int_xd.connect(s_xd, s_x);
     gain_c_m.connect(s_xd, s_cxd_m);

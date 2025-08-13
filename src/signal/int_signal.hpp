@@ -42,7 +42,8 @@ protected:
 public:
     IntSignalImpl(Protected, const ValidName& name = "") : ValueSignalImpl(name, IntType) {}
 
-    static IntSignalImplPtr create_new(const ValidName& name = "")
+    // static IntSignalImplPtr create_new(const ValidName& name = "")
+    static std::shared_ptr<IntSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<IntSignalImpl>(Protected(), name);
     }
@@ -83,11 +84,15 @@ class IntSignal : public ValueSignal<int>
 
 public:
     explicit IntSignal(const ValidName& name = "") : Base(IntSignalImpl::create_new(name)) {}
-    explicit IntSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_int() ? std::static_pointer_cast<IntSignalImpl>(sid) : nullptr)
+    // explicit IntSignal(const SignalImplPtr& sid)
+    //     : Base(sid && sid->is_int() ? std::static_pointer_cast<IntSignalImpl>(sid) : nullptr)
+    template <typename T>
+    explicit IntSignal(T sid)
+        : Base(sid && sid->is_int() ? static_cast<IntSignalImpl*>(sid) : nullptr)
     {
     }
-    IntSignal(const IntSignalImplPtr& sid) : Base(sid) {}
+    // IntSignal(const IntSignalImplPtr& sid) : Base(sid) {}
+    // IntSignal(const IntSignalImpl* sid) : Base(sid) {}
 
     IntSignal& operator=(const IntSignal&) = delete;
 

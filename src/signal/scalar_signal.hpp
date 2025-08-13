@@ -38,7 +38,8 @@ protected:
 public:
     ScalarSignalImpl(Protected, const ValidName& name = "") : FloatSignalImpl(name, ScalarType) {}
 
-    static ScalarSignalImplPtr create_new(const ValidName& name = "")
+    // static ScalarSignalImplPtr create_new(const ValidName& name = "")
+    static std::shared_ptr<ScalarSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<ScalarSignalImpl>(Protected(), name);
     }
@@ -79,11 +80,15 @@ class ScalarSignal : public FloatSignal<double>
 
 public:
     explicit ScalarSignal(const ValidName& name = "") : Base(ScalarSignalImpl::create_new(name)) {}
-    explicit ScalarSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_scalar() ? std::static_pointer_cast<ScalarSignalImpl>(sid) : nullptr)
+    // explicit ScalarSignal(const SignalImplPtr& sid)
+        // : Base(sid && sid->is_scalar() ? std::static_pointer_cast<ScalarSignalImpl>(sid) : nullptr)
+    template <typename T>
+    explicit ScalarSignal(T sid)
+        : Base(sid && sid->is_scalar() ? static_cast<ScalarSignalImpl*>(sid) : nullptr)
     {
     }
-    ScalarSignal(const ScalarSignalImplPtr& sid) : Base(sid) {}
+    // ScalarSignal(const ScalarSignalImplPtr& sid) : Base(sid) {}
+    // ScalarSignal(ScalarSignalImpl* sid) : Base(sid) {}
 
     ScalarSignal& operator=(const ScalarSignal&) = delete;
 

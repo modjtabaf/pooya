@@ -87,73 +87,94 @@ public:
     auto linked_signals() const -> const auto& { return _linked_signals; }
 
     template<typename T, typename Key>
-    typename Types<T>::Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
+    // typename Types<T>::Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
+    typename Types<T>::SignalImpl* io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
     {
-        SignalImplPtr ptr = bus->at(key);
-        typename Types<T>::Signal sig(ptr);
+        // SignalImplPtr ptr = bus->at(key);
+        auto* ptr = bus->at(key);
+        pooya_verify_valid_signal(ptr);
+        // typename Types<T>::Signal sig(ptr);
         if (type.has_value())
         {
             pooya_verify_value_signal(ptr);
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), *type);
+            // link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), *type);
+            link_signal(std::static_pointer_cast<ValueSignalImpl>(ptr->shared_from_this()), *type);
         }
-        return Types<T>::as_signal_id(sig);
+        // return Types<T>::as_signal_id(sig);
+        return Types<T>::as_signal(*ptr);
     }
 
-    ScalarSignal scalar_input_at(const std::string& label)
+    // ScalarSignal scalar_input_at(const std::string& label)
+    ScalarSignalImpl* scalar_input_at(const std::string& label)
     {
         return io_at<double, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
-    IntSignal int_input_at(const std::string& label)
+    // IntSignal int_input_at(const std::string& label)
+    IntSignalImpl* int_input_at(const std::string& label)
     {
         return io_at<int, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
-    BoolSignal bool_input_at(const std::string& label)
+    // BoolSignal bool_input_at(const std::string& label)
+    BoolSignalImpl* bool_input_at(const std::string& label)
     {
         return io_at<bool, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
-    ArraySignal array_input_at(const std::string& label)
+    // ArraySignal array_input_at(const std::string& label)
+    ArraySignalImpl* array_input_at(const std::string& label)
     {
         return io_at<Array, const std::string&>(_ibus, label, SignalLinkType::Input);
     }
-    ScalarSignal scalar_input_at(std::size_t index)
+    // ScalarSignal scalar_input_at(std::size_t index)
+    ScalarSignalImpl* scalar_input_at(std::size_t index)
     {
         return io_at<double, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
-    IntSignal int_input_at(std::size_t index) { return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input); }
-    BoolSignal bool_input_at(std::size_t index)
+    // IntSignal int_input_at(std::size_t index) { return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input); }
+    IntSignalImpl* int_input_at(std::size_t index) { return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input); }
+    // BoolSignal bool_input_at(std::size_t index)
+    BoolSignalImpl* bool_input_at(std::size_t index)
     {
         return io_at<bool, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
-    ArraySignal array_input_at(std::size_t index)
+    // ArraySignal array_input_at(std::size_t index)
+    ArraySignalImpl* array_input_at(std::size_t index)
     {
         return io_at<Array, std::size_t>(_ibus, index, SignalLinkType::Input);
     }
-    ScalarSignal scalar_output_at(const std::string& label)
+    // ScalarSignal scalar_output_at(const std::string& label)
+    ScalarSignalImpl* scalar_output_at(const std::string& label)
     {
         return io_at<double, const std::string&>(_obus, label, SignalLinkType::Output);
     }
-    IntSignal int_output_at(const std::string& label)
+    // IntSignal int_output_at(const std::string& label)
+    IntSignalImpl* int_output_at(const std::string& label)
     {
         return io_at<int, const std::string&>(_obus, label, SignalLinkType::Output);
     }
-    BoolSignal bool_output_at(const std::string& label)
+    // BoolSignal bool_output_at(const std::string& label)
+    BoolSignalImpl* bool_output_at(const std::string& label)
     {
         return io_at<bool, const std::string&>(_obus, label, SignalLinkType::Output);
     }
-    ArraySignal array_output_at(const std::string& label)
+    // ArraySignal array_output_at(const std::string& label)
+    ArraySignalImpl* array_output_at(const std::string& label)
     {
         return io_at<Array, const std::string&>(_obus, label, SignalLinkType::Output);
     }
-    ScalarSignal scalar_output_at(std::size_t index)
+    // ScalarSignal scalar_output_at(std::size_t index)
+    ScalarSignalImpl* scalar_output_at(std::size_t index)
     {
         return io_at<double, std::size_t>(_obus, index, SignalLinkType::Output);
     }
-    IntSignal int_output_at(std::size_t index) { return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output); }
-    BoolSignal bool_output_at(std::size_t index)
+    // IntSignal int_output_at(std::size_t index) { return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output); }
+    IntSignalImpl* int_output_at(std::size_t index) { return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output); }
+    // BoolSignal bool_output_at(std::size_t index)
+    BoolSignalImpl* bool_output_at(std::size_t index)
     {
         return io_at<bool, std::size_t>(_obus, index, SignalLinkType::Output);
     }
-    ArraySignal array_output_at(std::size_t index)
+    // ArraySignal array_output_at(std::size_t index)
+    ArraySignalImpl* array_output_at(std::size_t index)
     {
         return io_at<Array, std::size_t>(_obus, index, SignalLinkType::Output);
     }

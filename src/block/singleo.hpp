@@ -47,7 +47,8 @@ public:
         {
             return false;
         }
-        _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0)));
+        // _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0)));
+        _s_out.reset(Types<T>::as_signal(Base::_obus.at(0)));
         return true;
     }
 };

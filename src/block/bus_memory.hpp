@@ -77,8 +77,10 @@ public:
     bool connect(const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 
 protected:
-    void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
-                       const SignalImplPtr& sig_out) override;
+    // void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
+    //                    const SignalImplPtr& sig_out) override;
+    void block_builder(const std::string& full_label, const SignalImpl& sig_in,
+                       const SignalImpl& sig_out) override;
 };
 
 } // namespace pooya

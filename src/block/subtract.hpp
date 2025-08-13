@@ -49,8 +49,10 @@ public:
         }
 
         // input signals
-        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
-        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+        // _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        // _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+        _s_x1.reset(Types<T>::as_signal(SingleOutputT<T>::_ibus.at(0)));
+        _s_x2.reset(Types<T>::as_signal(SingleOutputT<T>::_ibus.at(1)));
 
         return true;
     }

@@ -46,11 +46,13 @@ public:
     {
     }
 
-    static ArraySignalImplPtr create_new(std::size_t size)
+    // static ArraySignalImplPtr create_new(std::size_t size)
+    static std::shared_ptr<ArraySignalImpl> create_new(std::size_t size)
     {
         return std::make_shared<ArraySignalImpl>(Protected(), "", size);
     }
-    static ArraySignalImplPtr create_new(const ValidName& name, std::size_t size)
+    // static ArraySignalImplPtr create_new(const ValidName& name, std::size_t size)
+    static std::shared_ptr<ArraySignalImpl> create_new(const ValidName& name, std::size_t size)
     {
         return std::make_shared<ArraySignalImpl>(Protected(), name, size);
     }
@@ -96,11 +98,13 @@ class ArraySignal : public FloatSignal<Array>
 public:
     explicit ArraySignal(std::size_t size = 1) : Base(ArraySignalImpl::create_new(size)) {}
     ArraySignal(const ValidName& name, std::size_t size = 1) : Base(ArraySignalImpl::create_new(name, size)) {}
-    explicit ArraySignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_array() ? std::static_pointer_cast<ArraySignalImpl>(sid) : nullptr)
-    {
-    }
-    ArraySignal(const ArraySignalImplPtr& sid) : Base(sid) {}
+    // explicit ArraySignal(const SignalImplPtr& sid)
+    //     : Base(sid && sid->is_array() ? std::static_pointer_cast<ArraySignalImpl>(sid) : nullptr)
+    template <typename T>
+    explicit ArraySignal(T sid)
+        : Base(sid && sid->is_array() ? static_cast<ArraySignalImpl*>(sid) : nullptr) {}
+    // ArraySignal(const ArraySignalImplPtr& sid) : Base(sid) {}
+    // ArraySignal(ArraySignalImpl* sid) : Base(sid) {}
 
     ArraySignal& operator=(const ArraySignal&) = delete;
 

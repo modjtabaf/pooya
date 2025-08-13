@@ -39,8 +39,8 @@ protected:
     ValueSignalImpl(const ValidName& name, uint32_t type) : SignalImpl(name, type | ValueType) {}
 
 public:
-    double get_as_scalar() const;
-    void set_as_scalar(double value);
+    // double get_as_scalar() const;
+    // void set_as_scalar(double value);
     void clear() { _assigned = false; }
 
     bool is_assigned() const { return _assigned; }
@@ -64,7 +64,10 @@ class ValueSignal : public Signal<T>
     using Base = Signal<T>;
 
 public:
-    explicit ValueSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
+    // explicit ValueSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
+    template <typename T2>
+    explicit ValueSignal(T2 sid)
+        : Base(sid && sid->is_value() ? std::static_pointer_cast<ValueSignalImpl>(sid) : nullptr) {}
 
     operator typename Types<T>::GetValue() const { return Base::_sid->get(); }
     typename Types<T>::GetValue operator*() const { return Base::_sid->get(); }
@@ -77,10 +80,12 @@ public:
 
     ValueSignal& operator=(const ValueSignal&) = delete;
 
-    operator ValueSignalImplPtr() const
+    // operator ValueSignalImplPtr() const
+    operator ValueSignalImpl*() const
     {
-        return std::static_pointer_cast<ValueSignalImpl>(
-            static_cast<const typename Types<T>::Signal&>(*this)->shared_from_this());
+        // return std::static_pointer_cast<ValueSignalImpl>(
+        //     static_cast<const typename Types<T>::Signal&>(*this)->shared_from_this());
+        return static_cast<ValueSignalImpl*>(this);
     }
 };
 

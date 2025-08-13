@@ -40,8 +40,10 @@ class BusSpec
 class BusImpl : public SignalImpl
 {
 public:
-    using LabelSignalImplPtr = std::pair<std::string, SignalImplPtr>;
-    using Signals            = std::vector<std::pair<std::string, SignalImplPtr>>;
+    // using LabelSignalImplPtr = std::pair<std::string, SignalImplPtr>;
+    using LabelSignalImplPtr = std::pair<std::string, SignalImpl*>;
+    // using Signals            = std::vector<std::pair<std::string, SignalImplPtr>>;
+    using Signals            = std::vector<std::pair<std::string, SignalImpl*>>;
 
 protected:
     Signals _signals;
@@ -57,7 +59,8 @@ public:
         auto size = std::distance(begin_, end_);
         _signals.reserve(size);
 
-        for (auto& it = begin_; it != end_; it++)
+        // for (auto& it = begin_; it != end_; it++)
+        for (auto it = begin_; it != end_; ++it)
         {
             if (!it->second) continue;
 
@@ -69,19 +72,22 @@ public:
     }
 
     template<typename Iter>
-    static BusImplPtr create_new(const ValidName& name, Iter begin_, Iter end_)
+    // static BusImplPtr create_new(const ValidName& name, Iter begin_, Iter end_)
+    static std::shared_ptr<BusImpl> create_new(const ValidName& name, Iter begin_, Iter end_)
     {
         pooya_trace("bus: " + name.str());
         return std::make_shared<BusImpl>(Protected(), name, begin_, end_);
     }
 
     template<typename Iter>
-    static BusImplPtr create_new(Iter begin_, Iter end_)
+    // static BusImplPtr create_new(Iter begin_, Iter end_)
+    static std::shared_ptr<BusImpl> create_new(Iter begin_, Iter end_)
     {
         return create_new("", begin_, end_);
     }
 
-    static BusImplPtr create_new(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {})
+    // static BusImplPtr create_new(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {})
+    static std::shared_ptr<BusImpl> create_new(const ValidName& name, const std::initializer_list<SignalImpl*>& l = {})
     {
         pooya_trace("create_new: " + name.str());
 
@@ -96,42 +102,50 @@ public:
         return create_new(name, signals.begin(), signals.end());
     }
 
-    static BusImplPtr create_new(const std::initializer_list<SignalImplPtr>& l = {}) { return create_new("", l); }
+    // static BusImplPtr create_new(const std::initializer_list<SignalImplPtr>& l = {}) { return create_new("", l); }
+    static std::shared_ptr<BusImpl> create_new(const std::initializer_list<SignalImpl*>& l = {}) { return create_new("", l); }
 
     template<typename T>
-    static BusImplPtr create_new(const T& signal)
+    // static BusImplPtr create_new(const T& signal)
+    static std::shared_ptr<BusImpl> create_new(const T& signal)
     {
         std::vector<LabelSignalImplPtr> label_signal({{_make_auto_label(0), signal->shared_from_this()}});
         return create_new(label_signal.begin(), label_signal.end());
     }
 
-    static BusImplPtr create_new(const ValidName& name, const std::initializer_list<LabelSignalImplPtr>& l)
+    // static BusImplPtr create_new(const ValidName& name, const std::initializer_list<LabelSignalImplPtr>& l)
+    static std::shared_ptr<BusImpl> create_new(const ValidName& name, const std::initializer_list<LabelSignalImplPtr>& l)
     {
         return create_new(name, l.begin(), l.end());
     }
 
-    static BusImplPtr create_new(const std::initializer_list<LabelSignalImplPtr>& l) { return create_new("", l); }
+    // static BusImplPtr create_new(const std::initializer_list<LabelSignalImplPtr>& l) { return create_new("", l); }
+    static std::shared_ptr<BusImpl> create_new(const std::initializer_list<LabelSignalImplPtr>& l) { return create_new("", l); }
 
     std::size_t size() const { return _signals.size(); }
     Signals::const_iterator begin() const noexcept { return _signals.begin(); }
     Signals::const_iterator end() const noexcept { return _signals.end(); }
 
-    const SignalImplPtr& at(std::size_t index) const
+    // const SignalImplPtr& at(std::size_t index) const
+    const SignalImpl* at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         return _signals.at(index).second;
     }
 
-    const SignalImplPtr& operator[](std::size_t index) const
+    // const SignalImplPtr& operator[](std::size_t index) const
+    const SignalImpl* operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         pooya_verify(index < _signals.size(), "index out of range!");
         return _signals[index].second;
     }
 
-    const SignalImplPtr& at(const std::string& label) const;
+    // const SignalImplPtr& at(const std::string& label) const;
+    const SignalImpl* at(const std::string& label) const;
 
-    const SignalImplPtr& operator[](const std::string& label) const { return at(label); }
+    // const SignalImplPtr& operator[](const std::string& label) const { return at(label); }
+    const SignalImpl* operator[](const std::string& label) const { return at(label); }
 };
 
 inline BusImpl& SignalImpl::as_bus()
@@ -151,8 +165,10 @@ class Bus : public Signal<BusSpec>
     using Base = Signal<BusSpec>;
 
 public:
-    Bus(const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(l)) {}
-    Bus(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(name, l))
+    // Bus(const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(l)) {}
+    Bus(const std::initializer_list<SignalImpl*>& l = {}) : Base(BusImpl::create_new(l)) {}
+    // Bus(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(name, l))
+    Bus(const ValidName& name, const std::initializer_list<SignalImpl*>& l = {}) : Base(BusImpl::create_new(name, l))
     {
     }
     Bus(const std::initializer_list<BusImpl::LabelSignalImplPtr>& l) : Base(BusImpl::create_new(l)) {}
@@ -168,15 +184,18 @@ public:
         : Base(BusImpl::create_new(name, begin_, end_))
     {
     }
-    template<typename T>
+    template <typename T>
     Bus(const T& signal) : Base(BusImpl::create_new(signal))
     {
     }
-    explicit Bus(const SignalImplPtr& sid)
-        : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr)
+    // explicit Bus(const SignalImplPtr& sid)
+    //     : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr)
+    template <typename T2>
+    explicit Bus(T2 sid)
+        : Base(sid && sid->is_bus() ? std::static_cast<BusImpl*>(sid) : nullptr)
     {
     }
-    Bus(const BusImplPtr& sid) : Base(sid) {}
+    // Bus(const BusImplPtr& sid) : Base(sid) {}
 
     Bus& operator=(const Bus&) = delete;
 
@@ -202,25 +221,43 @@ public:
     std::size_t size() const { return _sid->size(); }
     BusImpl::Signals::const_iterator begin() const noexcept { return _sid->begin(); }
     BusImpl::Signals::const_iterator end() const noexcept { return _sid->end(); }
-    const SignalImplPtr& operator[](std::size_t index) const { return (*_sid)[index]; }
-    const SignalImplPtr& at(std::size_t index) const { return _sid->at(index); }
-    const SignalImplPtr& operator[](const std::string& label) const { return (*_sid)[label]; }
-    const SignalImplPtr& at(const std::string& label) const { return _sid->at(label); }
+    // const SignalImplPtr& operator[](std::size_t index) const { return (*_sid)[index]; }
+    const SignalImpl* operator[](std::size_t index) const { return (*_sid)[index]; }
+    // const SignalImplPtr& at(std::size_t index) const { return _sid->at(index); }
+    const SignalImpl* at(std::size_t index) const { return _sid->at(index); }
+    // const SignalImplPtr& operator[](const std::string& label) const { return (*_sid)[label]; }
+    const SignalImpl* operator[](const std::string& label) const { return (*_sid)[label]; }
+    // const SignalImplPtr& at(const std::string& label) const { return _sid->at(label); }
+    const SignalImpl* at(const std::string& label) const { return _sid->at(label); }
 
-    ValueSignalImplPtr value_at(const std::string& label) const;
-    FloatSignalImplPtr float_at(const std::string& label) const;
-    ScalarSignalImplPtr scalar_at(const std::string& label) const;
-    IntSignalImplPtr int_at(const std::string& label) const;
-    BoolSignalImplPtr bool_at(const std::string& label) const;
-    ArraySignalImplPtr array_at(const std::string& label) const;
-    BusImplPtr bus_at(const std::string& label) const;
-    ValueSignalImplPtr value_at(std::size_t index) const;
-    FloatSignalImplPtr float_at(std::size_t index) const;
-    ScalarSignalImplPtr scalar_at(std::size_t index) const;
-    IntSignalImplPtr int_at(std::size_t index) const;
-    BoolSignalImplPtr bool_at(std::size_t index) const;
-    ArraySignalImplPtr array_at(std::size_t index) const;
-    BusImplPtr bus_at(std::size_t index) const;
+    // ValueSignalImplPtr value_at(const std::string& label) const;
+    // FloatSignalImplPtr float_at(const std::string& label) const;
+    // ScalarSignalImplPtr scalar_at(const std::string& label) const;
+    // IntSignalImplPtr int_at(const std::string& label) const;
+    // BoolSignalImplPtr bool_at(const std::string& label) const;
+    // ArraySignalImplPtr array_at(const std::string& label) const;
+    // BusImplPtr bus_at(const std::string& label) const;
+    // ValueSignalImplPtr value_at(std::size_t index) const;
+    // FloatSignalImplPtr float_at(std::size_t index) const;
+    // ScalarSignalImplPtr scalar_at(std::size_t index) const;
+    // IntSignalImplPtr int_at(std::size_t index) const;
+    // BoolSignalImplPtr bool_at(std::size_t index) const;
+    // ArraySignalImplPtr array_at(std::size_t index) const;
+    // BusImplPtr bus_at(std::size_t index) const;
+    ValueSignalImpl* value_at(const std::string& label) const;
+    FloatSignalImpl* float_at(const std::string& label) const;
+    ScalarSignalImpl* scalar_at(const std::string& label) const;
+    IntSignalImpl* int_at(const std::string& label) const;
+    BoolSignalImpl* bool_at(const std::string& label) const;
+    ArraySignalImpl* array_at(const std::string& label) const;
+    BusImpl* bus_at(const std::string& label) const;
+    ValueSignalImpl* value_at(std::size_t index) const;
+    FloatSignalImpl* float_at(std::size_t index) const;
+    ScalarSignalImpl* scalar_at(std::size_t index) const;
+    IntSignalImpl* int_at(std::size_t index) const;
+    BoolSignalImpl* bool_at(std::size_t index) const;
+    ArraySignalImpl* array_at(std::size_t index) const;
+    BusImpl* bus_at(std::size_t index) const;
 
     using Signal<BusSpec>::reset;
 };

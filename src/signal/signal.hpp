@@ -82,29 +82,40 @@ template<typename T>
 class Signal
 {
 protected:
-    typename Types<T>::SignalImplPtr _sid;
+    // typename Types<T>::SignalImplPtr _sid;
+    std::shared_ptr<typename Types<T>::SignalImpl> _sid;
 
-    static void fail_if_invalid_signal(const SignalImplPtr& sid)
+    // static void fail_if_invalid_signal(const SignalImplPtr& sid)
+    static void fail_if_invalid_signal(const SignalImpl* sid)
     {
         if (!sid) helper::pooya_throw_exception(__FILE__, __LINE__, "invalid signal id!");
     }
 
 public:
-    explicit Signal(const typename Types<T>::SignalImplPtr& sid) { reset(sid); }
+    // explicit Signal(const typename Types<T>::SignalImplPtr& sid) { reset(sid); }
+    // explicit Signal(const std::shared_ptr<typename Types<T>::SignalImpl>& sid) { reset(sid); }
+    template <typename T2>
+    explicit Signal(T2 sid) { reset(sid); }
 
     Signal<T>& operator=(const Signal<T>&) = delete;
 
-    void reset(const typename Types<T>::SignalImplPtr& sid)
+    // void reset(const typename Types<T>::SignalImplPtr& sid)
+    void reset(const typename Types<T>::SignalImpl* sid)
     {
         fail_if_invalid_signal(sid);
-        _sid = sid;
+        // _sid = sid;
+        _sid = sid->shared_from_this();
     }
 
-    const typename Types<T>::SignalImplPtr operator->() const { return _sid; }
-    typename Types<T>::SignalImplPtr operator->() { return _sid; }
+    // const typename Types<T>::SignalImplPtr operator->() const { return _sid; }
+    const typename Types<T>::SignalImpl* operator->() const { return _sid; }
+    // typename Types<T>::SignalImplPtr operator->() { return _sid; }
+    typename Types<T>::SignalImpl* operator->() { return _sid; }
 
-    operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
-    operator SignalImplPtr() const { return _sid->shared_from_this(); }
+    // operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
+    operator const typename Types<T>::SignalImpl* &() const { return _sid; }
+    // operator SignalImplPtr() const { return _sid->shared_from_this(); }
+    operator typename Types<T>::SignalImpl*() const { return _sid; }
 };
 
 } // namespace pooya

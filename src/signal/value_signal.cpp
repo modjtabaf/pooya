@@ -23,38 +23,38 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-double ValueSignalImpl::get_as_scalar() const
-{
-    if (is_scalar())
-    {
-        return as_scalar().get();
-    }
-    else if (is_int())
-    {
-        return static_cast<double>(as_int().get());
-    }
-    else
-    {
-        pooya_verify(is_bool(), "boolean signal expected!");
-        return as_bool().get() ? 1 : 0;
-    }
-}
+// double ValueSignalImpl::get_as_scalar() const
+// {
+//     if (is_scalar())
+//     {
+//         return as_scalar().get();
+//     }
+//     else if (is_int())
+//     {
+//         return static_cast<double>(as_int().get());
+//     }
+//     else
+//     {
+//         pooya_verify(is_bool(), "boolean signal expected!");
+//         return as_bool().get() ? 1 : 0;
+//     }
+// }
 
-void ValueSignalImpl::set_as_scalar(double value)
-{
-    if (is_scalar())
-    {
-        as_scalar().set(value);
-    }
-    else if (is_int())
-    {
-        as_int().set(std::round(value));
-    }
-    else
-    {
-        pooya_verify(is_bool(), "boolean signal expected!");
-        as_bool().set(value != 0);
-    }
-}
+// void ValueSignalImpl::set_as_scalar(double value)
+// {
+//     if (is_scalar())
+//     {
+//         as_scalar().set(value);
+//     }
+//     else if (is_int())
+//     {
+//         as_int().set(std::round(value));
+//     }
+//     else
+//     {
+//         pooya_verify(is_bool(), "boolean signal expected!");
+//         as_bool().set(value != 0);
+//     }
+// }
 
 } // namespace pooya

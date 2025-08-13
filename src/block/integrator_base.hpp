@@ -53,7 +53,8 @@ public:
             return false;
         }
 
-        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        // SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal(SingleOutputT<T>::_ibus.at(0)));
 
         return true;
     }

@@ -61,7 +61,8 @@ public:
         _ret = _initial;
         for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
         {
-            _ret *= Types<T>::as_signal_info(sig).get();
+            // _ret *= Types<T>::as_signal_info(sig).get();
+            _ret *= Types<T>::as_signal(sig)->get();
         }
         SingleOutputT<T>::_s_out->set(_ret);
     }

@@ -30,24 +30,30 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
-                            const SignalImplPtr& sig_out)
+// void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
+//                             const SignalImplPtr& sig_out)
+void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImpl& sig_in,
+                            const SignalImpl& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     std::shared_ptr<Block> block;
-    if (sig_in->is_scalar())
+    // if (sig_in->is_scalar())
+    if (sig_in.is_scalar())
     {
         block = std::make_shared<Pipe>();
     }
-    else if (sig_in->is_int())
+    // else if (sig_in->is_int())
+    else if (sig_in.is_int())
     {
         block = std::make_shared<PipeI>();
     }
-    else if (sig_in->is_bool())
+    // else if (sig_in->is_bool())
+    else if (sig_in.is_bool())
     {
         block = std::make_shared<PipeB>();
     }
-    else if (sig_in->is_array())
+    // else if (sig_in->is_array())
+    else if (sig_in.is_array())
     {
         block = std::make_shared<PipeA>();
     }

@@ -40,7 +40,8 @@ protected:
 public:
     BoolSignalImpl(Protected, const ValidName& name = "") : ValueSignalImpl(name, BoolType) {}
 
-    static BoolSignalImplPtr create_new(const ValidName& name = "")
+    // static BoolSignalImplPtr create_new(const ValidName& name = "")
+    static std::shared_ptr<BoolSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<BoolSignalImpl>(Protected(), name);
     }
@@ -81,11 +82,15 @@ class BoolSignal : public ValueSignal<bool>
 
 public:
     explicit BoolSignal(const ValidName& name = "") : Base(BoolSignalImpl::create_new(name)) {}
-    explicit BoolSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_bool() ? std::static_pointer_cast<BoolSignalImpl>(sid) : nullptr)
+    // explicit BoolSignal(const SignalImplPtr& sid)
+    //     : Base(sid && sid->is_bool() ? std::static_pointer_cast<BoolSignalImpl>(sid) : nullptr)
+    template <typename T>
+    explicit BoolSignal(T sid)
+        : Base(sid && sid->is_bool() ? static_cast<BoolSignalImpl*>(sid) : nullptr)
     {
     }
-    BoolSignal(const BoolSignalImplPtr& sid) : Base(sid) {}
+    // BoolSignal(const BoolSignalImplPtr& sid) : Base(sid) {}
+    // BoolSignal(BoolSignalImpl* sid) : Base(sid) {}
 
     BoolSignal& operator=(const BoolSignal&) = delete;
 

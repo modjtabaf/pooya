@@ -55,9 +55,11 @@ public:
         }
 
         // input signals
-        _s_x.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
+        // _s_x.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
+        _s_x.reset(Types<T>::as_signal(SingleOutputT<T>::_ibus.at("in")));
         _s_delay.reset(SingleOutputT<T>::scalar_input_at("delay"));
-        _s_initial.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
+        // _s_initial.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
+        _s_initial.reset(Types<T>::as_signal(SingleOutputT<T>::_ibus.at("initial")));
 
         return true;
     }

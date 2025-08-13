@@ -35,7 +35,8 @@ namespace pooya
 class FloatSignalImpl : public ValueSignalImpl
 {
 protected:
-    FloatSignalImplPtr _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
+    // FloatSignalImplPtr _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
+    std::shared_ptr<FloatSignalImpl> _deriv_sig{nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     const std::size_t _size;
 
     FloatSignalImpl(const ValidName& name, uint32_t type, std::size_t size = 1)
@@ -46,16 +47,20 @@ protected:
 public:
     bool is_state_variable() const { return static_cast<bool>(_deriv_sig); }
     std::size_t size() const { return _size; }
-    void set_deriv_signal(FloatSignalImplPtr deriv_sig)
+    // void set_deriv_signal(FloatSignalImplPtr deriv_sig)
+    void set_deriv_signal(FloatSignalImpl* deriv_sig)
     {
         pooya_verify_valid_signal(deriv_sig);
         pooya_verify(_type == deriv_sig->_type, name().str() + ", " + deriv_sig->name().str() + ": type mismatch!");
         pooya_verify(_size == deriv_sig->_size, name().str() + ", " + deriv_sig->name().str() + ": size mismatch!");
 
-        _deriv_sig = deriv_sig;
+        // _deriv_sig = deriv_sig;
+        _deriv_sig = std::static_pointer_cast<FloatSignalImpl>(deriv_sig->shared_from_this());
     }
-    FloatSignalImplPtr& deriv_signal() { return _deriv_sig; }
-    const FloatSignalImplPtr& deriv_signal() const { return _deriv_sig; }
+    // FloatSignalImplPtr& deriv_signal() { return _deriv_sig; }
+    FloatSignalImpl* deriv_signal() { return _deriv_sig.get(); }
+    // const FloatSignalImplPtr& deriv_signal() const { return _deriv_sig; }
+    const FloatSignalImpl* deriv_signal() const { return _deriv_sig.get(); }
 };
 
 inline FloatSignalImpl& SignalImpl::as_float()
@@ -76,19 +81,25 @@ class FloatSignal : public ValueSignal<T>
     using Base = ValueSignal<T>;
 
 public:
-    explicit FloatSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
+    // explicit FloatSignal(const typename Types<T>::SignalImplPtr& sid) : Base(sid) {}
+    template <typename T2>
+    explicit FloatSignal(T2 sid)
+        : Base(sid && sid->is_float() ? std::static_pointer_cast<FloatSignalImpl>(sid) : nullptr) {}
 
     FloatSignal& operator=(const FloatSignal&) = delete;
 
-    void set_deriv_signal(FloatSignalImplPtr deriv_sig)
+    // void set_deriv_signal(FloatSignalImplPtr deriv_sig)
+    void set_deriv_signal(FloatSignalImpl* deriv_sig)
     {
         static_cast<typename Types<T>::Signal&>(*this)->set_deriv_signal(deriv_sig);
     }
 
-    operator FloatSignalImplPtr() const
+    // operator FloatSignalImplPtr() const
+    operator FloatSignalImpl*() const
     {
-        return std::static_pointer_cast<FloatSignalImpl>(
-            static_cast<const typename Types<T>::Signal&>(*this)->shared_from_this());
+        // return std::static_pointer_cast<FloatSignalImpl>(
+        //     static_cast<const typename Types<T>::Signal&>(*this)->shared_from_this());
+        return static_cast<FloatSignalImpl*>(this);
     }
 };
 

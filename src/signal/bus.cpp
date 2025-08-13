@@ -26,7 +26,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-const SignalImplPtr& BusImpl::at(const std::string& label) const
+// const SignalImplPtr& BusImpl::at(const std::string& label) const
+SignalImpl* BusImpl::at(const std::string& label) const
 {
     pooya_trace("label: " + label);
 
@@ -36,8 +37,10 @@ const SignalImplPtr& BusImpl::at(const std::string& label) const
                                              [label_to_find](const auto& p) -> bool { return p.first == label_to_find; });
     if (it == _signals.end())
     {
-        throw std::out_of_range("Label not found in the bus: " + label);
+        // throw std::out_of_range("Label not found in the bus: " + label);
+        return nullptr;
     }
+
     if (pos == std::string::npos)
     {
         return it->second;
@@ -47,60 +50,81 @@ const SignalImplPtr& BusImpl::at(const std::string& label) const
     return it->second->as_bus().at(label.substr(pos + 1));
 }
 
-ValueSignalImplPtr Bus::value_at(const std::string& label) const
+// ValueSignalImplPtr Bus::value_at(const std::string& label) const
+ValueSignalImpl* Bus::value_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    auto* sig = _sid->at(label);
     pooya_verify_value_signal(sig);
-    return std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
+    return static_cast<ValueSignalImpl*>(sig);
 }
 
-FloatSignalImplPtr Bus::float_at(const std::string& label) const
+// FloatSignalImplPtr Bus::float_at(const std::string& label) const
+FloatSignalImpl* Bus::float_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    auto* sig = _sid->at(label);
     pooya_verify_float_signal(sig);
-    return std::static_pointer_cast<FloatSignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<FloatSignalImpl>(sig->shared_from_this());
+    return static_cast<FloatSignalImpl*>(sig);
 }
 
-ScalarSignalImplPtr Bus::scalar_at(const std::string& label) const
+// ScalarSignalImplPtr Bus::scalar_at(const std::string& label) const
+ScalarSignalImpl* Bus::scalar_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    auto* sig = _sid->at(label);
     pooya_verify_scalar_signal(sig);
-    return std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this());
+    return static_cast<ScalarSignalImpl*>(sig);
 }
 
-IntSignalImplPtr Bus::int_at(const std::string& label) const
+// IntSignalImplPtr Bus::int_at(const std::string& label) const
+IntSignalImpl* Bus::int_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    SignalImpl* sig = _sid->at(label);
     pooya_verify_int_signal(sig);
-    return std::static_pointer_cast<IntSignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<IntSignalImpl>(sig->shared_from_this());
+    return static_cast<IntSignalImpl*>(sig);
 }
 
-BoolSignalImplPtr Bus::bool_at(const std::string& label) const
+// BoolSignalImplPtr Bus::bool_at(const std::string& label) const
+BoolSignalImpl* Bus::bool_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    SignalImpl* sig = _sid->at(label);
     pooya_verify_bool_signal(sig);
-    return std::static_pointer_cast<BoolSignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<BoolSignalImpl>(sig->shared_from_this());
+    return static_cast<BoolSignalImpl*>(sig);
 }
 
-ArraySignalImplPtr Bus::array_at(const std::string& label) const
+// ArraySignalImplPtr Bus::array_at(const std::string& label) const
+ArraySignalImpl* Bus::array_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    SignalImpl* sig = _sid->at(label);
     pooya_verify_array_signal(sig);
-    return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this());
+    return static_cast<ArraySignalImpl*>(sig->shared_from_this());
 }
 
-BusImplPtr Bus::bus_at(const std::string& label) const
+// BusImplPtr Bus::bus_at(const std::string& label) const
+BusImpl* Bus::bus_at(const std::string& label) const
 {
     pooya_trace("label: " + label);
-    SignalImplPtr sig = _sid->at(label);
+    // SignalImplPtr sig = _sid->at(label);
+    auto* sig = _sid->at(label);
     pooya_verify_bus(sig);
-    return std::static_pointer_cast<BusImpl>(sig->shared_from_this());
+    // return std::static_pointer_cast<BusImpl>(sig->shared_from_this());
+    return static_cast<BusImpl*>(sig);
 }
 
 ValueSignalImplPtr Bus::value_at(std::size_t index) const

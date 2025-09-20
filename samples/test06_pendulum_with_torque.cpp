@@ -72,21 +72,21 @@ public:
         _div2.rename("_ml2");
         _sub.rename("d2phi");
 
-        pooya::ScalarSignal s10;
-        pooya::ScalarSignal s15;
-        pooya::ScalarSignal s20;
-        pooya::ScalarSignal s25;
-        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s10("s10");
+        pooya::ScalarSignal s15("s15");
+        pooya::ScalarSignal s20("s20");
+        pooya::ScalarSignal s25("s25");
+        pooya::ScalarSignal s30("s30");
 
         // setup the submodel
-        _integ1.connect(_d2phi, _dphi);
-        _integ2.connect(_dphi, _phi);
-        _sin.connect(_phi, s10);
-        _mul1.connect({s10, _g}, s15);
-        _div1.connect({s15, _l}, s20);
-        _mul2.connect({_m, _l, _l}, s25);
-        _div2.connect({_tau, s25}, s30);
-        _sub.connect({s30, s20}, _d2phi);
+        _integ1.connect({_d2phi}, {_dphi});
+        _integ2.connect({_dphi}, {_phi});
+        _sin.connect({_phi}, {s10});
+        _mul1.connect({s10, _g}, {s15});
+        _div1.connect({s15, _l}, {s20});
+        _mul2.connect({_m, _l, _l}, {s25});
+        _div2.connect({_tau, s25}, {s30});
+        _sub.connect({s30, s20}, {_d2phi});
     }
 };
 
@@ -106,10 +106,10 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum._m   = 0.2;
-            pendulum._l   = 0.1;
-            pendulum._g   = 9.81;
-            pendulum._tau = 0.13;
+            *pendulum._m   = 0.2;
+            *pendulum._l   = 0.1;
+            *pendulum._g   = 9.81;
+            *pendulum._tau = 0.13;
         },
         &stepper, true);
 

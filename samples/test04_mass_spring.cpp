@@ -47,9 +47,9 @@ public:
         _integ2.rename("x");
         _gain.rename("-k\\m");
 
-        _integ1.connect(_xdd, _xd);
-        _integ2.connect(_xd, _x);
-        _gain.connect(_x, _xdd);
+        _integ1.connect({_xdd}, {_xd});
+        _integ2.connect({_xd}, {_x});
+        _gain.connect({_x}, {_xdd});
     }
 };
 

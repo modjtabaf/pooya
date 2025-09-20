@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_HELPER_VERIFY_HPP__
 #define __POOYA_HELPER_VERIFY_HPP__
 
-#include "ndebug.hpp"
+#include "defs.hpp"
 
 #if !defined(POOYA_DEBUG)
 
@@ -35,7 +35,5 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     }
 
 #endif // !defined(POOYA_DEBUG)
-
-#define pooya_verify_valid_signal(sig) pooya_verify(sig, "invalid signal!")
 
 #endif // __POOYA_HELPER_VERIFY_HPP__

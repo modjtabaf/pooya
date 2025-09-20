@@ -29,6 +29,7 @@
 * In BusInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
 * Discard addsub and muldiv
 
+- Move additional blocks (gain, add, ...) and less-frequently-used block to different folders
 - Make sure Simulator evaluates the model only if necessary. Remove any duplicates.
 - Call shared_from_this() only when necessary
 - Convert current samples to tests (hybrid)

@@ -36,7 +36,7 @@ protected:
 
 public:
     explicit MemoryT(const Tic& ic = Tic(0)) : SingleInputOutputT<T>(1), _value(ic) {}
-    MemoryT(Submodel* parent, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic) {}
+    explicit MemoryT(Submodel* parent, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
     {
@@ -76,10 +76,16 @@ public:
     operator bool() const { return _b; }
 };
 
-using Memory  = MemoryT<double>;
+using Memory = MemoryT<double>;
+#ifdef POOYA_INT_SIGNAL
 using MemoryI = MemoryT<int>;
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
 using MemoryB = MemoryT<bool, Bool>;
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
 using MemoryA = MemoryT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

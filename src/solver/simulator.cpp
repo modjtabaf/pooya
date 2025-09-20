@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <unordered_set>
 
 #include "simulator.hpp"
+#include "src/helper/here.hpp"
 #include "src/helper/util.hpp"
 
 namespace pooya
@@ -135,9 +136,11 @@ void Simulator::init(double t0)
 
     std::size_t state_variables_size{0};
 
-    std::unordered_set<ValueSignalImplPtr> value_signals;
-    std::unordered_set<ScalarSignalImplPtr> scalar_state_signals;
-    std::unordered_set<ArraySignalImplPtr> array_state_signals;
+    std::unordered_set<ValueSignalImpl*> value_signals;
+    std::unordered_set<ScalarSignalImpl*> scalar_state_signals;
+#ifdef POOYA_ARRAY_SIGNAL
+    std::unordered_set<ArraySignalImpl*> array_state_signals;
+#endif // POOYA_ARRAY_SIGNAL
 
     _model.visit(
         [&](Block& block, uint32_t /*level*/) -> bool
@@ -145,34 +148,41 @@ void Simulator::init(double t0)
             const auto& signals = block.linked_signals();
             for (auto& sig : signals)
             {
-                value_signals.insert(sig.first);
+                value_signals.insert(sig.first.get());
 
-                if (!sig.first->is_float() || !sig.first->as_float().is_state_variable())
+                // if (!sig.first->is_float() || !sig.first->as_float().is_state_variable())
+                // if (auto* pf = dynamic_cast<FloatSignalImpl*>(sig.first.get()); !pf || !pf->is_state_variable())
+                // {
+                //     continue;
+                // }
+                // if (sig.first->is_scalar())
+                if (auto* ps = dynamic_cast<ScalarSignalImpl*>(sig.first.get()); ps)
                 {
-                    continue;
-                }
-                if (sig.first->is_scalar())
-                {
-                    if (scalar_state_signals
-                            .insert(std::static_pointer_cast<ScalarSignalImpl>(sig.first->shared_from_this()))
+                    if (ps->is_state_variable() &&
+                        scalar_state_signals
+                            .insert(std::static_pointer_cast<ScalarSignalImpl>(ps->shared_from_this()).get())
                             .second)
                     {
                         state_variables_size++;
                     }
                 }
-                else if (sig.first->is_array())
+#ifdef POOYA_ARRAY_SIGNAL
+                // else if (sig.first->is_array())
+                else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.first.get()); pa)
                 {
-                    if (array_state_signals
-                            .insert(std::static_pointer_cast<ArraySignalImpl>(sig.first->shared_from_this()))
+                    if (pa->is_state_variable() &&
+                        array_state_signals
+                            .insert(std::static_pointer_cast<ArraySignalImpl>(pa->shared_from_this()).get())
                             .second)
                     {
-                        state_variables_size += sig.first->as_array().size();
+                        state_variables_size += pa->size();
                     }
                 }
-                else
-                {
-                    helper::pooya_throw_exception(__FILE__, __LINE__, "Unknown state signal type!");
-                }
+#endif // POOYA_ARRAY_SIGNAL
+       // else
+       // {
+       //     helper::pooya_throw_exception(__FILE__, __LINE__, "Unknown state signal type!");
+       // }
             }
 
             return true;
@@ -180,20 +190,22 @@ void Simulator::init(double t0)
         0);
 
     value_signals_.reserve(value_signals.size());
-    for (auto& sig : value_signals)
+    for (auto* sig : value_signals)
     {
-        value_signals_.emplace_back(sig);
+        value_signals_.emplace_back(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()));
     }
     scalar_state_signals_.reserve(scalar_state_signals.size());
-    for (auto& sig : scalar_state_signals)
+    for (auto* sig : scalar_state_signals)
     {
-        scalar_state_signals_.emplace_back(sig);
+        scalar_state_signals_.emplace_back(std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this()));
     }
+#ifdef POOYA_ARRAY_SIGNAL
     array_state_signals_.reserve(array_state_signals.size());
-    for (auto& sig : array_state_signals)
+    for (auto* sig : array_state_signals)
     {
-        array_state_signals_.emplace_back(sig);
+        array_state_signals_.emplace_back(std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this()));
     }
+#endif // POOYA_ARRAY_SIGNAL
 
     _state_variables.resize(state_variables_size);
     _state_variables_orig.resize(state_variables_size);
@@ -273,15 +285,18 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
         double* data = _state_variable_derivs.data();
         for (auto& sig : scalar_state_signals_)
         {
-            *data = sig->deriv_signal()->as_scalar().get();
+            // *data = sig->deriv_signal()->as_scalar().get();
+            *data = sig->deriv_signal()->get();
             data++;
         }
+#ifdef POOYA_ARRAY_SIGNAL
         for (auto& sig : array_state_signals_)
         {
-            auto& deriv_sig                            = sig->deriv_signal();
-            Eigen::Map<Array>(data, deriv_sig->size()) = deriv_sig->as_array().get();
+            auto* deriv_sig                            = sig->deriv_signal();
+            Eigen::Map<Array>(data, deriv_sig->size()) = deriv_sig->get();
             data += deriv_sig->size();
         }
+#endif // POOYA_ARRAY_SIGNAL
 
         return _state_variable_derivs;
     };
@@ -413,11 +428,13 @@ void Simulator::reset_with_state_variables(const Array& state_variables)
         sig->set(*data);
         data++;
     }
+#ifdef POOYA_ARRAY_SIGNAL
     for (auto& sig : array_state_signals_)
     {
         sig->set(Eigen::Map<const Array>(data, sig->size()));
         data += sig->size();
     }
+#endif // POOYA_ARRAY_SIGNAL
 }
 
 void Simulator::get_state_variables(Array& state_variables)
@@ -430,11 +447,20 @@ void Simulator::get_state_variables(Array& state_variables)
         *data = sig->get();
         data++;
     }
+#ifdef POOYA_ARRAY_SIGNAL
     for (auto& sig : array_state_signals_)
     {
         Eigen::Map<Array>(data, sig->size()) = sig->get();
         data += sig->size();
     }
+#endif // POOYA_ARRAY_SIGNAL
 }
+
+// Simulator::~Simulator()
+// {
+//     // value_signals_.clear();
+//     pooya_here(value_signals_.size());
+//     pooya_here(scalar_state_signals_.size());
+// }
 
 } // namespace pooya

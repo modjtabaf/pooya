@@ -31,24 +31,34 @@ namespace pooya
 
 class Block;
 
-class History : public std::unordered_map<SignalImplPtr, Eigen::MatrixXd>
+class History : public std::unordered_map<std::shared_ptr<ValueSignalImpl>, Eigen::MatrixXd>
 {
+    using Base = std::unordered_map<std::shared_ptr<ValueSignalImpl>, Eigen::MatrixXd>;
+
 protected:
     uint _nrows_grow;
     uint _bottom_row{static_cast<uint>(-1)};
     Array _time;
-    std::vector<ValueSignalImplPtr> _signals;
+    std::vector<std::shared_ptr<ValueSignalImpl>> _signals;
 
 public:
     History(uint nrows_grow = 1000) : _nrows_grow(nrows_grow), _time(nrows_grow) {}
 
-    void track(SignalImplPtr sig);
-    void untrack(SignalImplPtr sig);
+    bool track(SignalImpl* sig);
+    bool track(Signal& sig) { return track(sig.get()); }
+    void untrack(SignalImpl* sig);
+    void untrack(Signal& sig) { untrack(sig.get()); }
     void update(uint k, double t);
     void export_csv(const std::string& filename);
     void shrink_to_fit();
     uint nrows() const { return _bottom_row + 1; }
     const Array& time() const { return _time; }
+
+    const Eigen::MatrixXd& operator[](SignalImpl* sig) const
+    {
+        return at(std::dynamic_pointer_cast<ValueSignalImpl>(sig->shared_from_this()));
+    }
+    const Eigen::MatrixXd& operator[](Signal& sig) const { return operator[](sig.get()); }
 };
 
 } // namespace pooya

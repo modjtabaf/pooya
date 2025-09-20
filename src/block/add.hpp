@@ -31,36 +31,41 @@ namespace pooya
 template<typename T>
 class AddT : public SingleOutputT<T>
 {
+    using Base = SingleOutputT<T>;
+
 protected:
     T _initial;
     T _ret;
 
 public:
-    AddT(const T& initial = 0.0) : SingleOutputT<T>(Block::NoIOLimit, 1), _initial(initial) {}
-    AddT(Submodel* parent, const T& initial = 0.0) : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _initial(initial) {}
+    explicit AddT(const T& initial = 0.0) : Base(Block::NoIOLimit, 1), _initial(initial) {}
+    explicit AddT(Submodel* parent, const T& initial = 0.0) : Base(parent, Block::NoIOLimit, 1), _initial(initial) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
-        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
+        pooya_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
+        for (const auto& sig : *ibus)
+            pooya_verify(dynamic_cast<typename Types<T>::SignalImpl*>(sig.second.get()),
+                         Base::full_name().str() + ": signal type mismatch!");
 
         return true;
     }
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         _ret = _initial;
-        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
+        for (const auto& sig : *Base::_ibus)
         {
-            _ret += Types<T>::as_signal_info(sig).get();
+            _ret += static_cast<const typename Types<T>::SignalImpl&>(*sig.second.get()).get();
         }
-        SingleOutputT<T>::_s_out->set(_ret);
+        Base::_s_out->set(_ret);
     }
 };
 

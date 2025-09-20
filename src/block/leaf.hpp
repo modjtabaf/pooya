@@ -27,7 +27,7 @@ class Leaf : public Block
 {
 protected:
     explicit Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
-    Leaf(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Leaf(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
         : Block(parent, num_iports, num_oports)
     {
     }

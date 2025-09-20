@@ -39,7 +39,7 @@ protected:
 
 public:
     explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
-    SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
+    explicit SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
 
     void activation_function(double t) override
     {
@@ -48,9 +48,13 @@ public:
     }
 };
 
-using Source  = SourceT<double>;
+using Source = SourceT<double>;
+#ifdef POOYA_INT_SIGNAL
 using SourceI = SourceT<int>;
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
 using SourceA = SourceT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

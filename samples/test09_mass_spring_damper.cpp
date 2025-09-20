@@ -52,10 +52,10 @@ public:
 
         if (!pooya::Leaf::connect(ibus)) return false;
 
-        _s_tau.reset(scalar_input_at(0));
+        _s_tau = &ibus->at(0);
 
-        _s_x.set_deriv_signal(_s_xd);
-        _s_xd.set_deriv_signal(_s_xdd);
+        _s_x->set_deriv_signal(_s_xd);
+        _s_xd->set_deriv_signal(_s_xdd);
 
         link_signal(_s_x, SignalLinkType::Input);
         link_signal(_s_xd, SignalLinkType::Input);
@@ -69,19 +69,19 @@ public:
         pooya_trace0;
 
         // calculate acceleration
-        _s_xdd = _s_tau / _m - _c / _m * _s_xd - _k / _m * _s_x;
+        *_s_xdd = *_s_tau / _m - _c / _m * *_s_xd - _k / _m * *_s_x;
     }
 
     void pre_step(double /*t*/) override
     {
-        _s_x  = _x;
-        _s_xd = _xd;
+        *_s_x  = _x;
+        *_s_xd = _xd;
     }
 
     void post_step(double /*t*/) override
     {
-        _x  = _s_x;
-        _xd = _s_xd;
+        _x  = *_s_x;
+        _xd = *_s_xd;
     }
 };
 
@@ -99,7 +99,7 @@ int main()
     pooya::ScalarSignal tau("tau");
 
     // setup the model
-    model.connect(tau, {});
+    model.connect({tau}, {});
 
     pooya::Euler stepper;
     pooya::Simulator sim(
@@ -107,7 +107,7 @@ int main()
         [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
-            tau = 0.01 * std::sin(t);
+            *tau = 0.01 * std::sin(t);
         },
         &stepper);
 

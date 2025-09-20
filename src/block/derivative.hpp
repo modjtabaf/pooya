@@ -39,7 +39,7 @@ protected:
 
 public:
     explicit DerivativeT(const T& y0 = 0) : SingleInputOutputT<T>(1), _y(y0) {}
-    DerivativeT(Submodel* parent, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
+    explicit DerivativeT(Submodel* parent, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
 
     void post_step(double t) override
     {
@@ -70,8 +70,10 @@ public:
     }
 };
 
-using Derivative  = DerivativeT<double>;
+using Derivative = DerivativeT<double>;
+#ifdef POOYA_ARRAY_SIGNAL
 using DerivativeA = DerivativeT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

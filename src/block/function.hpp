@@ -38,11 +38,13 @@ protected:
     ActFunction _act_func;
 
 public:
-    Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit,
+                      uint16_t num_oports = NoIOLimit)
         : Leaf(parent, num_iports, num_oports), _act_func(act_func)
     {
     }
-    Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit,
+                      uint16_t num_oports = NoIOLimit)
         : Leaf(parent, num_iports, num_oports), _act_func(act_func)
     {
     }

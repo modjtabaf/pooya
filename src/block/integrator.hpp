@@ -33,11 +33,13 @@ class IntegratorT : public IntegratorBaseT<T>
 {
 public:
     explicit IntegratorT(T ic = T(0.0)) : IntegratorBaseT<T>(ic, 1, 1) {}
-    IntegratorT(Submodel* parent, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 1, 1) {}
+    explicit IntegratorT(Submodel* parent, T ic = T(0.0)) : IntegratorBaseT<T>(parent, ic, 1, 1) {}
 };
 
-using Integrator  = IntegratorT<double>;
+using Integrator = IntegratorT<double>;
+#ifdef POOYA_ARRAY_SIGNAL
 using IntegratorA = IntegratorT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

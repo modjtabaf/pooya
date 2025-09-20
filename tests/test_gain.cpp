@@ -48,18 +48,19 @@ TEST_F(TestGain, ScalarGain)
     pooya::Gain gain(gain_value);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    gain.connect(s_x, s_y);
+    gain.connect({s_x}, {s_y});
 
     // simulator setup
-    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { *s_x = x; });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    EXPECT_DOUBLE_EQ(gain_value * x, s_y);
+    EXPECT_DOUBLE_EQ(gain_value * x, *s_y);
 }
 
+#ifdef POOYA_INT_SIGNAL
 TEST_F(TestGain, IntGain)
 {
     // test parameters
@@ -70,18 +71,20 @@ TEST_F(TestGain, IntGain)
     pooya::GainT<int, int> gain(gain_value);
     pooya::IntSignal s_x;
     pooya::IntSignal s_y;
-    gain.connect(s_x, s_y);
+    gain.connect({s_x}, {s_y});
 
     // simulator setup
-    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { *s_x = x; });
 
     // do one step
     sim.init(0.0);
 
     // verify the results
-    EXPECT_EQ(gain_value * x, s_y);
+    EXPECT_EQ(gain_value * x, *s_y);
 }
+#endif // POOYA_INT_SIGNAL
 
+#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestGain, ArrayGain)
 {
     // test parameters
@@ -93,10 +96,10 @@ TEST_F(TestGain, ArrayGain)
     pooya::GainA gain(gain_value);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    gain.connect(s_x, s_y);
+    gain.connect({s_x}, {s_y});
 
     // simulator setup
-    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(gain, [&](pooya::Block&, double /*t*/) -> void { *s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -104,6 +107,7 @@ TEST_F(TestGain, ArrayGain)
     // verify the results
     for (std::size_t k = 0; k < N; k++)
     {
-        EXPECT_NEAR(gain_value * s_x[k], s_y[k], 1e-10);
+        EXPECT_NEAR(gain_value * (*s_x)[k], (*s_y)[k], 1e-10);
     }
 }
+#endif // POOYA_ARRAY_SIGNAL

@@ -46,7 +46,7 @@ int main()
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;
-                             x = std::sin(M_PI * t / 5);
+                             *x = std::sin(M_PI * t / 5);
                          });
 
     pooya::History history;

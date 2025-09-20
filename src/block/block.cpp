@@ -15,7 +15,6 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <cassert>
 #include <memory>
 
 #include "block.hpp"
@@ -60,38 +59,38 @@ bool Block::connect(const Bus& ibus, const Bus& obus)
         helper::pooya_throw_exception(__FILE__, __LINE__, _name.str() + ": illegal attempt to reconnecting a block!");
     }
 
-    pooya_verify((_num_iports == NoIOLimit) || (ibus.size() == _num_iports),
+    pooya_verify((_num_iports == NoIOLimit) || (ibus->size() == _num_iports),
                  _num_iports == 0 ? full_name().str() + " cannot take any input."
                                   : full_name().str() + " requires " + std::to_string(_num_iports) +
                                         std::string(" input signal") + (_num_iports == 1 ? "." : "s."));
 
-    pooya_verify((_num_oports == NoIOLimit) || (obus.size() == _num_oports),
+    pooya_verify((_num_oports == NoIOLimit) || (obus->size() == _num_oports),
                  _num_oports == 0 ? full_name().str() + " cannot generate any output."
                                   : full_name().str() + " requires " + std::to_string(_num_oports) +
                                         std::string(" output signal") + (_num_oports == 1 ? "." : "s."));
 
-    _linked_signals.reserve(ibus.size() + obus.size());
+    _linked_signals.reserve(ibus->size() + obus->size());
 
-    for (const auto& [label, sig] : ibus)
+    for (auto& [label, sig] : *ibus)
     {
-        if (sig->is_value())
+        if (std::dynamic_pointer_cast<ValueSignalImpl>(sig))
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Input);
+            link_signal(static_cast<ValueSignalImpl*>(sig.get()), SignalLinkType::Input);
         }
     }
 
-    for (const auto& [label, sig] : obus)
+    for (auto& [label, sig] : *obus)
     {
-        if (sig->is_value())
+        if (std::dynamic_pointer_cast<ValueSignalImpl>(sig))
         {
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), SignalLinkType::Output);
+            link_signal(static_cast<ValueSignalImpl*>(sig.get()), SignalLinkType::Output);
         }
     }
 
     _linked_signals.shrink_to_fit();
 
-    _ibus.reset(ibus);
-    _obus.reset(obus);
+    _ibus = ibus;
+    _obus = obus;
 
     _connected = true;
     return true;
@@ -102,15 +101,17 @@ ValidName Block::full_name() const
     return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
-bool Block::link_signal(const ValueSignalImplPtr& signal, SignalLinkType type)
+bool Block::link_signal(ValueSignalImpl* signal, SignalLinkType type)
 {
     pooya_trace("block: " + full_name().str());
-    pooya_verify_valid_signal(signal);
+
+    if (!signal) return false;
+
     auto it = std::find_if(_linked_signals.begin(), _linked_signals.end(),
-                           [&](const SignalLinkPair& sig_type) -> bool { return sig_type.first == signal; });
+                           [&](const SignalLinkPair& sig_type) -> bool { return sig_type.first.get() == signal; });
     if (it == _linked_signals.end())
     {
-        _linked_signals.emplace_back(signal, type);
+        _linked_signals.emplace_back(std::static_pointer_cast<ValueSignalImpl>(signal->shared_from_this()), type);
         return true;
     }
 

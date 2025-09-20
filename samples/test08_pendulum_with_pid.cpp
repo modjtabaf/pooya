@@ -77,18 +77,18 @@ public:
         pooya::ScalarSignal s30;
         pooya::ScalarSignal s40;
 
-        auto tau = scalar_input_at(0);
-        auto phi = scalar_output_at(0);
+        pooya::ScalarSignal tau(&ibus->at(0));
+        pooya::ScalarSignal phi(&obus->at(0));
 
         // setup the submodel
-        _mul1.connect({_m, _l, _l}, s05);
-        _div1.connect({tau, s05}, s10);
-        _sub.connect({s10, s20}, s30);
-        _integ1.connect(s30, _dphi);
-        _integ2.connect(_dphi, phi);
-        _sin.connect(phi, s40);
-        _mul2.connect({s40, _g}, s15);
-        _div2.connect({s15, _l}, s20);
+        _mul1.connect({_m, _l, _l}, {s05});
+        _div1.connect({tau, s05}, {s10});
+        _sub.connect({s10, s20}, {s30});
+        _integ1.connect({s30}, {_dphi});
+        _integ2.connect({_dphi}, {phi});
+        _sin.connect({phi}, {s40});
+        _mul2.connect({s40, _g}, {s15});
+        _div2.connect({s15, _l}, {s20});
 
         return true;
     }
@@ -127,16 +127,16 @@ public:
         pooya::ScalarSignal s40;
         pooya::ScalarSignal s50;
 
-        auto x = scalar_input_at(0);
-        auto y = scalar_output_at(0);
+        pooya::ScalarSignal x(&ibus->at(0));
+        pooya::ScalarSignal y(&obus->at(0));
 
         // blocks
-        _gain_p.connect(x, s10);
-        _integ.connect(x, s20);
-        _gain_i.connect(s20, s30);
-        _deriv.connect(x, s40);
-        _gain_d.connect(s40, s50);
-        _add.connect({s10, s30, s50}, y);
+        _gain_p.connect({x}, {s10});
+        _integ.connect({x}, {s20});
+        _gain_i.connect({s20}, {s30});
+        _deriv.connect({x}, {s40});
+        _gain_d.connect({s40}, {s50});
+        _add.connect({s10, s30, s50}, {y});
 
         return true;
     }
@@ -159,9 +159,9 @@ public:
     {
         rename("pendulum_with_PID");
 
-        _sub.connect({_des_phi, _phi}, _err);
-        _pid.connect(_err, _tau);
-        _pend.connect(_tau, _phi);
+        _sub.connect({_des_phi, _phi}, {_err});
+        _pid.connect({_err}, {_tau});
+        _pend.connect({_tau}, {_phi});
     }
 };
 
@@ -180,10 +180,10 @@ int main()
         pendulum_with_pid,
         [&](pooya::Block&, double /*t*/) -> void
         {
-            pendulum_with_pid._pend._m = 0.2;
-            pendulum_with_pid._pend._l = 0.1;
-            pendulum_with_pid._pend._g = 9.81;
-            pendulum_with_pid._des_phi = M_PI_4;
+            *pendulum_with_pid._pend._m = 0.2;
+            *pendulum_with_pid._pend._l = 0.1;
+            *pendulum_with_pid._pend._g = 9.81;
+            *pendulum_with_pid._des_phi = M_PI_4;
         },
         &stepper);
 

@@ -36,17 +36,17 @@ class MyBus : public pooya::Bus
 public:
     MyBus(const std::string& name)
         : pooya::Bus( //
-              name,   //
               {
                   {"x0", pooya::ScalarSignal("x0")},
                   {"x1", pooya::ScalarSignal("x1")},
                   {"Z", pooya::Bus( //
-                            "Z",    //
                             {
                                 {"z3", pooya::ScalarSignal("z3")},
-                            })},
+                            },
+                            "Z")},
                   {"x2", pooya::ScalarSignal("x2")},
-              })
+              },
+              name)
     {
     }
 };
@@ -70,23 +70,23 @@ int main()
     // setup the model
     bus_memory.connect(x, y);
 
-    pooya::ScalarSignal x_x0 = x.scalar_at("x0");
-    pooya::ScalarSignal x_x1 = x.scalar_at("x1");
-    pooya::ScalarSignal x_x2 = x.scalar_at("x2");
-    pooya::ScalarSignal x_z3 = x.scalar_at("Z.z3");
+    pooya::ScalarSignal x_x0(&x->at("x0"));
+    pooya::ScalarSignal x_x1(&x->at("x1"));
+    pooya::ScalarSignal x_x2(&x->at("x2"));
+    pooya::ScalarSignal x_z3(&x->at("Z.z3"));
 
-    pooya::ScalarSignal y_x0 = y.scalar_at("x0");
-    pooya::ScalarSignal y_x1 = y.scalar_at("x1");
-    pooya::ScalarSignal y_x2 = y.scalar_at("x2");
-    pooya::ScalarSignal y_z3 = y.scalar_at("Z.z3");
+    pooya::ScalarSignal y_x0(&y->at("x0"));
+    pooya::ScalarSignal y_x1(&y->at("x1"));
+    pooya::ScalarSignal y_x2(&y->at("x2"));
+    pooya::ScalarSignal y_z3(&y->at("Z.z3"));
 
     pooya::Simulator sim(model,
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;
-                             x_x0 = std::sin(M_PI * t / 3);
-                             x_x2 = std::sin(M_PI * t / 7);
-                             x_z3 = std::sin(M_PI * t / 9);
+                             *x_x0 = std::sin(M_PI * t / 3);
+                             *x_x2 = std::sin(M_PI * t / 7);
+                             *x_z3 = std::sin(M_PI * t / 9);
                          });
 
     pooya::History history;
@@ -116,11 +116,15 @@ int main()
     Gnuplot gp;
     gp << "set xrange [0:" << history.nrows() - 1 << "]\n";
     gp << "set yrange [-1:1]\n";
-    gp << "plot" << gp.file1d(history[x_x0]) << "with lines title 'x0'," << gp.file1d(history[y_x0])
-       << "with lines title 'y0'," << gp.file1d(history[x_x1]) << "with lines title 'x1'," << gp.file1d(history[y_x1])
-       << "with lines title 'y1'," << gp.file1d(history[x_x2]) << "with lines title 'x2'," << gp.file1d(history[y_x2])
-       << "with lines title 'y2'," << gp.file1d(history[x_z3]) << "with lines title 'x3'," << gp.file1d(history[y_z3])
-       << "with lines title 'y3',"
+    gp << "plot"                                               //
+       << gp.file1d(history[x_x0]) << "with lines title 'x0'," //
+       << gp.file1d(history[y_x0]) << "with lines title 'y0'," //
+       << gp.file1d(history[x_x1]) << "with lines title 'x1'," //
+       << gp.file1d(history[y_x1]) << "with lines title 'y1'," //
+       << gp.file1d(history[x_x2]) << "with lines title 'x2'," //
+       << gp.file1d(history[y_x2]) << "with lines title 'y2'," //
+       << gp.file1d(history[x_z3]) << "with lines title 'x3'," //
+       << gp.file1d(history[y_z3]) << "with lines title 'y3'," //
        << "\n";
 
     assert(pooya::helper::pooya_trace_info.size() == 1);

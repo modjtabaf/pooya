@@ -32,6 +32,8 @@ namespace pooya
 template<typename T>
 class DelayT : public SingleOutputT<T>
 {
+    using Base = SingleOutputT<T>;
+
 protected:
     double _lifespan;
     std::vector<double> _t;
@@ -43,28 +45,28 @@ protected:
     typename Types<T>::Signal _s_initial; // initial
 
 public:
-    explicit DelayT(double lifespan) : SingleOutputT<T>(3, 1), _lifespan(lifespan) {}
-    DelayT(Submodel* parent, double lifespan) : SingleOutputT<T>(parent, 3, 1), _lifespan(lifespan) {}
+    explicit DelayT(double lifespan) : Base(3, 1), _lifespan(lifespan) {}
+    explicit DelayT(Submodel* parent, double lifespan) : Base(parent, 3, 1), _lifespan(lifespan) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
         // input signals
-        _s_x.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("in")));
-        _s_delay.reset(SingleOutputT<T>::scalar_input_at("delay"));
-        _s_initial.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at("initial")));
+        _s_x       = &Base::_ibus->at("in");
+        _s_delay   = &Base::_ibus->at("delay");
+        _s_initial = &Base::_ibus->at("initial");
 
         return true;
     }
 
     void post_step(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         if (!_t.empty())
         {
             double t1 = t - _lifespan;
@@ -88,21 +90,21 @@ public:
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         if (_t.empty())
         {
-            SingleOutputT<T>::_s_out->set(_s_initial->get());
+            Base::_s_out->set(_s_initial->get());
             return;
         }
 
         t -= _s_delay->get();
         if (t <= _t[0])
         {
-            SingleOutputT<T>::_s_out->set(_s_initial->get());
+            Base::_s_out->set(_s_initial->get());
         }
         else if (t >= _t.back())
         {
-            SingleOutputT<T>::_s_out->set(_x.back());
+            Base::_s_out->set(_x.back());
         }
         else
         {
@@ -116,7 +118,7 @@ public:
                 k++;
             }
 
-            SingleOutputT<T>::_s_out->set((_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
+            Base::_s_out->set((_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1]);
         }
     }
 };

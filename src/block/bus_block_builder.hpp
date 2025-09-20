@@ -40,11 +40,10 @@ protected:
 
     void visit_bus(const std::string& path_name, const Bus& bus);
 
-    virtual void block_builder(const std::string& path_name, const SignalImplPtr& sig_in,
-                               const SignalImplPtr& sig_out) = 0;
+    virtual void block_builder(std::string_view path_name, SignalImpl& sig_in, SignalImpl& sig_out) = 0;
 
 public:
-    explicit BusBlockBuilder(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
+    explicit BusBlockBuilder(Submodel& parent, std::initializer_list<std::string> excluded_labels = {})
         : Leaf(&parent), _excluded_labels(excluded_labels)
     {
     }

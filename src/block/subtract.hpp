@@ -31,34 +31,36 @@ namespace pooya
 template<typename T>
 class SubtractT : public SingleOutputT<T>
 {
+    using Base = SingleOutputT<T>;
+
 protected:
     // input signals
     typename Types<T>::Signal _s_x1; // input 1
     typename Types<T>::Signal _s_x2; // input 2
 
 public:
-    SubtractT() : SingleOutputT<T>(2, 1) {}
-    SubtractT(Submodel* parent) : SingleOutputT<T>(parent, 2, 1) {}
+    explicit SubtractT() : Base(2, 1) {}
+    explicit SubtractT(Submodel* parent) : Base(parent, 2, 1) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
         // input signals
-        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
-        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+        _s_x1 = &Base::_ibus->at(0);
+        _s_x2 = &Base::_ibus->at(1);
 
         return true;
     }
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_s_x1 - _s_x2);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out->set(*_s_x1 - *_s_x2);
     }
 };
 

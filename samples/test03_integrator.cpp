@@ -42,7 +42,7 @@ int main()
     pooya::BoolSignal trigger("trigger");
 
     // setup the model
-    integ.connect({{"in", xd}, {"trigger", trigger}}, x);
+    integ.connect({{"in", xd}, {"trigger", trigger}}, {x});
 
     pooya::Euler stepper;
 
@@ -51,8 +51,8 @@ int main()
         [&](pooya::Block&, double t) -> void
         {
             pooya_trace0;
-            xd      = t < 3 or t > 7 ? 1.0 : 0.0;
-            trigger = t >= 4.9 && t <= 5.1;
+            *xd      = t < 3 or t > 7 ? 1.0 : 0.0;
+            *trigger = t >= 4.9 && t <= 5.1;
         },
         &stepper);
 

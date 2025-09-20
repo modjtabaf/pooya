@@ -30,58 +30,60 @@ namespace pooya
 template<typename T>
 class IntegratorBaseT : public SingleOutputT<T>
 {
+    using Base = SingleOutputT<T>;
+
 protected:
     T _value;
 
 public:
     explicit IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
                              uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(num_iports, num_oports), _value(ic)
+        : Base(num_iports, num_oports), _value(ic)
     {
     }
-    IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                    uint16_t num_oports = Block::NoIOLimit)
-        : SingleOutputT<T>(parent, num_iports, num_oports), _value(ic)
+    explicit IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+                             uint16_t num_oports = Block::NoIOLimit)
+        : Base(parent, num_iports, num_oports), _value(ic)
     {
     }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
-        SingleOutputT<T>::_s_out->set_deriv_signal(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
+        Base::_s_out->set_deriv_signal(&Base::_ibus->template at<T>(0));
 
         return true;
     }
 
     void pre_step(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        assert(!SingleOutputT<T>::_s_out->is_assigned());
-        SingleOutputT<T>::_s_out->set(_value);
+        pooya_trace("block: " + Base::full_name().str());
+        assert(!Base::_s_out->is_assigned());
+        Base::_s_out->set(_value);
     }
 
     void post_step(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        assert(SingleOutputT<T>::_s_out->is_assigned());
-        _value = SingleOutputT<T>::_s_out->get();
+        pooya_trace("block: " + Base::full_name().str());
+        assert(Base::_s_out->is_assigned());
+        _value = Base::_s_out->get();
     }
 
     uint _process(double /*t*/, bool /*go_deep*/ = true) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (SingleOutputT<T>::_processed)
+        pooya_trace("block: " + Base::full_name().str());
+        if (Base::_processed)
         {
             return 0;
         }
 
-        SingleOutputT<T>::_processed = SingleOutputT<T>::_s_out->is_assigned();
-        return SingleOutputT<T>::_processed ? 1 : 0; // is it safe to simply return _processed?
+        Base::_processed = Base::_s_out->is_assigned();
+        return Base::_processed ? 1 : 0; // is it safe to simply return _processed?
     }
 };
 

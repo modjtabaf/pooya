@@ -41,13 +41,13 @@ int main()
     pooya::IntSignal y("y");
 
     // setup the model
-    gain.connect(x, y);
+    gain.connect({x}, {y});
 
     pooya::Simulator sim(gain,
                          [&](pooya::Block&, double t) -> void
                          {
                              pooya_trace0;
-                             x = std::round(std::sin(M_PI * t / 5));
+                             *x = std::round(std::sin(M_PI * t / 5));
                          });
 
     pooya::History history;

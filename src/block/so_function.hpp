@@ -38,11 +38,11 @@ protected:
     ActFunction _act_func;
 
 public:
-    SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+    explicit SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
         : SingleOutputT<T>(parent, num_iports), _act_func(act_func)
     {
     }
-    SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+    explicit SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
         : SingleOutputT<T>(parent, num_iports), _act_func(act_func)
     {
     }

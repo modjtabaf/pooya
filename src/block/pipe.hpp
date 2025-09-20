@@ -32,8 +32,8 @@ template<typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    PipeT() : SingleInputOutputT<T>(1) {}
-    PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
+    explicit PipeT() : SingleInputOutputT<T>(1) {}
+    explicit PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
 
     void activation_function(double /*t*/) override
     {
@@ -42,10 +42,16 @@ public:
     }
 };
 
-using Pipe  = PipeT<double>;
+using Pipe = PipeT<double>;
+#ifdef POOYA_INT_SIGNAL
 using PipeI = PipeT<int>;
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
 using PipeB = PipeT<bool>;
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
 using PipeA = PipeT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

@@ -44,10 +44,10 @@ TEST_F(TestMemory, ScalarMemory)
     pooya::Memory memory(x0);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    memory.connect(s_x, s_y);
+    memory.connect({s_x}, {s_y});
 
     // simulator setup
-    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { *s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -56,6 +56,7 @@ TEST_F(TestMemory, ScalarMemory)
     EXPECT_EQ(x0, *s_y);
 }
 
+#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestMemory, ArrayMemory)
 {
     // test parameters
@@ -67,10 +68,10 @@ TEST_F(TestMemory, ArrayMemory)
     pooya::MemoryA memory(x0);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    memory.connect(s_x, s_y);
+    memory.connect({s_x}, {s_y});
 
     // simulator setup
-    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
+    pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { *s_x = x; });
 
     // do one step
     sim.init(0.0);
@@ -78,6 +79,7 @@ TEST_F(TestMemory, ArrayMemory)
     // verify the results
     for (std::size_t k = 0; k < N; k++)
     {
-        EXPECT_EQ(s_y[k], x0[k]);
+        EXPECT_EQ((*s_y)[k], x0[k]);
     }
 }
+#endif // POOYA_ARRAY_SIGNAL

@@ -19,26 +19,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 
 #include "float_signal.hpp"
+#include "src/helper/here.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 
-#define pooya_verify_scalar_signal(sig)                                                                                \
-    pooya_verify_valid_signal(sig);                                                                                    \
-    pooya_verify((sig)->is_scalar(), (sig)->name().str() + ": scalar signal expected!");
-
 namespace pooya
 {
 
-class ScalarSignalImpl : public FloatSignalImpl
+class ScalarSignalImpl : public FloatSignalImplT<double>
 {
 protected:
     double _scalar_value;
 
 public:
-    ScalarSignalImpl(Protected, const ValidName& name = "") : FloatSignalImpl(name, ScalarType) {}
+    ScalarSignalImpl(Protected, const ValidName& name = "") : FloatSignalImplT(1, name) {}
 
-    static ScalarSignalImplPtr create_new(const ValidName& name = "")
+    static std::shared_ptr<ScalarSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<ScalarSignalImpl>(Protected(), name);
     }
@@ -58,39 +55,27 @@ public:
         _assigned     = true;
     }
 
+    double operator=(double value)
+    {
+        set(value);
+        return value;
+    }
+
     operator double() const { return get(); }
 };
 
-inline ScalarSignalImpl& SignalImpl::as_scalar()
+class ScalarSignal : public SignalT<double>
 {
-    pooya_verify(_type & ScalarType, "Illegal attempt to dereference a non-scalar as a scalar.");
-    return *static_cast<ScalarSignalImpl*>(this);
-}
-
-inline const ScalarSignalImpl& SignalImpl::as_scalar() const
-{
-    pooya_verify(_type & ScalarType, "Illegal attempt to dereference a non-scalar as a scalar.");
-    return *static_cast<const ScalarSignalImpl*>(this);
-}
-
-class ScalarSignal : public FloatSignal<double>
-{
-    using Base = FloatSignal<double>;
+    using Base = SignalT<double>;
 
 public:
-    explicit ScalarSignal(const ValidName& name = "") : Base(ScalarSignalImpl::create_new(name)) {}
-    explicit ScalarSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_scalar() ? std::static_pointer_cast<ScalarSignalImpl>(sid) : nullptr)
-    {
-    }
-    ScalarSignal(const ScalarSignalImplPtr& sid) : Base(sid) {}
+    explicit ScalarSignal(const ValidName& name = "") : Base(ScalarSignalImpl::create_new(name).get()) {}
 
-    ScalarSignal& operator=(const ScalarSignal&) = delete;
+    explicit ScalarSignal(SignalImpl* sig) : Base(sig) {}
 
-    void reset(const ValidName& name = "") { _sid = ScalarSignalImpl::create_new(name); }
+    explicit ScalarSignal(const Signal& sig) : Base(sig) {}
 
-    using ValueSignal<double>::operator=;
-    using Signal<double>::reset;
+    using Base::operator=;
 };
 
 } // namespace pooya

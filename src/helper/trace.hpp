@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <string>
 #include <vector>
 
-#include "ndebug.hpp"
+#include "defs.hpp"
 #include "verify.hpp"
 
 namespace pooya::helper

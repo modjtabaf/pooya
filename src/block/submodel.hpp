@@ -32,7 +32,7 @@ public:
     explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
     {
     }
-    Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
         : Block(parent, num_iports, num_oports)
     {
     }

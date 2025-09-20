@@ -36,7 +36,7 @@ protected:
 
 public:
     explicit ConstT(const T& value) : SingleOutputT<T>(0), _value(value) {}
-    ConstT(Submodel* parent, const T& value) : SingleOutputT<T>(parent, 0), _value(value) {}
+    explicit ConstT(Submodel* parent, const T& value) : SingleOutputT<T>(parent, 0), _value(value) {}
 
     void activation_function(double /*t*/) override
     {
@@ -45,8 +45,10 @@ public:
     }
 };
 
-using Const  = ConstT<double>;
+using Const = ConstT<double>;
+#ifdef POOYA_ARRAY_SIGNAL
 using ConstA = ConstT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

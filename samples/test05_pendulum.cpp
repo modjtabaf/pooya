@@ -61,11 +61,11 @@ public:
         pooya::ScalarSignal s20;
 
         // setup the submodel
-        _integ1.connect(_d2phi, _dphi);
-        _integ2.connect(_dphi, _phi);
-        _sin.connect(_phi, s10);
-        _mul.connect({s10, _g}, s20);
-        _div.connect({s20, _l}, _d2phi);
+        _integ1.connect({_d2phi}, {_dphi});
+        _integ2.connect({_dphi}, {_phi});
+        _sin.connect({_phi}, {s10});
+        _mul.connect({s10, _g}, {s20});
+        _div.connect({s20, _l}, {_d2phi});
     }
 };
 
@@ -85,8 +85,8 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum._l = 0.1;
-            pendulum._g = 9.81;
+            *pendulum._l = 0.1;
+            *pendulum._g = 9.81;
         },
         &stepper);
 

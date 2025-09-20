@@ -35,8 +35,8 @@ protected:
     GainType _k;
 
 public:
-    GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
-    GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
+    explicit GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
+    explicit GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {
@@ -47,9 +47,13 @@ public:
     typename Types<GainType>::GetValue gain() const { return _k; }
 };
 
-using Gain  = GainT<double, double>;
+using Gain = GainT<double, double>;
+#ifdef POOYA_INT_SIGNAL
 using GainI = GainT<int, int>;
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
 using GainA = GainT<Array, double>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

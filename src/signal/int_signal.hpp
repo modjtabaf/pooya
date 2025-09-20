@@ -18,18 +18,15 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_INT_SIGNAL_HPP__
 #define __POOYA_SIGNAL_INT_SIGNAL_HPP__
 
+#ifdef POOYA_INT_SIGNAL
+
 #include <cmath>
-#include <optional>
 
 #include "signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 #include "value_signal.hpp"
-
-#define pooya_verify_int_signal(sig)                                                                                   \
-    pooya_verify_valid_signal(sig);                                                                                    \
-    pooya_verify((sig)->is_int(), (sig)->name().str() + ": int signal expected!");
 
 namespace pooya
 {
@@ -40,9 +37,9 @@ protected:
     int _int_value;
 
 public:
-    IntSignalImpl(Protected, const ValidName& name = "") : ValueSignalImpl(name, IntType) {}
+    IntSignalImpl(Protected, const ValidName& name = "") : ValueSignalImpl(name) {}
 
-    static IntSignalImplPtr create_new(const ValidName& name = "")
+    static std::shared_ptr<IntSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<IntSignalImpl>(Protected(), name);
     }
@@ -62,41 +59,31 @@ public:
         _assigned  = true;
     }
 
+    int operator=(int value)
+    {
+        set(value);
+        return value;
+    }
+
     operator int() const { return get(); }
 };
 
-inline IntSignalImpl& SignalImpl::as_int()
+class IntSignal : public SignalT<int>
 {
-    pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
-    return *static_cast<IntSignalImpl*>(this);
-}
-
-inline const IntSignalImpl& SignalImpl::as_int() const
-{
-    pooya_verify(_type & IntType, "Illegal attempt to dereference a non-int as an int.");
-    return *static_cast<const IntSignalImpl*>(this);
-}
-
-class IntSignal : public ValueSignal<int>
-{
-    using Base = ValueSignal<int>;
+    using Base = SignalT<int>;
 
 public:
-    explicit IntSignal(const ValidName& name = "") : Base(IntSignalImpl::create_new(name)) {}
-    explicit IntSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_int() ? std::static_pointer_cast<IntSignalImpl>(sid) : nullptr)
-    {
-    }
-    IntSignal(const IntSignalImplPtr& sid) : Base(sid) {}
+    explicit IntSignal(const ValidName& name = "") : Base(IntSignalImpl::create_new(name).get()) {}
 
-    IntSignal& operator=(const IntSignal&) = delete;
+    explicit IntSignal(SignalImpl* sig) : Base(sig) {}
 
-    void reset(const ValidName& name = "") { _sid = IntSignalImpl::create_new(name); }
+    explicit IntSignal(const Signal& sig) : Base(sig) {}
 
-    using ValueSignal<int>::operator=;
-    using Signal<int>::reset;
+    using Base::operator=;
 };
 
 } // namespace pooya
+
+#endif // POOYA_INT_SIGNAL
 
 #endif // __POOYA_SIGNAL_INT_SIGNAL_HPP__

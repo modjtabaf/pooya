@@ -18,8 +18,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SIGNAL_HPP__
 
-#include <cstdint>
+#include <memory>
 
+#include "src/helper/defs.hpp"
 #include "src/helper/util.hpp"
 #include "src/shared/named_object.hpp"
 #include "trait.hpp"
@@ -34,77 +35,123 @@ protected:
     {
     };
 
-public:
-    const uint32_t _type;
-
-    enum SignalTypes
-    {
-        BusType    = 0x0001,
-        ValueType  = 0x0002,
-        FloatType  = 0x0004,
-        ScalarType = 0x0008,
-        IntType    = 0x0010,
-        BoolType   = 0x0020,
-        ArrayType  = 0x0040,
-        AllTypes   = -1,
-    };
-
-protected:
-    SignalImpl(const ValidName& name, uint32_t type) : NamedObject(name), _type(type) {}
+    SignalImpl(const ValidName& name) : NamedObject(name) {}
 
 public:
-    bool is_value() const { return _type & ValueType; }
-    bool is_float() const { return _type & FloatType; }
-    bool is_scalar() const { return _type & ScalarType; }
-    bool is_int() const { return _type & IntType; }
-    bool is_bool() const { return _type & BoolType; }
-    bool is_array() const { return _type & ArrayType; }
-    bool is_bus() const { return _type & BusType; }
-
-    ValueSignalImpl& as_value();
-    FloatSignalImpl& as_float();
-    ScalarSignalImpl& as_scalar();
-    IntSignalImpl& as_int();
-    BoolSignalImpl& as_bool();
-    ArraySignalImpl& as_array();
-    BusImpl& as_bus();
-
-    const ValueSignalImpl& as_value() const;
-    const FloatSignalImpl& as_float() const;
-    const ScalarSignalImpl& as_scalar() const;
-    const IntSignalImpl& as_int() const;
-    const BoolSignalImpl& as_bool() const;
-    const ArraySignalImpl& as_array() const;
-    const BusImpl& as_bus() const;
+    virtual ~SignalImpl() = default;
 };
 
-template<typename T>
 class Signal
 {
 protected:
-    typename Types<T>::SignalImplPtr _sid;
-
-    static void fail_if_invalid_signal(const SignalImplPtr& sid)
-    {
-        if (!sid) helper::pooya_throw_exception(__FILE__, __LINE__, "invalid signal id!");
-    }
+    std::shared_ptr<SignalImpl> _sid; // move this to Signal, make it a parent maybe?
 
 public:
-    explicit Signal(const typename Types<T>::SignalImplPtr& sid) { reset(sid); }
+    explicit Signal(SignalImpl* sig) : _sid(sig ? sig->shared_from_this() : nullptr) {}
 
-    Signal<T>& operator=(const Signal<T>&) = delete;
+    Signal(const Signal&) = default;
 
-    void reset(const typename Types<T>::SignalImplPtr& sid)
+    const SignalImpl* get() const { return _sid.get(); }
+
+    SignalImpl* get() { return _sid.get(); }
+
+    const SignalImpl* operator->() const
     {
-        fail_if_invalid_signal(sid);
-        _sid = sid;
+        pooya_verify(_sid, "Illegal attempt to access a null signal.");
+        return get();
     }
 
-    const typename Types<T>::SignalImplPtr& operator->() const { return _sid; }
-    typename Types<T>::SignalImplPtr& operator->() { return _sid; }
+    SignalImpl* operator->()
+    {
+        pooya_verify(_sid, "Illegal attempt to access a null signal.");
+        return get();
+    }
 
-    operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
-    operator SignalImplPtr() const { return _sid->shared_from_this(); }
+    const SignalImpl& operator*() const
+    {
+        pooya_verify(_sid, "Illegal attempt to dereference a null signal.");
+        return *_sid;
+    }
+
+    SignalImpl& operator*()
+    {
+        pooya_verify(_sid, "Illegal attempt to dereference a null signal.");
+        return *_sid;
+    }
+
+    explicit operator const SignalImpl*() const { return get(); }
+
+    explicit operator SignalImpl*() { return get(); }
+
+    explicit operator bool() const noexcept { return _sid.operator bool(); }
+};
+
+template<typename T>
+class SignalT : public Signal
+{
+    using Base = Signal;
+
+public:
+    explicit SignalT(SignalImpl* sig) : Base(sig) {} // todo: rename sig to sig or similar everywhere
+
+    SignalT(const Signal& sig) : Base(sig) {}
+
+    typename Types<T>::Signal& operator=(SignalImpl* sig)
+    {
+        _sid = sig ? std::dynamic_pointer_cast<typename Types<T>::SignalImpl>(sig->shared_from_this()) : nullptr;
+        return *static_cast<typename Types<T>::Signal*>(this);
+    }
+
+    typename Types<T>::Signal& operator=(const Signal& sig)
+    {
+        _sid = sig ? std::dynamic_pointer_cast<typename Types<T>::SignalImpl>(sig._sid->shared_from_this()) : nullptr;
+        return *static_cast<typename Types<T>::Signal*>(this);
+    }
+
+    const typename Types<T>::SignalImpl* get() const
+    {
+        pooya_verify(!_sid || dynamic_cast<const typename Types<T>::SignalImpl*>(_sid.get()),
+                     "Illegal cast attempted.");
+        return static_cast<const typename Types<T>::SignalImpl*>(_sid.get());
+    }
+
+    typename Types<T>::SignalImpl* get()
+    {
+        pooya_verify(!_sid || dynamic_cast<typename Types<T>::SignalImpl*>(_sid.get()), "Illegal cast attempted.");
+        return static_cast<typename Types<T>::SignalImpl*>(_sid.get());
+    }
+
+    const typename Types<T>::SignalImpl* operator->() const
+    {
+        const auto* ret = get();
+        pooya_verify(ret, "Illegal attempt to access a null signal.");
+        return ret;
+    }
+
+    typename Types<T>::SignalImpl* operator->()
+    {
+        auto* ret = get();
+        pooya_verify(ret, "Illegal attempt to access a null signal.");
+        return ret;
+    }
+
+    operator const typename Types<T>::SignalImpl *() const { return get(); }
+
+    operator typename Types<T>::SignalImpl *() { return get(); }
+
+    const typename Types<T>::SignalImpl& operator*() const
+    {
+        const auto* ret = get();
+        pooya_verify(ret, "Illegal attempt to dereference a null signal.");
+        return *ret;
+    }
+
+    typename Types<T>::SignalImpl& operator*()
+    {
+        auto* ret = get();
+        pooya_verify(ret, "Illegal attempt to dereference a null signal.");
+        return *ret;
+    }
 };
 
 } // namespace pooya

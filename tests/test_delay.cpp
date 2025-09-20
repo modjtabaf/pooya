@@ -49,15 +49,15 @@ TEST_F(TestDelay, ScalarDelay)
     pooya::ScalarSignal s_initial;
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(delay,
                          [&](pooya::Block&, double t) -> void
                          {
-                             s_time_delay = time_delay;
-                             s_initial    = initial;
-                             s_x          = func(t);
+                             *s_time_delay = time_delay;
+                             *s_initial    = initial;
+                             *s_x          = func(t);
                          });
 
     double t;
@@ -67,15 +67,16 @@ TEST_F(TestDelay, ScalarDelay)
     for (t = dt; t < time_delay / 2; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_EQ(initial, s_y);
+    EXPECT_EQ(initial, *s_y);
 
     // continue running the simulation
     for (; t < t_end; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_NEAR(func(t_end - time_delay), s_y, 1e-10);
+    EXPECT_NEAR(func(t_end - time_delay), *s_y, 1e-10);
 }
 
+#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestDelay, ArrayDelay)
 {
     // test parameters
@@ -97,15 +98,15 @@ TEST_F(TestDelay, ArrayDelay)
     pooya::ArraySignal s_initial(N);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(delay,
                          [&](pooya::Block&, double t) -> void
                          {
-                             s_time_delay = time_delay;
-                             s_initial    = initial;
-                             s_x          = func(t);
+                             *s_time_delay = time_delay;
+                             *s_initial    = initial;
+                             *s_x          = func(t);
                          });
 
     double t;
@@ -115,11 +116,12 @@ TEST_F(TestDelay, ArrayDelay)
     for (t = dt; t < time_delay / 2; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_EQ((initial - *s_y).abs().maxCoeff(), 0);
+    EXPECT_EQ((initial - s_y->get()).abs().maxCoeff(), 0);
 
     // continue running the simulation
     for (; t < t_end; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_NEAR((func(t_end - time_delay) - *s_y).abs().maxCoeff(), 0, 1e-10);
+    EXPECT_NEAR((func(t_end - time_delay) - s_y->get()).abs().maxCoeff(), 0, 1e-10);
 }
+#endif // POOYA_ARRAY_SIGNAL

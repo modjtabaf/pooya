@@ -47,18 +47,20 @@ void BusBlockBuilder::visit_bus(const std::string& full_label, const Bus& bus)
         return;
     }
 
-    for (const auto& [label, sig] : bus)
+    for (const auto& [label, sig] : *bus)
     {
-        if (sig->is_bus())
+        if (!sig)
+            continue;
+        else if (auto* pa = dynamic_cast<pooya::BusImpl*>(sig.get()); pa)
         {
-            visit_bus(full_label + label + ".", Bus(sig->shared_from_this()));
+            visit_bus(full_label + label + ".", pa);
         }
         else
         {
             auto new_label = full_label + label;
             if (std::find(_excluded_labels.begin(), _excluded_labels.end(), new_label) == _excluded_labels.end())
             {
-                block_builder(new_label, _ibus.at(new_label), _obus.at(new_label));
+                block_builder(new_label, _ibus->at(new_label), _obus->at(new_label));
             }
         }
     }

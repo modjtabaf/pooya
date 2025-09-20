@@ -30,33 +30,38 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
-                            const SignalImplPtr& sig_out)
+void BusPipe::block_builder(std::string_view /*full_label*/, SignalImpl& sig_in, SignalImpl& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     std::shared_ptr<Block> block;
-    if (sig_in->is_scalar())
+    if (dynamic_cast<ScalarSignalImpl*>(&sig_in))
     {
         block = std::make_shared<Pipe>();
     }
-    else if (sig_in->is_int())
+#ifdef POOYA_INT_SIGNAL
+    else if (dynamic_cast<IntSignalImpl*>(&sig_in))
     {
         block = std::make_shared<PipeI>();
     }
-    else if (sig_in->is_bool())
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
+    else if (dynamic_cast<BoolSignalImpl*>(&sig_in))
     {
         block = std::make_shared<PipeB>();
     }
-    else if (sig_in->is_array())
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
+    else if (dynamic_cast<ArraySignalImpl*>(&sig_in))
     {
         block = std::make_shared<PipeA>();
     }
+#endif // POOYA_ARRAY_SIGNAL
     else
     {
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    block->connect(sig_in, sig_out);
+    block->connect({&sig_in}, {&sig_out});
     _blocks.emplace_back(std::move(block));
 }
 

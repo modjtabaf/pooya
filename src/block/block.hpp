@@ -23,6 +23,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <memory>
 #include <optional>
 
+#include "src/helper/defs.hpp"
 #include "src/shared/named_object.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/bool_signal.hpp"
@@ -53,7 +54,7 @@ public:
         Unknown,
     };
 
-    using SignalLinkPair = std::pair<ValueSignalImplPtr, SignalLinkType>;
+    using SignalLinkPair = std::pair<std::shared_ptr<ValueSignalImpl>, SignalLinkType>;
 
 protected:
     bool _connected{false};
@@ -65,10 +66,10 @@ protected:
     uint16_t _num_oports{NoIOLimit};
 
     bool _processed{false};
-    bool link_signal(const ValueSignalImplPtr& sig, SignalLinkType type);
+    bool link_signal(const Signal& sig, SignalLinkType type);
 
     explicit Block(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
-    Block(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
+    explicit Block(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit);
 
 public:
     virtual ~Block() = default;
@@ -86,76 +87,27 @@ public:
     const Bus& obus() const { return _obus; }
     auto linked_signals() const -> const auto& { return _linked_signals; }
 
-    template<typename T, typename Key>
-    typename Types<T>::Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
+    template<typename Key>
+    Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
     {
-        SignalImplPtr ptr = bus->at(key);
-        typename Types<T>::Signal sig(ptr);
+        Signal sig(bus.at(key));
         if (type.has_value())
         {
-            pooya_verify_value_signal(ptr);
-            link_signal(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()), *type);
+            link_signal(sig, *type);
         }
-        return Types<T>::as_signal_id(sig);
+        return sig;
     }
 
-    ScalarSignal scalar_input_at(const std::string& label)
+    template<typename Key = std::size_t>
+    Signal input(Key key)
     {
-        return io_at<double, const std::string&>(_ibus, label, SignalLinkType::Input);
+        return io_at<Key>(_ibus, key, SignalLinkType::Input);
     }
-    IntSignal int_input_at(const std::string& label)
+
+    template<typename Key = std::size_t>
+    Signal output(Key key)
     {
-        return io_at<int, const std::string&>(_ibus, label, SignalLinkType::Input);
-    }
-    BoolSignal bool_input_at(const std::string& label)
-    {
-        return io_at<bool, const std::string&>(_ibus, label, SignalLinkType::Input);
-    }
-    ArraySignal array_input_at(const std::string& label)
-    {
-        return io_at<Array, const std::string&>(_ibus, label, SignalLinkType::Input);
-    }
-    ScalarSignal scalar_input_at(std::size_t index)
-    {
-        return io_at<double, std::size_t>(_ibus, index, SignalLinkType::Input);
-    }
-    IntSignal int_input_at(std::size_t index) { return io_at<int, std::size_t>(_ibus, index, SignalLinkType::Input); }
-    BoolSignal bool_input_at(std::size_t index)
-    {
-        return io_at<bool, std::size_t>(_ibus, index, SignalLinkType::Input);
-    }
-    ArraySignal array_input_at(std::size_t index)
-    {
-        return io_at<Array, std::size_t>(_ibus, index, SignalLinkType::Input);
-    }
-    ScalarSignal scalar_output_at(const std::string& label)
-    {
-        return io_at<double, const std::string&>(_obus, label, SignalLinkType::Output);
-    }
-    IntSignal int_output_at(const std::string& label)
-    {
-        return io_at<int, const std::string&>(_obus, label, SignalLinkType::Output);
-    }
-    BoolSignal bool_output_at(const std::string& label)
-    {
-        return io_at<bool, const std::string&>(_obus, label, SignalLinkType::Output);
-    }
-    ArraySignal array_output_at(const std::string& label)
-    {
-        return io_at<Array, const std::string&>(_obus, label, SignalLinkType::Output);
-    }
-    ScalarSignal scalar_output_at(std::size_t index)
-    {
-        return io_at<double, std::size_t>(_obus, index, SignalLinkType::Output);
-    }
-    IntSignal int_output_at(std::size_t index) { return io_at<int, std::size_t>(_obus, index, SignalLinkType::Output); }
-    BoolSignal bool_output_at(std::size_t index)
-    {
-        return io_at<bool, std::size_t>(_obus, index, SignalLinkType::Output);
-    }
-    ArraySignal array_output_at(std::size_t index)
-    {
-        return io_at<Array, std::size_t>(_obus, index, SignalLinkType::Output);
+        return io_at<Key>(_obus, key, SignalLinkType::Output);
     }
 
     virtual void _mark_unprocessed();
@@ -166,6 +118,7 @@ public:
         pooya_trace("block: " + full_name().str());
         return (level > max_level) || cb(*this, level);
     }
+
     virtual bool const_visit(ConstVisitorCallback cb, uint32_t level,
                              uint32_t max_level = std::numeric_limits<uint32_t>::max()) const
     {

@@ -19,28 +19,27 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_INTEGRATOR_BASE_HPP__
-#define __POOYA_BLOCK_INTEGRATOR_BASE_HPP__
+#ifndef __POOYA_BLOCK_MULTIPLY_HPP__
+#define __POOYA_BLOCK_MULTIPLY_HPP__
 
 #include "src/block/singleo.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class IntegratorBaseT : public SingleOutputT<T>
+class MultiplyT : public SingleOutputT<T>
 {
-public:
     using Base = SingleOutputT<T>;
 
-    explicit IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                             uint16_t num_oports = Block::NoIOLimit)
-        : Base(num_iports, num_oports), _value(ic)
-    {
-    }
-    explicit IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                             uint16_t num_oports = Block::NoIOLimit)
-        : Base(parent, num_iports, num_oports), _value(ic)
+protected:
+    T _initial;
+    T _ret;
+
+public:
+    explicit MultiplyT(const T& initial = 1.0) : Base(Block::NoIOLimit, 1), _initial(initial) {}
+    explicit MultiplyT(Submodel* parent, const T& initial = 1.0) : Base(parent, Block::NoIOLimit, 1), _initial(initial)
     {
     }
 
@@ -52,41 +51,32 @@ public:
             return false;
         }
 
-        Base::_s_out->set_deriv_signal(Base::input(0));
+        pooya_debug_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
+        for (const auto& sig : ibus)
+            pooya_debug_verify(dynamic_cast<typename Types<T>::SignalImpl*>(&sig.second.impl()),
+                               Base::full_name().str() + ": signal type mismatch!");
 
         return true;
     }
 
-    void pre_step(double /*t*/) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(!Base::_s_out->is_assigned());
-        Base::_s_out = _value;
-    }
-
-    void post_step(double /*t*/) override
-    {
-        pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(Base::_s_out->is_assigned());
-        _value = Base::_s_out;
-    }
-
-    uint _process(double /*t*/, bool /*go_deep*/ = true) override
-    {
-        pooya_trace("block: " + Base::full_name().str());
-        if (Base::_processed)
+        _ret = _initial;
+        for (const auto& sig : Base::_ibus)
         {
-            return 0;
+            _ret *= static_cast<const typename Types<T>::SignalImpl*>(&sig.second.impl())->get_value();
         }
-
-        Base::_processed = Base::_s_out->is_assigned();
-        return Base::_processed ? 1 : 0; // is it safe to simply return _processed?
+        Base::_s_out = _ret;
     }
-
-protected:
-    T _value;
 };
+
+using Multiply = MultiplyT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using MultiplyA = MultiplyT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_INTEGRATOR_BASE_HPP__
+#endif // __POOYA_BLOCK_MULTIPLY_HPP__

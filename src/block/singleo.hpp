@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_SO_HPP__
 #define __POOYA_BLOCK_SO_HPP__
 
-#include "leaf.hpp"
+#include "src/block/leaf.hpp"
 
 namespace pooya
 {
@@ -34,7 +34,7 @@ protected:
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }
-    SingleOutputT(Submodel* parent, uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
+    explicit SingleOutputT(Submodel* parent, uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
         : Base(parent, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
@@ -47,7 +47,7 @@ public:
         {
             return false;
         }
-        _s_out.reset(Types<T>::as_signal_id(Base::_obus.at(0)));
+        _s_out.reset(Base::output(0));
         return true;
     }
 };

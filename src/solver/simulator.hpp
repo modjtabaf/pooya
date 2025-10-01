@@ -36,13 +36,15 @@ protected:
     Block& _model;
     double _t_prev{0};
     InputCallback _inputs_cb;
-    std::vector<ValueSignalImplPtr> value_signals_;
-    std::vector<ScalarSignalImplPtr> scalar_state_signals_;
-    std::vector<ArraySignalImplPtr> array_state_signals_;
+    std::vector<std::shared_ptr<ValueSignalImpl>> value_signals_;
+    std::vector<std::shared_ptr<ScalarSignalImpl>> scalar_state_signals_;
+#ifdef POOYA_ARRAY_SIGNAL
+    std::vector<std::shared_ptr<ArraySignalImpl>> array_state_signals_;
+#endif // POOYA_ARRAY_SIGNAL
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;
-    StepperBase* _stepper{nullptr};
+    StepperBase* _stepper{nullptr}; // todo: use a smart pointer
     bool _initialized{false};
 
     const bool _reuse_order;
@@ -57,8 +59,8 @@ protected:
     void get_state_variables(Array& state_variables);
 
 public:
-    Simulator(Block& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr,
-              bool reuse_order = false);
+    explicit Simulator(Block& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr,
+                       bool reuse_order = false);
     Simulator(const Simulator&) = delete; // no copy constructor
 
     void init(double t0 = 0.0);

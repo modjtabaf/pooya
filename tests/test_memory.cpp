@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <gtest/gtest.h>
 
-#include "src/block/memory.hpp"
+#include "src/block/extra/memory.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
@@ -44,7 +44,7 @@ TEST_F(TestMemory, ScalarMemory)
     pooya::Memory memory(x0);
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    memory.connect(s_x, s_y);
+    memory.connect({s_x}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
@@ -53,9 +53,10 @@ TEST_F(TestMemory, ScalarMemory)
     sim.init(0.0);
 
     // verify the results
-    EXPECT_EQ(x0, *s_y);
+    EXPECT_EQ(x0, s_y);
 }
 
+#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestMemory, ArrayMemory)
 {
     // test parameters
@@ -67,7 +68,7 @@ TEST_F(TestMemory, ArrayMemory)
     pooya::MemoryA memory(x0);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    memory.connect(s_x, s_y);
+    memory.connect({s_x}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(memory, [&](pooya::Block&, double /*t*/) -> void { s_x = x; });
@@ -81,3 +82,4 @@ TEST_F(TestMemory, ArrayMemory)
         EXPECT_EQ(s_y[k], x0[k]);
     }
 }
+#endif // POOYA_ARRAY_SIGNAL

@@ -18,8 +18,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_SIGNAL_HPP__
 
-#include <cstdint>
+#include <memory>
 
+#include "src/helper/defs.hpp"
 #include "src/helper/util.hpp"
 #include "src/shared/named_object.hpp"
 #include "trait.hpp"
@@ -29,82 +30,78 @@ namespace pooya
 
 class SignalImpl : public std::enable_shared_from_this<SignalImpl>, public NamedObject
 {
+public:
+    virtual ~SignalImpl() = default;
+
 protected:
     struct Protected
     {
     };
 
-public:
-    const uint32_t _type;
+    SignalImpl(const ValidName& name) : NamedObject(name) {}
+};
 
-    enum SignalTypes
+class Signal
+{
+public:
+    template<typename T>
+    static void fail_if_invalid_signal_type(SignalImpl* sig)
     {
-        BusType    = 0x0001,
-        ValueType  = 0x0002,
-        FloatType  = 0x0004,
-        ScalarType = 0x0008,
-        IntType    = 0x0010,
-        BoolType   = 0x0020,
-        ArrayType  = 0x0040,
-        AllTypes   = -1,
-    };
+        pooya_verify(dynamic_cast<typename Types<T>::SignalImpl*>(sig),
+                     (sig ? std::string("(null)") : sig->name().str()) + ": invalid signal type!");
+    }
+
+    explicit Signal(SignalImpl& sig) : _ptr(std::move(sig.shared_from_this())) {}
+
+    Signal(const Signal&) = default;
+
+    SignalImpl& impl() const { return *_ptr; }
+    SignalImpl& operator*() const { return *_ptr; }
+    SignalImpl* operator->() const { return _ptr.get(); }
 
 protected:
-    SignalImpl(const ValidName& name, uint32_t type) : NamedObject(name), _type(type) {}
-
-public:
-    bool is_value() const { return _type & ValueType; }
-    bool is_float() const { return _type & FloatType; }
-    bool is_scalar() const { return _type & ScalarType; }
-    bool is_int() const { return _type & IntType; }
-    bool is_bool() const { return _type & BoolType; }
-    bool is_array() const { return _type & ArrayType; }
-    bool is_bus() const { return _type & BusType; }
-
-    ValueSignalImpl& as_value();
-    FloatSignalImpl& as_float();
-    ScalarSignalImpl& as_scalar();
-    IntSignalImpl& as_int();
-    BoolSignalImpl& as_bool();
-    ArraySignalImpl& as_array();
-    BusImpl& as_bus();
-
-    const ValueSignalImpl& as_value() const;
-    const FloatSignalImpl& as_float() const;
-    const ScalarSignalImpl& as_scalar() const;
-    const IntSignalImpl& as_int() const;
-    const BoolSignalImpl& as_bool() const;
-    const ArraySignalImpl& as_array() const;
-    const BusImpl& as_bus() const;
+    std::shared_ptr<SignalImpl> _ptr;
 };
 
 template<typename T>
-class Signal
+class SignalT : public Signal
 {
-protected:
-    typename Types<T>::SignalImplPtr _sid;
-
-    static void fail_if_invalid_signal(const SignalImplPtr& sid)
-    {
-        if (!sid) helper::pooya_throw_exception(__FILE__, __LINE__, "invalid signal id!");
-    }
-
 public:
-    explicit Signal(const typename Types<T>::SignalImplPtr& sid) { reset(sid); }
+    using Base = Signal;
+    using Impl = typename Types<T>::SignalImpl;
 
-    Signal<T>& operator=(const Signal<T>&) = delete;
-
-    void reset(const typename Types<T>::SignalImplPtr& sid)
+    explicit SignalT(SignalImpl& sig) : Base(sig)
     {
-        fail_if_invalid_signal(sid);
-        _sid = sid;
+        fail_if_invalid_signal_type<T>(&sig);
+        update_typed_ptr();
     }
 
-    const typename Types<T>::SignalImplPtr& operator->() const { return _sid; }
-    typename Types<T>::SignalImplPtr& operator->() { return _sid; }
+    explicit SignalT(const Signal& sig) : Base(sig)
+    {
+        fail_if_invalid_signal_type<T>(&sig.impl());
+        update_typed_ptr();
+    }
 
-    operator const typename Types<T>::SignalImplPtr &() const { return _sid; }
-    operator SignalImplPtr() const { return _sid->shared_from_this(); }
+    virtual void reset(const Signal& sig)
+    {
+        _ptr = std::dynamic_pointer_cast<Impl>(sig->shared_from_this());
+        fail_if_invalid_signal_type<T>(_ptr.get());
+        update_typed_ptr();
+    }
+
+    void operator=(const Signal&) = delete;
+
+    Impl& impl() const { return *_typed_ptr.get(); }
+    Impl* operator->() const { return _typed_ptr.get(); }
+
+protected:
+    std::shared_ptr<Impl> _typed_ptr;
+
+    void update_typed_ptr()
+    {
+        _typed_ptr = std::dynamic_pointer_cast<Impl>(_ptr->shared_from_this());
+        pooya_verify(_typed_ptr, "Illegal cast attempted.");
+    }
 };
 
 } // namespace pooya

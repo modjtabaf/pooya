@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <gtest/gtest.h>
 
-#include "src/block/delay.hpp"
+#include "src/block/extra/delay.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
 #include "src/solver/simulator.hpp"
@@ -49,7 +49,7 @@ TEST_F(TestDelay, ScalarDelay)
     pooya::ScalarSignal s_initial;
     pooya::ScalarSignal s_x;
     pooya::ScalarSignal s_y;
-    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(delay,
@@ -76,6 +76,7 @@ TEST_F(TestDelay, ScalarDelay)
     EXPECT_NEAR(func(t_end - time_delay), s_y, 1e-10);
 }
 
+#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestDelay, ArrayDelay)
 {
     // test parameters
@@ -97,7 +98,7 @@ TEST_F(TestDelay, ArrayDelay)
     pooya::ArraySignal s_initial(N);
     pooya::ArraySignal s_x(N);
     pooya::ArraySignal s_y(N);
-    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, s_y);
+    delay.connect({{"delay", s_time_delay}, {"in", s_x}, {"initial", s_initial}}, {s_y});
 
     // simulator setup
     pooya::Simulator sim(delay,
@@ -115,11 +116,12 @@ TEST_F(TestDelay, ArrayDelay)
     for (t = dt; t < time_delay / 2; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_EQ((initial - *s_y).abs().maxCoeff(), 0);
+    EXPECT_EQ((initial - s_y->get_value()).abs().maxCoeff(), 0);
 
     // continue running the simulation
     for (; t < t_end; t += dt) sim.run(t);
 
     // verify the results
-    EXPECT_NEAR((func(t_end - time_delay) - *s_y).abs().maxCoeff(), 0, 1e-10);
+    EXPECT_NEAR((func(t_end - time_delay) - s_y->get_value()).abs().maxCoeff(), 0, 1e-10);
 }
+#endif // POOYA_ARRAY_SIGNAL

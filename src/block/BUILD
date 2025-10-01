@@ -22,3 +22,15 @@ pooya_cc_library(
     ],
     visibility = ["//visibility:public"],
 )
+
+pooya_cc_library(
+    name = "extra",
+    srcs = glob(["extra/*.cpp"]),
+    hdrs = glob(["extra/*.hpp"]),
+    deps = [
+        "//src/block",
+        "//src/signal",
+        "//src/shared",
+    ],
+    visibility = ["//visibility:public"],
+)

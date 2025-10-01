@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <iostream>
 #include <math.h>
 
-#include "src/block/gain.hpp"
+#include "src/block/extra/gain.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
@@ -47,9 +47,9 @@ public:
         _integ2.rename("x");
         _gain.rename("-k\\m");
 
-        _integ1.connect(_xdd, _xd);
-        _integ2.connect(_xd, _x);
-        _gain.connect(_x, _xdd);
+        _integ1.connect({_xdd}, {_xd});
+        _integ2.connect({_xd}, {_x});
+        _gain.connect({_x}, {_xdd});
     }
 };
 
@@ -91,7 +91,7 @@ int main()
     gp << "plot" << gp.file1d(history[model._x]) << "with lines title 'x'," << gp.file1d(history[model._xd])
        << "with lines title 'xd'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

@@ -18,9 +18,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-#include "src/block/const.hpp"
-#include "src/block/delay.hpp"
-#include "src/block/source.hpp"
+#include "src/block/extra/const.hpp"
+#include "src/block/extra/delay.hpp"
+#include "src/block/extra/source.hpp"
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -30,8 +30,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Source _source{this,
-                          [](double t) -> double
+    pooya::Source _source{this, [](double t) -> double
                           {
                               pooya_trace0;
                               return std::sin(M_PI * t / 5);
@@ -54,10 +53,10 @@ public:
         pooya::ScalarSignal initial;
 
         // setup the submodel
-        _source.connect({}, _s_x);
-        _const1.connect({}, time_delay);
-        _const2.connect({}, initial);
-        _delay.connect({{"delay", time_delay}, {"in", _s_x}, {"initial", initial}}, _s_y);
+        _source.connect({}, {_s_x});
+        _const1.connect({}, {time_delay});
+        _const2.connect({}, {initial});
+        _delay.connect({{"delay", time_delay}, {"in", _s_x}, {"initial", initial}}, {_s_y});
     }
 };
 
@@ -96,7 +95,7 @@ int main()
     gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x'," << gp.file1d(history[model._s_y])
        << "with lines title 'xd'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

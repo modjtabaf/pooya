@@ -18,101 +18,82 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 #define __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 
+#ifdef POOYA_ARRAY_SIGNAL
+
 #include "array.hpp"
 #include "float_signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 
-#define pooya_verify_array_signal(sig)                                                                                 \
-    pooya_verify_valid_signal(sig);                                                                                    \
-    pooya_verify((sig)->is_array(), (sig)->name().str() + ": array signal expected!");
-
-#define pooya_verify_array_signal_size(sig, size_)                                                                     \
-    pooya_verify_array_signal(sig);                                                                                    \
-    pooya_verify((sig)->as_array().size() == size_, (sig)->name().str() + ": array size mismatch!");
-
 namespace pooya
 {
 
-class ArraySignalImpl : public FloatSignalImpl
+class ArraySignalImpl : public FloatSignalImplT<Array>
 {
-protected:
-    Array _array_value;
-
 public:
-    ArraySignalImpl(Protected, const ValidName& name, std::size_t size)
-        : FloatSignalImpl(name, ArrayType, size), _array_value(size)
+    using Base = FloatSignalImplT<Array>;
+    using Ptr  = std::shared_ptr<ArraySignalImpl>;
+
+    ArraySignalImpl(Protected, std::size_t size, const ValidName& name) : Base(size, name), _array_value(size) {}
+
+    static std::shared_ptr<ArraySignalImpl> create_new(std::size_t size, const ValidName& name)
     {
+        return std::make_shared<ArraySignalImpl>(Protected(), size, name);
     }
 
-    static ArraySignalImplPtr create_new(std::size_t size)
-    {
-        return std::make_shared<ArraySignalImpl>(Protected(), "", size);
-    }
-    static ArraySignalImplPtr create_new(const ValidName& name, std::size_t size)
-    {
-        return std::make_shared<ArraySignalImpl>(Protected(), name, size);
-    }
-
-    const Array& get() const
+    const Array& get_value() const
     {
         pooya_trace0;
-        pooya_verify(_array_value.rows() == int(_size),
-                     name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
-        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_debug_verify(_array_value.rows() == int(_size),
+                           name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
+        pooya_debug_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _array_value;
     }
 
-    void set(const Array& value)
+    double get_value(std::size_t index) const { return get_value()[index]; }
+
+    void set_value(const Array& value)
     {
-        pooya_verify(_array_value.rows() == int(_size),
-                     name().str() + ": attempting to assign the value of an uninitialized array signal!");
-        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
-        pooya_verify(value.rows() == int(_size), std::string("size mismatch (id=") + name().str() + ")(" +
-                                                     std::to_string(_size) + " vs " + std::to_string(value.rows()) +
-                                                     ")!");
+        pooya_debug_verify(_array_value.rows() == int(_size),
+                           name().str() + ": attempting to assign the value of an uninitialized array signal!");
+        pooya_debug_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(value.rows() == int(_size), std::string("size mismatch (id=") + name().str() + ")(" +
+                                                           std::to_string(_size) + " vs " +
+                                                           std::to_string(value.rows()) + ")!");
         _array_value = value;
         _assigned    = true;
     }
+
+protected:
+    Array _array_value;
 };
 
-inline ArraySignalImpl& SignalImpl::as_array()
+class ArraySignal : public SignalT<Array>
 {
-    pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
-    return *static_cast<ArraySignalImpl*>(this);
-}
-
-inline const ArraySignalImpl& SignalImpl::as_array() const
-{
-    pooya_verify(_type & ArrayType, "Illegal attempt to dereference a non-array as an array.");
-    return *static_cast<const ArraySignalImpl*>(this);
-}
-
-class ArraySignal : public FloatSignal<Array>
-{
-    using Base = FloatSignal<Array>;
-
 public:
-    explicit ArraySignal(std::size_t size = 1) : Base(ArraySignalImpl::create_new(size)) {}
-    ArraySignal(const ValidName& name, std::size_t size = 1) : Base(ArraySignalImpl::create_new(name, size)) {}
-    explicit ArraySignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_array() ? std::static_pointer_cast<ArraySignalImpl>(sid) : nullptr)
+    using Base = SignalT<Array>;
+
+    ArraySignal(const ArraySignal& sig) : Base(sig) {}
+
+    explicit ArraySignal(std::size_t size = 1, const ValidName& name = "")
+        : Base(*ArraySignalImpl::create_new(size, name).get())
     {
     }
-    ArraySignal(const ArraySignalImplPtr& sid) : Base(sid) {}
+    explicit ArraySignal(SignalImpl& sig) : Base(sig) {}
+    explicit ArraySignal(const Signal& sig) : Base(sig) {}
 
-    ArraySignal& operator=(const ArraySignal&) = delete;
+    void operator=(const Signal&) = delete;
+    void operator=(const ArraySignal& sig) { _typed_ptr->set_value(sig); }
+    void operator=(const Array& value) { _typed_ptr->set_value(value); }
 
-    void reset(std::size_t size) { _sid = ArraySignalImpl::create_new(size); }
-    void reset(const ValidName& name, std::size_t size) { _sid = ArraySignalImpl::create_new(name, size); }
+    operator const Array&() const { return _typed_ptr->get_value(); }
 
-    using ValueSignal<Array>::operator=;
-    using Signal<Array>::reset;
-
-    double operator[](std::size_t index) const { return _sid->get()[index]; }
+    double operator[](std::size_t index) const { return _typed_ptr->get_value(index); }
 };
 
 } // namespace pooya
+
+#endif // POOYA_ARRAY_SIGNAL
 
 #endif // __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__

@@ -17,8 +17,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <algorithm>
 
+#include "src/block/submodel.hpp"
 #include "src/signal/array_signal.hpp"
-#include "submodel.hpp"
 
 namespace pooya
 {

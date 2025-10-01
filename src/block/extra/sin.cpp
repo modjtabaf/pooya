@@ -19,35 +19,17 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_CONST_HPP__
-#define __POOYA_BLOCK_CONST_HPP__
-
-#include "singleo.hpp"
-#include "src/signal/array.hpp"
+#include "sin.hpp"
+#include "src/signal/scalar_signal.hpp"
 
 namespace pooya
 {
 
-template<typename T>
-class ConstT : public SingleOutputT<T>
+template<>
+void SinT<double>::activation_function(double /*t*/)
 {
-protected:
-    T _value;
-
-public:
-    explicit ConstT(const T& value) : SingleOutputT<T>(0), _value(value) {}
-    ConstT(Submodel* parent, const T& value) : SingleOutputT<T>(parent, 0), _value(value) {}
-
-    void activation_function(double /*t*/) override
-    {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_value);
-    }
-};
-
-using Const  = ConstT<double>;
-using ConstA = ConstT<Array>;
+    pooya_trace("block: " + full_name().str());
+    _s_out = std::sin(_s_in);
+}
 
 } // namespace pooya
-
-#endif // __POOYA_BLOCK_CONST_HPP__

@@ -15,64 +15,103 @@ load("//:pooya_rules.bzl", "pooya_cc_binary")
 pooya_cc_binary(
     name = "gain_block",
     src = "gain_block.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "memory_block",
     src = "memory_block.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "delay_block",
     src = "delay_block.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test03",
     src = "test03_integrator.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test04",
     src = "test04_mass_spring.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test05",
     src = "test05_pendulum.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test06",
     src = "test06_pendulum_with_torque.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test07",
     src = "test07_pendulum_with_pi.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test08",
     src = "test08_pendulum_with_pid.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test09",
     src = "test09_mass_spring_damper.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test10",
     src = "test10_memory_with_bus.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "test11",
     src = "test11_int_gain.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )
 
 pooya_cc_binary(
     name = "tutorial01",
     src = "tut01_mass_spring_damper.cpp",
+    deps = [
+        "//src/block:extra",
+    ]
 )

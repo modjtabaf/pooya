@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_MEMORY_HPP__
 #define __POOYA_BLOCK_MEMORY_HPP__
 
-#include "singleio.hpp"
+#include "src/block/singleio.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
@@ -36,12 +36,12 @@ protected:
 
 public:
     explicit MemoryT(const Tic& ic = Tic(0)) : SingleInputOutputT<T>(1), _value(ic) {}
-    MemoryT(Submodel* parent, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic) {}
+    explicit MemoryT(Submodel* parent, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic) {}
 
     void post_step(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        _value = SingleInputOutputT<T>::_s_in->get();
+        _value = SingleInputOutputT<T>::_s_in;
     }
 
     // # Memory can be implemented either by defining the following activation
@@ -62,7 +62,7 @@ public:
         }
 
         pooya_trace_update0;
-        SingleInputOutputT<T>::_s_out->set(_value);
+        SingleInputOutputT<T>::_s_out     = _value;
         SingleInputOutputT<T>::_processed = true;
         return 1;
     }
@@ -76,10 +76,19 @@ public:
     operator bool() const { return _b; }
 };
 
-using Memory  = MemoryT<double>;
+using Memory = MemoryT<double>;
+
+#ifdef POOYA_INT_SIGNAL
 using MemoryI = MemoryT<int>;
+#endif // POOYA_INT_SIGNAL
+
+#ifdef POOYA_BOOL_SIGNAL
 using MemoryB = MemoryT<bool, Bool>;
+#endif // POOYA_BOOL_SIGNAL
+
+#ifdef POOYA_ARRAY_SIGNAL
 using MemoryA = MemoryT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

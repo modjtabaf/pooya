@@ -19,27 +19,39 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_BUS_PIPE_HPP__
-#define __POOYA_BLOCK_BUS_PIPE_HPP__
+#ifndef __POOYA_BLOCK_SOURCES_HPP__
+#define __POOYA_BLOCK_SOURCES_HPP__
 
-#include "bus_block_builder.hpp"
+#include "src/block/leaf.hpp"
 
 namespace pooya
 {
 
-class BusPipe : public BusBlockBuilder
+class Sources : public Leaf
 {
 public:
-    explicit BusPipe(Submodel& parent, const std::initializer_list<std::string>& excluded_labels = {})
-        : BusBlockBuilder(parent, excluded_labels)
+    using SourcesFunction = std::function<void(const Bus&, double)>;
+
+protected:
+    SourcesFunction _src_func;
+
+public:
+    explicit Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
+        : Leaf(0, num_oports), _src_func(src_func)
+    {
+    }
+    explicit Sources(const ValidName& name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
+        : Leaf(name, 0, num_oports), _src_func(src_func)
     {
     }
 
-protected:
-    void block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
-                       const SignalImplPtr& sig_out) override;
+    void activation_function(double t) override
+    {
+        pooya_trace("block: " + full_name().str());
+        _src_func(_obus, t);
+    }
 };
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_BUS_PIPE_HPP__
+#endif // __POOYA_BLOCK_SOURCES_HPP__

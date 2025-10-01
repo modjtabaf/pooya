@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <iostream>
 #include <math.h>
 
-#include "src/block/gain.hpp"
+#include "src/block/extra/gain.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
@@ -40,7 +40,7 @@ int main()
     pooya::ScalarSignal y("y");
 
     // setup the model
-    gain.connect(x, y);
+    gain.connect({x}, {y});
 
     pooya::Simulator sim(gain,
                          [&](pooya::Block&, double t) -> void
@@ -73,7 +73,7 @@ int main()
     gp << "plot" << gp.file1d(history[x]) << "with lines title 'x'," << gp.file1d(history[y])
        << "with lines title 'y'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

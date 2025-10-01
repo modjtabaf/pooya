@@ -19,34 +19,54 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_GAIN_HPP__
-#define __POOYA_BLOCK_GAIN_HPP__
-
-#include "singleio.hpp"
-#include "src/signal/array.hpp"
+#include "bus_block_builder.hpp"
 
 namespace pooya
 {
 
-template<typename T>
-class PipeT : public SingleInputOutputT<T>
+bool BusBlockBuilder::connect(const Bus& ibus, const Bus& obus)
 {
-public:
-    PipeT() : SingleInputOutputT<T>(1) {}
-    PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
-
-    void activation_function(double /*t*/) override
+    pooya_trace("block: " + full_name().str());
+    if (!Leaf::connect(ibus, obus))
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get());
+        return false;
     }
-};
 
-using Pipe  = PipeT<double>;
-using PipeI = PipeT<int>;
-using PipeB = PipeT<bool>;
-using PipeA = PipeT<Array>;
+    _blocks.reserve(ibus->size());
+    visit_bus("", ibus);
+
+    return true;
+}
+
+void BusBlockBuilder::visit_bus(const std::string& full_label, const Bus& bus)
+{
+    pooya_trace("block: " + full_name().str());
+
+    if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end())
+    {
+        return;
+    }
+
+    for (const auto& [label, sig] : bus)
+    {
+        if (auto* pa = dynamic_cast<pooya::BusImpl*>(&sig.impl()); pa)
+        {
+            visit_bus(full_label + label + ".", Bus(*pa));
+        }
+        else
+        {
+            auto new_label = full_label + label;
+            if (std::find(_excluded_labels.begin(), _excluded_labels.end(), new_label) == _excluded_labels.end())
+            {
+                block_builder(new_label, _ibus.at(new_label), _obus.at(new_label));
+            }
+        }
+    }
+}
+
+void BusBlockBuilder::_mark_unprocessed()
+{
+    _processed = true;
+}
 
 } // namespace pooya
-
-#endif // __POOYA_BLOCK_GAIN_HPP__

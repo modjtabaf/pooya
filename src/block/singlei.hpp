@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_SI_HPP__
 #define __POOYA_BLOCK_SI_HPP__
 
-#include "leaf.hpp"
+#include "src/block/leaf.hpp"
 
 namespace pooya
 {
@@ -30,12 +30,13 @@ protected:
     typename Types<T>::Signal _s_in;
 
     explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
-    SingleInputT(Submodel* parent, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
-    SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
+    explicit SingleInputT(Submodel* parent, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
+    explicit SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
-    SingleInputT(Submodel* parent, uint16_t num_iports, uint16_t num_oports) : Leaf(parent, num_iports, num_oports)
+    explicit SingleInputT(Submodel* parent, uint16_t num_iports, uint16_t num_oports)
+        : Leaf(parent, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }
@@ -47,7 +48,7 @@ public:
         {
             return false;
         }
-        _s_in.reset(Types<T>::as_signal_id(_ibus.at(0)));
+        _s_in.reset(input(0));
         return true;
     }
 };

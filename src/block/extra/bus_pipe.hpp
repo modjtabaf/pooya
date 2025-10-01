@@ -19,34 +19,26 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SIN_HPP__
-#define __POOYA_BLOCK_SIN_HPP__
+#ifndef __POOYA_BLOCK_BUS_PIPE_HPP__
+#define __POOYA_BLOCK_BUS_PIPE_HPP__
 
-#include "singleio.hpp"
-#include "src/signal/array.hpp"
+#include "bus_block_builder.hpp"
 
 namespace pooya
 {
 
-template<typename T>
-class SinT : public SingleInputOutputT<T>
+class BusPipe : public BusBlockBuilder
 {
 public:
-    explicit SinT(Submodel* parent = nullptr) : SingleInputOutputT<T>(parent, 1) {}
-
-    void activation_function(double /*t*/) override
+    explicit BusPipe(Submodel& parent, std::initializer_list<std::string> excluded_labels = {})
+        : BusBlockBuilder(parent, excluded_labels)
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out->set(SingleInputOutputT<T>::_s_in->get().sin());
     }
+
+protected:
+    void block_builder(const std::string& /*full_label*/, const Signal& sig_in, const Signal& sig_out) override;
 };
-
-template<>
-void SinT<double>::activation_function(double);
-
-using Sin  = SinT<double>;
-using SinA = SinT<Array>;
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SIN_HPP__
+#endif // __POOYA_BLOCK_BUS_PIPE_HPP__

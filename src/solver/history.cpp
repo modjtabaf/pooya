@@ -25,21 +25,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-void History::track(SignalImplPtr sig)
+bool History::track(const Signal& sig)
 {
-    pooya_verify(empty(), "track should be called before the history is updated!");
-    pooya_verify_value_signal(sig);
-    if (std::find(_signals.begin(), _signals.end(), sig) == _signals.end())
-    {
-        _signals.emplace_back(std::move(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this())));
-    }
+    pooya_debug_verify(empty(), "track should be called before the history is updated!");
+
+    auto vsig = std::dynamic_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
+    if (!vsig || std::find(_signals.begin(), _signals.end(), vsig) != _signals.end()) return false;
+
+    _signals.emplace_back(std::move(vsig));
+    return true;
 }
 
-void History::untrack(SignalImplPtr sig)
+void History::untrack(const Signal& sig)
 {
-    pooya_verify(empty(), "untrack should be called before the history is updated!");
-    pooya_verify_value_signal(sig);
-    _signals.erase(std::find(_signals.begin(), _signals.end(), sig));
+    pooya_debug_verify(empty(), "untrack should be called before the history is updated!");
+
+    auto vsig = std::dynamic_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
+    if (vsig) _signals.erase(std::find(_signals.begin(), _signals.end(), vsig));
 }
 
 void History::update(uint k, double t)
@@ -51,16 +53,25 @@ void History::update(uint k, double t)
         {
             return;
         }
-        for (auto sig : _signals)
+        for (auto& sig : _signals)
         {
-            if (sig->is_scalar() || sig->is_int() || sig->is_bool())
+            if (dynamic_cast<ScalarSignalImpl*>(sig.get())
+#ifdef POOYA_INT_SIGNAL
+                || dynamic_cast<IntSignalImpl*>(sig.get())
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
+                || dynamic_cast<BoolSignalImpl*>(sig.get())
+#endif // POOYA_BOOL_SIGNAL
+            )
             {
                 insert_or_assign(sig, Array(_nrows_grow));
             }
-            else
+#ifdef POOYA_ARRAY_SIGNAL
+            else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.get()); pa)
             {
-                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, sig->as_array().size()));
+                insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, pa->size()));
             }
+#endif // POOYA_ARRAY_SIGNAL
         }
     }
 
@@ -69,7 +80,7 @@ void History::update(uint k, double t)
         _time.conservativeResize(k + _nrows_grow, Eigen::NoChange);
     }
     _time(k, 0) = t;
-    for (auto sig : _signals)
+    for (auto& sig : _signals)
     {
         auto& h = at(sig);
         if (k >= h.rows())
@@ -77,29 +88,35 @@ void History::update(uint k, double t)
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         }
         bool valid = sig->is_assigned();
-        if (sig->is_int())
+        if (auto* ps = dynamic_cast<ScalarSignalImpl*>(sig.get()); ps)
         {
-            h(k, 0) = valid ? sig->as_int().get() : 0;
+            h(k, 0) = valid ? ps->get_value() : 0;
         }
-        else if (sig->is_bool())
+#ifdef POOYA_INT_SIGNAL
+        else if (auto* pi = dynamic_cast<IntSignalImpl*>(sig.get()); pi)
         {
-            h(k, 0) = valid ? sig->as_bool().get() : 0;
+            h(k, 0) = valid ? pi->get_value() : 0;
         }
-        else if (sig->is_scalar())
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
+        else if (auto* pb = dynamic_cast<BoolSignalImpl*>(sig.get()); pb)
         {
-            h(k, 0) = valid ? sig->as_scalar().get() : 0;
+            h(k, 0) = valid ? pb->get_value() : 0;
         }
-        else
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
+        else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.get()); pa)
         {
             if (valid)
             {
-                h.row(k) = sig->as_array().get();
+                h.row(k) = pa->get_value();
             }
             else
             {
                 h.row(k).setZero();
             }
         }
+#endif // POOYA_ARRAY_SIGNAL
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))
@@ -141,15 +158,16 @@ void History::export_csv(const std::string& filename)
     {
         if (h.first)
         {
-            if (h.first->is_array())
+#ifdef POOYA_ARRAY_SIGNAL
+            if (auto* pa = dynamic_cast<ArraySignalImpl*>(h.first.get()); pa)
             {
-                auto sig = h.first->as_array();
-                for (std::size_t k = 0; k < sig.size(); k++)
+                for (std::size_t k = 0; k < pa->size(); k++)
                 {
                     ofs << "," << h.first->name().str() << "[" << k << "]";
                 }
             }
             else
+#endif // POOYA_ARRAY_SIGNAL
             {
                 ofs << "," << h.first->name().str();
             }
@@ -166,15 +184,16 @@ void History::export_csv(const std::string& filename)
         {
             if (h.first)
             {
-                if (h.first->is_array())
+#ifdef POOYA_ARRAY_SIGNAL
+                if (auto* pa = dynamic_cast<ArraySignalImpl*>(h.first.get()); pa)
                 {
-                    auto sig = h.first->as_array();
-                    for (std::size_t j = 0; j < sig.size(); j++)
+                    for (std::size_t j = 0; j < pa->size(); j++)
                     {
                         ofs << "," << h.second(k, j);
                     }
                 }
                 else
+#endif // POOYA_ARRAY_SIGNAL
                 {
                     ofs << "," << h.second(k);
                 }

@@ -19,39 +19,44 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SOURCE_HPP__
-#define __POOYA_BLOCK_SOURCE_HPP__
+#ifndef __POOYA_BLOCK_SISO_FUNCTION_HPP__
+#define __POOYA_BLOCK_SISO_FUNCTION_HPP__
 
-#include "singleio.hpp"
+#include "src/block/singleio.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class SourceT : public SingleOutputT<T>
+class SISOFunctionT : public SingleInputOutputT<T>
 {
 public:
-    using SourceFunction = std::function<T(double)>;
+    using ActFunction = std::function<typename Types<T>::SetValue(double, typename Types<T>::GetValue)>;
 
-protected:
-    SourceFunction _src_func;
+    explicit SISOFunctionT(ActFunction act_func) : SingleInputOutputT<T>(1), _act_func(act_func) {}
 
-public:
-    explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
-    SourceT(Submodel* parent, SourceFunction src_func) : SingleOutputT<T>(parent), _src_func(src_func) {}
+    explicit SISOFunctionT(Submodel* parent, ActFunction act_func)
+        : SingleInputOutputT<T>(parent, 1), _act_func(act_func)
+    {
+    }
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_src_func(t));
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
+        SingleInputOutputT<T>::_s_out = _act_func(t, SingleInputOutputT<T>::_s_in);
     }
+
+protected:
+    ActFunction _act_func;
 };
 
-using Source  = SourceT<double>;
-using SourceI = SourceT<int>;
-using SourceA = SourceT<Array>;
+using SISOFunction = SISOFunctionT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using SISOFunctionA = SISOFunctionT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SOURCE_HPP__
+#endif // __POOYA_BLOCK_SISO_FUNCTION_HPP__

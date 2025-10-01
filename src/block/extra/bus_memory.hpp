@@ -30,6 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
+// todo: use std::variant instead
 class Value
 {
 protected:
@@ -46,14 +47,14 @@ public:
     double as_scalar() const
     {
         pooya_trace0;
-        pooya_verify(_is_scalar, "attempting to retrieve an array as a scalar!");
+        pooya_debug_verify(_is_scalar, "attempting to retrieve an array as a scalar!");
         return _scalar;
     }
 
     const Array& as_array() const
     {
         pooya_trace0;
-        pooya_verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
+        pooya_debug_verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
         return _array;
     }
 };
@@ -68,8 +69,8 @@ protected:
     LabelValueMap _init_values;
 
 public:
-    BusMemory(Submodel& parent, const std::initializer_list<LabelValue>& l = {},
-              const std::initializer_list<std::string>& excluded_labels = {})
+    explicit BusMemory(Submodel& parent, std::initializer_list<LabelValue> l = {},
+                       std::initializer_list<std::string> excluded_labels = {})
         : BusBlockBuilder(parent, excluded_labels), _init_values(l)
     {
     }
@@ -77,8 +78,7 @@ public:
     bool connect(const Bus& ibus = Bus(), const Bus& obus = Bus()) override;
 
 protected:
-    void block_builder(const std::string& full_label, const SignalImplPtr& sig_in,
-                       const SignalImplPtr& sig_out) override;
+    void block_builder(const std::string& full_label, const Signal& sig_in, const Signal& sig_out) override;
 };
 
 } // namespace pooya

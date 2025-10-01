@@ -21,7 +21,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <string>
 #include <vector>
 
-#include "ndebug.hpp"
+#include "defs.hpp"
 #include "verify.hpp"
 
 namespace pooya::helper
@@ -52,9 +52,10 @@ public:
 
     static void update(const std::string& file, int line, const std::string& msg)
     {
-        pooya_verify(!pooya_trace_info.empty(), "Empty trace queue!") auto& pt = pooya_trace_info.back();
-        pt._file                                                               = file;
-        pt._line                                                               = line;
+        pooya_debug_verify(!pooya_trace_info.empty(), "Empty trace queue!");
+        auto& pt = pooya_trace_info.back();
+        pt._file = file;
+        pt._line = line;
         if (!msg.empty())
         {
             pt._msg = msg;

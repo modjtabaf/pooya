@@ -19,54 +19,42 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "bus_block_builder.hpp"
+#ifndef __POOYA_BLOCK_FUNCTION_HPP__
+#define __POOYA_BLOCK_FUNCTION_HPP__
+
+#include <functional>
+
+#include "src/block/leaf.hpp"
 
 namespace pooya
 {
 
-bool BusBlockBuilder::connect(const Bus& ibus, const Bus& obus)
+class Function : public Leaf
 {
-    pooya_trace("block: " + full_name().str());
-    if (!Leaf::connect(ibus, obus))
+public:
+    using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
+
+    explicit Function(ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+        : Leaf(num_iports, num_oports), _act_func(act_func)
     {
-        return false;
     }
 
-    _blocks.reserve(ibus->size());
-    visit_bus("", ibus);
-
-    return true;
-}
-
-void BusBlockBuilder::visit_bus(const std::string& full_label, const Bus& bus)
-{
-    pooya_trace("block: " + full_name().str());
-
-    if (std::find(_excluded_labels.begin(), _excluded_labels.end(), full_label) != _excluded_labels.end())
+    explicit Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit,
+                      uint16_t num_oports = NoIOLimit)
+        : Leaf(parent, num_iports, num_oports), _act_func(act_func)
     {
-        return;
     }
 
-    for (const auto& [label, sig] : bus)
+    void activation_function(double t) override
     {
-        if (sig->is_bus())
-        {
-            visit_bus(full_label + label + ".", Bus(sig->shared_from_this()));
-        }
-        else
-        {
-            auto new_label = full_label + label;
-            if (std::find(_excluded_labels.begin(), _excluded_labels.end(), new_label) == _excluded_labels.end())
-            {
-                block_builder(new_label, _ibus.at(new_label), _obus.at(new_label));
-            }
-        }
+        pooya_trace("block: " + full_name().str());
+        _act_func(t, _ibus, _obus);
     }
-}
 
-void BusBlockBuilder::_mark_unprocessed()
-{
-    _processed = true;
-}
+protected:
+    ActFunction _act_func;
+};
 
 } // namespace pooya
+
+#endif // __POOYA_BLOCK_FUNCTION_HPP__

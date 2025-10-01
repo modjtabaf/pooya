@@ -18,8 +18,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_SISO_HPP__
 #define __POOYA_BLOCK_SISO_HPP__
 
-#include "singlei.hpp"
-#include "singleo.hpp"
+#include "src/block/singlei.hpp"
+#include "src/block/singleo.hpp"
 
 namespace pooya
 {

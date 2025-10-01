@@ -19,52 +19,40 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_DIVIDE_HPP__
-#define __POOYA_BLOCK_DIVIDE_HPP__
+#ifndef __POOYA_BLOCK_CONST_HPP__
+#define __POOYA_BLOCK_CONST_HPP__
 
-#include "singleo.hpp"
+#include "src/block/singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class DivideT : public SingleOutputT<T>
+class ConstT : public SingleOutputT<T>
 {
-protected:
-    // input signals
-    typename Types<T>::Signal _s_x1; // input 1
-    typename Types<T>::Signal _s_x2; // input 2
-
 public:
-    DivideT() : SingleOutputT<T>(2, 1) {}
-    DivideT(Submodel* parent) : SingleOutputT<T>(parent, 2, 1) {}
+    using Base = SingleOutputT<T>;
 
-    bool connect(const Bus& ibus, const Bus& obus) override
-    {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
-        {
-            return false;
-        }
-
-        // input signals
-        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
-        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
-
-        return true;
-    }
+    explicit ConstT(const T& value) : Base(0), _value(value) {}
+    explicit ConstT(Submodel* parent, const T& value) : Base(parent, 0), _value(value) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_s_x1 / _s_x2);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _value;
     }
+
+protected:
+    T _value;
 };
 
-using Divide  = DivideT<double>;
-using DivideA = DivideT<Array>;
+using Const = ConstT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using ConstA = ConstT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_DIVIDE_HPP__
+#endif // __POOYA_BLOCK_CONST_HPP__

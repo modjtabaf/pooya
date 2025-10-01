@@ -18,83 +18,69 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_BOOL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_BOOL_SIGNAL_HPP__
 
-#include <optional>
+#ifdef POOYA_BOOL_SIGNAL
 
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 #include "value_signal.hpp"
 
-#define pooya_verify_bool_signal(sig)                                                                                  \
-    pooya_verify_valid_signal(sig);                                                                                    \
-    pooya_verify((sig)->is_bool(), (sig)->name().str() + ": bool signal expected!");
-
 namespace pooya
 {
 
 class BoolSignalImpl : public ValueSignalImpl
 {
-protected:
-    bool _bool_value;
-
 public:
-    BoolSignalImpl(Protected, const ValidName& name = "") : ValueSignalImpl(name, BoolType) {}
+    using Base = ValueSignalImpl;
+    using Ptr  = std::shared_ptr<BoolSignalImpl>;
 
-    static BoolSignalImplPtr create_new(const ValidName& name = "")
+    BoolSignalImpl(Protected, const ValidName& name = "") : Base(name) {}
+
+    static std::shared_ptr<BoolSignalImpl> create_new(const ValidName& name = "")
     {
         return std::make_shared<BoolSignalImpl>(Protected(), name);
     }
 
-    bool get() const
+    bool get_value() const
     {
         pooya_trace0;
-        pooya_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_debug_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
         return _bool_value;
     }
 
-    void set(bool value)
+    void set_value(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
         _bool_value = value;
         _assigned   = true;
     }
 
-    operator bool() const { return get(); }
+protected:
+    bool _bool_value;
 };
 
-inline BoolSignalImpl& SignalImpl::as_bool()
+class BoolSignal : public SignalT<bool>
 {
-    pooya_verify(_type & BoolType, "Illegal attempt to dereference a non-bool as a bool.");
-    return *static_cast<BoolSignalImpl*>(this);
-}
-
-inline const BoolSignalImpl& SignalImpl::as_bool() const
-{
-    pooya_verify(_type & BoolType, "Illegal attempt to dereference a non-bool as a bool.");
-    return *static_cast<const BoolSignalImpl*>(this);
-}
-
-class BoolSignal : public ValueSignal<bool>
-{
-    using Base = ValueSignal<bool>;
-
 public:
-    explicit BoolSignal(const ValidName& name = "") : Base(BoolSignalImpl::create_new(name)) {}
-    explicit BoolSignal(const SignalImplPtr& sid)
-        : Base(sid && sid->is_bool() ? std::static_pointer_cast<BoolSignalImpl>(sid) : nullptr)
-    {
-    }
-    BoolSignal(const BoolSignalImplPtr& sid) : Base(sid) {}
+    using Base = SignalT<bool>;
 
-    BoolSignal& operator=(const BoolSignal&) = delete;
+    BoolSignal() : Base(*BoolSignalImpl::create_new("").get()) {}
+    BoolSignal(const BoolSignal& sig) : Base(sig) {}
 
-    void reset(const ValidName& name = "") { _sid = BoolSignalImpl::create_new(name); }
+    explicit BoolSignal(const ValidName& name) : Base(*BoolSignalImpl::create_new(name).get()) {}
+    explicit BoolSignal(SignalImpl& sig) : Base(sig) {}
+    explicit BoolSignal(const Signal& sig) : Base(sig) {}
 
-    using ValueSignal<bool>::operator=;
-    using Signal<bool>::reset;
+    void operator=(const Signal&) = delete;
+    void operator=(const BoolSignal& sig) { _typed_ptr->set_value(sig); }
+    void operator=(bool value) { _typed_ptr->set_value(value); }
+
+    operator bool() const { return _typed_ptr->get_value(); }
 };
 
 } // namespace pooya
+
+#endif // POOYA_BOOL_SIGNAL
 
 #endif // __POOYA_SIGNAL_BOOL_SIGNAL_HPP__

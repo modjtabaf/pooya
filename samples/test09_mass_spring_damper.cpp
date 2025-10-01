@@ -52,10 +52,10 @@ public:
 
         if (!pooya::Leaf::connect(ibus)) return false;
 
-        _s_tau.reset(scalar_input_at(0));
+        _s_tau.reset(ibus->at(0));
 
-        _s_x.set_deriv_signal(_s_xd);
-        _s_xd.set_deriv_signal(_s_xdd);
+        _s_x->set_deriv_signal(_s_xd);
+        _s_xd->set_deriv_signal(_s_xdd);
 
         link_signal(_s_x, SignalLinkType::Input);
         link_signal(_s_xd, SignalLinkType::Input);
@@ -99,7 +99,7 @@ int main()
     pooya::ScalarSignal tau("tau");
 
     // setup the model
-    model.connect(tau, {});
+    model.connect({tau}, {});
 
     pooya::Euler stepper;
     pooya::Simulator sim(
@@ -133,7 +133,7 @@ int main()
     gp << "set yrange [-0.4:0.5]\n";
     gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

@@ -28,6 +28,7 @@
 * Deprecate BusSpec
 * In BusInfo, use both std::map and std::vector for signals so they can be accessed with either label or index
 * Discard addsub and muldiv
+* Move additional blocks (gain, add, ...) and the blocks used occasionally to different folders
 
 - Make sure Simulator evaluates the model only if necessary. Remove any duplicates.
 - Call shared_from_this() only when necessary
@@ -37,7 +38,7 @@
 - Create an abstraction layer between pooya and Eigen
 - Reduce the usage of POOYA_USE_SMART_PTRS through defining proper macros or helper classes
 - Call pre_step and post_step for minor steps too
-- enclose the methods that only contain pooya_verify macros within #if...#endif blocks
+- enclose the methods that only contain pooya_debug_verify macros within #if...#endif blocks
 - Use DOT to generate a graph presentation of the model
 - Doxygen
 - logging (spdlog)

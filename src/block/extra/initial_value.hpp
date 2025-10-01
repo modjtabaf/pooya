@@ -19,60 +19,44 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_DERIVATIVE_HPP__
-#define __POOYA_BLOCK_DERIVATIVE_HPP__
+#ifndef __POOYA_BLOCK_INITIAL_VALUE_HPP__
+#define __POOYA_BLOCK_INITIAL_VALUE_HPP__
 
-#include "singleio.hpp"
+#include "src/block/singleio.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class DerivativeT : public SingleInputOutputT<T>
+class InitialValueT : public SingleInputOutputT<T>
 {
 protected:
-    bool _first_step{true};
-    double _t;
-    T _x;
-    T _y;
+    T _value;
+    bool _init{true};
 
 public:
-    explicit DerivativeT(const T& y0 = 0) : SingleInputOutputT<T>(1), _y(y0) {}
-    DerivativeT(Submodel* parent, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
+    explicit InitialValueT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
 
-    void post_step(double t) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        _t          = t;
-        _x          = *SingleInputOutputT<T>::_s_in;
-        _y          = _x;
-        _first_step = false;
-    }
-
-    void activation_function(double t) override
-    {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        if (_first_step)
+        if (_init)
         {
-            _t = t;
-            _x = *SingleInputOutputT<T>::_s_in;
-            SingleInputOutputT<T>::_s_out->set(_y);
+            _value                       = SingleInputOutputT<T>::_s_in->get();
+            SingleInputOutputT<T>::_ibus = nullptr;
+            _init                        = false;
         }
-        else if (_t == t)
-        {
-            SingleInputOutputT<T>::_s_out->set(_y);
-        }
-        else
-        {
-            SingleInputOutputT<T>::_s_out->set((*SingleInputOutputT<T>::_s_in - _x) / (t - _t));
-        }
+        SingleInputOutputT<T>::_s_out->set(_value);
     }
 };
 
-using Derivative  = DerivativeT<double>;
-using DerivativeA = DerivativeT<Array>;
+using InitialValue = InitialValueT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using InitialValueA = InitialValueT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_DERIVATIVE_HPP__
+#endif // __POOYA_BLOCK_INITIAL_VALUE_HPP__

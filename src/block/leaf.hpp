@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_LEAF_HPP__
 #define __POOYA_BLOCK_LEAF_HPP__
 
-#include "block.hpp"
+#include "src/block/block.hpp"
 
 namespace pooya
 {
@@ -27,7 +27,7 @@ class Leaf : public Block
 {
 protected:
     explicit Leaf(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports) {}
-    Leaf(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Leaf(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
         : Block(parent, num_iports, num_oports)
     {
     }

@@ -18,17 +18,18 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_BUS_HPP__
 #define __POOYA_SIGNAL_BUS_HPP__
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "signal.hpp"
+#include "src/helper/defs.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
 #include "src/helper/verify.hpp"
 
-#define pooya_verify_bus(sig)                                                                                          \
-    pooya_verify_valid_signal(sig);                                                                                    \
-    pooya_verify((sig)->is_bus(), (sig)->name().str() + ": bus signal expected!");
+#include <type_traits>
+#include <utility>
 
 namespace pooya
 {
@@ -40,189 +41,130 @@ class BusSpec
 class BusImpl : public SignalImpl
 {
 public:
-    using LabelSignalImplPtr = std::pair<std::string, SignalImplPtr>;
-    using Signals            = std::vector<std::pair<std::string, SignalImplPtr>>;
+    using LabelSignalImpl = std::pair<std::string, Signal>;
+    using Signals         = std::vector<LabelSignalImpl>;
 
-protected:
-    Signals _signals;
-
-    static std::string _make_auto_label(std::size_t index) { return "sig" + std::to_string(index); }
-
-public:
-    template<typename Iter>
-    BusImpl(Protected, const ValidName& name, Iter begin_, Iter end_) : SignalImpl(name, BusType)
+    template<typename T>
+    BusImpl(Protected, std::initializer_list<T> l, const ValidName& name) : SignalImpl(name)
     {
         pooya_trace("name: " + name.str());
 
-        auto size = std::distance(begin_, end_);
-        _signals.reserve(size);
+        _signals.reserve(l.size());
 
-        for (auto& it = begin_; it != end_; it++)
-        {
-            if (!it->second) continue;
-
-            auto label = ValidName(it->first).str();
-            if (label.empty()) continue;
-
-            _signals.emplace_back(label, it->second);
-        }
-    }
-
-    template<typename Iter>
-    static BusImplPtr create_new(const ValidName& name, Iter begin_, Iter end_)
-    {
-        pooya_trace("bus: " + name.str());
-        return std::make_shared<BusImpl>(Protected(), name, begin_, end_);
-    }
-
-    template<typename Iter>
-    static BusImplPtr create_new(Iter begin_, Iter end_)
-    {
-        return create_new("", begin_, end_);
-    }
-
-    static BusImplPtr create_new(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {})
-    {
-        pooya_trace("create_new: " + name.str());
-
-        std::vector<LabelSignalImplPtr> signals;
-        signals.reserve(l.size());
         int k{0};
-        for (auto& sig : l)
+        for (auto v : l)
         {
-            signals.emplace_back(_make_auto_label(k++), sig);
+            if constexpr (is_pair_v<T>)
+            {
+                const ValidName label(v.first);
+                if (v.second.impl().name().str().empty()) v.second.impl().rename(label.str());
+                _signals.emplace_back(label.str(), v.second.impl());
+            }
+            else
+            {
+                const ValidName label(_make_auto_label(k++));
+                if (v.impl().name().str().empty()) v.impl().rename(label.str());
+                _signals.emplace_back(label.str(), v.impl());
+            }
         }
-
-        return create_new(name, signals.begin(), signals.end());
     }
-
-    static BusImplPtr create_new(const std::initializer_list<SignalImplPtr>& l = {}) { return create_new("", l); }
 
     template<typename T>
-    static BusImplPtr create_new(const T& signal)
+    static std::shared_ptr<BusImpl> create_new(std::initializer_list<T> l = {}, const ValidName& name = "")
     {
-        std::vector<LabelSignalImplPtr> label_signal({{_make_auto_label(0), signal->shared_from_this()}});
-        return create_new(label_signal.begin(), label_signal.end());
+        return std::make_shared<BusImpl>(Protected(), l, name);
     }
-
-    static BusImplPtr create_new(const ValidName& name, const std::initializer_list<LabelSignalImplPtr>& l)
-    {
-        return create_new(name, l.begin(), l.end());
-    }
-
-    static BusImplPtr create_new(const std::initializer_list<LabelSignalImplPtr>& l) { return create_new("", l); }
 
     std::size_t size() const { return _signals.size(); }
     Signals::const_iterator begin() const noexcept { return _signals.begin(); }
     Signals::const_iterator end() const noexcept { return _signals.end(); }
 
-    const SignalImplPtr& at(std::size_t index) const
+    Signal at(std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
         return _signals.at(index).second;
     }
 
-    const SignalImplPtr& operator[](std::size_t index) const
+    Signal operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
-        pooya_verify(index < _signals.size(), "index out of range!");
+        pooya_debug_verify(index < _signals.size(), "index out of range!");
         return _signals[index].second;
     }
 
-    const SignalImplPtr& at(const std::string& label) const;
+    Signal at(std::string_view label) const
+    {
+        pooya_trace("label: " + std::string(label));
 
-    const SignalImplPtr& operator[](const std::string& label) const { return at(label); }
+        auto pos                  = label.find(".");
+        const auto& label_to_find = pos == std::string::npos ? label : label.substr(0, pos);
+        const auto it             = std::find_if(_signals.begin(), _signals.end(),
+                                                 [label_to_find](const auto& p) -> bool { return p.first == label_to_find; });
+        pooya_verify(it != _signals.end(), "Label not found in the bus: " + std::string(label));
+
+        if (pos == std::string::npos)
+        {
+            return it->second;
+        }
+
+        Signal::fail_if_invalid_signal_type<BusSpec>(&it->second.impl());
+        BusImpl* bus = static_cast<BusImpl*>(&it->second.impl());
+        return bus->at(label.substr(pos + 1));
+    }
+
+    std::optional<Signal> try_at(std::string_view label) const
+    {
+        pooya_trace("label: " + std::string(label));
+
+        auto pos                  = label.find(".");
+        const auto& label_to_find = pos == std::string::npos ? label : label.substr(0, pos);
+        const auto it             = std::find_if(_signals.begin(), _signals.end(),
+                                                 [label_to_find](const auto& p) -> bool { return p.first == label_to_find; });
+        if (it == _signals.end())
+        {
+            return std::nullopt;
+        }
+        if (pos == std::string::npos)
+        {
+            return it->second;
+        }
+
+        BusImpl* bus = static_cast<BusImpl*>(&it->second.impl());
+        if (!bus) return std::nullopt;
+        return bus->at(label.substr(pos + 1));
+    }
+
+    Signal operator[](std::string_view label) const { return at(label); }
+
+protected:
+    Signals _signals;
+
+    static std::string _make_auto_label(std::size_t index) { return "sig" + std::to_string(index); }
 };
 
-inline BusImpl& SignalImpl::as_bus()
+class Bus : public SignalT<BusSpec>
 {
-    pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
-    return *static_cast<BusImpl*>(this);
-}
-
-inline const BusImpl& SignalImpl::as_bus() const
-{
-    pooya_verify(_type & BusType, "Illegal attempt to dereference a non-bus as a bus.");
-    return *static_cast<const BusImpl*>(this);
-}
-
-class Bus : public Signal<BusSpec>
-{
-    using Base = Signal<BusSpec>;
-
 public:
-    Bus(const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(l)) {}
-    Bus(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {}) : Base(BusImpl::create_new(name, l))
-    {
-    }
-    Bus(const std::initializer_list<BusImpl::LabelSignalImplPtr>& l) : Base(BusImpl::create_new(l)) {}
-    Bus(const ValidName& name, const std::initializer_list<BusImpl::LabelSignalImplPtr>& l)
-        : Base(BusImpl::create_new(name, l))
-    {
-    }
-    Bus(BusImpl::Signals::const_iterator begin_, BusImpl::Signals::const_iterator end_)
-        : Base(BusImpl::create_new(begin_, end_))
-    {
-    }
-    Bus(const ValidName& name, BusImpl::Signals::const_iterator begin_, BusImpl::Signals::const_iterator end_)
-        : Base(BusImpl::create_new(name, begin_, end_))
-    {
-    }
-    template<typename T>
-    Bus(const T& signal) : Base(BusImpl::create_new(signal))
-    {
-    }
-    explicit Bus(const SignalImplPtr& sid)
-        : Base(sid && sid->is_bus() ? std::static_pointer_cast<BusImpl>(sid) : nullptr)
-    {
-    }
-    Bus(const BusImplPtr& sid) : Base(sid) {}
+    using Base = SignalT<BusSpec>;
 
-    Bus& operator=(const Bus&) = delete;
+    Bus(std::initializer_list<Signal> l = {}, const ValidName& name = "") : Base(*BusImpl::create_new(l, name)) {}
 
-    void reset(const std::initializer_list<BusImpl::LabelSignalImplPtr>& l) { _sid = BusImpl::create_new(l); }
-    void reset(const ValidName& name, const std::initializer_list<BusImpl::LabelSignalImplPtr>& l)
+    template<typename T = Signal>
+    Bus(std::initializer_list<std::pair<std::string, T>> l, const ValidName& name = "")
+        : Base(*BusImpl::create_new(l, name))
     {
-        _sid = BusImpl::create_new(name, l);
-    }
-    void reset(const std::initializer_list<SignalImplPtr>& l = {}) { _sid = BusImpl::create_new(l); }
-    void reset(const ValidName& name, const std::initializer_list<SignalImplPtr>& l = {})
-    {
-        _sid = BusImpl::create_new(name, l);
-    }
-    void reset(BusImpl::Signals::const_iterator begin_, BusImpl::Signals::const_iterator end_)
-    {
-        _sid = BusImpl::create_new(begin_, end_);
-    }
-    void reset(const ValidName& name, BusImpl::Signals::const_iterator begin_, BusImpl::Signals::const_iterator end_)
-    {
-        _sid = BusImpl::create_new(name, begin_, end_);
     }
 
-    std::size_t size() const { return _sid->size(); }
-    BusImpl::Signals::const_iterator begin() const noexcept { return _sid->begin(); }
-    BusImpl::Signals::const_iterator end() const noexcept { return _sid->end(); }
-    const SignalImplPtr& operator[](std::size_t index) const { return (*_sid)[index]; }
-    const SignalImplPtr& at(std::size_t index) const { return _sid->at(index); }
-    const SignalImplPtr& operator[](const std::string& label) const { return (*_sid)[label]; }
-    const SignalImplPtr& at(const std::string& label) const { return _sid->at(label); }
+    explicit Bus(SignalImpl& sig) : Base(sig) {}
+    explicit Bus(const Signal& sig) : Base(sig) {}
 
-    ValueSignalImplPtr value_at(const std::string& label) const;
-    FloatSignalImplPtr float_at(const std::string& label) const;
-    ScalarSignalImplPtr scalar_at(const std::string& label) const;
-    IntSignalImplPtr int_at(const std::string& label) const;
-    BoolSignalImplPtr bool_at(const std::string& label) const;
-    ArraySignalImplPtr array_at(const std::string& label) const;
-    BusImplPtr bus_at(const std::string& label) const;
-    ValueSignalImplPtr value_at(std::size_t index) const;
-    FloatSignalImplPtr float_at(std::size_t index) const;
-    ScalarSignalImplPtr scalar_at(std::size_t index) const;
-    IntSignalImplPtr int_at(std::size_t index) const;
-    BoolSignalImplPtr bool_at(std::size_t index) const;
-    ArraySignalImplPtr array_at(std::size_t index) const;
-    BusImplPtr bus_at(std::size_t index) const;
-
-    using Signal<BusSpec>::reset;
+    std::size_t size() const { return _typed_ptr->size(); }
+    BusImpl::Signals::const_iterator begin() const noexcept { return _typed_ptr->begin(); }
+    BusImpl::Signals::const_iterator end() const noexcept { return _typed_ptr->end(); }
+    Signal at(std::size_t index) const { return _typed_ptr->at(index); }
+    Signal operator[](std::size_t index) const { return _typed_ptr->operator[](index); }
+    Signal at(std::string_view label) const { return _typed_ptr->at(label); }
+    Signal operator[](std::string_view label) const { return _typed_ptr->operator[](label); }
 };
 
 } // namespace pooya

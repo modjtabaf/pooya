@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Mojtaba (Moji) Fathi
+Copyright 2025 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the “Software”), to deal in
@@ -19,41 +19,35 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SISO_FUNCTION_HPP__
-#define __POOYA_BLOCK_SISO_FUNCTION_HPP__
+#include <gtest/gtest.h>
 
-#include "singleio.hpp"
-#include "src/signal/array.hpp"
+#include "src/signal/bus.hpp"
+#include "src/signal/scalar_signal.hpp"
 
-namespace pooya
-{
-
-template<typename T>
-class SISOFunctionT : public SingleInputOutputT<T>
+class TestBus : public testing::Test
 {
 public:
-    using ActFunction = std::function<typename Types<T>::SetValue(double, typename Types<T>::GetValue)>;
-
-protected:
-    ActFunction _act_func;
-
-public:
-    explicit SISOFunctionT(Submodel* parent, ActFunction act_func)
-        : SingleInputOutputT<T>(parent, 1), _act_func(act_func)
+    TestBus()
     {
-    }
-    SISOFunctionT(Submodel* parent, ActFunction act_func) : SingleInputOutputT<T>(parent, 1), _act_func(act_func) {}
-
-    void activation_function(double t) override
-    {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out->set(_act_func(t, SingleInputOutputT<T>::_s_in->get()));
+        //
     }
 };
 
-using SISOFunction  = SISOFunctionT<double>;
-using SISOFunctionA = SISOFunctionT<Array>;
+TEST_F(TestBus, Bus)
+{
+    // signal setup
+    pooya::ScalarSignal s_x("x");
+    pooya::Bus bus1({{"s0", s_x}});
 
-} // namespace pooya
+    EXPECT_EQ(bus1.size(), 1);
+    EXPECT_EQ(&bus1[0].impl(), &s_x.impl());
+    EXPECT_TRUE(dynamic_cast<pooya::ValueSignalImpl*>(&bus1[0].impl()));
+    EXPECT_TRUE(std::dynamic_pointer_cast<pooya::ValueSignalImpl>(bus1[0]->shared_from_this()));
 
-#endif // __POOYA_BLOCK_SISO_FUNCTION_HPP__
+    pooya::Bus bus2({s_x, bus1});
+
+    EXPECT_EQ(bus2.size(), 2);
+    EXPECT_EQ(&bus2[0].impl(), &s_x.impl());
+    EXPECT_TRUE(dynamic_cast<pooya::ValueSignalImpl*>(&bus2[0].impl()));
+    EXPECT_TRUE(std::dynamic_pointer_cast<pooya::ValueSignalImpl>(bus2[0]->shared_from_this()));
+}

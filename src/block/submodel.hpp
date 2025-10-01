@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_BLOCK_SUBMODEL_HPP__
 #define __POOYA_BLOCK_SUBMODEL_HPP__
 
-#include "block.hpp"
+#include "src/block/block.hpp"
 
 namespace pooya
 {
@@ -32,7 +32,7 @@ public:
     explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
     {
     }
-    Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
+    explicit Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
         : Block(parent, num_iports, num_oports)
     {
     }

@@ -18,15 +18,15 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-// #include "src/block/function.hpp"
-#include "src/block/divide.hpp"
+#include "src/block/extra/divide.hpp"
+// #include "src/block/extra/function.hpp"
+#include "src/block/extra/multiply.hpp"
+#include "src/block/extra/sin.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/multiply.hpp"
-#include "src/block/sin.hpp"
-// #include "src/block/siso_function.hpp"
-// #include "src/block/so_function.hpp"
+// #include "src/block/extra/siso_function.hpp"
+// #include "src/block/extra/so_function.hpp"
+#include "src/block/extra/subtract.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/subtract.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
@@ -38,11 +38,11 @@ class Pendulum : public pooya::Submodel
 protected:
     pooya::Integrator _integ1{this, M_PI_4};
     pooya::Integrator _integ2{this};
-    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    // pooya::SOFunction _sin(this, [](double /*t*/, const pooya::Bus& ibus) -> double
-    //                        { return std::sin(ibus.scalar_at(0)->get()); });
-    // pooya::Function _sin(this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-    //                      { obus.scalar_at(0)->set(std::sin(ibus.scalar_at(0)->get())); });
+    // pooya::SISOFunction _sin{this, [](double /*t*/, double x) -> double { return std::sin(x); }};
+    // pooya::SOFunction _sin{this, [](double /*t*/, const pooya::Bus& ibus) -> double
+    //                        { return std::sin(pooya::ScalarSignal(ibus.at(0))); }};
+    // pooya::Function _sin{this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+    //                      { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); }};
     pooya::Sin _sin{this};
     pooya::Multiply _mul1{this};
     pooya::Divide _div1{this};
@@ -72,21 +72,21 @@ public:
         _div2.rename("_ml2");
         _sub.rename("d2phi");
 
-        pooya::ScalarSignal s10;
-        pooya::ScalarSignal s15;
-        pooya::ScalarSignal s20;
-        pooya::ScalarSignal s25;
-        pooya::ScalarSignal s30;
+        pooya::ScalarSignal s10("s10");
+        pooya::ScalarSignal s15("s15");
+        pooya::ScalarSignal s20("s20");
+        pooya::ScalarSignal s25("s25");
+        pooya::ScalarSignal s30("s30");
 
         // setup the submodel
-        _integ1.connect(_d2phi, _dphi);
-        _integ2.connect(_dphi, _phi);
-        _sin.connect(_phi, s10);
-        _mul1.connect({s10, _g}, s15);
-        _div1.connect({s15, _l}, s20);
-        _mul2.connect({_m, _l, _l}, s25);
-        _div2.connect({_tau, s25}, s30);
-        _sub.connect({s30, s20}, _d2phi);
+        _integ1.connect({_d2phi}, {_dphi});
+        _integ2.connect({_dphi}, {_phi});
+        _sin.connect({_phi}, {s10});
+        _mul1.connect({s10, _g}, {s15});
+        _div1.connect({s15, _l}, {s20});
+        _mul2.connect({_m, _l, _l}, {s25});
+        _div2.connect({_tau, s25}, {s30});
+        _sub.connect({s30, s20}, {_d2phi});
     }
 };
 
@@ -137,7 +137,7 @@ int main()
     gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'phi'," << gp.file1d(history[pendulum._dphi])
        << "with lines title 'dphi'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

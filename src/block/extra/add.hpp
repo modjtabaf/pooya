@@ -19,52 +19,62 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SUBTRACT_HPP__
-#define __POOYA_BLOCK_SUBTRACT_HPP__
+#ifndef __POOYA_BLOCK_ADD_HPP__
+#define __POOYA_BLOCK_ADD_HPP__
 
-#include "singleo.hpp"
+#include "src/block/singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class SubtractT : public SingleOutputT<T>
+class AddT : public SingleOutputT<T>
 {
-protected:
-    // input signals
-    typename Types<T>::Signal _s_x1; // input 1
-    typename Types<T>::Signal _s_x2; // input 2
-
 public:
-    SubtractT() : SingleOutputT<T>(2, 1) {}
-    SubtractT(Submodel* parent) : SingleOutputT<T>(parent, 2, 1) {}
+    using Base = SingleOutputT<T>;
+
+    explicit AddT(const T& initial = 0.0) : Base(Block::NoIOLimit, 1), _initial(initial) {}
+    explicit AddT(Submodel* parent, const T& initial = 0.0) : Base(parent, Block::NoIOLimit, 1), _initial(initial) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
         {
             return false;
         }
 
-        // input signals
-        _s_x1.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(0)));
-        _s_x2.reset(Types<T>::as_signal_id(SingleOutputT<T>::_ibus.at(1)));
+        pooya_debug_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
+        for (const auto& sig : ibus)
+            pooya_debug_verify(dynamic_cast<typename Types<T>::SignalImpl*>(&sig.second.impl()),
+                               Base::full_name().str() + ": signal type mismatch!");
 
         return true;
     }
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_s_x1 - _s_x2);
+        pooya_trace("block: " + Base::full_name().str());
+        _ret = _initial;
+        for (const auto& sig : Base::_ibus)
+        {
+            _ret += static_cast<const typename Types<T>::SignalImpl*>(&sig.second.impl())->get_value();
+        }
+        Base::_s_out = _ret;
     }
+
+protected:
+    T _initial;
+    T _ret;
 };
 
-using Subtract  = SubtractT<double>;
-using SubtractA = SubtractT<Array>;
+using Add = AddT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using AddA = AddT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SUBTRACT_HPP__
+#endif // __POOYA_BLOCK_ADD_HPP__

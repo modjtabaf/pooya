@@ -13,16 +13,43 @@
 load("//:pooya_rules.bzl", "pooya_cc_test")
 
 pooya_cc_test(
+    name = "test_scalar_signal",
+    src = "test_scalar_signal.cpp",
+    deps = ["//src/signal"],
+)
+
+pooya_cc_test(
+    name = "test_bus",
+    src = "test_bus.cpp",
+    deps = ["//src/signal"],
+)
+
+pooya_cc_test(
     name = "test_gain",
     src = "test_gain.cpp",
+    deps = [
+        "//src/block:extra",
+        "//src/signal",
+        "//src/solver",
+        ],
 )
 
 pooya_cc_test(
     name = "test_memory",
     src = "test_memory.cpp",
+    deps = [
+        "//src/block:extra",
+        "//src/signal",
+        "//src/solver",
+        ],
 )
 
 pooya_cc_test(
     name = "test_delay",
     src = "test_delay.cpp",
+    deps = [
+        "//src/block:extra",
+        "//src/signal",
+        "//src/solver",
+        ],
 )

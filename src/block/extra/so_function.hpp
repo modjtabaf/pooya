@@ -19,57 +19,47 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_MULTIPLY_HPP__
-#define __POOYA_BLOCK_MULTIPLY_HPP__
+#ifndef __POOYA_BLOCK_SO_FUNCTION_HPP__
+#define __POOYA_BLOCK_SO_FUNCTION_HPP__
 
-#include "singleo.hpp"
+#include "src/block/singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class MultiplyT : public SingleOutputT<T>
+class SOFunctionT : public SingleOutputT<T>
 {
-protected:
-    T _initial;
-    T _ret;
-
 public:
-    MultiplyT(const T& initial = 1.0) : SingleOutputT<T>(Block::NoIOLimit, 1), _initial(initial) {}
-    MultiplyT(Submodel* parent, const T& initial = 1.0)
-        : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _initial(initial)
+    using ActFunction = std::function<typename Types<T>::SetValue(double, const pooya::Bus& ibus)>;
+
+    explicit SOFunctionT(ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+        : SingleOutputT<T>(num_iports), _act_func(act_func)
     {
     }
 
-    bool connect(const Bus& ibus, const Bus& obus) override
+    explicit SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
+        : SingleOutputT<T>(parent, num_iports), _act_func(act_func)
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
-        {
-            return false;
-        }
-
-        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
-
-        return true;
     }
 
-    void activation_function(double /*t*/) override
+    void activation_function(double t) override
     {
         pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        _ret = _initial;
-        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
-        {
-            _ret *= Types<T>::as_signal_info(sig).get();
-        }
-        SingleOutputT<T>::_s_out->set(_ret);
+        SingleOutputT<T>::_s_out = _act_func(t, SingleOutputT<T>::_ibus);
     }
+
+protected:
+    ActFunction _act_func;
 };
 
-using Multiply  = MultiplyT<double>;
-using MultiplyA = MultiplyT<Array>;
+using SOFunction = SOFunctionT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using SOFunctionA = SOFunctionT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_MULTIPLY_HPP__
+#endif // __POOYA_BLOCK_SO_FUNCTION_HPP__

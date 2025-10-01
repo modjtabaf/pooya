@@ -21,11 +21,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "bus_memory.hpp"
 #include "memory.hpp"
+#include "src/block/submodel.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/bool_signal.hpp"
 #include "src/signal/int_signal.hpp"
 #include "src/signal/scalar_signal.hpp"
-#include "submodel.hpp"
 
 namespace pooya
 {
@@ -38,37 +38,54 @@ bool BusMemory::connect(const Bus& ibus, const Bus& obus)
         return false;
     }
 
-    pooya_verify(_init_values.empty(), full_name().str() + ": Some initial values of bus memory block were not used!");
+#ifdef POOYA_DEBUG
+    if (!_init_values.empty())
+    {
+        std::stringstream ss;
+        ss << full_name().str() << ": The following initial values of bus memory block were not used:\n";
+        for (const auto& iv : _init_values)
+        {
+            ss << " - " << iv.first << "\n";
+        }
+        pooya_debug_verify(false, ss.str());
+    }
+#endif // POOYA_DEBUG
 
     return true;
 }
 
-void BusMemory::block_builder(const std::string& full_label, const SignalImplPtr& sig_in, const SignalImplPtr& sig_out)
+void BusMemory::block_builder(const std::string& full_label, const Signal& sig_in, const Signal& sig_out)
 {
     pooya_trace("block: " + full_name().str());
     auto it = _init_values.find(full_label);
 
     std::shared_ptr<Block> block;
-    if (sig_in->is_scalar())
+    if (dynamic_cast<ScalarSignalImpl*>(&sig_in.impl()))
     {
         block = (it == _init_values.end()) ? std::make_shared<Memory>(_parent)
                                            : std::make_shared<Memory>(_parent, it->second.as_scalar());
     }
-    else if (sig_in->is_int())
+#ifdef POOYA_INT_SIGNAL
+    else if (dynamic_cast<IntSignalImpl*>(&sig_in.impl()))
     {
         block = (it == _init_values.end()) ? std::make_shared<MemoryI>(_parent)
                                            : std::make_shared<MemoryI>(_parent, std::round(it->second.as_scalar()));
     }
-    else if (sig_in->is_bool())
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
+    else if (dynamic_cast<BoolSignalImpl*>(&sig_in.impl()))
     {
         block = (it == _init_values.end()) ? std::make_shared<MemoryB>(_parent)
                                            : std::make_shared<MemoryB>(_parent, Bool(it->second.as_scalar() != 0));
     }
-    else if (sig_in->is_array())
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
+    else if (auto* pa = dynamic_cast<ArraySignalImpl*>(&sig_in.impl()); pa)
     {
-        block = (it == _init_values.end()) ? std::make_shared<MemoryA>(_parent, Array::Zero(sig_in->as_array().size()))
+        block = (it == _init_values.end()) ? std::make_shared<MemoryA>(_parent, Array::Zero(pa->size()))
                                            : std::make_shared<MemoryA>(_parent, it->second.as_array());
     }
+#endif // POOYA_ARRAY_SIGNAL
     else
     {
         pooya_verify(false, "cannot create a memory block for a non-value signal.");
@@ -79,7 +96,8 @@ void BusMemory::block_builder(const std::string& full_label, const SignalImplPtr
         _init_values.erase(it);
     }
 
-    block->connect(sig_in, sig_out);
+    block->rename(full_label);
+    block->connect({sig_in}, {sig_out});
     _blocks.emplace_back(std::move(block));
 }
 

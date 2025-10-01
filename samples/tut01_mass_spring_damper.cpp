@@ -15,11 +15,11 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "src/block/gain.hpp"
+#include "src/block/extra/gain.hpp"
+#include "src/block/extra/source.hpp"
+#include "src/block/extra/subtract.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/source.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/subtract.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rk4.hpp"
@@ -52,14 +52,14 @@ int main()
     pooya::ScalarSignal s_cxd_m;
 
     // set up the model
-    src_F.connect({}, s_F);
-    gain_1_m.connect(s_F, s_F_m);
-    sub1.connect({s_F_m, s_cxd_m}, s1);
-    sub2.connect({s1, s_kx_m}, s_xdd);
-    int_xdd.connect(s_xdd, s_xd);
-    int_xd.connect(s_xd, s_x);
-    gain_c_m.connect(s_xd, s_cxd_m);
-    gain_k_m.connect(s_x, s_kx_m);
+    src_F.connect({}, {s_F});
+    gain_1_m.connect({s_F}, {s_F_m});
+    sub1.connect({s_F_m, s_cxd_m}, {s1});
+    sub2.connect({s1, s_kx_m}, {s_xdd});
+    int_xdd.connect({s_xdd}, {s_xd});
+    int_xd.connect({s_xd}, {s_x});
+    gain_c_m.connect({s_xd}, {s_cxd_m});
+    gain_k_m.connect({s_x}, {s_kx_m});
 
     // set up the simulator
     pooya::Rk4 solver;

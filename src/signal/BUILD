@@ -14,7 +14,7 @@ load("//:pooya_rules.bzl", "pooya_cc_library")
 
 pooya_cc_library(
     name = "signal",
-    srcs = glob(["*.cpp"]),
+    srcs = [],
     hdrs = glob(["*.hpp"]),
     deps = [
         "@eigen",

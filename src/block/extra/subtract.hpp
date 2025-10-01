@@ -19,44 +19,57 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SO_FUNCTION_HPP__
-#define __POOYA_BLOCK_SO_FUNCTION_HPP__
+#ifndef __POOYA_BLOCK_SUBTRACT_HPP__
+#define __POOYA_BLOCK_SUBTRACT_HPP__
 
-#include "singleo.hpp"
+#include "src/block/singleo.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class SOFunctionT : public SingleOutputT<T>
+class SubtractT : public SingleOutputT<T>
 {
 public:
-    using ActFunction = std::function<typename Types<T>::SetValue(double, const pooya::Bus& ibus)>;
+    using Base = SingleOutputT<T>;
+
+    explicit SubtractT() : Base(2, 1) {}
+    explicit SubtractT(Submodel* parent) : Base(parent, 2, 1) {}
+
+    bool connect(const Bus& ibus, const Bus& obus) override
+    {
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        // input signals
+        _s_x1.reset(Base::input(0));
+        _s_x2.reset(Base::input(1));
+
+        return true;
+    }
+
+    void activation_function(double /*t*/) override
+    {
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _s_x1 - _s_x2;
+    }
 
 protected:
-    ActFunction _act_func;
-
-public:
-    SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
-        : SingleOutputT<T>(parent, num_iports), _act_func(act_func)
-    {
-    }
-    SOFunctionT(Submodel* parent, ActFunction act_func, uint16_t num_iports = Block::NoIOLimit)
-        : SingleOutputT<T>(parent, num_iports), _act_func(act_func)
-    {
-    }
-
-    void activation_function(double t) override
-    {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        SingleOutputT<T>::_s_out->set(_act_func(t, SingleOutputT<T>::_ibus));
-    }
+    // input signals
+    typename Types<T>::Signal _s_x1; // input 1
+    typename Types<T>::Signal _s_x2; // input 2
 };
 
-using SOFunction  = SOFunctionT<double>;
-using SOFunctionA = SOFunctionT<Array>;
+using Subtract = SubtractT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using SubtractA = SubtractT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SO_FUNCTION_HPP__
+#endif // __POOYA_BLOCK_SUBTRACT_HPP__

@@ -19,54 +19,43 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_ADD_HPP__
-#define __POOYA_BLOCK_ADD_HPP__
+#ifndef __POOYA_BLOCK_PIPE_HPP__
+#define __POOYA_BLOCK_PIPE_HPP__
 
-#include "singleo.hpp"
+#include "src/block/singleio.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
 {
 
 template<typename T>
-class AddT : public SingleOutputT<T>
+class PipeT : public SingleInputOutputT<T>
 {
-protected:
-    T _initial;
-    T _ret;
-
 public:
-    AddT(const T& initial = 0.0) : SingleOutputT<T>(Block::NoIOLimit, 1), _initial(initial) {}
-    AddT(Submodel* parent, const T& initial = 0.0) : SingleOutputT<T>(parent, Block::NoIOLimit, 1), _initial(initial) {}
-
-    bool connect(const Bus& ibus, const Bus& obus) override
-    {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        if (!SingleOutputT<T>::connect(ibus, obus))
-        {
-            return false;
-        }
-
-        pooya_verify(ibus.size() >= 1, SingleOutputT<T>::full_name().str() + " requires 1 or more input signals.");
-
-        return true;
-    }
+    explicit PipeT() : SingleInputOutputT<T>(1) {}
+    explicit PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleOutputT<T>::full_name().str());
-        _ret = _initial;
-        for (const auto& [label, sig] : SingleOutputT<T>::_ibus)
-        {
-            _ret += Types<T>::as_signal_info(sig).get();
-        }
-        SingleOutputT<T>::_s_out->set(_ret);
+        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
+        SingleInputOutputT<T>::_s_out = SingleInputOutputT<T>::_s_in;
     }
 };
 
-using Add  = AddT<double>;
-using AddA = AddT<Array>;
+using Pipe = PipeT<double>;
+
+#ifdef POOYA_INT_SIGNAL
+using PipeI = PipeT<int>;
+#endif // POOYA_INT_SIGNAL
+
+#ifdef POOYA_BOOL_SIGNAL
+using PipeB = PipeT<bool>;
+#endif // POOYA_BOOL_SIGNAL
+
+#ifdef POOYA_ARRAY_SIGNAL
+using PipeA = PipeT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_ADD_HPP__
+#endif // __POOYA_BLOCK_PIPE_HPP__

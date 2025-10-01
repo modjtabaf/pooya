@@ -19,36 +19,57 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_SOURCES_HPP__
-#define __POOYA_BLOCK_SOURCES_HPP__
+#ifndef __POOYA_BLOCK_DIVIDE_HPP__
+#define __POOYA_BLOCK_DIVIDE_HPP__
 
-#include "leaf.hpp"
+#include "src/block/singleo.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-class Sources : public Leaf
+template<typename T>
+class DivideT : public SingleOutputT<T>
 {
-public:
-    using SourcesFunction = std::function<void(const Bus&, double)>;
+    using Base = SingleOutputT<T>;
 
 protected:
-    SourcesFunction _src_func;
+    // input signals
+    typename Types<T>::Signal _s_x1; // input 1
+    typename Types<T>::Signal _s_x2; // input 2
 
 public:
-    Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit) : Leaf(0, num_oports), _src_func(src_func) {}
-    Sources(const ValidName& name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
-        : Leaf(name, 0, num_oports), _src_func(src_func)
+    explicit DivideT() : Base(2, 1) {}
+    explicit DivideT(Submodel* parent) : Base(parent, 2, 1) {}
+
+    bool connect(const Bus& ibus, const Bus& obus) override
     {
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        // input signals
+        _s_x1.reset(Base::input(0));
+        _s_x2.reset(Base::input(1));
+
+        return true;
     }
 
-    void activation_function(double t) override
+    void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + full_name().str());
-        _src_func(_obus, t);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _s_x1 / _s_x2;
     }
 };
 
+using Divide = DivideT<double>;
+
+#ifdef POOYA_ARRAY_SIGNAL
+using DivideA = DivideT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
+
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_SOURCES_HPP__
+#endif // __POOYA_BLOCK_DIVIDE_HPP__

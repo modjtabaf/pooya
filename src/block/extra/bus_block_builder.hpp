@@ -19,45 +19,39 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "bus_pipe.hpp"
-#include "pipe.hpp"
-#include "src/signal/array_signal.hpp"
-#include "src/signal/bool_signal.hpp"
-#include "src/signal/int_signal.hpp"
-#include "src/signal/scalar_signal.hpp"
-#include "submodel.hpp"
+#ifndef __POOYA_BLOCK_BUS_BLOCK_BUILDER_HPP__
+#define __POOYA_BLOCK_BUS_BLOCK_BUILDER_HPP__
+
+#include <memory>
+#include <vector>
+
+#include "src/block/leaf.hpp"
+#include "src/signal/array.hpp"
+#include "src/signal/bus.hpp"
 
 namespace pooya
 {
 
-void BusPipe::block_builder(const std::string& /*full_label*/, const SignalImplPtr& sig_in,
-                            const SignalImplPtr& sig_out)
+class BusBlockBuilder : public Leaf
 {
-    pooya_trace("block: " + full_name().str());
-    std::shared_ptr<Block> block;
-    if (sig_in->is_scalar())
+protected:
+    std::vector<std::shared_ptr<Block>> _blocks;
+    std::vector<std::string> _excluded_labels;
+
+    void visit_bus(const std::string& path_name, const Bus& bus);
+
+    virtual void block_builder(const std::string& path_name, const Signal& sig_in, const Signal& sig_out) = 0;
+
+public:
+    explicit BusBlockBuilder(Submodel& parent, std::initializer_list<std::string> excluded_labels = {})
+        : Leaf(&parent), _excluded_labels(excluded_labels)
     {
-        block = std::make_shared<Pipe>();
-    }
-    else if (sig_in->is_int())
-    {
-        block = std::make_shared<PipeI>();
-    }
-    else if (sig_in->is_bool())
-    {
-        block = std::make_shared<PipeB>();
-    }
-    else if (sig_in->is_array())
-    {
-        block = std::make_shared<PipeA>();
-    }
-    else
-    {
-        pooya_verify(false, "cannot create a pipe block for a non-value signal.");
     }
 
-    block->connect(sig_in, sig_out);
-    _blocks.emplace_back(std::move(block));
-}
+    bool connect(const Bus& ibus, const Bus& obus) override;
+    void _mark_unprocessed() override;
+};
 
 } // namespace pooya
+
+#endif // __POOYA_BLOCK_BUS_BLOCK_BUILDER_HPP__

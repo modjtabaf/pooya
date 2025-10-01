@@ -22,7 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __POOYA_BLOCK_GAIN_HPP__
 #define __POOYA_BLOCK_GAIN_HPP__
 
-#include "singleio.hpp"
+#include "src/block/singleio.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
@@ -35,21 +35,27 @@ protected:
     GainType _k;
 
 public:
-    GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
-    GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
+    explicit GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
+    explicit GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out->set(_k * SingleInputOutputT<T>::_s_in->get());
+        SingleInputOutputT<T>::_s_out = _k * SingleInputOutputT<T>::_s_in->get_value();
     }
 
     typename Types<GainType>::GetValue gain() const { return _k; }
 };
 
-using Gain  = GainT<double, double>;
+using Gain = GainT<double, double>;
+
+#ifdef POOYA_INT_SIGNAL
 using GainI = GainT<int, int>;
+#endif // POOYA_INT_SIGNAL
+
+#ifdef POOYA_ARRAY_SIGNAL
 using GainA = GainT<Array, double>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 

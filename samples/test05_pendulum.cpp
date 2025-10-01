@@ -18,11 +18,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-#include "src/block/divide.hpp"
+#include "src/block/extra/divide.hpp"
+#include "src/block/extra/multiply.hpp"
+#include "src/block/extra/sin.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/multiply.hpp"
-#include "src/block/sin.hpp"
-// #include "src/block/siso_function.hpp"
+// #include "src/block/extra/siso_function.hpp"
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -61,11 +61,11 @@ public:
         pooya::ScalarSignal s20;
 
         // setup the submodel
-        _integ1.connect(_d2phi, _dphi);
-        _integ2.connect(_dphi, _phi);
-        _sin.connect(_phi, s10);
-        _mul.connect({s10, _g}, s20);
-        _div.connect({s20, _l}, _d2phi);
+        _integ1.connect({_d2phi}, {_dphi});
+        _integ2.connect({_dphi}, {_phi});
+        _sin.connect({_phi}, {s10});
+        _mul.connect({s10, _g}, {s20});
+        _div.connect({s20, _l}, {_d2phi});
     }
 };
 
@@ -112,7 +112,7 @@ int main()
     gp << "set yrange [-0.8:0.8]\n";
     gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'x'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

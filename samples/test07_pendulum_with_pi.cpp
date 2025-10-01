@@ -18,14 +18,14 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <chrono>
 #include <iostream>
 
-#include "src/block/add.hpp"
-#include "src/block/divide.hpp"
-#include "src/block/gain.hpp"
+#include "src/block/extra/add.hpp"
+#include "src/block/extra/divide.hpp"
+#include "src/block/extra/gain.hpp"
+#include "src/block/extra/multiply.hpp"
+#include "src/block/extra/sin.hpp"
+#include "src/block/extra/subtract.hpp"
 #include "src/block/integrator.hpp"
-#include "src/block/multiply.hpp"
-#include "src/block/sin.hpp"
 #include "src/block/submodel.hpp"
-#include "src/block/subtract.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/history.hpp"
@@ -66,18 +66,18 @@ public:
         pooya::ScalarSignal s30;
         pooya::ScalarSignal s40;
 
-        auto tau = scalar_input_at(0);
-        auto phi = scalar_output_at(0);
+        pooya::ScalarSignal tau(ibus->at(0));
+        pooya::ScalarSignal phi(obus->at(0));
 
         // setup the submodel
-        _mul1.connect({_m, _l, _l}, s05);
-        _div1.connect({tau, s05}, s10);
-        _sub.connect({s10, s20}, s30);
-        _integ1.connect(s30, dphi);
-        _integ2.connect(dphi, phi);
-        _sin.connect(phi, s40);
-        _mul2.connect({s40, _g}, s15);
-        _div2.connect({s15, _l}, s20);
+        _mul1.connect({_m, _l, _l}, {s05});
+        _div1.connect({tau, s05}, {s10});
+        _sub.connect({s10, s20}, {s30});
+        _integ1.connect({s30}, {dphi});
+        _integ2.connect({dphi}, {phi});
+        _sin.connect({phi}, {s40});
+        _mul2.connect({s40, _g}, {s15});
+        _div2.connect({s15, _l}, {s20});
 
         return true;
     }
@@ -104,14 +104,14 @@ public:
         pooya::ScalarSignal s20;
         pooya::ScalarSignal s30;
 
-        auto x = scalar_input_at(0);
-        auto y = scalar_output_at(0);
+        pooya::ScalarSignal x(ibus->at(0));
+        pooya::ScalarSignal y(obus->at(0));
 
         // blocks
-        _gain_p.connect(x, s10);
-        _integ.connect(x, s20);
-        _gain_i.connect(s20, s30);
-        _add.connect({s10, s30}, y);
+        _gain_p.connect({x}, {s10});
+        _integ.connect({x}, {s20});
+        _gain_i.connect({s20}, {s30});
+        _add.connect({s10, s30}, {y});
 
         return true;
     }
@@ -132,9 +132,9 @@ public:
 
     PendulumWithPI()
     {
-        add_block(_sub, {_des_phi, _phi}, _err);
-        add_block(_pi, _err, _tau);
-        add_block(_pend, _tau, _phi);
+        add_block(_sub, {_des_phi, _phi}, {_err});
+        add_block(_pi, {_err}, {_tau});
+        add_block(_pend, {_tau}, {_phi});
     }
 };
 
@@ -188,7 +188,7 @@ int main()
           // << gp.file1d(history[sig_reg.lookup_signal(".tau")]) << "with lines title 'tau'"
           "\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

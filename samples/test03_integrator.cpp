@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <cmath>
 #include <iostream>
 
-#include "src/block/triggered_integrator.hpp"
+#include "src/block/extra/triggered_integrator.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
 #include "src/solver/euler.hpp"
@@ -42,7 +42,7 @@ int main()
     pooya::BoolSignal trigger("trigger");
 
     // setup the model
-    integ.connect({{"in", xd}, {"trigger", trigger}}, x);
+    integ.connect({{"in", xd}, {"trigger", trigger}}, {x});
 
     pooya::Euler stepper;
 
@@ -80,7 +80,7 @@ int main()
     gp << "plot" << gp.file1d(history[x]) << "with lines title 'x'," << gp.file1d(history[xd])
        << "with lines title 'xd'\n";
 
-    assert(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
 
     return 0;
 }

@@ -15,8 +15,8 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_HELPER_NDEBUG_HPP__
-#define __POOYA_HELPER_NDEBUG_HPP__
+#ifndef __POOYA_HELPER_DEFS_HPP__
+#define __POOYA_HELPER_DEFS_HPP__
 
 #undef POOYA_DEBUG
 
@@ -24,4 +24,21 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define POOYA_DEBUG
 #endif
 
-#endif // __POOYA_HELPER_NDEBUG_HPP__
+#define POOYA_BOOL_SIGNAL
+#define POOYA_INT_SIGNAL
+#define POOYA_ARRAY_SIGNAL
+
+template<typename T>
+struct is_pair : std::false_type
+{
+};
+
+template<typename T1, typename T2>
+struct is_pair<std::pair<T1, T2>> : std::true_type
+{
+};
+
+template<typename T>
+constexpr bool is_pair_v = is_pair<T>::value;
+
+#endif // __POOYA_HELPER_DEFS_HPP__

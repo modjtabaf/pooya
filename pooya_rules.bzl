@@ -12,7 +12,16 @@
 
 SHARED_COPTS = []
 
-def pooya_cc_library(name, srcs, hdrs=[], deps=[], **kwargs):
+def get_from_dict(dct, key, val=[]):
+    if key in dct:
+        val = dct[key]
+        dct.pop(key)
+    return val
+
+def pooya_cc_library(name, srcs, **kwargs):
+    hdrs = get_from_dict(kwargs, "hdrs")
+    deps = get_from_dict(kwargs, "deps")
+
     native.cc_library(
         name = name,
         srcs = srcs,
@@ -33,6 +42,8 @@ def pooya_cc_library(name, srcs, hdrs=[], deps=[], **kwargs):
     )
 
 def pooya_cc_binary(name, src, **kwargs):
+    deps = get_from_dict(kwargs, "deps")
+
     native.cc_binary(
         name = name,
         srcs = [src],
@@ -51,11 +62,13 @@ def pooya_cc_binary(name, src, **kwargs):
             "//src/block",
             "//src/solver",
             "//src/misc",
-        ],
+        ] + deps,
         **kwargs
     )
 
 def pooya_cc_test(name, src, **kwargs):
+    deps = get_from_dict(kwargs, "deps")
+
     native.cc_test(
         name = name,
         size = "small",
@@ -63,10 +76,7 @@ def pooya_cc_test(name, src, **kwargs):
         copts = SHARED_COPTS,
         deps = [
             "@com_google_googletest//:gtest_main",
-            "//src/block",
-            "//src/signal",
-            "//src/solver",
-        ],
+        ] + deps,
         linkopts = [
             "-lboost_iostreams",
             "-lboost_system",

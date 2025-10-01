@@ -19,41 +19,46 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_BLOCK_FUNCTION_HPP__
-#define __POOYA_BLOCK_FUNCTION_HPP__
+#ifndef __POOYA_BLOCK_SOURCE_HPP__
+#define __POOYA_BLOCK_SOURCE_HPP__
 
-#include <functional>
-
-#include "leaf.hpp"
+#include "src/block/singleio.hpp"
+#include "src/signal/array.hpp"
 
 namespace pooya
 {
 
-class Function : public Leaf
+template<typename T>
+class SourceT : public SingleOutputT<T>
 {
 public:
-    using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
-
-protected:
-    ActFunction _act_func;
+    using Base           = SingleOutputT<T>;
+    using SourceFunction = std::function<T(double)>;
 
 public:
-    Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Leaf(parent, num_iports, num_oports), _act_func(act_func)
-    {
-    }
-    Function(Submodel* parent, ActFunction act_func, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Leaf(parent, num_iports, num_oports), _act_func(act_func)
-    {
-    }
+    explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
+    explicit SourceT(Submodel* parent, SourceFunction src_func) : Base(parent), _src_func(src_func) {}
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + full_name().str());
-        _act_func(t, _ibus, _obus);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _src_func(t);
     }
+
+protected:
+    SourceFunction _src_func;
 };
+
+using Source = SourceT<double>;
+
+#ifdef POOYA_INT_SIGNAL
+using SourceI = SourceT<int>;
+#endif // POOYA_INT_SIGNAL
+
+#ifdef POOYA_ARRAY_SIGNAL
+using SourceA = SourceT<Array>;
+#endif // POOYA_ARRAY_SIGNAL
 
 } // namespace pooya
 
-#endif // __POOYA_BLOCK_FUNCTION_HPP__
+#endif // __POOYA_BLOCK_SOURCE_HPP__

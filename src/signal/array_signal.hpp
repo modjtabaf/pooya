@@ -37,7 +37,7 @@ public:
 
     ArraySignalImpl(Protected, std::size_t size, const ValidName& name) : Base(size, name), _array_value(size) {}
 
-    static std::shared_ptr<ArraySignalImpl> create_new(std::size_t size, const ValidName& name)
+    static Ptr create_new(std::size_t size, const ValidName& name)
     {
         return std::make_shared<ArraySignalImpl>(Protected(), size, name);
     }

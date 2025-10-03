@@ -36,10 +36,7 @@ public:
 
     BoolSignalImpl(Protected, const ValidName& name = "") : Base(name) {}
 
-    static std::shared_ptr<BoolSignalImpl> create_new(const ValidName& name = "")
-    {
-        return std::make_shared<BoolSignalImpl>(Protected(), name);
-    }
+    static Ptr create_new(const ValidName& name = "") { return std::make_shared<BoolSignalImpl>(Protected(), name); }
 
     bool get_value() const
     {
@@ -65,7 +62,7 @@ class BoolSignal : public SignalT<bool>
 public:
     using Base = SignalT<bool>;
 
-    BoolSignal() : Base(*BoolSignalImpl::create_new("").get()) {}
+    BoolSignal() : BoolSignal("") {}
     BoolSignal(const BoolSignal& sig) : Base(sig) {}
 
     explicit BoolSignal(const ValidName& name) : Base(*BoolSignalImpl::create_new(name).get()) {}

@@ -41,6 +41,7 @@ class BusSpec
 class BusImpl : public SignalImpl
 {
 public:
+    using Ptr             = std::shared_ptr<BusImpl>;
     using LabelSignalImpl = std::pair<std::string, Signal>;
     using Signals         = std::vector<LabelSignalImpl>;
 
@@ -70,7 +71,7 @@ public:
     }
 
     template<typename T>
-    static std::shared_ptr<BusImpl> create_new(std::initializer_list<T> l = {}, const ValidName& name = "")
+    static Ptr create_new(std::initializer_list<T> l = {}, const ValidName& name = "")
     {
         return std::make_shared<BusImpl>(Protected(), l, name);
     }

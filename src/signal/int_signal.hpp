@@ -39,10 +39,7 @@ public:
 
     IntSignalImpl(Protected, const ValidName& name = "") : Base(name) {}
 
-    static std::shared_ptr<IntSignalImpl> create_new(const ValidName& name = "")
-    {
-        return std::make_shared<IntSignalImpl>(Protected(), name);
-    }
+    static Ptr create_new(const ValidName& name = "") { return std::make_shared<IntSignalImpl>(Protected(), name); }
 
     int get_value() const
     {
@@ -68,7 +65,7 @@ class IntSignal : public SignalT<int>
 public:
     using Base = SignalT<int>;
 
-    IntSignal() : Base(*IntSignalImpl::create_new("").get()) {}
+    IntSignal() : IntSignal("") {}
     IntSignal(const IntSignal& sig) : Base(sig) {}
 
     explicit IntSignal(const ValidName& name) : Base(*IntSignalImpl::create_new(name).get()) {}

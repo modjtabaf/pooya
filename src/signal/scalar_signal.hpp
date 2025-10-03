@@ -36,10 +36,7 @@ public:
 
     ScalarSignalImpl(Protected, const ValidName& name = "") : Base(1, name) {}
 
-    static std::shared_ptr<ScalarSignalImpl> create_new(const ValidName& name = "")
-    {
-        return std::make_shared<ScalarSignalImpl>(Protected(), name);
-    }
+    static Ptr create_new(const ValidName& name = "") { return std::make_shared<ScalarSignalImpl>(Protected(), name); }
 
     double get_value() const
     {
@@ -65,7 +62,7 @@ class ScalarSignal : public SignalT<double>
 public:
     using Base = SignalT<double>;
 
-    ScalarSignal() : Base(*ScalarSignalImpl::create_new("").get()) {}
+    ScalarSignal() : ScalarSignal("") {}
     ScalarSignal(const ScalarSignal& sig) : Base(sig) {}
 
     explicit ScalarSignal(const ValidName& name) : Base(*ScalarSignalImpl::create_new(name).get()) {}

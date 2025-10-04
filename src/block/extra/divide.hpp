@@ -31,16 +31,10 @@ namespace pooya
 template<typename T>
 class DivideT : public SingleOutputT<T>
 {
+public:
     using Base = SingleOutputT<T>;
 
-protected:
-    // input signals
-    typename Types<T>::Signal _s_x1; // input 1
-    typename Types<T>::Signal _s_x2; // input 2
-
-public:
-    explicit DivideT() : Base(2, 1) {}
-    explicit DivideT(Submodel* parent) : Base(parent, 2, 1) {}
+    explicit DivideT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 2, 1) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
@@ -62,6 +56,11 @@ public:
         pooya_trace("block: " + Base::full_name().str());
         Base::_s_out = _s_x1 / _s_x2;
     }
+
+protected:
+    // input signals
+    typename Types<T>::Signal _s_x1; // input 1
+    typename Types<T>::Signal _s_x2; // input 2
 };
 
 using Divide = DivideT<double>;

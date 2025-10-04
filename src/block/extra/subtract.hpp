@@ -34,8 +34,7 @@ class SubtractT : public SingleOutputT<T>
 public:
     using Base = SingleOutputT<T>;
 
-    explicit SubtractT() : Base(2, 1) {}
-    explicit SubtractT(Submodel* parent) : Base(parent, 2, 1) {}
+    explicit SubtractT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 2, 1) {}
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

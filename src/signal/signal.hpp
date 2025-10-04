@@ -38,7 +38,7 @@ protected:
     {
     };
 
-    SignalImpl(const ValidName& name) : NamedObject(name) {}
+    SignalImpl(std::string_view name) : NamedObject(name) {}
 };
 
 class Signal

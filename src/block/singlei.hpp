@@ -29,14 +29,8 @@ class SingleInputT : public Leaf
 protected:
     typename Types<T>::Signal _s_in;
 
-    explicit SingleInputT(uint16_t num_oports = NoIOLimit) : Leaf(1, num_oports) {}
-    explicit SingleInputT(Submodel* parent, uint16_t num_oports = NoIOLimit) : Leaf(parent, 1, num_oports) {}
-    explicit SingleInputT(uint16_t num_iports, uint16_t num_oports) : Leaf(num_iports, num_oports)
-    {
-        pooya_verify(num_iports == 1, "One and only one input expected!");
-    }
-    explicit SingleInputT(Submodel* parent, uint16_t num_iports, uint16_t num_oports)
-        : Leaf(parent, num_iports, num_oports)
+    explicit SingleInputT(Submodel* parent, std::string_view name, uint16_t num_iports, uint16_t num_oports)
+        : Leaf(parent, name, num_iports, num_oports)
     {
         pooya_verify(num_iports == 1, "One and only one input expected!");
     }

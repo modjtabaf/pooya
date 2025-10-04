@@ -32,19 +32,18 @@ template<typename T>
 class SISOFunctionT : public SingleInputOutputT<T>
 {
 public:
+    using Base        = SingleInputOutputT<T>;
     using ActFunction = std::function<typename Types<T>::SetValue(double, typename Types<T>::GetValue)>;
 
-    explicit SISOFunctionT(ActFunction act_func) : SingleInputOutputT<T>(1), _act_func(act_func) {}
-
-    explicit SISOFunctionT(Submodel* parent, ActFunction act_func)
-        : SingleInputOutputT<T>(parent, 1), _act_func(act_func)
+    explicit SISOFunctionT(ActFunction act_func, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, 1), _act_func(act_func)
     {
     }
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out = _act_func(t, SingleInputOutputT<T>::_s_in);
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _act_func(t, Base::_s_in);
     }
 
 protected:

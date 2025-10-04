@@ -22,7 +22,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/block/extra/divide.hpp"
 #include "src/block/extra/gain.hpp"
 #include "src/block/extra/multiply.hpp"
-#include "src/block/extra/sin.hpp"
+#include "src/block/extra/siso_function.hpp"
 #include "src/block/extra/subtract.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/submodel.hpp"
@@ -35,13 +35,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Multiply _mul1{this};
+    pooya::Multiply _mul1{1.0, this};
     pooya::Divide _div1{this};
     pooya::Subtract _sub{this};
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this};
-    pooya::Sin _sin{this};
-    pooya::Multiply _mul2{this};
+    pooya::Integrator _integ1{0.0, this};
+    pooya::Integrator _integ2{0.0, this};
+    pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this};
+    pooya::Multiply _mul2{1.0, this};
     pooya::Divide _div2{this};
 
 public:
@@ -49,7 +49,7 @@ public:
     pooya::ScalarSignal _g;
     pooya::ScalarSignal _l;
 
-    explicit Pendulum() { rename("pendulum"); }
+    explicit Pendulum() : pooya::Submodel(nullptr, "pendulum") {}
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {
@@ -89,10 +89,13 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{this};
+    pooya::Add _add{0.0, this};
 
 public:
-    PI(double Kp, double Ki, double x0 = 0.0) : _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki) { rename("PI"); }
+    PI(double Kp, double Ki, double x0 = 0.0)
+        : pooya::Submodel(nullptr, "PI"), _gain_p(Kp, this), _integ(x0, this), _gain_i(Ki, this)
+    {
+    }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
     {

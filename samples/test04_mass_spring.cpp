@@ -31,22 +31,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class MyModel : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{this, 0.1};
-    pooya::Integrator _integ2{this};
-    pooya::Gain _gain{this, -1.0 / 1.0};
+    pooya::Integrator _integ1{0.1, this, "xd"};
+    pooya::Integrator _integ2{0.0, this, "x"};
+    pooya::Gain _gain{-1.0 / 1.0, this, "-k\\m"};
 
 public:
     pooya::ScalarSignal _x{"x"};
     pooya::ScalarSignal _xd{"xd"};
     pooya::ScalarSignal _xdd{"xdd"};
 
-    MyModel()
+    MyModel() : pooya::Submodel(nullptr, "MyModel")
     {
-        rename("MyModel");
-        _integ1.rename("xd");
-        _integ2.rename("x");
-        _gain.rename("-k\\m");
-
         _integ1.connect({_xdd}, {_xd});
         _integ2.connect({_xd}, {_x});
         _gain.connect({_x}, {_xdd});

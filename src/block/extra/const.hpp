@@ -34,8 +34,10 @@ class ConstT : public SingleOutputT<T>
 public:
     using Base = SingleOutputT<T>;
 
-    explicit ConstT(const T& value) : Base(0), _value(value) {}
-    explicit ConstT(Submodel* parent, const T& value) : Base(parent, 0), _value(value) {}
+    explicit ConstT(typename Types<T>::SetValue value, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, 0), _value(value)
+    {
+    }
 
     void activation_function(double /*t*/) override
     {

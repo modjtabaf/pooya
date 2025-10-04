@@ -23,7 +23,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/block/extra/divide.hpp"
 #include "src/block/extra/gain.hpp"
 #include "src/block/extra/multiply.hpp"
-#include "src/block/extra/sin.hpp"
+#include "src/block/extra/siso_function.hpp"
 #include "src/block/extra/subtract.hpp"
 #include "src/block/integrator.hpp"
 #include "src/block/submodel.hpp"
@@ -36,28 +36,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Multiply _mul1{this};
-    pooya::Divide _div1{this};
-    pooya::Subtract _sub{this};
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this};
-    pooya::Sin _sin{this};
-    pooya::Multiply _mul2{this};
-    pooya::Divide _div2{this};
+    pooya::Multiply _mul1{1.0, this, "tau"};
+    pooya::Divide _div1{this, "_ml2"};
+    pooya::Subtract _sub{this, "err"};
+    pooya::Integrator _integ1{0.0, this, "dphi"};
+    pooya::Integrator _integ2{0.0, this, "phi"};
+    pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this, "sin(phi)"};
+    pooya::Multiply _mul2{1.0, this, "g"};
+    pooya::Divide _div2{this, "_l"};
 
 public:
-    Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent)
-    {
-        rename("pendulum");
-        _mul1.rename("tau");
-        _div1.rename("_ml2");
-        _sub.rename("err");
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _mul2.rename("g");
-        _div2.rename("_l");
-    }
+    Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent, "pendulum") {}
 
     pooya::ScalarSignal _m{"m"};
     pooya::ScalarSignal _g{"g"};
@@ -100,19 +89,15 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{this};
-    pooya::Derivative _deriv{this};
+    pooya::Add _add{0.0, this};
+    pooya::Derivative _deriv{0.0, this};
     pooya::Gain _gain_d;
 
 public:
     PID(pooya::Submodel* parent, double Kp, double Ki, double Kd, double x0 = 0.0)
-        : pooya::Submodel(parent), _gain_p(this, Kp), _integ(this, x0), _gain_i(this, Ki), _gain_d(this, Kd)
+        : pooya::Submodel(parent, "PI"), _gain_p(Kp, this, "Kp"), _integ(x0, this, "ix"), _gain_i(Ki, this, "Ki"),
+          _gain_d(Kd, this, "Kd")
     {
-        rename("PI");
-        _gain_p.rename("Kp");
-        _integ.rename("ix");
-        _gain_i.rename("Ki");
-        _gain_d.rename("Kd");
     }
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
@@ -155,10 +140,8 @@ public:
     pooya::ScalarSignal _tau{"tau"};
     pooya::ScalarSignal _err{"err"};
 
-    PendulumWithPID()
+    PendulumWithPID() : pooya::Submodel(nullptr, "pendulum_with_PID")
     {
-        rename("pendulum_with_PID");
-
         _sub.connect({_des_phi, _phi}, {_err});
         _pid.connect({_err}, {_tau});
         _pend.connect({_tau}, {_phi});

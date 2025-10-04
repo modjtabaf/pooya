@@ -62,28 +62,26 @@ void BusMemory::block_builder(const std::string& full_label, const Signal& sig_i
     std::shared_ptr<Block> block;
     if (dynamic_cast<ScalarSignalImpl*>(&sig_in.impl()))
     {
-        block = (it == _init_values.end()) ? std::make_shared<Memory>(_parent)
-                                           : std::make_shared<Memory>(_parent, it->second.as_scalar());
+        block = std::make_shared<Memory>((it == _init_values.end()) ? 0.0 : it->second.as_scalar(), _parent);
     }
 #ifdef POOYA_INT_SIGNAL
     else if (dynamic_cast<IntSignalImpl*>(&sig_in.impl()))
     {
-        block = (it == _init_values.end()) ? std::make_shared<MemoryI>(_parent)
-                                           : std::make_shared<MemoryI>(_parent, std::round(it->second.as_scalar()));
+        block = std::make_shared<MemoryI>((it == _init_values.end()) ? 0 : std::round(it->second.as_scalar()), _parent);
     }
 #endif // POOYA_INT_SIGNAL
 #ifdef POOYA_BOOL_SIGNAL
     else if (dynamic_cast<BoolSignalImpl*>(&sig_in.impl()))
     {
-        block = (it == _init_values.end()) ? std::make_shared<MemoryB>(_parent)
-                                           : std::make_shared<MemoryB>(_parent, Bool(it->second.as_scalar() != 0));
+        block =
+            std::make_shared<MemoryB>(Bool((it == _init_values.end()) ? false : it->second.as_scalar() != 0), _parent);
     }
 #endif // POOYA_BOOL_SIGNAL
 #ifdef POOYA_ARRAY_SIGNAL
     else if (auto* pa = dynamic_cast<ArraySignalImpl*>(&sig_in.impl()); pa)
     {
-        block = (it == _init_values.end()) ? std::make_shared<MemoryA>(_parent, Array::Zero(pa->size()))
-                                           : std::make_shared<MemoryA>(_parent, it->second.as_array());
+        block = std::make_shared<MemoryA>((it == _init_values.end()) ? Array::Zero(pa->size()) : it->second.as_array(),
+                                          _parent);
     }
 #endif // POOYA_ARRAY_SIGNAL
     else

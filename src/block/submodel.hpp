@@ -25,15 +25,10 @@ namespace pooya
 
 class Submodel : public Block
 {
-protected:
-    std::vector<Block*> _blocks;
-
 public:
-    explicit Submodel(uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit) : Block(num_iports, num_oports)
-    {
-    }
-    explicit Submodel(Submodel* parent, uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
-        : Block(parent, num_iports, num_oports)
+    explicit Submodel(Submodel* parent = nullptr, std::string_view name = "", uint16_t num_iports = NoIOLimit,
+                      uint16_t num_oports = NoIOLimit)
+        : Block(parent, name, num_iports, num_oports)
     {
     }
 
@@ -63,6 +58,9 @@ public:
     bool visit(VisitorCallback cb, uint32_t level, uint32_t max_level = std::numeric_limits<uint32_t>::max()) override;
     bool const_visit(ConstVisitorCallback cb, uint32_t level,
                      uint32_t max_level = std::numeric_limits<uint32_t>::max()) const override;
+
+protected:
+    std::vector<Block*> _blocks;
 }; // class Submodel
 
 } // namespace pooya

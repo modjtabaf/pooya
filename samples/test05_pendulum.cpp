@@ -20,9 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include "src/block/extra/divide.hpp"
 #include "src/block/extra/multiply.hpp"
-#include "src/block/extra/sin.hpp"
+#include "src/block/extra/siso_function.hpp"
 #include "src/block/integrator.hpp"
-// #include "src/block/extra/siso_function.hpp"
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
@@ -33,12 +32,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{this};
-    pooya::Integrator _integ2{this, M_PI_4};
-    // pooya::SISOFunction _sin(this, [](double /*t*/, double x) -> double { return std::sin(x); });
-    pooya::Sin _sin{this};
-    pooya::Multiply _mul{this, -1};
-    pooya::Divide _div{this};
+    pooya::Integrator _integ1{0.0, this, "dphi"};
+    pooya::Integrator _integ2{M_PI_4, this, "phi"};
+    pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this, "sin(phi)"};
+    pooya::Multiply _mul{-1, this, "-g"};
+    pooya::Divide _div{this, "_l"};
 
 public:
     pooya::ScalarSignal _phi{"phi"};
@@ -50,12 +48,6 @@ public:
     Pendulum()
     {
         pooya_trace0;
-
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _mul.rename("-g");
-        _div.rename("_l");
 
         pooya::ScalarSignal s10;
         pooya::ScalarSignal s20;

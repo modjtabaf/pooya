@@ -31,15 +31,12 @@ namespace pooya
 template<typename T>
 class MultiplyT : public SingleOutputT<T>
 {
+public:
     using Base = SingleOutputT<T>;
 
-protected:
-    T _initial;
-    T _ret;
-
-public:
-    explicit MultiplyT(const T& initial = 1.0) : Base(Block::NoIOLimit, 1), _initial(initial) {}
-    explicit MultiplyT(Submodel* parent, const T& initial = 1.0) : Base(parent, Block::NoIOLimit, 1), _initial(initial)
+    explicit MultiplyT(typename Types<T>::SetValue initial = 1.0, Submodel* parent = nullptr,
+                       std::string_view name = "")
+        : Base(parent, name, Block::NoIOLimit, 1), _initial(initial)
     {
     }
 
@@ -69,6 +66,10 @@ public:
         }
         Base::_s_out = _ret;
     }
+
+protected:
+    T _initial;
+    T _ret;
 };
 
 using Multiply = MultiplyT<double>;

@@ -35,7 +35,7 @@ public:
 protected:
     bool _assigned{false}; // has the value been assigned?
 
-    ValueSignalImpl(const ValidName& name) : SignalImpl(name) {}
+    ValueSignalImpl(std::string_view name) : SignalImpl(name) {}
 };
 
 } // namespace pooya

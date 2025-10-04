@@ -45,8 +45,7 @@ TEST_F(TestGain, ScalarGain)
     constexpr double gain_value{2.0};
 
     // model setup
-    pooya::Gain gain(gain_value);
-    gain.rename("gain");
+    pooya::Gain gain(gain_value, nullptr, "gain");
     pooya::ScalarSignal s_x("x");
     pooya::ScalarSignal s_y("y");
     gain.connect({s_x}, {s_y});

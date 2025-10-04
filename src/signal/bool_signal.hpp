@@ -34,9 +34,9 @@ public:
     using Base = ValueSignalImpl;
     using Ptr  = std::shared_ptr<BoolSignalImpl>;
 
-    BoolSignalImpl(Protected, const ValidName& name = "") : Base(name) {}
+    BoolSignalImpl(Protected, std::string_view name) : Base(name) {}
 
-    static Ptr create_new(const ValidName& name = "") { return std::make_shared<BoolSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name) { return std::make_shared<BoolSignalImpl>(Protected(), name); }
 
     bool get_value() const
     {
@@ -65,7 +65,7 @@ public:
     BoolSignal() : BoolSignal("") {}
     BoolSignal(const BoolSignal& sig) : Base(sig) {}
 
-    explicit BoolSignal(const ValidName& name) : Base(*BoolSignalImpl::create_new(name).get()) {}
+    explicit BoolSignal(std::string_view name) : Base(*BoolSignalImpl::create_new(name).get()) {}
     explicit BoolSignal(SignalImpl& sig) : Base(sig) {}
     explicit BoolSignal(const Signal& sig) : Base(sig) {}
 

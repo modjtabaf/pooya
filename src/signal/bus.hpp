@@ -46,9 +46,9 @@ public:
     using Signals         = std::vector<LabelSignalImpl>;
 
     template<typename T>
-    BusImpl(Protected, std::initializer_list<T> l, const ValidName& name) : SignalImpl(name)
+    BusImpl(Protected, std::initializer_list<T> l, std::string_view name) : SignalImpl(name)
     {
-        pooya_trace("name: " + name.str());
+        pooya_trace("name: " + this->name().str());
 
         _signals.reserve(l.size());
 
@@ -71,7 +71,7 @@ public:
     }
 
     template<typename T>
-    static Ptr create_new(std::initializer_list<T> l = {}, const ValidName& name = "")
+    static Ptr create_new(std::initializer_list<T> l, std::string_view name)
     {
         return std::make_shared<BusImpl>(Protected(), l, name);
     }
@@ -148,10 +148,10 @@ class Bus : public SignalT<BusSpec>
 public:
     using Base = SignalT<BusSpec>;
 
-    Bus(std::initializer_list<Signal> l = {}, const ValidName& name = "") : Base(*BusImpl::create_new(l, name)) {}
+    Bus(std::initializer_list<Signal> l = {}, std::string_view name = "") : Base(*BusImpl::create_new(l, name)) {}
 
     template<typename T = Signal>
-    Bus(std::initializer_list<std::pair<std::string, T>> l, const ValidName& name = "")
+    Bus(std::initializer_list<std::pair<std::string, T>> l, std::string_view name = "")
         : Base(*BusImpl::create_new(l, name))
     {
     }

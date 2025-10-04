@@ -34,8 +34,10 @@ class AddT : public SingleOutputT<T>
 public:
     using Base = SingleOutputT<T>;
 
-    explicit AddT(const T& initial = 0.0) : Base(Block::NoIOLimit, 1), _initial(initial) {}
-    explicit AddT(Submodel* parent, const T& initial = 0.0) : Base(parent, Block::NoIOLimit, 1), _initial(initial) {}
+    explicit AddT(typename Types<T>::SetValue initial = 0.0, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, Block::NoIOLimit, 1), _initial(initial)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

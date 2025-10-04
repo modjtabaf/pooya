@@ -31,24 +31,26 @@ namespace pooya
 template<typename T>
 class InitialValueT : public SingleInputOutputT<T>
 {
-protected:
-    T _value;
-    bool _init{true};
-
 public:
-    explicit InitialValueT(const ValidName& name = "") : SingleInputOutputT<T>(name, 1) {}
+    using Base = SingleInputOutputT<T>;
+
+    explicit InitialValueT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         if (_init)
         {
-            _value                       = SingleInputOutputT<T>::_s_in->get();
-            SingleInputOutputT<T>::_ibus = nullptr;
-            _init                        = false;
+            _value      = Base::_s_in->get();
+            Base::_ibus = nullptr;
+            _init       = false;
         }
-        SingleInputOutputT<T>::_s_out->set(_value);
+        Base::_s_out->set(_value);
     }
+
+protected:
+    T _value;
+    bool _init{true};
 };
 
 using InitialValue = InitialValueT<double>;

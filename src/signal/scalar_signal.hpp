@@ -34,9 +34,9 @@ public:
     using Base = FloatSignalImplT<double>;
     using Ptr  = std::shared_ptr<ScalarSignalImpl>;
 
-    ScalarSignalImpl(Protected, const ValidName& name = "") : Base(1, name) {}
+    ScalarSignalImpl(Protected, std::string_view name) : Base(1, name) {}
 
-    static Ptr create_new(const ValidName& name = "") { return std::make_shared<ScalarSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name) { return std::make_shared<ScalarSignalImpl>(Protected(), name); }
 
     double get_value() const
     {
@@ -65,7 +65,7 @@ public:
     ScalarSignal() : ScalarSignal("") {}
     ScalarSignal(const ScalarSignal& sig) : Base(sig) {}
 
-    explicit ScalarSignal(const ValidName& name) : Base(*ScalarSignalImpl::create_new(name).get()) {}
+    explicit ScalarSignal(std::string_view name) : Base(*ScalarSignalImpl::create_new(name).get()) {}
     explicit ScalarSignal(SignalImpl& sig) : Base(sig) {}
     explicit ScalarSignal(const Signal& sig) : Base(sig) {}
 

@@ -35,9 +35,9 @@ public:
     using Base = FloatSignalImplT<Array>;
     using Ptr  = std::shared_ptr<ArraySignalImpl>;
 
-    ArraySignalImpl(Protected, std::size_t size, const ValidName& name) : Base(size, name), _array_value(size) {}
+    ArraySignalImpl(Protected, std::size_t size, std::string_view name) : Base(size, name), _array_value(size) {}
 
-    static Ptr create_new(std::size_t size, const ValidName& name)
+    static Ptr create_new(std::size_t size, std::string_view name)
     {
         return std::make_shared<ArraySignalImpl>(Protected(), size, name);
     }
@@ -76,7 +76,7 @@ public:
 
     ArraySignal(const ArraySignal& sig) : Base(sig) {}
 
-    explicit ArraySignal(std::size_t size = 1, const ValidName& name = "")
+    explicit ArraySignal(std::size_t size = 1, std::string_view name = "")
         : Base(*ArraySignalImpl::create_new(size, name).get())
     {
     }

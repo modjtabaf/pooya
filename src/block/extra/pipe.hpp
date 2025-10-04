@@ -32,13 +32,14 @@ template<typename T>
 class PipeT : public SingleInputOutputT<T>
 {
 public:
-    explicit PipeT() : SingleInputOutputT<T>(1) {}
-    explicit PipeT(Submodel* parent) : SingleInputOutputT<T>(parent, 1) {}
+    using Base = SingleInputOutputT<T>;
+
+    explicit PipeT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out = SingleInputOutputT<T>::_s_in;
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = Base::_s_in;
     }
 };
 

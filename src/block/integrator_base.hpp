@@ -33,14 +33,10 @@ class IntegratorBaseT : public SingleOutputT<T>
 public:
     using Base = SingleOutputT<T>;
 
-    explicit IntegratorBaseT(T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
+    explicit IntegratorBaseT(typename Types<T>::SetValue ic = 0.0, Submodel* parent = nullptr,
+                             std::string_view name = "", uint16_t num_iports = Block::NoIOLimit,
                              uint16_t num_oports = Block::NoIOLimit)
-        : Base(num_iports, num_oports), _value(ic)
-    {
-    }
-    explicit IntegratorBaseT(Submodel* parent, T ic = T(0.0), uint16_t num_iports = Block::NoIOLimit,
-                             uint16_t num_oports = Block::NoIOLimit)
-        : Base(parent, num_iports, num_oports), _value(ic)
+        : Base(parent, name, num_iports, num_oports), _value(ic)
     {
     }
 

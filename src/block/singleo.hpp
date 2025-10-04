@@ -29,13 +29,9 @@ class SingleOutputT : public Base
 protected:
     typename Types<T>::Signal _s_out;
 
-    explicit SingleOutputT(uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
-        : Base(num_iports, num_oports)
-    {
-        pooya_verify(num_oports == 1, "One and only one output expected!");
-    }
-    explicit SingleOutputT(Submodel* parent, uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
-        : Base(parent, num_iports, num_oports)
+    explicit SingleOutputT(Submodel* parent = nullptr, std::string_view name = "",
+                           uint16_t num_iports = Block::NoIOLimit, uint16_t num_oports = 1)
+        : Base(parent, name, num_iports, num_oports)
     {
         pooya_verify(num_oports == 1, "One and only one output expected!");
     }

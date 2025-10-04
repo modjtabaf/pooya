@@ -31,43 +31,47 @@ namespace pooya
 template<typename T>
 class DerivativeT : public SingleInputOutputT<T>
 {
-protected:
-    bool _first_step{true};
-    double _t;
-    T _x;
-    T _y;
-
 public:
-    explicit DerivativeT(const T& y0 = 0) : SingleInputOutputT<T>(1), _y(y0) {}
-    explicit DerivativeT(Submodel* parent, const T& y0 = 0) : SingleInputOutputT<T>(parent, 1), _y(y0) {}
+    using Base = SingleInputOutputT<T>;
+
+    explicit DerivativeT(typename Types<T>::SetValue y0 = 0.0, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, 1), _y(y0)
+    {
+    }
 
     void post_step(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         _t          = t;
-        _x          = SingleInputOutputT<T>::_s_in;
+        _x          = Base::_s_in;
         _y          = _x;
         _first_step = false;
     }
 
     void activation_function(double t) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
+        pooya_trace("block: " + Base::full_name().str());
         if (_first_step)
         {
-            _t                            = t;
-            _x                            = SingleInputOutputT<T>::_s_in;
-            SingleInputOutputT<T>::_s_out = _y;
+            _t           = t;
+            _x           = Base::_s_in;
+            Base::_s_out = _y;
         }
         else if (_t == t)
         {
-            SingleInputOutputT<T>::_s_out = _y;
+            Base::_s_out = _y;
         }
         else
         {
-            SingleInputOutputT<T>::_s_out = (SingleInputOutputT<T>::_s_in - _x) / (t - _t);
+            Base::_s_out = (Base::_s_in - _x) / (t - _t);
         }
     }
+
+protected:
+    bool _first_step{true};
+    double _t;
+    T _x;
+    T _y;
 };
 
 using Derivative = DerivativeT<double>;

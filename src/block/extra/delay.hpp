@@ -32,21 +32,13 @@ namespace pooya
 template<typename T>
 class DelayT : public SingleOutputT<T>
 {
+public:
     using Base = SingleOutputT<T>;
 
-protected:
-    double _lifespan;
-    std::vector<double> _t;
-    std::vector<T> _x;
-
-    // input signals
-    typename Types<T>::Signal _s_x;       // in
-    ScalarSignal _s_delay;                // delay
-    typename Types<T>::Signal _s_initial; // initial
-
-public:
-    explicit DelayT(double lifespan) : Base(3, 1), _lifespan(lifespan) {}
-    explicit DelayT(Submodel* parent, double lifespan) : Base(parent, 3, 1), _lifespan(lifespan) {}
+    explicit DelayT(double lifespan, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, 3, 1), _lifespan(lifespan)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {
@@ -121,6 +113,16 @@ public:
             Base::_s_out = (_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1];
         }
     }
+
+protected:
+    double _lifespan;
+    std::vector<double> _t;
+    std::vector<T> _x;
+
+    // input signals
+    typename Types<T>::Signal _s_x;       // in
+    ScalarSignal _s_delay;                // delay
+    typename Types<T>::Signal _s_initial; // initial
 };
 
 using Delay = DelayT<double>;

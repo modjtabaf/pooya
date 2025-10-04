@@ -31,49 +31,36 @@ namespace pooya
 template<typename T, typename Tic = T>
 class MemoryT : public SingleInputOutputT<T>
 {
-protected:
-    T _value;
-
 public:
-    explicit MemoryT(const Tic& ic = Tic(0)) : SingleInputOutputT<T>(1), _value(ic) {}
-    explicit MemoryT(Submodel* parent, const Tic& ic = Tic(0)) : SingleInputOutputT<T>(parent, 1), _value(ic) {}
+    using Base = SingleInputOutputT<T>;
+
+    explicit MemoryT(const Tic& ic = Tic(0), Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name, 1), _value(ic)
+    {
+    }
 
     void post_step(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        _value = SingleInputOutputT<T>::_s_in;
+        pooya_trace("block: " + Base::full_name().str());
+        _value = Base::_s_in;
     }
-
-    // # Memory can be implemented either by defining the following activation
-    // function #   (which is more straightforward) or through overloading the
-    // _process method #   which is more efficient since it deosn't rely on the
-    // input signal being known. #   Both approaches are supposed to lead to the
-    // exact same results.
-
-    // # def activation_function(self, t, x):
-    // #     return [self._value]
 
     uint _process(double /*t*/, bool /*go_deep*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        if (SingleInputOutputT<T>::_processed)
+        pooya_trace("block: " + Base::full_name().str());
+        if (Base::_processed)
         {
             return 0;
         }
 
         pooya_trace_update0;
-        SingleInputOutputT<T>::_s_out     = _value;
-        SingleInputOutputT<T>::_processed = true;
+        Base::_s_out     = _value;
+        Base::_processed = true;
         return 1;
     }
-};
 
-class Bool
-{
-public:
-    explicit Bool(bool b = false) : _b(b) {}
-    bool _b{false};
-    operator bool() const { return _b; }
+protected:
+    T _value;
 };
 
 using Memory = MemoryT<double>;
@@ -83,6 +70,14 @@ using MemoryI = MemoryT<int>;
 #endif // POOYA_INT_SIGNAL
 
 #ifdef POOYA_BOOL_SIGNAL
+class Bool
+{
+public:
+    explicit Bool(bool b = false) : _b(b) {}
+    bool _b{false};
+    operator bool() const { return _b; }
+};
+
 using MemoryB = MemoryT<bool, Bool>;
 #endif // POOYA_BOOL_SIGNAL
 

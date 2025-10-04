@@ -35,8 +35,11 @@ class TriggeredIntegratorT : public IntegratorBaseT<T>
 public:
     using Base = IntegratorBaseT<T>;
 
-    explicit TriggeredIntegratorT(T ic = T(0.0)) : Base(ic, 2, 1) {}
-    explicit TriggeredIntegratorT(Submodel* parent, T ic = T(0.0)) : Base(parent, ic, 2, 1) {}
+    explicit TriggeredIntegratorT(typename Types<T>::SetValue ic = 0.0, Submodel* parent = nullptr,
+                                  std::string_view name = "")
+        : Base(ic, parent, name, 2, 1)
+    {
+    }
 
     bool connect(const Bus& ibus, const Bus& obus) override
     {

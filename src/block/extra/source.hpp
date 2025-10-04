@@ -35,9 +35,10 @@ public:
     using Base           = SingleOutputT<T>;
     using SourceFunction = std::function<T(double)>;
 
-public:
-    explicit SourceT(SourceFunction src_func) : _src_func(src_func) {}
-    explicit SourceT(Submodel* parent, SourceFunction src_func) : Base(parent), _src_func(src_func) {}
+    explicit SourceT(SourceFunction src_func, Submodel* parent = nullptr, std::string_view name = "")
+        : Base(parent, name), _src_func(src_func)
+    {
+    }
 
     void activation_function(double t) override
     {

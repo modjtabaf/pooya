@@ -31,20 +31,21 @@ namespace pooya
 template<typename T, typename GainType>
 class GainT : public SingleInputOutputT<T>
 {
-protected:
-    GainType _k;
-
 public:
-    explicit GainT(GainType k) : SingleInputOutputT<T>(1), _k(k) {}
-    explicit GainT(Submodel* parent, GainType k) : SingleInputOutputT<T>(parent, 1), _k(k) {}
+    using Base = SingleInputOutputT<T>;
+
+    explicit GainT(GainType k, Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1), _k(k) {}
 
     void activation_function(double /*t*/) override
     {
-        pooya_trace("block: " + SingleInputOutputT<T>::full_name().str());
-        SingleInputOutputT<T>::_s_out = _k * SingleInputOutputT<T>::_s_in->get_value();
+        pooya_trace("block: " + Base::full_name().str());
+        Base::_s_out = _k * Base::_s_in->get_value();
     }
 
     typename Types<GainType>::GetValue gain() const { return _k; }
+
+protected:
+    GainType _k;
 };
 
 using Gain = GainT<double, double>;

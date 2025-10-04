@@ -37,9 +37,9 @@ public:
     using Base = ValueSignalImpl;
     using Ptr  = std::shared_ptr<IntSignalImpl>;
 
-    IntSignalImpl(Protected, const ValidName& name = "") : Base(name) {}
+    IntSignalImpl(Protected, std::string_view name) : Base(name) {}
 
-    static Ptr create_new(const ValidName& name = "") { return std::make_shared<IntSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name) { return std::make_shared<IntSignalImpl>(Protected(), name); }
 
     int get_value() const
     {
@@ -68,7 +68,7 @@ public:
     IntSignal() : IntSignal("") {}
     IntSignal(const IntSignal& sig) : Base(sig) {}
 
-    explicit IntSignal(const ValidName& name) : Base(*IntSignalImpl::create_new(name).get()) {}
+    explicit IntSignal(std::string_view name) : Base(*IntSignalImpl::create_new(name).get()) {}
     explicit IntSignal(SignalImpl& sig) : Base(sig) {}
     explicit IntSignal(const Signal& sig) : Base(sig) {}
 

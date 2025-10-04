@@ -39,34 +39,30 @@ protected:
 public:
     ValidName()                 = default;
     ValidName(const ValidName&) = default;
-    ValidName(const char* name) : _name(emend(std::string(name))) {}
-    ValidName(const std::string& name) : _name(emend(name)) {}
+    ValidName(std::string_view name) : _name(emend(name)) {}
 
     ValidName& operator=(const ValidName&) = default;
-    ValidName& operator=(const char* name)
-    {
-        _name = emend(std::string(name));
-        return *this;
-    }
-    ValidName& operator=(const std::string& name)
+    ValidName& operator=(std::string_view name)
     {
         _name = emend(name);
         return *this;
     }
 
-    std::string str() const { return _name; }
+    const std::string& str() const { return _name; }
+
     template<typename T>
     ValidName operator|(const T& name) const
     {
         return append(name, ".");
     }
+
     template<typename T>
     ValidName operator/(const T& name) const
     {
         return append(name, "/");
     }
 
-    static std::string emend(const std::string& name);
+    static std::string emend(std::string_view name);
     static std::string emend(const ValidName& name) { return name._name; }
 };
 
@@ -76,15 +72,11 @@ protected:
     ValidName _name;
 
 public:
-    explicit NamedObject(const ValidName& name = "") : _name(name) {}
+    explicit NamedObject(const ValidName& name = {}) : _name(name) {}
 
     const ValidName& name() const { return _name; }
 
-    template<typename T>
-    void rename(const T& name)
-    {
-        _name = name;
-    }
+    void rename(std::string_view name) { _name = name; }
 }; // class NamedObject
 
 } // namespace pooya

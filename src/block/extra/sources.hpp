@@ -32,16 +32,9 @@ class Sources : public Leaf
 public:
     using SourcesFunction = std::function<void(const Bus&, double)>;
 
-protected:
-    SourcesFunction _src_func;
-
-public:
-    explicit Sources(SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
-        : Leaf(0, num_oports), _src_func(src_func)
-    {
-    }
-    explicit Sources(const ValidName& name, SourcesFunction src_func, uint16_t num_oports = NoIOLimit)
-        : Leaf(name, 0, num_oports), _src_func(src_func)
+    explicit Sources(SourcesFunction src_func, Submodel* parent = nullptr, std::string_view name = "",
+                     uint16_t num_oports = NoIOLimit)
+        : Leaf(parent, name, 0, num_oports), _src_func(src_func)
     {
     }
 
@@ -50,6 +43,9 @@ public:
         pooya_trace("block: " + full_name().str());
         _src_func(_obus, t);
     }
+
+protected:
+    SourcesFunction _src_func;
 };
 
 } // namespace pooya

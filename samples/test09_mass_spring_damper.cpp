@@ -37,7 +37,7 @@ protected:
 
 public:
     MassSpringDamper(double m, double k, double c, double x0, double xd0)
-        : pooya::Leaf(1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
+        : pooya::Leaf(nullptr, "", 1, 0), _m(m), _k(k), _c(c), _x(x0), _xd(xd0)
     {
     }
 

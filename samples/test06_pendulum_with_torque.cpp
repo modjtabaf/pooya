@@ -19,9 +19,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <iostream>
 
 #include "src/block/extra/divide.hpp"
-// #include "src/block/extra/function.hpp"
+#include "src/block/extra/function.hpp"
 #include "src/block/extra/multiply.hpp"
-#include "src/block/extra/sin.hpp"
 #include "src/block/integrator.hpp"
 // #include "src/block/extra/siso_function.hpp"
 // #include "src/block/extra/so_function.hpp"
@@ -36,19 +35,19 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Integrator _integ1{this, M_PI_4};
-    pooya::Integrator _integ2{this};
-    // pooya::SISOFunction _sin{this, [](double /*t*/, double x) -> double { return std::sin(x); }};
-    // pooya::SOFunction _sin{this, [](double /*t*/, const pooya::Bus& ibus) -> double
-    //                        { return std::sin(pooya::ScalarSignal(ibus.at(0))); }};
-    // pooya::Function _sin{this, [](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-    //                      { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); }};
-    pooya::Sin _sin{this};
-    pooya::Multiply _mul1{this};
-    pooya::Divide _div1{this};
-    pooya::Multiply _mul2{this};
-    pooya::Divide _div2{this};
-    pooya::Subtract _sub{this};
+    pooya::Integrator _integ1{M_PI_4, this, "dphi"};
+    pooya::Integrator _integ2{0.0, this, "phi"};
+    pooya::Function _sin{[](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
+                         { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); }, this,
+                         "sin(phi)"};
+    // pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this, "sin(phi)"};
+    // pooya::SOFunction _sin{[](double /*t*/, const pooya::Bus& ibus) -> double
+    //                        { return std::sin(pooya::ScalarSignal(ibus.at(0))); }, this, "sin(phi)"};
+    pooya::Multiply _mul1{1.0, this, "g"};
+    pooya::Divide _div1{this, "_l"};
+    pooya::Multiply _mul2{1.0, this, "ml2"};
+    pooya::Divide _div2{this, "_ml2"};
+    pooya::Subtract _sub{this, "d2phi"};
 
 public:
     pooya::ScalarSignal _tau{"tau"};
@@ -62,15 +61,6 @@ public:
     Pendulum()
     {
         pooya_trace0;
-
-        _integ1.rename("dphi");
-        _integ2.rename("phi");
-        _sin.rename("sin(phi)");
-        _mul1.rename("g");
-        _div1.rename("_l");
-        _mul2.rename("ml2");
-        _div2.rename("_ml2");
-        _sub.rename("d2phi");
 
         pooya::ScalarSignal s10("s10");
         pooya::ScalarSignal s15("s15");

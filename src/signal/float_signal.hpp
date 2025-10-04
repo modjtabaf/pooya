@@ -50,7 +50,7 @@ protected:
         nullptr}; // the derivative signal if this is a state variable, nullptr otherwise
     const std::size_t _size;
 
-    FloatSignalImplT(std::size_t size, const ValidName& name) : Base(name), _size(size) {}
+    FloatSignalImplT(std::size_t size, std::string_view name) : Base(name), _size(size) {}
 };
 
 } // namespace pooya

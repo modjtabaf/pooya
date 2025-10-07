@@ -25,12 +25,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-bool arange(uint k, double& t, double t_init, double t_end, double dt)
-{
-    t_init += k * dt;
-    return (t_init <= t_end) && (t = t_init, true);
-}
-
 Simulator::Simulator(Block& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order)
     : _model(model), _inputs_cb(inputs_cb), _reuse_order(reuse_order)
 {

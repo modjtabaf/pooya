@@ -167,13 +167,11 @@ int main()
     pooya::History history;
     history.track(pendulum_with_pi._phi);
 
-    uint k = 0;
-    double t;
-    while (pooya::arange(k, t, 0, 5, 0.1))
+    uint ind{0};
+    for (double t = 0; t <= 5; t += 0.1)
     {
         sim.run(t);
-        history.update(k, t);
-        k++;
+        history.update(ind++, t);
     }
 
     auto finish = std::chrono::high_resolution_clock::now();

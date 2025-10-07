@@ -175,13 +175,11 @@ int main()
     history.track(pendulum_with_pid._pend._dphi);
     history.track(pendulum_with_pid._tau);
 
-    uint k = 0;
-    double t;
-    while (pooya::arange(k, t, 0, 5, 0.02))
+    uint ind{0};
+    for (double t = 0; t <= 5; t += 0.02)
     {
         sim.run(t);
-        history.update(k, t);
-        k++;
+        history.update(ind++, t);
     }
 
     auto finish = std::chrono::high_resolution_clock::now();

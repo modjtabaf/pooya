@@ -32,13 +32,14 @@ pooya::Source     src_F(
     [](double t) -> double
     {
         return t < 1 ? 0 : 1;
-    });
-pooya::Gain       gain_1_m(1 / m);
-pooya::AddSub     addsub_rhs("+--");
-pooya::Integrator int_xdd;
-pooya::Integrator int_xd;
-pooya::Gain       gain_c_m(c / m);
-pooya::Gain       gain_k_m(k / m);
+    }, &model);
+pooya::Gain       gain_1_m(1 / m, &model);
+pooya::Subtract   sub1(&model);
+pooya::Subtract   sub2(&model);
+pooya::Integrator int_xdd(0.0, &model);
+pooya::Integrator int_xd(0.0, &model);
+pooya::Gain       gain_c_m(c / m, &model);
+pooya::Gain       gain_k_m(k / m, &model);
 ```
 
 The second step is to identify the signals and their equivalent **pooya** signal types and label them. The most common signal type is a scalar signal which represents a scalar real number. In this block diagram, all signals are scalars so it is not needed to mention the signal types. In the diagram below, the identified signals are prefixed *s_* and labeled in red:
@@ -51,6 +52,7 @@ Here is the implementation:
 // create signals
 pooya::ScalarSignal s_F;
 pooya::ScalarSignal s_F_m;
+pooya::ScalarSignal s1;
 pooya::ScalarSignal s_xdd;
 pooya::ScalarSignal s_xd;
 pooya::ScalarSignal s_x;
@@ -62,13 +64,14 @@ Now that all blocks and signals are defined, the model could be set up by adding
 
 ```cpp
 // setup the model
-src_F.connect({}, s_F);
-gain_1_m.connect(s_F, s_F_m);
-addsub_rhs.connect({s_F_m, s_cxd_m, s_kx_m}, s_xdd);
-int_xdd.connect(s_xdd, s_xd);
-int_xd.connect(s_xd, s_x);
-gain_c_m.connect(s_xd, s_cxd_m);
-gain_k_m.connect(s_x, s_kx_m);
+src_F.connect({}, {s_F});
+gain_1_m.connect({s_F}, {s_F_m});
+sub1.connect({s_F_m, s_cxd_m}, {s1});
+sub2.connect({s1, s_kx_m}, {s_xdd});
+int_xdd.connect({s_xdd}, {s_xd});
+int_xd.connect({s_xd}, {s_x});
+gain_c_m.connect({s_xd}, {s_cxd_m});
+gain_k_m.connect({s_x}, {s_kx_m});
 ```
 
 The model setup is complete and it is ready to use. The RK4 solver works well for this model. A simulator object is needed for simulating along with a history object for recording the signal values. While the history object is optional for simulation, it is useful for post-processing. Here, the simulation starts at `t0 = 0` and is run for 10 seconds with a fixed time step of 0.1 seconds:
@@ -83,11 +86,11 @@ history.track(s_x);
 history.track(s_xd);
 
 // run the simulation
-double t;
-for (uint k=0; pooya::arange(k, t, 0, 10, 0.1); k++)
+uint ind{0};
+for (double t=0; t <= 10; t += 0.1)
 {
     sim.run(t);
-    history.update(k, t, sim.values());
+    history.update(ind++, t);
 }
 ```
 

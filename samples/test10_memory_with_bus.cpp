@@ -99,13 +99,11 @@ int main()
     history.track(y_x2);
     history.track(y_z3);
 
-    uint k = 0;
-    double t;
-    while (pooya::arange(k, t, 0, 10, 0.5))
+    uint ind{0};
+    for (double t = 0; t <= 10; t += 0.5)
     {
         sim.run(t);
-        history.update(k, t);
-        k++;
+        history.update(ind++, t);
     }
 
     auto finish = std::chrono::high_resolution_clock::now();

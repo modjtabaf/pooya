@@ -67,8 +67,6 @@ public:
     void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
 };
 
-bool arange(uint k, double& t, double t_init, double t_end, double dt);
-
 } // namespace pooya
 
 #endif // __POOYA_SOLVER_SIMULATOR_HPP__

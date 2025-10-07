@@ -70,11 +70,11 @@ int main()
     history.track(s_xd);
 
     // run the simulation
-    double t;
-    for (uint k = 0; pooya::arange(k, t, 0, 10, 0.1); k++)
+    uint ind{0};
+    for (double t = 0; t <= 10; t += 0.1)
     {
         sim.run(t);
-        history.update(k, t);
+        history.update(ind++, t);
     }
 
     // post-processing

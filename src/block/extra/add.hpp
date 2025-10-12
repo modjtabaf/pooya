@@ -47,10 +47,12 @@ public:
             return false;
         }
 
+#if defined(POOYA_DEBUG)
         pooya_debug_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
         for (const auto& sig : ibus)
             pooya_debug_verify(dynamic_cast<typename Types<T>::SignalImpl*>(&sig.second.impl()),
                                Base::full_name().str() + ": signal type mismatch!");
+#endif // POOYA_DEBUG
 
         return true;
     }

@@ -48,7 +48,7 @@ public:
     static void fail_if_invalid_signal_type(SignalImpl* sig)
     {
         pooya_verify(dynamic_cast<typename Types<T>::SignalImpl*>(sig),
-                     (sig ? std::string("(null)") : sig->name().str()) + ": invalid signal type!");
+                     (sig ? sig->name().str() : std::string("(null)")) + ": invalid signal type!");
     }
 
     explicit Signal(SignalImpl& sig) : _ptr(std::move(sig.shared_from_this())) {}

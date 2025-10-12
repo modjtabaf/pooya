@@ -35,6 +35,7 @@ protected:
 public:
     virtual ~Leaf() = default;
 
+    bool ready_to_process() const;
     uint process(double t, bool go_deep = true) override;
 
     virtual void activation_function(double /*t*/) {}

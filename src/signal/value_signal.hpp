@@ -30,7 +30,7 @@ public:
     using Ptr  = std::shared_ptr<ValueSignalImpl>;
 
     void clear() { _assigned = false; }
-    bool is_assigned() const { return _assigned; }
+    bool assigned() const { return _assigned; }
 
 protected:
     bool _assigned{false}; // has the value been assigned?

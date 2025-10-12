@@ -47,7 +47,7 @@ public:
         pooya_trace0;
         pooya_debug_verify(_array_value.rows() == int(_size),
                            name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
-        pooya_debug_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_debug_verify(assigned(), name().str() + ": attempting to access an unassigned value!");
         return _array_value;
     }
 
@@ -57,7 +57,7 @@ public:
     {
         pooya_debug_verify(_array_value.rows() == int(_size),
                            name().str() + ": attempting to assign the value of an uninitialized array signal!");
-        pooya_debug_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
         pooya_debug_verify(value.rows() == int(_size), std::string("size mismatch (id=") + name().str() + ")(" +
                                                            std::to_string(_size) + " vs " +
                                                            std::to_string(value.rows()) + ")!");

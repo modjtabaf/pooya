@@ -23,22 +23,27 @@ namespace pooya
 uint Leaf::process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name().str());
-    if (_processed)
+    if (_processed || !ready_to_process())
     {
         return 0;
-    }
-    for (auto& sig : _linked_signals)
-    {
-        if ((sig.second & SignalLinkType::Required) && !sig.first->is_assigned())
-        {
-            return 0;
-        }
     }
 
     activation_function(t);
 
     _processed = true;
     return 1;
+}
+
+bool Leaf::ready_to_process() const
+{
+    for (auto& sig : _linked_signals)
+    {
+        if ((sig.second & SignalLinkType::Required) && !sig.first->assigned())
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace pooya

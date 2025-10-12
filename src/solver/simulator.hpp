@@ -18,35 +18,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SOLVER_SIMULATOR_HPP__
 #define __POOYA_SOLVER_SIMULATOR_HPP__
 
-#include <functional>
-#include <vector>
-
-#include "src/block/block.hpp"
-#include "src/signal/array.hpp"
-#include "stepper_base.hpp"
+#include "simulator_base.hpp"
 
 namespace pooya
 {
 
-using InputCallback = std::function<void(Block&, double)>;
-
-class Simulator
+class Simulator : public SimulatorBase
 {
-protected:
-    Block& _model;
-    double _t_prev{0};
-    InputCallback _inputs_cb;
-    std::vector<std::shared_ptr<ValueSignalImpl>> value_signals_;
-    std::vector<std::shared_ptr<ScalarSignalImpl>> scalar_state_signals_;
-#ifdef POOYA_ARRAY_SIGNAL
-    std::vector<std::shared_ptr<ArraySignalImpl>> array_state_signals_;
-#endif // POOYA_ARRAY_SIGNAL
-    Array _state_variables;
-    Array _state_variables_orig;
-    Array _state_variable_derivs;
-    StepperBase* _stepper{nullptr}; // todo: use a smart pointer
-    bool _initialized{false};
+public:
+    explicit Simulator(Block& model, SimulatorBase::InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr,
+                       bool reuse_order = false)
+        : SimulatorBase(model, inputs_cb, stepper), _reuse_order(reuse_order)
+    {
+    }
+    Simulator(const Simulator&) = delete; // no copy constructor
+    virtual ~Simulator()        = default;
 
+    void init(double t0 = 0.0) override;
+
+protected:
     const bool _reuse_order;
     using ProcessingOrder = std::vector<Block*>;
     ProcessingOrder _processing_order1;
@@ -54,17 +44,7 @@ protected:
     ProcessingOrder* _current_po{nullptr};
     ProcessingOrder* _new_po{nullptr};
 
-    uint process(double t);
-    void reset_with_state_variables(const Array& state_variables);
-    void get_state_variables(Array& state_variables);
-
-public:
-    explicit Simulator(Block& model, InputCallback inputs_cb = nullptr, StepperBase* stepper = nullptr,
-                       bool reuse_order = false);
-    Simulator(const Simulator&) = delete; // no copy constructor
-
-    void init(double t0 = 0.0);
-    void run(double t, double min_time_step = 1e-3, double max_time_step = 1);
+    void process_model(double t, bool call_pre_step, bool call_post_step) override;
 };
 
 } // namespace pooya

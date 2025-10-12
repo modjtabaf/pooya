@@ -67,7 +67,7 @@ public:
 
     auto parent() -> auto { return _parent; }
     bool processed() const { return _processed; }
-    bool is_connected() const { return _connected; }
+    bool connected() const { return _connected; }
     const Bus& ibus() const { return _ibus; }
     const Bus& obus() const { return _obus; }
     auto linked_signals() const -> const auto& { return _linked_signals; }

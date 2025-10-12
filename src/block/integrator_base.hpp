@@ -66,14 +66,14 @@ public:
     void pre_step(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(!Base::_s_out->is_assigned());
+        pooya_debug_verify0(!Base::_s_out->assigned());
         Base::_s_out = _value;
     }
 
     void post_step(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(Base::_s_out->is_assigned());
+        pooya_debug_verify0(Base::_s_out->assigned());
         _value = Base::_s_out;
     }
 

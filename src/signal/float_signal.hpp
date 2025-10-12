@@ -33,7 +33,7 @@ public:
     using Base = ValueSignalImpl;
     using Ptr  = std::shared_ptr<FloatSignalImplT<T>>;
 
-    bool is_state_variable() const { return static_cast<bool>(_deriv_sig); }
+    typename Types<T>::SignalImpl* state_variable() const { return _deriv_sig.get(); }
     std::size_t size() const { return _size; }
 
     void set_deriv_signal(const Signal& deriv_sig)

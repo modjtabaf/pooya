@@ -41,14 +41,14 @@ public:
     bool get_value() const
     {
         pooya_trace0;
-        pooya_debug_verify(is_assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_debug_verify(assigned(), name().str() + ": attempting to access an unassigned value!");
         return _bool_value;
     }
 
     void set_value(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(!is_assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
         _bool_value = value;
         _assigned   = true;
     }

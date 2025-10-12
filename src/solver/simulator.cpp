@@ -15,32 +15,32 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "src/helper/defs.hpp"
+
+#if defined(POOYA_DEBUG)
 #include <iostream>
-#include <memory>
-#include <unordered_set>
+#endif // defined(POOYA_DEBUG)
 
 #include "simulator.hpp"
+#include "src/block/block.hpp"
 #include "src/helper/util.hpp"
 
 namespace pooya
 {
 
-Simulator::Simulator(Block& model, InputCallback inputs_cb, StepperBase* stepper, bool reuse_order)
-    : _model(model), _inputs_cb(inputs_cb), _reuse_order(reuse_order)
-{
-    pooya_trace("model: " + model.full_name().str());
-    if (stepper)
-    {
-        _stepper = stepper;
-    }
-}
-
-uint Simulator::process(double t)
+void Simulator::process_model(double t, bool call_pre_step, bool call_post_step)
 {
     pooya_trace("t: " + std::to_string(t));
-    _model._mark_unprocessed();
 
-    uint n_processed = 0;
+    if (_inputs_cb)
+    {
+        _inputs_cb(_model, t);
+    }
+    _model.input_cb(t);
+
+    if (call_pre_step) _model.pre_step(t);
+
+    _model._mark_unprocessed();
 
     if (_reuse_order)
     {
@@ -56,7 +56,7 @@ uint Simulator::process(double t)
                 {
                     continue;
                 }
-                n_processed += base->process(t, false);
+                base->process(t, false);
                 if (base->processed())
                 {
                     _new_po->emplace_back(base);
@@ -81,12 +81,9 @@ uint Simulator::process(double t)
     }
     else
     {
-        uint n;
-        do
+        while (_model.process(t))
         {
-            n = _model.process(t);
-            n_processed += n;
-        } while (n);
+        }
     }
 
 #if defined(POOYA_DEBUG)
@@ -110,7 +107,7 @@ uint Simulator::process(double t)
             std::cout << "- " << c->full_name().str() << "\n";
             for (auto& sig_type : c->linked_signals())
             {
-                if (((sig_type.second & Block::SignalLinkType::Required) == 0) || sig_type.first->is_assigned())
+                if (((sig_type.second & Block::SignalLinkType::Required) == 0) || sig_type.first->assigned())
                 {
                     continue;
                 }
@@ -120,321 +117,43 @@ uint Simulator::process(double t)
     }
 #endif // defined(POOYA_DEBUG)
 
-    return n_processed;
+    if (call_post_step) _model.post_step(t);
 }
 
 void Simulator::init(double t0)
 {
     pooya_trace("t0: " + std::to_string(t0));
 
-    std::size_t state_variables_size{0};
+    SimulatorBase::init(t0);
 
-    std::unordered_set<ValueSignalImpl*> value_signals;
-    std::unordered_set<ScalarSignalImpl*> scalar_state_signals;
-#ifdef POOYA_ARRAY_SIGNAL
-    std::unordered_set<ArraySignalImpl*> array_state_signals;
-#endif // POOYA_ARRAY_SIGNAL
+    if (_state_variables.size() > 0 && _reuse_order)
+    {
+        pooya_debug_verify0(_processing_order1.empty());
+        pooya_debug_verify0(_processing_order2.empty());
 
-    _model.visit(
-        [&](Block& block, uint32_t /*level*/) -> bool
+        uint num_blocks     = 0;
+        auto enum_blocks_cb = [&](Block& /*c*/, uint32_t /*level*/) -> bool
         {
-            const auto& signals = block.linked_signals();
-            for (auto& sig : signals)
-            {
-                value_signals.insert(sig.first.get());
-
-                if (auto* ps = dynamic_cast<ScalarSignalImpl*>(sig.first.get()); ps)
-                {
-                    if (ps->is_state_variable() &&
-                        scalar_state_signals
-                            .insert(std::static_pointer_cast<ScalarSignalImpl>(ps->shared_from_this()).get())
-                            .second)
-                    {
-                        state_variables_size++;
-                    }
-                }
-#ifdef POOYA_ARRAY_SIGNAL
-                else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.first.get()); pa)
-                {
-                    if (pa->is_state_variable() &&
-                        array_state_signals
-                            .insert(std::static_pointer_cast<ArraySignalImpl>(pa->shared_from_this()).get())
-                            .second)
-                    {
-                        state_variables_size += pa->size();
-                    }
-                }
-#endif // POOYA_ARRAY_SIGNAL
-            }
-
+            num_blocks++;
             return true;
-        },
-        0);
+        };
+        _model.visit(enum_blocks_cb, 0);
 
-    value_signals_.reserve(value_signals.size());
-    for (auto* sig : value_signals)
-    {
-        value_signals_.emplace_back(std::static_pointer_cast<ValueSignalImpl>(sig->shared_from_this()));
-    }
-    scalar_state_signals_.reserve(scalar_state_signals.size());
-    for (auto* sig : scalar_state_signals)
-    {
-        scalar_state_signals_.emplace_back(std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this()));
-    }
-#ifdef POOYA_ARRAY_SIGNAL
-    array_state_signals_.reserve(array_state_signals.size());
-    for (auto* sig : array_state_signals)
-    {
-        array_state_signals_.emplace_back(std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this()));
-    }
-#endif // POOYA_ARRAY_SIGNAL
+        _processing_order1.reserve(num_blocks);
+        _processing_order2.reserve(num_blocks);
 
-    _state_variables.resize(state_variables_size);
-    _state_variables_orig.resize(state_variables_size);
-    _state_variable_derivs.resize(state_variables_size);
-
-    _t_prev = t0;
-
-    if (state_variables_size > 0)
-    {
-        if (_reuse_order)
+        auto add_blocks_cb = [&](Block& c, uint32_t /*level*/) -> bool
         {
-            pooya_debug_verify0(_processing_order1.empty());
-            pooya_debug_verify0(_processing_order2.empty());
+            _processing_order1.emplace_back(&c);
+            return true;
+        };
+        _model.visit(add_blocks_cb, 0);
 
-            uint num_blocks     = 0;
-            auto enum_blocks_cb = [&](Block& /*c*/, uint32_t /*level*/) -> bool
-            {
-                num_blocks++;
-                return true;
-            };
-            _model.visit(enum_blocks_cb, 0);
-
-            _processing_order1.reserve(num_blocks);
-            _processing_order2.reserve(num_blocks);
-
-            auto add_blocks_cb = [&](Block& c, uint32_t /*level*/) -> bool
-            {
-                _processing_order1.emplace_back(&c);
-                return true;
-            };
-            _model.visit(add_blocks_cb, 0);
-
-            _current_po = &_processing_order1;
-            _new_po     = &_processing_order2;
-        }
-    }
-    else
-    {
-        if (_stepper)
-        {
-            helper::pooya_show_warning(
-                __FILE__, __LINE__,
-                "A stepper is provided but no state variable is defined! The stepper will be ignored.");
-        }
+        _current_po = &_processing_order1;
+        _new_po     = &_processing_order2;
     }
 
-    for (auto& sig : value_signals_)
-    {
-        sig->clear();
-    }
-    if (_inputs_cb)
-    {
-        _inputs_cb(_model, t0);
-    }
-    _model.input_cb(t0);
-    _model.pre_step(t0);
-    process(t0);
-    _model.post_step(t0);
-
-    _initialized = true;
-}
-
-void Simulator::run(double t, double min_time_step, double max_time_step)
-{
-    pooya_trace("t: " + std::to_string(t));
-    auto minor_solver_step_cb = [&](double t, const Array& state_variables) -> const Array&
-    {
-        pooya_trace("t: " + std::to_string(t));
-        reset_with_state_variables(state_variables);
-        if (_inputs_cb)
-        {
-            _inputs_cb(_model, t);
-        }
-        _model.input_cb(t);
-        process(t);
-
-        double* data = _state_variable_derivs.data();
-        for (auto& sig : scalar_state_signals_)
-        {
-            *data = sig->deriv_signal()->get_value();
-            data++;
-        }
-#ifdef POOYA_ARRAY_SIGNAL
-        for (auto& sig : array_state_signals_)
-        {
-            auto* deriv_sig                            = sig->deriv_signal();
-            Eigen::Map<Array>(data, deriv_sig->size()) = deriv_sig->get_value();
-            data += deriv_sig->size();
-        }
-#endif // POOYA_ARRAY_SIGNAL
-
-        return _state_variable_derivs;
-    };
-
-    if (!_initialized)
-    {
-        // treat the first call as the initialization call if init(t0) was not called explicitely
-        init(t);
-        return;
-    }
-
-    if (_state_variables.size() > 0)
-    {
-        if (t < _t_prev)
-        {
-            helper::pooya_throw_exception(__FILE__, __LINE__,
-                                          "Simulation cannot go back in time. Aborting!\n  "
-                                          "- current time  = " +
-                                              std::to_string(t) +
-                                              "\n  "
-                                              "- previous time = " +
-                                              std::to_string(_t_prev) + "\n");
-        }
-
-        if (t == _t_prev)
-        {
-            helper::pooya_show_warning(__FILE__, __LINE__,
-                                       "Repeated simulation step:\n  "
-                                       "- time = " +
-                                           std::to_string(t) + "\n");
-
-            for (auto& sig : value_signals_)
-            {
-                sig->clear();
-            }
-            if (_inputs_cb)
-            {
-                _inputs_cb(_model, t);
-            }
-            _model.input_cb(t);
-            _model.pre_step(t);
-            get_state_variables(_state_variables);
-        }
-        else
-        {
-            pooya_debug_verify0(_stepper);
-
-            pooya_debug_verify0(min_time_step > 0);
-            pooya_debug_verify0(max_time_step > min_time_step);
-
-            double new_h;
-            double t1         = _t_prev;
-            double t2         = t;
-            bool force_accept = false;
-            while (t1 < t)
-            {
-                for (auto& sig : value_signals_)
-                {
-                    sig->clear();
-                }
-                if (_inputs_cb)
-                {
-                    _inputs_cb(_model, t1);
-                }
-                _model.input_cb(t1);
-                _model.pre_step(t1);
-                get_state_variables(_state_variables_orig);
-
-                _stepper->step(minor_solver_step_cb, t1, _state_variables_orig, t2, _state_variables, new_h);
-
-                double h = t2 - t1;
-                if (force_accept || (new_h >= h) || (h <= min_time_step))
-                {
-                    // accept this step
-                    force_accept = false;
-                    new_h        = std::max(min_time_step, std::min(new_h, max_time_step));
-                    t1           = t2;
-                    t2           = std::min(t1 + new_h, t);
-
-                    if (t1 < t)
-                    {
-                        reset_with_state_variables(_state_variables);
-                        if (_inputs_cb)
-                        {
-                            _inputs_cb(_model, t1);
-                        }
-                        _model.input_cb(t1);
-                        process(t1);
-                        _model.post_step(t1);
-                    }
-                }
-                else
-                {
-                    // redo this step
-                    force_accept = new_h <= min_time_step;
-                    new_h        = std::max(min_time_step, std::min(new_h, max_time_step));
-                    t2           = t1 + new_h;
-                }
-            }
-        }
-    }
-
-    reset_with_state_variables(_state_variables);
-    if (_inputs_cb)
-    {
-        _inputs_cb(_model, t);
-    }
-    _model.input_cb(t);
-    if (_state_variables.size() == 0)
-    {
-        _model.pre_step(t);
-    }
-    process(t);
-    _model.post_step(t);
-
-    _t_prev = t;
-}
-
-void Simulator::reset_with_state_variables(const Array& state_variables)
-{
-    pooya_trace0;
-    for (auto& sig : value_signals_)
-    {
-        sig->clear();
-    }
-    const double* data = state_variables.data();
-    for (auto& sig : scalar_state_signals_)
-    {
-        sig->set_value(*data);
-        data++;
-    }
-#ifdef POOYA_ARRAY_SIGNAL
-    for (auto& sig : array_state_signals_)
-    {
-        sig->set_value(Eigen::Map<const Array>(data, sig->size()));
-        data += sig->size();
-    }
-#endif // POOYA_ARRAY_SIGNAL
-}
-
-void Simulator::get_state_variables(Array& state_variables)
-{
-    pooya_trace0;
-    pooya_debug_verify(state_variables.size() == _state_variables.size(), "Incorrect output array size!");
-    double* data = state_variables.data();
-    for (auto& sig : scalar_state_signals_)
-    {
-        *data = sig->get_value();
-        data++;
-    }
-#ifdef POOYA_ARRAY_SIGNAL
-    for (auto& sig : array_state_signals_)
-    {
-        Eigen::Map<Array>(data, sig->size()) = sig->get_value();
-        data += sig->size();
-    }
-#endif // POOYA_ARRAY_SIGNAL
+    process_model(t0, true, true);
 }
 
 } // namespace pooya

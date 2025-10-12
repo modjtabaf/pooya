@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Mojtaba (Moji) Fathi
+Copyright 2025 Mojtaba (Moji) Fathi
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 documentation files (the “Software”), to deal in the Software without restriction, including without limitation the
@@ -15,32 +15,35 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_HELPER_DEFS_HPP__
-#define __POOYA_HELPER_DEFS_HPP__
+#ifndef __POOYA_SOLVER_FAST_SIMULATOR_HPP__
+#define __POOYA_SOLVER_FAST_SIMULATOR_HPP__
 
-#include <utility>
+#include "simulator_base.hpp"
 
-#undef POOYA_DEBUG
-
-#if !defined(NDEBUG)
-#define POOYA_DEBUG
-#endif
-
-#define POOYA_BOOL_SIGNAL
-#define POOYA_INT_SIGNAL
-#define POOYA_ARRAY_SIGNAL
-
-template<typename T>
-struct is_pair : std::false_type
+namespace pooya
 {
+
+class Leaf;
+
+class FastSimulator : public SimulatorBase
+{
+public:
+    explicit FastSimulator(Block& model, SimulatorBase::InputCallback inputs_cb = nullptr,
+                           StepperBase* stepper = nullptr)
+        : SimulatorBase(model, inputs_cb, stepper)
+    {
+    }
+    FastSimulator(const FastSimulator&) = delete; // no copy constructor
+    virtual ~FastSimulator()            = default;
+
+    void init(double t0 = 0.0) override;
+
+protected:
+    std::vector<std::vector<Leaf*>> _processing_order;
+
+    void process_model(double t, bool call_pre_step, bool call_post_step) override;
 };
 
-template<typename T1, typename T2>
-struct is_pair<std::pair<T1, T2>> : std::true_type
-{
-};
+} // namespace pooya
 
-template<typename T>
-constexpr bool is_pair_v = is_pair<T>::value;
-
-#endif // __POOYA_HELPER_DEFS_HPP__
+#endif // __POOYA_SOLVER_FAST_SIMULATOR_HPP__

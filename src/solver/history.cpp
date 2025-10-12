@@ -87,7 +87,7 @@ void History::update(uint k, double t)
         {
             h.conservativeResize(k + _nrows_grow, Eigen::NoChange);
         }
-        bool valid = sig->is_assigned();
+        bool valid = sig->assigned();
         if (auto* ps = dynamic_cast<ScalarSignalImpl*>(sig.get()); ps)
         {
             h(k, 0) = valid ? ps->get_value() : 0;

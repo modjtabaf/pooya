@@ -29,9 +29,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/block/submodel.hpp"
 #include "src/helper/trace.hpp"
 #include "src/misc/gp-ios.hpp"
+#include "src/solver/fast_simulator.hpp"
 #include "src/solver/history.hpp"
 #include "src/solver/rkf45.hpp"
-#include "src/solver/simulator.hpp"
 
 class Pendulum : public pooya::Submodel
 {
@@ -159,7 +159,7 @@ int main()
     PendulumWithPID pendulum_with_pid;
 
     pooya::Rkf45 stepper;
-    pooya::Simulator sim(
+    pooya::FastSimulator sim(
         pendulum_with_pid,
         [&](pooya::Block&, double /*t*/) -> void
         {

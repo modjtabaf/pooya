@@ -54,7 +54,7 @@ public:
     }
 
     void _mark_unprocessed() override;
-    uint _process(double t, bool go_deep = true) override;
+    uint process(double t, bool go_deep = true) override;
     bool visit(VisitorCallback cb, uint32_t level, uint32_t max_level = std::numeric_limits<uint32_t>::max()) override;
     bool const_visit(ConstVisitorCallback cb, uint32_t level,
                      uint32_t max_level = std::numeric_limits<uint32_t>::max()) const override;

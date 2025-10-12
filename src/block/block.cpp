@@ -67,7 +67,7 @@ bool Block::connect(const Bus& ibus, const Bus& obus)
     {
         if (dynamic_cast<ValueSignalImpl*>(&sig.impl()))
         {
-            link_signal(sig, SignalLinkType::Input);
+            link_signal(sig, SignalLinkType::Input | SignalLinkType::Required);
         }
     }
 
@@ -93,22 +93,28 @@ ValidName Block::full_name() const
     return (_parent ? _parent->full_name() : ValidName()) / _name;
 }
 
-bool Block::link_signal(const Signal& signal, SignalLinkType type)
+void Block::link_signal(const Signal& signal, uint32_t types)
 {
     pooya_trace("block: " + full_name().str());
 
-    auto* ptr = dynamic_cast<ValueSignalImpl*>(&signal.impl());
-    if (!ptr) return false;
-
-    auto it = std::find_if(_linked_signals.begin(), _linked_signals.end(),
-                           [&](const SignalLinkPair& sig_type) -> bool { return sig_type.first.get() == ptr; });
-    if (it == _linked_signals.end())
+    if (auto* ptr = dynamic_cast<ValueSignalImpl*>(&signal.impl()))
     {
-        _linked_signals.emplace_back(std::static_pointer_cast<ValueSignalImpl>(ptr->shared_from_this()), type);
-        return true;
+        if (auto* pair = find_linked_signal(*ptr))
+        {
+            pair->second = pair->second | types;
+        }
+        else
+        {
+            _linked_signals.emplace_back(std::static_pointer_cast<ValueSignalImpl>(ptr->shared_from_this()), types);
+        }
     }
+}
 
-    return false;
+Block::SignalLinkPair* Block::find_linked_signal(SignalImpl& impl)
+{
+    auto it = std::find_if(_linked_signals.begin(), _linked_signals.end(),
+                           [&](const SignalLinkPair& sig_type) -> bool { return sig_type.first.get() == &impl; });
+    return it == _linked_signals.end() ? nullptr : &(*it);
 }
 
 void Block::_mark_unprocessed()

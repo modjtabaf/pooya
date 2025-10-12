@@ -54,7 +54,7 @@ protected:
     ProcessingOrder* _current_po{nullptr};
     ProcessingOrder* _new_po{nullptr};
 
-    uint _process(double t);
+    uint process(double t);
     void reset_with_state_variables(const Array& state_variables);
     void get_state_variables(Array& state_variables);
 

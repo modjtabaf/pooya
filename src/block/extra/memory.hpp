@@ -39,24 +39,32 @@ public:
     {
     }
 
+    bool connect(const Bus& ibus, const Bus& obus) override
+    {
+        pooya_trace("block: " + Base::full_name().str());
+        if (!Base::connect(ibus, obus))
+        {
+            return false;
+        }
+
+        if (auto* ptr = Base::find_linked_signal(Base::_s_in.impl()))
+        {
+            ptr->second = ptr->second & (~Base::SignalLinkType::Required);
+        }
+
+        return true;
+    }
+
     void post_step(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         _value = Base::_s_in;
     }
 
-    uint _process(double /*t*/, bool /*go_deep*/) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        if (Base::_processed)
-        {
-            return 0;
-        }
-
-        pooya_trace_update0;
-        Base::_s_out     = _value;
-        Base::_processed = true;
-        return 1;
+        Base::_s_out = _value;
     }
 
 protected:
@@ -70,7 +78,7 @@ using MemoryI = MemoryT<int>;
 #endif // POOYA_INT_SIGNAL
 
 #ifdef POOYA_BOOL_SIGNAL
-class Bool
+class Bool // TODO: is this still needed?
 {
 public:
     explicit Bool(bool b = false) : _b(b) {}

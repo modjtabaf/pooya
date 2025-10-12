@@ -20,7 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
-uint Leaf::_process(double t, bool /*go_deep*/)
+uint Leaf::process(double t, bool /*go_deep*/)
 {
     pooya_trace("block: " + full_name().str());
     if (_processed)
@@ -29,7 +29,7 @@ uint Leaf::_process(double t, bool /*go_deep*/)
     }
     for (auto& sig : _linked_signals)
     {
-        if ((sig.second == SignalLinkType::Input) && !sig.first->is_assigned())
+        if ((sig.second & SignalLinkType::Required) && !sig.first->is_assigned())
         {
             return 0;
         }

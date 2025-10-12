@@ -57,8 +57,8 @@ public:
         _s_x->set_deriv_signal(_s_xd);
         _s_xd->set_deriv_signal(_s_xdd);
 
-        link_signal(_s_x, SignalLinkType::Input);
-        link_signal(_s_xd, SignalLinkType::Input);
+        link_signal(_s_x, SignalLinkType::Required);
+        link_signal(_s_xd, SignalLinkType::Required);
         link_signal(_s_xdd, SignalLinkType::Internal);
 
         return true;

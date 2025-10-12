@@ -46,32 +46,17 @@ class Block : public NamedObject
 public:
     static constexpr uint16_t NoIOLimit = uint16_t(-1);
 
-    enum class SignalLinkType
+    enum SignalLinkType : uint32_t
     {
-        Input,
-        Output,
-        Internal,
-        Unknown,
+        Input    = 1U << 0,
+        Output   = 1U << 1,
+        Internal = 1U << 2,
+        Required = 1U << 3,
+        Unknown  = 1U << (8 * sizeof(SignalLinkType) - 1),
     };
 
-    using SignalLinkPair = std::pair<std::shared_ptr<ValueSignalImpl>, SignalLinkType>;
+    using SignalLinkPair = std::pair<std::shared_ptr<ValueSignalImpl>, uint32_t>;
 
-protected:
-    bool _connected{false};
-    Bus _ibus;
-    Bus _obus;
-    std::vector<SignalLinkPair> _linked_signals;
-    Submodel* _parent{nullptr};
-    uint16_t _num_iports{NoIOLimit};
-    uint16_t _num_oports{NoIOLimit};
-
-    bool _processed{false};
-    bool link_signal(const Signal& sig, SignalLinkType type);
-
-    explicit Block(Submodel* parent = nullptr, std::string_view name = "", uint16_t num_iports = NoIOLimit,
-                   uint16_t num_oports = NoIOLimit);
-
-public:
     virtual ~Block() = default;
 
     virtual bool set_parent(Submodel& parent);
@@ -88,12 +73,12 @@ public:
     auto linked_signals() const -> const auto& { return _linked_signals; }
 
     template<typename Key>
-    Signal io_at(const Bus& bus, Key key, std::optional<SignalLinkType> type)
+    Signal io_at(const Bus& bus, Key key, std::optional<uint32_t> types)
     {
         Signal sig(bus.at(key));
-        if (type.has_value())
+        if (types.has_value())
         {
-            link_signal(sig, *type);
+            link_signal(sig, *types);
         }
         return sig;
     }
@@ -101,7 +86,7 @@ public:
     template<typename Key = std::size_t>
     Signal input(Key key)
     {
-        return io_at<Key>(_ibus, key, SignalLinkType::Input);
+        return io_at<Key>(_ibus, key, SignalLinkType::Input | SignalLinkType::Required);
     }
 
     template<typename Key = std::size_t>
@@ -111,7 +96,7 @@ public:
     }
 
     virtual void _mark_unprocessed();
-    virtual uint _process(double t, bool go_deep = true) = 0;
+    virtual uint process(double t, bool go_deep = true) = 0;
 
     virtual bool visit(VisitorCallback cb, uint32_t level, uint32_t max_level = std::numeric_limits<uint32_t>::max())
     {
@@ -127,6 +112,22 @@ public:
     }
 
     ValidName full_name() const;
+
+protected:
+    bool _connected{false};
+    Bus _ibus;
+    Bus _obus;
+    std::vector<SignalLinkPair> _linked_signals;
+    Submodel* _parent{nullptr};
+    uint16_t _num_iports{NoIOLimit};
+    uint16_t _num_oports{NoIOLimit};
+
+    bool _processed{false};
+    void link_signal(const Signal& sig, uint32_t types);
+    SignalLinkPair* find_linked_signal(SignalImpl& impl);
+
+    explicit Block(Submodel* parent = nullptr, std::string_view name = "", uint16_t num_iports = NoIOLimit,
+                   uint16_t num_oports = NoIOLimit);
 }; // class Block
 
 } // namespace pooya

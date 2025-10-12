@@ -48,7 +48,17 @@ public:
             return false;
         }
 
-        Base::_s_out->set_deriv_signal(Base::input(0));
+        auto s_in = Base::input(0);
+        Base::_s_out->set_deriv_signal(s_in);
+        if (auto* ptr = Base::find_linked_signal(s_in.impl()))
+        {
+            ptr->second = ptr->second & (~Base::SignalLinkType::Required);
+        }
+
+        if (auto* ptr = Base::find_linked_signal(Base::_s_out.impl()))
+        {
+            ptr->second = ptr->second | Base::SignalLinkType::Required;
+        }
 
         return true;
     }
@@ -65,18 +75,6 @@ public:
         pooya_trace("block: " + Base::full_name().str());
         pooya_debug_verify0(Base::_s_out->is_assigned());
         _value = Base::_s_out;
-    }
-
-    uint _process(double /*t*/, bool /*go_deep*/ = true) override
-    {
-        pooya_trace("block: " + Base::full_name().str());
-        if (Base::_processed)
-        {
-            return 0;
-        }
-
-        Base::_processed = Base::_s_out->is_assigned();
-        return Base::_processed ? 1 : 0; // is it safe to simply return _processed?
     }
 
 protected:

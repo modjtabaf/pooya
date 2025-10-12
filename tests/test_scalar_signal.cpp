@@ -41,7 +41,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
     // signal setup
     pooya::ScalarSignal s_x;
 
-#if defined (POOYA_DEBUG)
+#if defined(POOYA_DEBUG)
     // get the value of an un-assigned signal
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
@@ -56,7 +56,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
     // clear an assigned signal
     EXPECT_NO_THROW(s_x->clear());
 
-#if defined (POOYA_DEBUG)
+#if defined(POOYA_DEBUG)
     // get the value of an un-assigned signal
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
@@ -68,7 +68,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
     // get the value of an assigned signal
     EXPECT_EQ(x, s_x->get_value());
 
-#if defined (POOYA_DEBUG)
+#if defined(POOYA_DEBUG)
     // assign a value to an assigned signal
     EXPECT_THROW(s_x = x, std::runtime_error);
     EXPECT_THROW(s_x->set_value(x), std::runtime_error);

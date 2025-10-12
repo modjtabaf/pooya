@@ -72,20 +72,13 @@ public:
         Base::pre_step(t);
     }
 
-    uint _process(double t, bool go_deep = true) override
+    void activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        if (Base::_processed || !_trigger->is_assigned())
-        {
-            return 0;
-        }
-
         if (!_triggered)
         {
             _triggered = _trigger;
         }
-
-        return Base::_process(t, go_deep);
     }
 
 protected:

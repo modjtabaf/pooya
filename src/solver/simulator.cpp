@@ -35,7 +35,7 @@ Simulator::Simulator(Block& model, InputCallback inputs_cb, StepperBase* stepper
     }
 }
 
-uint Simulator::_process(double t)
+uint Simulator::process(double t)
 {
     pooya_trace("t: " + std::to_string(t));
     _model._mark_unprocessed();
@@ -56,7 +56,7 @@ uint Simulator::_process(double t)
                 {
                     continue;
                 }
-                n_processed += base->_process(t, false);
+                n_processed += base->process(t, false);
                 if (base->processed())
                 {
                     _new_po->emplace_back(base);
@@ -84,7 +84,7 @@ uint Simulator::_process(double t)
         uint n;
         do
         {
-            n = _model._process(t);
+            n = _model.process(t);
             n_processed += n;
         } while (n);
     }
@@ -110,7 +110,7 @@ uint Simulator::_process(double t)
             std::cout << "- " << c->full_name().str() << "\n";
             for (auto& sig_type : c->linked_signals())
             {
-                if ((sig_type.second != Block::SignalLinkType::Input) || sig_type.first->is_assigned())
+                if (((sig_type.second & Block::SignalLinkType::Required) == 0) || sig_type.first->is_assigned())
                 {
                     continue;
                 }
@@ -244,7 +244,7 @@ void Simulator::init(double t0)
     }
     _model.input_cb(t0);
     _model.pre_step(t0);
-    _process(t0);
+    process(t0);
     _model.post_step(t0);
 
     _initialized = true;
@@ -262,7 +262,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
             _inputs_cb(_model, t);
         }
         _model.input_cb(t);
-        _process(t);
+        process(t);
 
         double* data = _state_variable_derivs.data();
         for (auto& sig : scalar_state_signals_)
@@ -365,7 +365,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
                             _inputs_cb(_model, t1);
                         }
                         _model.input_cb(t1);
-                        _process(t1);
+                        process(t1);
                         _model.post_step(t1);
                     }
                 }
@@ -390,7 +390,7 @@ void Simulator::run(double t, double min_time_step, double max_time_step)
     {
         _model.pre_step(t);
     }
-    _process(t);
+    process(t);
     _model.post_step(t);
 
     _t_prev = t;

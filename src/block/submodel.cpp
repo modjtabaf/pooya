@@ -34,7 +34,7 @@ void Submodel::_mark_unprocessed()
     }
 }
 
-uint Submodel::_process(double t, bool go_deep)
+uint Submodel::process(double t, bool go_deep)
 {
     pooya_trace("block: " + full_name().str());
     uint n_processed = 0;
@@ -44,7 +44,7 @@ uint Submodel::_process(double t, bool go_deep)
         if (go_deep)
             for (auto* block : _blocks)
             {
-                n_processed += block->_process(t);
+                n_processed += block->process(t);
                 if (not block->processed())
                 {
                     _processed = false;

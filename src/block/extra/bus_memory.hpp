@@ -23,6 +23,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define __POOYA_BLOCK_BUS_MEMORY_HPP__
 
 #include <map>
+#include <variant>
 
 #include "bus_block_builder.hpp"
 #include "src/signal/array.hpp"
@@ -30,38 +31,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-// todo: use std::variant instead
-class Value
-{
-protected:
-    const bool _is_scalar{true};
-    double _scalar{0.0};
-    Array _array;
-
-public:
-    Value(double v) : _scalar(v) {}
-    Value(const Array& v) : _is_scalar(false), _array(v) {}
-
-    bool is_scalar() const { return _is_scalar; }
-
-    double as_scalar() const
-    {
-        pooya_trace0;
-        pooya_debug_verify(_is_scalar, "attempting to retrieve an array as a scalar!");
-        return _scalar;
-    }
-
-    const Array& as_array() const
-    {
-        pooya_trace0;
-        pooya_debug_verify(!_is_scalar, "attempting to retrieve a scalar as an array!");
-        return _array;
-    }
-};
-
 class BusMemory : public BusBlockBuilder
 {
 public:
+    using Value         = std::variant<double, Array>;
     using LabelValueMap = std::map<std::string, Value>;
     using LabelValue    = LabelValueMap::value_type;
 

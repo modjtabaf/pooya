@@ -67,15 +67,13 @@ void BusMemory::block_builder(const std::string& full_label, const Signal& sig_i
 #ifdef POOYA_INT_SIGNAL
     else if (dynamic_cast<IntSignalImpl*>(&sig_in.impl()))
     {
-        block = std::make_shared<MemoryI>((it == _init_values.end()) ? 0 : std::round(std::get<double>(it->second)),
-                                          _parent);
+        block = std::make_shared<MemoryI>((it == _init_values.end()) ? 0 : std::get<int>(it->second), _parent);
     }
 #endif // POOYA_INT_SIGNAL
 #ifdef POOYA_BOOL_SIGNAL
     else if (dynamic_cast<BoolSignalImpl*>(&sig_in.impl()))
     {
-        block = std::make_shared<MemoryB>(Bool((it == _init_values.end()) ? false : std::get<double>(it->second) != 0),
-                                          _parent);
+        block = std::make_shared<MemoryB>((it == _init_values.end()) ? false : std::get<bool>(it->second), _parent);
     }
 #endif // POOYA_BOOL_SIGNAL
 #ifdef POOYA_ARRAY_SIGNAL

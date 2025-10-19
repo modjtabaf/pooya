@@ -28,13 +28,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace pooya
 {
 
-template<typename T, typename Tic = T>
+template<typename T>
 class MemoryT : public SingleInputOutputT<T>
 {
 public:
     using Base = SingleInputOutputT<T>;
 
-    explicit MemoryT(const Tic& ic = Tic(0), Submodel* parent = nullptr, std::string_view name = "")
+    explicit MemoryT(typename Types<T>::SetValue ic, Submodel* parent = nullptr, std::string_view name = "")
         : Base(parent, name, 1), _value(ic)
     {
     }
@@ -78,15 +78,7 @@ using MemoryI = MemoryT<int>;
 #endif // POOYA_INT_SIGNAL
 
 #ifdef POOYA_BOOL_SIGNAL
-class Bool // TODO: is this still needed?
-{
-public:
-    explicit Bool(bool b = false) : _b(b) {}
-    bool _b{false};
-    operator bool() const { return _b; }
-};
-
-using MemoryB = MemoryT<bool, Bool>;
+using MemoryB = MemoryT<bool>;
 #endif // POOYA_BOOL_SIGNAL
 
 #ifdef POOYA_ARRAY_SIGNAL

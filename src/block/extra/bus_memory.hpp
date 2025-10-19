@@ -26,6 +26,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <variant>
 
 #include "bus_block_builder.hpp"
+#include "src/helper/defs.hpp"
 #include "src/signal/array.hpp"
 
 namespace pooya
@@ -34,7 +35,20 @@ namespace pooya
 class BusMemory : public BusBlockBuilder
 {
 public:
-    using Value         = std::variant<double, Array>;
+    using Value = std::variant<double
+#ifdef POOYA_INT_SIGNAL
+                               ,
+                               int
+#endif // POOYA_INT_SIGNAL
+#ifdef POOYA_BOOL_SIGNAL
+                               ,
+                               bool
+#endif // POOYA_BOOL_SIGNAL
+#ifdef POOYA_ARRAY_SIGNAL
+                               ,
+                               Array
+#endif // POOYA_ARRAY_SIGNAL
+                               >;
     using LabelValueMap = std::map<std::string, Value>;
     using LabelValue    = LabelValueMap::value_type;
 

@@ -33,7 +33,7 @@ int main()
     auto start  = std::chrono::high_resolution_clock::now();
 
     // create pooya blocks
-    pooya::Memory memory;
+    pooya::Memory memory(0.0);
 
     // create pooya signals
     pooya::ScalarSignal x("x");

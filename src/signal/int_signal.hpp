@@ -37,9 +37,16 @@ public:
     using Base = ValueSignalImpl;
     using Ptr  = std::shared_ptr<IntSignalImpl>;
 
-    IntSignalImpl(Protected, std::string_view name) : Base(name) {}
+    IntSignalImpl(Protected, std::string_view name, std::optional<int> persistent_value)
+        : Base(name, persistent_value.has_value())
+    {
+        if (persistent_value.has_value()) set_value(*persistent_value);
+    }
 
-    static Ptr create_new(std::string_view name) { return std::make_shared<IntSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name, std::optional<int> persistent_value)
+    {
+        return std::make_shared<IntSignalImpl>(Protected(), name, persistent_value);
+    }
 
     int get_value() const
     {
@@ -51,7 +58,7 @@ public:
     void set_value(int value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
         _int_value = value;
         _assigned  = true;
     }
@@ -68,7 +75,10 @@ public:
     IntSignal() : IntSignal("") {}
     IntSignal(const IntSignal& sig) : Base(sig) {}
 
-    explicit IntSignal(std::string_view name) : Base(*IntSignalImpl::create_new(name).get()) {}
+    explicit IntSignal(std::string_view name, std::optional<int> persistent_value = std::nullopt)
+        : Base(*IntSignalImpl::create_new(name, persistent_value).get())
+    {
+    }
     explicit IntSignal(SignalImpl& sig) : Base(sig) {}
     explicit IntSignal(const Signal& sig) : Base(sig) {}
 

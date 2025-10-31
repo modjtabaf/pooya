@@ -49,11 +49,12 @@ protected:
     pooya::Divide _div2{this, "_ml2"};
     pooya::Subtract _sub{this, "d2phi"};
 
+    pooya::ScalarSignal _m{"m", 0.2};
+    pooya::ScalarSignal _g{"g", 9.81};
+    pooya::ScalarSignal _l{"l", 0.1};
+
 public:
     pooya::ScalarSignal _tau{"tau"};
-    pooya::ScalarSignal _m{"m"};
-    pooya::ScalarSignal _g{"g"};
-    pooya::ScalarSignal _l{"l"};
     pooya::ScalarSignal _phi{"phi"};
     pooya::ScalarSignal _dphi{"dphi"};
     pooya::ScalarSignal _d2phi{"d2phi"};
@@ -96,9 +97,6 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum._m   = 0.2;
-            pendulum._l   = 0.1;
-            pendulum._g   = 9.81;
             pendulum._tau = 0.13;
         },
         &stepper, true);

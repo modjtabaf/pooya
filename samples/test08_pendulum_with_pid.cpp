@@ -45,12 +45,13 @@ protected:
     pooya::Multiply _mul2{1.0, this, "g"};
     pooya::Divide _div2{this, "_l"};
 
+    pooya::ScalarSignal _m{"m", 0.2};
+    pooya::ScalarSignal _g{"g", 9.81};
+    pooya::ScalarSignal _l{"l", 0.1};
+
 public:
     Pendulum(pooya::Submodel* parent) : pooya::Submodel(parent, "pendulum") {}
 
-    pooya::ScalarSignal _m{"m"};
-    pooya::ScalarSignal _g{"g"};
-    pooya::ScalarSignal _l{"l"};
     pooya::ScalarSignal _dphi{"dphi"};
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
@@ -160,15 +161,7 @@ int main()
 
     pooya::Rkf45 stepper;
     pooya::FastSimulator sim(
-        pendulum_with_pid,
-        [&](pooya::Block&, double /*t*/) -> void
-        {
-            pendulum_with_pid._pend._m = 0.2;
-            pendulum_with_pid._pend._l = 0.1;
-            pendulum_with_pid._pend._g = 9.81;
-            pendulum_with_pid._des_phi = M_PI_4;
-        },
-        &stepper);
+        pendulum_with_pid, [&](pooya::Block&, double /*t*/) -> void { pendulum_with_pid._des_phi = M_PI_4; }, &stepper);
 
     pooya::History history;
     history.track(pendulum_with_pid._phi);

@@ -19,6 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #define __POOYA_SIGNAL_SCALAR_SIGNAL_HPP__
 
 #include <memory>
+#include <optional>
 
 #include "float_signal.hpp"
 #include "src/helper/trace.hpp"
@@ -34,9 +35,16 @@ public:
     using Base = FloatSignalImplT<double>;
     using Ptr  = std::shared_ptr<ScalarSignalImpl>;
 
-    ScalarSignalImpl(Protected, std::string_view name) : Base(1, name) {}
+    ScalarSignalImpl(Protected, std::string_view name, std::optional<double> persistent_value)
+        : Base(1, name, persistent_value.has_value())
+    {
+        if (persistent_value.has_value()) set_value(*persistent_value);
+    }
 
-    static Ptr create_new(std::string_view name) { return std::make_shared<ScalarSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name, std::optional<double> persistent_value)
+    {
+        return std::make_shared<ScalarSignalImpl>(Protected(), name, persistent_value);
+    }
 
     double get_value() const
     {
@@ -48,7 +56,7 @@ public:
     void set_value(double value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
         _scalar_value = value;
         _assigned     = true;
     }
@@ -65,7 +73,10 @@ public:
     ScalarSignal() : ScalarSignal("") {}
     ScalarSignal(const ScalarSignal& sig) : Base(sig) {}
 
-    explicit ScalarSignal(std::string_view name) : Base(*ScalarSignalImpl::create_new(name).get()) {}
+    explicit ScalarSignal(std::string_view name, std::optional<double> persistent_value = std::nullopt)
+        : Base(*ScalarSignalImpl::create_new(name, persistent_value).get())
+    {
+    }
     explicit ScalarSignal(SignalImpl& sig) : Base(sig) {}
     explicit ScalarSignal(const Signal& sig) : Base(sig) {}
 

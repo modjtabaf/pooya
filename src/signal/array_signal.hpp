@@ -35,11 +35,15 @@ public:
     using Base = FloatSignalImplT<Array>;
     using Ptr  = std::shared_ptr<ArraySignalImpl>;
 
-    ArraySignalImpl(Protected, std::size_t size, std::string_view name) : Base(size, name), _array_value(size) {}
-
-    static Ptr create_new(std::size_t size, std::string_view name)
+    ArraySignalImpl(Protected, std::size_t size, std::string_view name, std::optional<Array> persistent_value)
+        : Base(size, name, persistent_value.has_value()), _array_value(size)
     {
-        return std::make_shared<ArraySignalImpl>(Protected(), size, name);
+        if (persistent_value.has_value()) set_value(*persistent_value);
+    }
+
+    static Ptr create_new(std::size_t size, std::string_view name, std::optional<Array> persistent_value)
+    {
+        return std::make_shared<ArraySignalImpl>(Protected(), size, name, persistent_value);
     }
 
     const Array& get_value() const
@@ -57,7 +61,7 @@ public:
     {
         pooya_debug_verify(_array_value.rows() == int(_size),
                            name().str() + ": attempting to assign the value of an uninitialized array signal!");
-        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
         pooya_debug_verify(value.rows() == int(_size), std::string("size mismatch (id=") + name().str() + ")(" +
                                                            std::to_string(_size) + " vs " +
                                                            std::to_string(value.rows()) + ")!");
@@ -76,8 +80,9 @@ public:
 
     ArraySignal(const ArraySignal& sig) : Base(sig) {}
 
-    explicit ArraySignal(std::size_t size = 1, std::string_view name = "")
-        : Base(*ArraySignalImpl::create_new(size, name).get())
+    explicit ArraySignal(std::size_t size = 1, std::string_view name = "",
+                         std::optional<Array> persistent_value = std::nullopt)
+        : Base(*ArraySignalImpl::create_new(size, name, persistent_value).get())
     {
     }
     explicit ArraySignal(SignalImpl& sig) : Base(sig) {}

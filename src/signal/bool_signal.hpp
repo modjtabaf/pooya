@@ -34,9 +34,16 @@ public:
     using Base = ValueSignalImpl;
     using Ptr  = std::shared_ptr<BoolSignalImpl>;
 
-    BoolSignalImpl(Protected, std::string_view name) : Base(name) {}
+    BoolSignalImpl(Protected, std::string_view name, std::optional<bool> persistent_value)
+        : Base(name, persistent_value.has_value())
+    {
+        if (persistent_value.has_value()) set_value(*persistent_value);
+    }
 
-    static Ptr create_new(std::string_view name) { return std::make_shared<BoolSignalImpl>(Protected(), name); }
+    static Ptr create_new(std::string_view name, std::optional<bool> persistent_value)
+    {
+        return std::make_shared<BoolSignalImpl>(Protected(), name, persistent_value);
+    }
 
     bool get_value() const
     {
@@ -48,7 +55,7 @@ public:
     void set_value(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(!assigned(), name().str() + ": re-assignment is prohibited!");
+        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
         _bool_value = value;
         _assigned   = true;
     }
@@ -65,7 +72,10 @@ public:
     BoolSignal() : BoolSignal("") {}
     BoolSignal(const BoolSignal& sig) : Base(sig) {}
 
-    explicit BoolSignal(std::string_view name) : Base(*BoolSignalImpl::create_new(name).get()) {}
+    explicit BoolSignal(std::string_view name, std::optional<bool> persistent_value = std::nullopt)
+        : Base(*BoolSignalImpl::create_new(name, persistent_value).get())
+    {
+    }
     explicit BoolSignal(SignalImpl& sig) : Base(sig) {}
     explicit BoolSignal(const Signal& sig) : Base(sig) {}
 

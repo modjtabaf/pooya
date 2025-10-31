@@ -44,11 +44,11 @@ protected:
     pooya::Multiply _mul2{1.0, this};
     pooya::Divide _div2{this};
 
-public:
-    pooya::ScalarSignal _m;
-    pooya::ScalarSignal _g;
-    pooya::ScalarSignal _l;
+    pooya::ScalarSignal _m{"m", 0.2};
+    pooya::ScalarSignal _g{"g", 9.81};
+    pooya::ScalarSignal _l{"l", 0.1};
 
+public:
     explicit Pendulum() : pooya::Submodel(nullptr, "pendulum") {}
 
     bool connect(const pooya::Bus& ibus, const pooya::Bus& obus) override
@@ -157,9 +157,6 @@ int main()
         [&](pooya::Block&, double /*t*/) -> void
         {
             pooya_trace0;
-            pendulum_with_pi._pend._m = 0.2;
-            pendulum_with_pi._pend._l = 0.1;
-            pendulum_with_pi._pend._g = 9.81;
             pendulum_with_pi._des_phi = M_PI_4;
         },
         &stepper); // try Rk4 with h = 0.01 to see the difference

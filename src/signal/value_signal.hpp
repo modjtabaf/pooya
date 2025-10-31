@@ -29,13 +29,15 @@ public:
     using Base = SignalImpl;
     using Ptr  = std::shared_ptr<ValueSignalImpl>;
 
-    void clear() { _assigned = false; }
+    void clear() { _assigned = _persistent; }
     bool assigned() const { return _assigned; }
+    bool assignable() const { return _persistent || !_assigned; }
 
 protected:
-    bool _assigned{false}; // has the value been assigned?
+    bool _assigned{false};   // has the value been assigned?
+    bool _persistent{false}; // true if the signal maintains its value even after cleared
 
-    ValueSignalImpl(std::string_view name) : SignalImpl(name) {}
+    ValueSignalImpl(std::string_view name, bool persistent) : SignalImpl(name), _persistent(persistent) {}
 };
 
 } // namespace pooya

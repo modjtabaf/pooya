@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_BOOL_SIGNAL_HPP__
 #define __POOYA_SIGNAL_BOOL_SIGNAL_HPP__
 
-#ifdef POOYA_BOOL_SIGNAL
+#if DEFINE_BOOL_SIGNAL != 0
 
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
@@ -48,14 +48,16 @@ public:
     bool get_value() const
     {
         pooya_trace0;
-        pooya_debug_verify(assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assigned(),
+                     name().str() + ": attempting to access an unassigned value!");
         return _bool_value;
     }
 
     void set_value(bool value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assignable(),
+                     name().str() + ": re-assignment is prohibited!");
         _bool_value = value;
         _assigned   = true;
     }
@@ -88,6 +90,6 @@ public:
 
 } // namespace pooya
 
-#endif // POOYA_BOOL_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
 
 #endif // __POOYA_SIGNAL_BOOL_SIGNAL_HPP__

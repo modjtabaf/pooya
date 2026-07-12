@@ -30,7 +30,7 @@ struct Types
 {
 };
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 
 class ArraySignalImpl;
 class ArraySignal;
@@ -44,7 +44,7 @@ struct Types<Array>
     using SetValue   = const Array&;
 };
 
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 class ScalarSignalImpl;
 class ScalarSignal;
@@ -58,7 +58,7 @@ struct Types<double>
     using SetValue   = double;
 };
 
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
 
 class IntSignalImpl;
 class IntSignal;
@@ -72,9 +72,9 @@ struct Types<int>
     using SetValue   = int;
 };
 
-#endif // POOYA_INT_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
 
-#ifdef POOYA_BOOL_SIGNAL
+#if DEFINE_BOOL_SIGNAL != 0
 
 class BoolSignalImpl;
 class BoolSignal;
@@ -88,7 +88,7 @@ struct Types<bool>
     using SetValue   = bool;
 };
 
-#endif // POOYA_BOOL_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
 
 class BusImpl;
 class BusSpec;

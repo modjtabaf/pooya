@@ -49,14 +49,16 @@ public:
     double get_value() const
     {
         pooya_trace0;
-        pooya_debug_verify(assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assigned(),
+                     name().str() + ": attempting to access an unassigned value!");
         return _scalar_value;
     }
 
     void set_value(double value)
     {
         pooya_trace("value: " + std::to_string(value));
-        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assignable(),
+                     name().str() + ": re-assignment is prohibited!");
         _scalar_value = value;
         _assigned     = true;
     }

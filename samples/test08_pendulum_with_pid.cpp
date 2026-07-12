@@ -187,7 +187,9 @@ int main()
        << gp.file1d(history[pendulum_with_pid._pend._dphi]) << "with lines title 'dphi',"
        << gp.file1d(history[pendulum_with_pid._tau]) << "with lines title 'tau'\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

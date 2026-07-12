@@ -36,18 +36,18 @@ class BusMemory : public BusBlockBuilder
 {
 public:
     using Value = std::variant<double
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
                                ,
                                int
-#endif // POOYA_INT_SIGNAL
-#ifdef POOYA_BOOL_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
+#if DEFINE_BOOL_SIGNAL != 0
                                ,
                                bool
-#endif // POOYA_BOOL_SIGNAL
-#ifdef POOYA_ARRAY_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
+#if DEFINE_ARRAY_SIGNAL != 0
                                ,
                                Array
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
                                >;
     using LabelValueMap = std::map<std::string, Value>;
     using LabelValue    = LabelValueMap::value_type;

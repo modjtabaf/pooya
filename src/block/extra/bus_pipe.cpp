@@ -38,24 +38,24 @@ void BusPipe::block_builder(const std::string& full_label, const Signal& sig_in,
     {
         block = std::make_shared<Pipe>();
     }
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
     else if (dynamic_cast<IntSignalImpl*>(&sig_in.impl()))
     {
         block = std::make_shared<PipeI>();
     }
-#endif // POOYA_INT_SIGNAL
-#ifdef POOYA_BOOL_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
+#if DEFINE_BOOL_SIGNAL != 0
     else if (dynamic_cast<BoolSignalImpl*>(&sig_in.impl()))
     {
         block = std::make_shared<PipeB>();
     }
-#endif // POOYA_BOOL_SIGNAL
-#ifdef POOYA_ARRAY_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
+#if DEFINE_ARRAY_SIGNAL != 0
     else if (dynamic_cast<ArraySignalImpl*>(&sig_in.impl()))
     {
         block = std::make_shared<PipeA>();
     }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
     else
     {
         pooya_verify(false, "cannot create a pipe block for a non-value signal.");

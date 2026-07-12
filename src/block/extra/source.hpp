@@ -52,13 +52,13 @@ protected:
 
 using Source = SourceT<double>;
 
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
 using SourceI = SourceT<int>;
-#endif // POOYA_INT_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using SourceA = SourceT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

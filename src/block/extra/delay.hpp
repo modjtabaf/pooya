@@ -26,6 +26,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "src/signal/array.hpp"
 #include "src/signal/scalar_signal.hpp"
 
+#if !defined(VERIFY_DELAY)
+#define VERIFY_DELAY POOYA_DEBUG
+#endif // !defined(VERIFY_DELAY)
+
 namespace pooya
 {
 
@@ -75,7 +79,9 @@ public:
             _x.erase(_x.begin(), _x.begin() + k);
         }
 
-        pooya_debug_verify0(_t.empty() || (t > _t.back()));
+#if VERIFY_DELAY != 0
+        pooya_verify0(_t.empty() || (t > _t.back()));
+#endif // VERIFY_DELAY != 0
         _t.push_back(t);
         _x.push_back(_s_x);
     }
@@ -127,9 +133,9 @@ protected:
 
 using Delay = DelayT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using DelayA = DelayT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

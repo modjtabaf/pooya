@@ -19,7 +19,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include "trace.hpp"
 
-#if defined(POOYA_DEBUG)
+#if POOYA_TRACE != 0
 
 namespace pooya::helper
 {
@@ -43,4 +43,4 @@ std::string pooya_trace_info_string()
 
 } // namespace pooya::helper
 
-#endif // defined(POOYA_DEBUG)
+#endif // POOYA_TRACE != 0

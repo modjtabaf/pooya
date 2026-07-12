@@ -27,7 +27,7 @@ namespace pooya
 
 bool History::track(const Signal& sig)
 {
-    pooya_debug_verify(empty(), "track should be called before the history is updated!");
+    pooya_verify(empty(), "track should be called before the history is updated!");
 
     auto vsig = std::dynamic_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
     if (!vsig || std::find(_signals.begin(), _signals.end(), vsig) != _signals.end()) return false;
@@ -38,7 +38,7 @@ bool History::track(const Signal& sig)
 
 void History::untrack(const Signal& sig)
 {
-    pooya_debug_verify(empty(), "untrack should be called before the history is updated!");
+    pooya_verify(empty(), "untrack should be called before the history is updated!");
 
     auto vsig = std::dynamic_pointer_cast<ValueSignalImpl>(sig->shared_from_this());
     if (vsig) _signals.erase(std::find(_signals.begin(), _signals.end(), vsig));
@@ -56,22 +56,22 @@ void History::update(uint k, double t)
         for (auto& sig : _signals)
         {
             if (dynamic_cast<ScalarSignalImpl*>(sig.get())
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
                 || dynamic_cast<IntSignalImpl*>(sig.get())
-#endif // POOYA_INT_SIGNAL
-#ifdef POOYA_BOOL_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
+#if DEFINE_BOOL_SIGNAL != 0
                 || dynamic_cast<BoolSignalImpl*>(sig.get())
-#endif // POOYA_BOOL_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
             )
             {
                 insert_or_assign(sig, Array(_nrows_grow));
             }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
             else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.get()); pa)
             {
                 insert_or_assign(sig, Eigen::MatrixXd(_nrows_grow, pa->size()));
             }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
         }
     }
 
@@ -92,19 +92,19 @@ void History::update(uint k, double t)
         {
             h(k, 0) = valid ? ps->get_value() : 0;
         }
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
         else if (auto* pi = dynamic_cast<IntSignalImpl*>(sig.get()); pi)
         {
             h(k, 0) = valid ? pi->get_value() : 0;
         }
-#endif // POOYA_INT_SIGNAL
-#ifdef POOYA_BOOL_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
+#if DEFINE_BOOL_SIGNAL != 0
         else if (auto* pb = dynamic_cast<BoolSignalImpl*>(sig.get()); pb)
         {
             h(k, 0) = valid ? pb->get_value() : 0;
         }
-#endif // POOYA_BOOL_SIGNAL
-#ifdef POOYA_ARRAY_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
+#if DEFINE_ARRAY_SIGNAL != 0
         else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.get()); pa)
         {
             if (valid)
@@ -116,7 +116,7 @@ void History::update(uint k, double t)
                 h.row(k).setZero();
             }
         }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
     }
 
     if ((_bottom_row == uint(-1)) || (k > _bottom_row))
@@ -158,7 +158,7 @@ void History::export_csv(const std::string& filename)
     {
         if (h.first)
         {
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
             if (auto* pa = dynamic_cast<ArraySignalImpl*>(h.first.get()); pa)
             {
                 for (std::size_t k = 0; k < pa->size(); k++)
@@ -167,7 +167,7 @@ void History::export_csv(const std::string& filename)
                 }
             }
             else
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
             {
                 ofs << "," << h.first->name().str();
             }
@@ -184,7 +184,7 @@ void History::export_csv(const std::string& filename)
         {
             if (h.first)
             {
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
                 if (auto* pa = dynamic_cast<ArraySignalImpl*>(h.first.get()); pa)
                 {
                     for (std::size_t j = 0; j < pa->size(); j++)
@@ -193,7 +193,7 @@ void History::export_csv(const std::string& filename)
                     }
                 }
                 else
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
                 {
                     ofs << "," << h.second(k);
                 }

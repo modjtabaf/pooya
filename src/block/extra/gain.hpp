@@ -50,13 +50,13 @@ protected:
 
 using Gain = GainT<double, double>;
 
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
 using GainI = GainT<int, int>;
-#endif // POOYA_INT_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using GainA = GainT<Array, double>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

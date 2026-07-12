@@ -55,9 +55,9 @@ protected:
 
 using InitialValue = InitialValueT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using InitialValueA = InitialValueT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

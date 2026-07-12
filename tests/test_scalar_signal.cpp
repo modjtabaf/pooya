@@ -44,11 +44,11 @@ TEST_F(TestScalarSignal, ScalarSignal)
     EXPECT_FALSE(s_x->assigned());
     EXPECT_TRUE(s_x->assignable());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // get the value of an un-assigned signal
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 
     // assign a value to an un-assigned signal
     EXPECT_NO_THROW(s_x = x);
@@ -65,11 +65,11 @@ TEST_F(TestScalarSignal, ScalarSignal)
     EXPECT_FALSE(s_x->assigned());
     EXPECT_TRUE(s_x->assignable());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // get the value of an un-assigned signal
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 
     // assign a value to an un-assigned signal
     EXPECT_NO_THROW(s_x->set_value(x));
@@ -77,11 +77,11 @@ TEST_F(TestScalarSignal, ScalarSignal)
     // get the value of an assigned signal
     EXPECT_EQ(x, s_x->get_value());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // assign a value to an assigned signal
     EXPECT_THROW(s_x = x, std::runtime_error);
     EXPECT_THROW(s_x->set_value(x), std::runtime_error);
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 }
 
 TEST_F(TestScalarSignal, PersistentScalarSignal)
@@ -96,11 +96,11 @@ TEST_F(TestScalarSignal, PersistentScalarSignal)
     EXPECT_TRUE(s_x->assigned());
     EXPECT_TRUE(s_x->assignable());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // get the value of an un-assigned signal
     EXPECT_NO_THROW(y = s_x);
     EXPECT_NO_THROW(y = s_x->get_value());
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 
     // assign a value to an un-assigned signal
     EXPECT_NO_THROW(s_x = x);
@@ -114,11 +114,11 @@ TEST_F(TestScalarSignal, PersistentScalarSignal)
     EXPECT_TRUE(s_x->assigned());
     EXPECT_TRUE(s_x->assignable());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // get the value of an un-assigned signal
     EXPECT_NO_THROW(y = s_x);
     EXPECT_NO_THROW(y = s_x->get_value());
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 
     // assign a value to an un-assigned signal
     EXPECT_NO_THROW(s_x->set_value(x));
@@ -126,9 +126,9 @@ TEST_F(TestScalarSignal, PersistentScalarSignal)
     // get the value of an assigned signal
     EXPECT_EQ(x, s_x->get_value());
 
-#if defined(POOYA_DEBUG)
+#if POOYA_DEBUG != 0
     // assign a value to an assigned signal
     EXPECT_NO_THROW(s_x = x);
     EXPECT_NO_THROW(s_x->set_value(x));
-#endif // POOYA_DEBUG
+#endif // POOYA_DEBUG != 0
 }

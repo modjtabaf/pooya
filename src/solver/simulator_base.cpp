@@ -38,9 +38,9 @@ void SimulatorBase::init(double t0)
 
     std::unordered_set<ValueSignalImpl*> value_signals;
     std::unordered_set<ScalarSignalImpl*> scalar_state_signals;
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
     std::unordered_set<ArraySignalImpl*> array_state_signals;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
     _model.visit(
         [&](Block& block, uint32_t /*level*/) -> bool
@@ -60,7 +60,7 @@ void SimulatorBase::init(double t0)
                         state_variables_size++;
                     }
                 }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
                 else if (auto* pa = dynamic_cast<ArraySignalImpl*>(sig.first.get()); pa)
                 {
                     if (pa->state_variable() &&
@@ -71,7 +71,7 @@ void SimulatorBase::init(double t0)
                         state_variables_size += pa->size();
                     }
                 }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
             }
 
             return true;
@@ -88,13 +88,13 @@ void SimulatorBase::init(double t0)
     {
         scalar_state_signals_.emplace_back(std::static_pointer_cast<ScalarSignalImpl>(sig->shared_from_this()));
     }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
     array_state_signals_.reserve(array_state_signals.size());
     for (auto* sig : array_state_signals)
     {
         array_state_signals_.emplace_back(std::static_pointer_cast<ArraySignalImpl>(sig->shared_from_this()));
     }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
     _state_variables.resize(state_variables_size);
     _state_variables_orig.resize(state_variables_size);
@@ -133,14 +133,14 @@ void SimulatorBase::run(double t, double min_time_step, double max_time_step)
             *data = sig->deriv_signal()->get_value();
             data++;
         }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
         for (auto& sig : array_state_signals_)
         {
             auto* deriv_sig                            = sig->deriv_signal();
             Eigen::Map<Array>(data, deriv_sig->size()) = deriv_sig->get_value();
             data += deriv_sig->size();
         }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
         return _state_variable_derivs;
     };
@@ -186,10 +186,11 @@ void SimulatorBase::run(double t, double min_time_step, double max_time_step)
         }
         else
         {
-            pooya_debug_verify0(_stepper);
-
-            pooya_debug_verify0(min_time_step > 0);
-            pooya_debug_verify0(max_time_step > min_time_step);
+#if VERIFY_SIMULATOR != 0
+            pooya_verify0(_stepper);
+            pooya_verify0(min_time_step > 0);
+            pooya_verify0(max_time_step > min_time_step);
+#endif // VERIFY_SIMULATOR != 0
 
             double new_h;
             double t1         = _t_prev;
@@ -256,32 +257,33 @@ void SimulatorBase::reset_with_state_variables(const Array& state_variables)
         sig->set_value(*data);
         data++;
     }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
     for (auto& sig : array_state_signals_)
     {
         sig->set_value(Eigen::Map<const Array>(data, sig->size()));
         data += sig->size();
     }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 }
 
 void SimulatorBase::get_state_variables(Array& state_variables)
 {
     pooya_trace0;
-    pooya_debug_verify(state_variables.size() == _state_variables.size(), "Incorrect output array size!");
+    pooya_verify((VERIFY_SIMULATOR == 0) || (state_variables.size() == _state_variables.size()),
+                 "Incorrect output array size!");
     double* data = state_variables.data();
     for (auto& sig : scalar_state_signals_)
     {
         *data = sig->get_value();
         data++;
     }
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
     for (auto& sig : array_state_signals_)
     {
         Eigen::Map<Array>(data, sig->size()) = sig->get_value();
         data += sig->size();
     }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 }
 
 } // namespace pooya

@@ -25,6 +25,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "src/shared/named_object.hpp"
 #include "trait.hpp"
 
+#if !defined(VERIFY_SIGNAL)
+#define VERIFY_SIGNAL POOYA_DEBUG
+#endif // !defined(VERIFY_SIGNAL)
+
 namespace pooya
 {
 

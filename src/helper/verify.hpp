@@ -18,7 +18,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_HELPER_VERIFY_HPP__
 #define __POOYA_HELPER_VERIFY_HPP__
 
-#include "defs.hpp"
+#include "util.hpp"
 
 #define pooya_verify(cond, msg)                                                                                        \
     if (!(cond))                                                                                                       \
@@ -26,18 +26,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
         pooya::helper::pooya_throw_exception(__FILE__, __LINE__, msg);                                                 \
     }
 
-#if !defined(POOYA_DEBUG)
-
-#define pooya_debug_verify(cond, msg)
-
-#else
-
-#include "util.hpp"
-
-#define pooya_debug_verify(cond, msg) pooya_verify(cond, msg)
-
-#endif // !defined(POOYA_DEBUG)
-
-#define pooya_debug_verify0(cond) pooya_debug_verify(cond, #cond)
+#define pooya_verify0(cond) pooya_verify((cond), #cond)
 
 #endif // __POOYA_HELPER_VERIFY_HPP__

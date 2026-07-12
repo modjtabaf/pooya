@@ -24,10 +24,14 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "defs.hpp"
 #include "verify.hpp"
 
+#if !defined(POOYA_TRACE)
+#define POOYA_TRACE POOYA_DEBUG
+#endif // !defined(POOYA_TRACE)
+
 namespace pooya::helper
 {
 
-#if !defined(POOYA_DEBUG)
+#if POOYA_TRACE == 0
 
 #define pooya_trace(msg)
 #define pooya_trace_update(msg)
@@ -52,7 +56,7 @@ public:
 
     static void update(const std::string& file, int line, const std::string& msg)
     {
-        pooya_debug_verify(!pooya_trace_info.empty(), "Empty trace queue!");
+        pooya_verify(!pooya_trace_info.empty(), "Empty trace queue!");
         auto& pt = pooya_trace_info.back();
         pt._file = file;
         pt._line = line;
@@ -70,7 +74,7 @@ public:
     pooya_trace_update(msg);
 #define pooya_trace_update(msg) __pooya_tracer__.update(__FILE__, __LINE__, msg);
 
-#endif // !defined(POOYA_DEBUG)
+#endif // POOYA_TRACE == 0
 
 #define pooya_trace0 pooya_trace("")
 #define pooya_trace_update0 pooya_trace_update("")

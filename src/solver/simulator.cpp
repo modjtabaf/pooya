@@ -17,9 +17,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include "src/helper/defs.hpp"
 
-#if defined(POOYA_DEBUG)
+#if VERIFY_SIMULATOR != 0
 #include <iostream>
-#endif // defined(POOYA_DEBUG)
+#endif // VERIFY_SIMULATOR != 0
 
 #include "simulator.hpp"
 #include "src/block/block.hpp"
@@ -73,9 +73,11 @@ void Simulator::process_model(double t, bool call_pre_step, bool call_post_step)
             }
         }
 
-        pooya_debug_verify0(_current_po->size() == _new_po->size());
-        pooya_debug_verify0(_current_po->size() == _current_po->capacity());
-        pooya_debug_verify0(_new_po->size() == _new_po->capacity());
+#if VERIFY_SIMULATOR != 0
+        pooya_verify0(_current_po->size() == _new_po->size());
+        pooya_verify0(_current_po->size() == _current_po->capacity());
+        pooya_verify0(_new_po->size() == _new_po->capacity());
+#endif // VERIFY_SIMULATOR != 0
 
         std::swap(_current_po, _new_po);
     }
@@ -86,7 +88,7 @@ void Simulator::process_model(double t, bool call_pre_step, bool call_post_step)
         }
     }
 
-#if defined(POOYA_DEBUG)
+#if VERIFY_SIMULATOR != 0
     std::vector<const Block*> unprocessed;
 
     auto find_unprocessed_cb = [&](const Block& c, uint32_t /*level*/) -> bool
@@ -115,7 +117,7 @@ void Simulator::process_model(double t, bool call_pre_step, bool call_post_step)
             }
         }
     }
-#endif // defined(POOYA_DEBUG)
+#endif // VERIFY_SIMULATOR != 0
 
     if (call_post_step) _model.post_step(t);
 }
@@ -128,8 +130,10 @@ void Simulator::init(double t0)
 
     if (_state_variables.size() > 0 && _reuse_order)
     {
-        pooya_debug_verify0(_processing_order1.empty());
-        pooya_debug_verify0(_processing_order2.empty());
+#if VERIFY_SIMULATOR != 0
+        pooya_verify0(_processing_order1.empty());
+        pooya_verify0(_processing_order2.empty());
+#endif // VERIFY_SIMULATOR != 0
 
         uint num_blocks     = 0;
         auto enum_blocks_cb = [&](Block& /*c*/, uint32_t /*level*/) -> bool

@@ -56,7 +56,7 @@ TEST_F(TestMemory, ScalarMemory)
     EXPECT_EQ(x0, s_y);
 }
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 TEST_F(TestMemory, ArrayMemory)
 {
     // test parameters
@@ -82,4 +82,4 @@ TEST_F(TestMemory, ArrayMemory)
         EXPECT_EQ(s_y[k], x0[k]);
     }
 }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0

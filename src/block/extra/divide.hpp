@@ -65,9 +65,9 @@ protected:
 
 using Divide = DivideT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using DivideA = DivideT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

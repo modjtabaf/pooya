@@ -40,9 +40,9 @@ public:
 
 using Integrator = IntegratorT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using IntegratorA = IntegratorT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

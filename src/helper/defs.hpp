@@ -22,23 +22,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #if !defined(POOYA_DEBUG)
 #if defined(NDEBUG)
-#define POOYA_DEBUG 1
-#else
 #define POOYA_DEBUG 0
+#else
+#define POOYA_DEBUG 1
 #endif // defined(NDEBUG)
 #endif // !defined(POOYA_DEBUG)
 
 #if !defined(DEFINE_INT_SIGNAL)
 #define DEFINE_INT_SIGNAL 1
-#endif // DEFINE_INT_SIGNAL != 0
+#endif // !defined(DEFINE_INT_SIGNAL)
 
 #if !defined(DEFINE_BOOL_SIGNAL)
 #define DEFINE_BOOL_SIGNAL 1
-#endif // DEFINE_BOOL_SIGNAL != 0
+#endif // !defined(DEFINE_BOOL_SIGNAL)
 
 #if !defined(DEFINE_ARRAY_SIGNAL)
 #define DEFINE_ARRAY_SIGNAL 1
-#endif // DEFINE_ARRAY_SIGNAL != 0
+#endif // !defined(DEFINE_ARRAY_SIGNAL)
 
 template<typename T>
 struct is_pair : std::false_type

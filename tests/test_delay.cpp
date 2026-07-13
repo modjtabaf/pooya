@@ -76,7 +76,6 @@ TEST_F(TestDelay, ScalarDelay)
     EXPECT_NEAR(func(t_end - time_delay), s_y, 1e-10);
 }
 
-#if DEFINE_ARRAY_SIGNAL != 0
 TEST_F(TestDelay, ArrayDelay)
 {
     // test parameters
@@ -124,4 +123,3 @@ TEST_F(TestDelay, ArrayDelay)
     // verify the results
     EXPECT_NEAR((func(t_end - time_delay) - s_y->get_value()).abs().maxCoeff(), 0, 1e-10);
 }
-#endif // DEFINE_ARRAY_SIGNAL != 0

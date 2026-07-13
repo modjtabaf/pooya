@@ -17,13 +17,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include "src/helper/defs.hpp"
 
-#if VERIFY_SIMULATOR != 0
-#include <iostream>
-#endif // VERIFY_SIMULATOR != 0
-
 #include "simulator.hpp"
 #include "src/block/block.hpp"
 #include "src/helper/util.hpp"
+
+#if VERIFY_SIMULATOR != 0
+#include <iostream>
+#endif // VERIFY_SIMULATOR != 0
 
 namespace pooya
 {

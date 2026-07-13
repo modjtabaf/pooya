@@ -57,12 +57,13 @@ def pooya_cc_binary(name, src, **kwargs):
 
 def pooya_cc_test(name, src, **kwargs):
     deps = get_from_dict(kwargs, "deps")
+    copts = get_from_dict(kwargs, "copts")
 
     native.cc_test(
         name = name,
         size = "small",
         srcs = [src],
-        copts = SHARED_COPTS,
+        copts = SHARED_COPTS + copts,
         deps = [
             "@com_google_googletest//:gtest_main",
         ] + deps,

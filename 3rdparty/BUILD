@@ -22,5 +22,10 @@ pooya_cc_library(
     includes = [
         ".",
         ],
+    linkopts = [
+        "-lboost_iostreams",
+        "-lboost_system",
+        "-lboost_filesystem",
+        ],
     visibility = ["//visibility:public"],
 )

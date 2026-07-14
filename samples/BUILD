@@ -17,6 +17,7 @@ pooya_cc_binary(
     src = "gain_block.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -25,6 +26,7 @@ pooya_cc_binary(
     src = "memory_block.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -33,6 +35,7 @@ pooya_cc_binary(
     src = "delay_block.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -41,6 +44,7 @@ pooya_cc_binary(
     src = "test03_integrator.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -49,6 +53,7 @@ pooya_cc_binary(
     src = "test04_mass_spring.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -57,6 +62,7 @@ pooya_cc_binary(
     src = "test05_pendulum.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -65,6 +71,7 @@ pooya_cc_binary(
     src = "test06_pendulum_with_torque.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -73,6 +80,7 @@ pooya_cc_binary(
     src = "test07_pendulum_with_pi.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -81,6 +89,7 @@ pooya_cc_binary(
     src = "test08_pendulum_with_pid.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -89,6 +98,7 @@ pooya_cc_binary(
     src = "test09_mass_spring_damper.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -97,6 +107,7 @@ pooya_cc_binary(
     src = "test10_memory_with_bus.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -105,6 +116,7 @@ pooya_cc_binary(
     src = "test11_int_gain.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )
 
@@ -113,5 +125,6 @@ pooya_cc_binary(
     src = "tut01_mass_spring_damper.cpp",
     deps = [
         "//src/block:extra",
+        "//src/misc",
     ]
 )

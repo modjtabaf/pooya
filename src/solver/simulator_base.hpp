@@ -22,6 +22,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <memory>
 #include <vector>
 
+#include "src/helper/defs.hpp" // should be the first include
 #include "src/signal/array.hpp"
 #include "stepper_base.hpp"
 

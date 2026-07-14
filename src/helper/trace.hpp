@@ -21,8 +21,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <string>
 #include <vector>
 
-#include "defs.hpp"
-#include "verify.hpp"
+#include "src/helper/defs.hpp" // should be the first include
+#include "src/helper/util.hpp"
 
 #if !defined(POOYA_TRACE)
 #define POOYA_TRACE POOYA_DEBUG

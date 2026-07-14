@@ -23,7 +23,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <memory>
 #include <optional>
 
-#include "src/helper/defs.hpp"
 #include "src/shared/named_object.hpp"
 #include "src/signal/array_signal.hpp"
 #include "src/signal/bool_signal.hpp"

@@ -15,17 +15,24 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER I
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef __POOYA_HELPER_VERIFY_HPP__
-#define __POOYA_HELPER_VERIFY_HPP__
+#ifndef __POOYA_HELPER_IS_PAIR_HPP__
+#define __POOYA_HELPER_IS_PAIR_HPP__
 
-#include "util.hpp"
+#include <utility>
 
-#define pooya_verify(cond, msg)                                                                                        \
-    if (!(cond))                                                                                                       \
-    {                                                                                                                  \
-        pooya::helper::pooya_throw_exception(__FILE__, __LINE__, msg);                                                 \
-    }
+#include "src/helper/defs.hpp" // should be the first include
 
-#define pooya_verify0(cond) pooya_verify((cond), #cond)
+template<typename T>
+struct is_pair : std::false_type
+{
+};
 
-#endif // __POOYA_HELPER_VERIFY_HPP__
+template<typename T1, typename T2>
+struct is_pair<std::pair<T1, T2>> : std::true_type
+{
+};
+
+template<typename T>
+constexpr bool is_pair_v = is_pair<T>::value;
+
+#endif // __POOYA_HELPER_IS_PAIR_HPP__

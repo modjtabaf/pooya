@@ -18,9 +18,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_TRAIT_HPP__
 #define __POOYA_SIGNAL_TRAIT_HPP__
 
+#include "src/helper/defs.hpp" // should be the first include
+
 #include "array.hpp"
-#include "src/helper/defs.hpp"
-#include "src/helper/verify.hpp"
 
 namespace pooya
 {

@@ -23,10 +23,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <vector>
 
 #include "signal.hpp"
-#include "src/helper/defs.hpp"
+#include "src/helper/defs.hpp" // should be the first include
+#include "src/helper/is_pair.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
-#include "src/helper/verify.hpp"
 
 #include <type_traits>
 #include <utility>

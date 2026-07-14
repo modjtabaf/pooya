@@ -24,7 +24,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include "float_signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
-#include "src/helper/verify.hpp"
 
 namespace pooya
 {

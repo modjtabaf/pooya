@@ -48,7 +48,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
 #if VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_NO_THROW(y = s_x);
     EXPECT_NO_THROW(y = s_x->get_value());
-#else // VERIFY_SIGNAL_VALUE_ACCESS == 0
+#else  // VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
 #endif // VERIFY_SIGNAL_VALUE_ACCESS == 0
@@ -72,7 +72,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
 #if VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_NO_THROW(y = s_x);
     EXPECT_NO_THROW(y = s_x->get_value());
-#else // VERIFY_SIGNAL_VALUE_ACCESS == 0
+#else  // VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_THROW(y = s_x, std::runtime_error);
     EXPECT_THROW(y = s_x->get_value(), std::runtime_error);
 #endif // VERIFY_SIGNAL_VALUE_ACCESS == 0
@@ -87,7 +87,7 @@ TEST_F(TestScalarSignal, ScalarSignal)
 #if VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_NO_THROW(s_x = x);
     EXPECT_NO_THROW(s_x->set_value(x));
-#else // VERIFY_SIGNAL_VALUE_ACCESS == 0
+#else  // VERIFY_SIGNAL_VALUE_ACCESS == 0
     EXPECT_THROW(s_x = x, std::runtime_error);
     EXPECT_THROW(s_x->set_value(x), std::runtime_error);
 #endif // VERIFY_SIGNAL_VALUE_ACCESS == 0

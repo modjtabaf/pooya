@@ -18,7 +18,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_HELPER_DEFS_HPP__
 #define __POOYA_HELPER_DEFS_HPP__
 
-#include <utility>
+// put prprocessor directive overrides here, e.g.
+// #define POOYA_DEBUG 1
+// #define DEFINE_BOOL_SIGNAL 0
 
 #if !defined(POOYA_DEBUG)
 #if defined(NDEBUG)
@@ -39,18 +41,5 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #if !defined(DEFINE_ARRAY_SIGNAL)
 #define DEFINE_ARRAY_SIGNAL 1
 #endif // !defined(DEFINE_ARRAY_SIGNAL)
-
-template<typename T>
-struct is_pair : std::false_type
-{
-};
-
-template<typename T1, typename T2>
-struct is_pair<std::pair<T1, T2>> : std::true_type
-{
-};
-
-template<typename T>
-constexpr bool is_pair_v = is_pair<T>::value;
 
 #endif // __POOYA_HELPER_DEFS_HPP__

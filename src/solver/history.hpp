@@ -22,8 +22,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <unordered_map>
 #include <vector>
 
+#include "src/helper/defs.hpp" // should be the first include
 #include "src/signal/array.hpp"
-#include "src/signal/signal.hpp"
 #include "src/signal/value_signal.hpp"
 
 namespace pooya

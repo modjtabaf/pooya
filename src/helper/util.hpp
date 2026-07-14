@@ -20,6 +20,16 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <string>
 
+#include "src/helper/defs.hpp" // should be the first include
+
+#define pooya_verify(cond, msg)                                                                                        \
+    if (!(cond))                                                                                                       \
+    {                                                                                                                  \
+        pooya::helper::pooya_throw_exception(__FILE__, __LINE__, msg);                                                 \
+    }
+
+#define pooya_verify0(cond) pooya_verify((cond), #cond)
+
 namespace pooya
 {
 class Submodel;

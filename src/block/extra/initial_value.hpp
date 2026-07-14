@@ -36,7 +36,7 @@ public:
 
     explicit InitialValueT(Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1) {}
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         if (_init)
@@ -46,6 +46,7 @@ public:
             _init       = false;
         }
         Base::_s_out->set(_value);
+        return true;
     }
 
 protected:

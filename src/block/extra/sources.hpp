@@ -30,7 +30,7 @@ namespace pooya
 class Sources : public Leaf
 {
 public:
-    using SourcesFunction = std::function<void(const Bus&, double)>;
+    using SourcesFunction = std::function<bool(const Bus&, double)>;
 
     explicit Sources(SourcesFunction src_func, Submodel* parent = nullptr, std::string_view name = "",
                      uint16_t num_oports = NoIOLimit)
@@ -38,10 +38,10 @@ public:
     {
     }
 
-    void activation_function(double t) override
+    bool activation_function(double t) override
     {
         pooya_trace("block: " + full_name().str());
-        _src_func(_obus, t);
+        return _src_func(_obus, t);
     }
 
 protected:

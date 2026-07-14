@@ -32,7 +32,7 @@ namespace pooya
 class Function : public Leaf
 {
 public:
-    using ActFunction = std::function<void(double, const Bus& ibus, const Bus& obus)>;
+    using ActFunction = std::function<bool(double, const Bus& ibus, const Bus& obus)>;
 
     explicit Function(ActFunction act_func, Submodel* parent = nullptr, std::string_view name = "",
                       uint16_t num_iports = NoIOLimit, uint16_t num_oports = NoIOLimit)
@@ -40,10 +40,10 @@ public:
     {
     }
 
-    void activation_function(double t) override
+    bool activation_function(double t) override
     {
         pooya_trace("block: " + full_name().str());
-        _act_func(t, _ibus, _obus);
+        return _act_func(t, _ibus, _obus);
     }
 
 protected:

@@ -36,10 +36,11 @@ public:
 
     explicit GainT(GainType k, Submodel* parent = nullptr, std::string_view name = "") : Base(parent, name, 1), _k(k) {}
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         Base::_s_out = _k * Base::_s_in->get_value();
+        return true;
     }
 
     typename Types<GainType>::GetValue gain() const { return _k; }

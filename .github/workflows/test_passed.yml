@@ -1,0 +1,19 @@
+name: Tests Passed
+on:
+  push:
+
+jobs:
+  bazel-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Bazel
+      uses: bazelbuild/setup-bazelisk@v3
+
+    - name: Run Bazel Tests
+      run: |
+        bazel clean
+        bazel test //tests:all --test_output=errors -c dbg

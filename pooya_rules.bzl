@@ -32,11 +32,6 @@ def pooya_cc_library(name, srcs, **kwargs):
             "-Wextra",
             "-Werror",
             ] + SHARED_COPTS,
-        linkopts = [
-            "-lboost_iostreams",
-            "-lboost_system",
-            "-lboost_filesystem",
-            ],
         deps = deps,
         **kwargs
     )
@@ -53,15 +48,9 @@ def pooya_cc_binary(name, src, **kwargs):
             "-Wextra",
             "-Werror",
             ] + SHARED_COPTS,
-        linkopts = [
-            "-lboost_iostreams",
-            "-lboost_system",
-            "-lboost_filesystem",
-            ],
         deps = [
             "//src/block",
             "//src/solver",
-            "//src/misc",
         ] + deps,
         **kwargs
     )
@@ -77,10 +66,5 @@ def pooya_cc_test(name, src, **kwargs):
         deps = [
             "@com_google_googletest//:gtest_main",
         ] + deps,
-        linkopts = [
-            "-lboost_iostreams",
-            "-lboost_system",
-            "-lboost_filesystem",
-            ],
         **kwargs
     )

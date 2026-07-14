@@ -60,7 +60,6 @@ TEST_F(TestGain, ScalarGain)
     EXPECT_DOUBLE_EQ(gain_value * x, s_y);
 }
 
-#ifdef POOYA_INT_SIGNAL
 TEST_F(TestGain, IntGain)
 {
     // test parameters
@@ -82,9 +81,7 @@ TEST_F(TestGain, IntGain)
     // verify the results
     EXPECT_EQ(gain_value * x, s_y);
 }
-#endif // POOYA_INT_SIGNAL
 
-#ifdef POOYA_ARRAY_SIGNAL
 TEST_F(TestGain, ArrayGain)
 {
     // test parameters
@@ -110,4 +107,3 @@ TEST_F(TestGain, ArrayGain)
         EXPECT_NEAR(gain_value * s_x[k], s_y[k], 1e-10);
     }
 }
-#endif // POOYA_ARRAY_SIGNAL

@@ -66,14 +66,18 @@ public:
     void pre_step(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(!Base::_s_out->assigned());
+#if VERIFY_SIGNAL_VALUE_ACCESS != 0
+        pooya_verify0(!Base::_s_out->assigned());
+#endif // VERIFY_SIGNAL_VALUE_ACCESS != 0
         Base::_s_out = _value;
     }
 
     void post_step(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
-        pooya_debug_verify0(Base::_s_out->assigned());
+#if VERIFY_SIGNAL_VALUE_ACCESS != 0
+        pooya_verify0(Base::_s_out->assigned());
+#endif // VERIFY_SIGNAL_VALUE_ACCESS != 0
         _value = Base::_s_out;
     }
 

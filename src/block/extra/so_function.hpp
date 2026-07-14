@@ -53,9 +53,9 @@ protected:
 
 using SOFunction = SOFunctionT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using SOFunctionA = SOFunctionT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

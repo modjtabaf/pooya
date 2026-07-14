@@ -38,7 +38,6 @@ bool BusMemory::connect(const Bus& ibus, const Bus& obus)
         return false;
     }
 
-#ifdef POOYA_DEBUG
     if (!_init_values.empty())
     {
         std::stringstream ss;
@@ -47,9 +46,8 @@ bool BusMemory::connect(const Bus& ibus, const Bus& obus)
         {
             ss << " - " << iv.first << "\n";
         }
-        pooya_debug_verify(false, ss.str());
+        pooya_verify(false, ss.str());
     }
-#endif // POOYA_DEBUG
 
     return true;
 }
@@ -64,25 +62,25 @@ void BusMemory::block_builder(const std::string& full_label, const Signal& sig_i
     {
         block = std::make_shared<Memory>((it == _init_values.end()) ? 0.0 : std::get<double>(it->second), _parent);
     }
-#ifdef POOYA_INT_SIGNAL
+#if DEFINE_INT_SIGNAL != 0
     else if (dynamic_cast<IntSignalImpl*>(&sig_in.impl()))
     {
         block = std::make_shared<MemoryI>((it == _init_values.end()) ? 0 : std::get<int>(it->second), _parent);
     }
-#endif // POOYA_INT_SIGNAL
-#ifdef POOYA_BOOL_SIGNAL
+#endif // DEFINE_INT_SIGNAL != 0
+#if DEFINE_BOOL_SIGNAL != 0
     else if (dynamic_cast<BoolSignalImpl*>(&sig_in.impl()))
     {
         block = std::make_shared<MemoryB>((it == _init_values.end()) ? false : std::get<bool>(it->second), _parent);
     }
-#endif // POOYA_BOOL_SIGNAL
-#ifdef POOYA_ARRAY_SIGNAL
+#endif // DEFINE_BOOL_SIGNAL != 0
+#if DEFINE_ARRAY_SIGNAL != 0
     else if (auto* pa = dynamic_cast<ArraySignalImpl*>(&sig_in.impl()); pa)
     {
         block = std::make_shared<MemoryA>(
             (it == _init_values.end()) ? Array::Zero(pa->size()) : std::get<Array>(it->second), _parent);
     }
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
     else
     {
         pooya_verify(false, "cannot create a memory block for a non-value signal.");

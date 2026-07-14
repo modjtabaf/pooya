@@ -18,13 +18,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 #define __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 
 #include "array.hpp"
 #include "float_signal.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
-#include "src/helper/verify.hpp"
 
 namespace pooya
 {
@@ -49,9 +48,10 @@ public:
     const Array& get_value() const
     {
         pooya_trace0;
-        pooya_debug_verify(_array_value.rows() == int(_size),
-                           name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
-        pooya_debug_verify(assigned(), name().str() + ": attempting to access an unassigned value!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || (_array_value.rows() == int(_size)),
+                     name().str() + ": attempting to retrieve the value of an uninitialized array signal!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assigned(),
+                     name().str() + ": attempting to access an unassigned value!");
         return _array_value;
     }
 
@@ -59,12 +59,13 @@ public:
 
     void set_value(const Array& value)
     {
-        pooya_debug_verify(_array_value.rows() == int(_size),
-                           name().str() + ": attempting to assign the value of an uninitialized array signal!");
-        pooya_debug_verify(assignable(), name().str() + ": re-assignment is prohibited!");
-        pooya_debug_verify(value.rows() == int(_size), std::string("size mismatch (id=") + name().str() + ")(" +
-                                                           std::to_string(_size) + " vs " +
-                                                           std::to_string(value.rows()) + ")!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || (_array_value.rows() == int(_size)),
+                     name().str() + ": attempting to assign the value of an uninitialized array signal!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || assignable(),
+                     name().str() + ": re-assignment is prohibited!");
+        pooya_verify((VERIFY_SIGNAL_VALUE_ACCESS == 0) || (value.rows() == int(_size)),
+                     std::string("size mismatch (id=") + name().str() + ")(" + std::to_string(_size) + " vs " +
+                         std::to_string(value.rows()) + ")!");
         _array_value = value;
         _assigned    = true;
     }
@@ -99,6 +100,6 @@ public:
 
 } // namespace pooya
 
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 #endif // __POOYA_SIGNAL_ARRAY_SIGNAL_HPP__

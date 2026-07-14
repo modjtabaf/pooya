@@ -125,7 +125,9 @@ int main()
        << gp.file1d(history[y_z3]) << "with lines title 'y3'," //
        << "\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

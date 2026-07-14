@@ -22,8 +22,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <memory>
 #include <vector>
 
+#include "src/helper/defs.hpp" // should be the first include
 #include "src/signal/array.hpp"
 #include "stepper_base.hpp"
+
+#if !defined(VERIFY_SIMULATOR)
+#define VERIFY_SIMULATOR POOYA_DEBUG
+#endif // !defined(VERIFY_SIMULATOR)
 
 namespace pooya
 {
@@ -51,9 +56,9 @@ protected:
     InputCallback _inputs_cb;
     std::vector<std::shared_ptr<ValueSignalImpl>> value_signals_;
     std::vector<std::shared_ptr<ScalarSignalImpl>> scalar_state_signals_;
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
     std::vector<std::shared_ptr<ArraySignalImpl>> array_state_signals_;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
     Array _state_variables;
     Array _state_variables_orig;
     Array _state_variable_derivs;

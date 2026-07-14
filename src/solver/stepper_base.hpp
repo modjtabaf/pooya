@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <functional>
 
+#include "src/helper/defs.hpp" // should be the first include
 #include "src/helper/trace.hpp"
 #include "src/signal/array.hpp"
 

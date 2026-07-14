@@ -186,7 +186,9 @@ int main()
           // << gp.file1d(history[sig_reg.lookup_signal(".tau")]) << "with lines title 'tau'"
           "\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

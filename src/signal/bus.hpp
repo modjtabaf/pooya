@@ -23,13 +23,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #include <vector>
 
 #include "signal.hpp"
-#include "src/helper/defs.hpp"
+#include "src/helper/defs.hpp" // should be the first include
+#include "src/helper/is_pair.hpp"
 #include "src/helper/trace.hpp"
 #include "src/helper/util.hpp"
-#include "src/helper/verify.hpp"
 
 #include <type_traits>
 #include <utility>
+
+#if !defined(VERIFY_BUS_MEMBER_ACCESS)
+#define VERIFY_BUS_MEMBER_ACCESS VERIFY_SIGNAL
+#endif // !defined(VERIFY_BUS_MEMBER_ACCESS)
 
 namespace pooya
 {
@@ -89,7 +93,7 @@ public:
     Signal operator[](std::size_t index) const
     {
         pooya_trace("index: " + std::to_string(index));
-        pooya_debug_verify(index < _signals.size(), "index out of range!");
+        pooya_verify((VERIFY_BUS_MEMBER_ACCESS == 0) || (index < _signals.size()), "index out of range!");
         return _signals[index].second;
     }
 
@@ -101,7 +105,8 @@ public:
         const auto& label_to_find = pos == std::string::npos ? label : label.substr(0, pos);
         const auto it             = std::find_if(_signals.begin(), _signals.end(),
                                                  [label_to_find](const auto& p) -> bool { return p.first == label_to_find; });
-        pooya_verify(it != _signals.end(), "Label not found in the bus: " + std::string(label));
+        pooya_verify((VERIFY_BUS_MEMBER_ACCESS == 0) || (it != _signals.end()),
+                     "Label not found in the bus: " + std::string(label));
 
         if (pos == std::string::npos)
         {

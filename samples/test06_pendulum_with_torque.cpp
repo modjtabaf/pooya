@@ -38,8 +38,8 @@ protected:
     pooya::Integrator _integ1{M_PI_4, this, "dphi"};
     pooya::Integrator _integ2{0.0, this, "phi"};
     pooya::Function _sin{[](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-                         { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); }, this,
-                         "sin(phi)"};
+                         { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); },
+                         this, "sin(phi)"};
     // pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this, "sin(phi)"};
     // pooya::SOFunction _sin{[](double /*t*/, const pooya::Bus& ibus) -> double
     //                        { return std::sin(pooya::ScalarSignal(ibus.at(0))); }, this, "sin(phi)"};
@@ -123,7 +123,9 @@ int main()
     gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'phi'," << gp.file1d(history[pendulum._dphi])
        << "with lines title 'dphi'\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

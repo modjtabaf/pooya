@@ -131,7 +131,9 @@ int main()
     gp << "set yrange [-0.4:0.5]\n";
     gp << "plot" << gp.file1d(history[model._s_x]) << "with lines title 'x'\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

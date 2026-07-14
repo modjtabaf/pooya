@@ -20,6 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 
 #include <string>
 
+#include "src/helper/defs.hpp" // should be the first include
+
 namespace pooya
 {
 

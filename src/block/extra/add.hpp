@@ -47,12 +47,10 @@ public:
             return false;
         }
 
-#if defined(POOYA_DEBUG)
-        pooya_debug_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
+        pooya_verify(ibus->size() >= 1, Base::full_name().str() + " requires 1 or more input signals.");
         for (const auto& sig : ibus)
-            pooya_debug_verify(dynamic_cast<typename Types<T>::SignalImpl*>(&sig.second.impl()),
-                               Base::full_name().str() + ": signal type mismatch!");
-#endif // POOYA_DEBUG
+            pooya_verify(dynamic_cast<typename Types<T>::SignalImpl*>(&sig.second.impl()),
+                         Base::full_name().str() + ": signal type mismatch!");
 
         return true;
     }
@@ -75,9 +73,9 @@ protected:
 
 using Add = AddT<double>;
 
-#ifdef POOYA_ARRAY_SIGNAL
+#if DEFINE_ARRAY_SIGNAL != 0
 using AddA = AddT<Array>;
-#endif // POOYA_ARRAY_SIGNAL
+#endif // DEFINE_ARRAY_SIGNAL != 0
 
 } // namespace pooya
 

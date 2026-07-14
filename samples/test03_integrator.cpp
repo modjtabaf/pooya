@@ -78,7 +78,9 @@ int main()
     gp << "plot" << gp.file1d(history[x]) << "with lines title 'x'," << gp.file1d(history[xd])
        << "with lines title 'xd'\n";
 
-    pooya_debug_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#if POOYA_TRACE != 0
+    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+#endif // POOYA_TRACE != 0
 
     return 0;
 }

@@ -46,7 +46,7 @@ void FastSimulator::init(double t0)
 
     SimulatorBase::init(t0);
 
-    pooya_debug_verify0(_processing_order.empty());
+    pooya_verify0(_processing_order.empty());
 
     uint num_blocks     = 0;
     auto enum_blocks_cb = [&](Block& c, uint32_t /*level*/) -> bool

@@ -17,6 +17,7 @@ pooya_cc_library(
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.hpp"]),
     deps = [
+        "//3rdparty:bs_thread_pool",
         "//src/signal",
         "//src/block",
     ],

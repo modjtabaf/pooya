@@ -36,8 +36,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 class Pendulum : public pooya::Submodel
 {
 protected:
-    pooya::Multiply _mul1{1.0, this, "tau"};
-    pooya::Divide _div1{this, "_ml2"};
+    pooya::Multiply _mul1{1.0, this, "ml2"};
+    pooya::Divide _div1{this, "tau_ml2"};
     pooya::Subtract _sub{this, "err"};
     pooya::Integrator _integ1{0.0, this, "dphi"};
     pooya::Integrator _integ2{0.0, this, "phi"};
@@ -90,13 +90,13 @@ protected:
     pooya::Gain _gain_p;
     pooya::Integrator _integ;
     pooya::Gain _gain_i;
-    pooya::Add _add{0.0, this};
-    pooya::Derivative _deriv{0.0, this};
+    pooya::Add _add{0.0, this, "add"};
+    pooya::Derivative _deriv{0.0, this, "deriv"};
     pooya::Gain _gain_d;
 
 public:
     PID(pooya::Submodel* parent, double Kp, double Ki, double Kd, double x0 = 0.0)
-        : pooya::Submodel(parent, "PI"), _gain_p(Kp, this, "Kp"), _integ(x0, this, "ix"), _gain_i(Ki, this, "Ki"),
+        : pooya::Submodel(parent, "PID"), _gain_p(Kp, this, "Kp"), _integ(x0, this, "ix"), _gain_i(Ki, this, "Ki"),
           _gain_d(Kd, this, "Kd")
     {
     }
@@ -131,7 +131,7 @@ public:
 class PendulumWithPID : public pooya::Submodel
 {
 protected:
-    pooya::Subtract _sub{this};
+    pooya::Subtract _sub{this, "err"};
     PID _pid{this, 40.0, 20.0, 0.05};
 
 public:
@@ -161,7 +161,8 @@ int main()
 
     pooya::Rkf45 stepper;
     pooya::FastSimulator sim(
-        pendulum_with_pid, [&](pooya::Block&, double /*t*/) -> void { pendulum_with_pid._des_phi = M_PI_4; }, &stepper);
+        pendulum_with_pid, [&](pooya::Block&, double /*t*/) -> void { pendulum_with_pid._des_phi = M_PI_4; }, &stepper,
+        pooya::FastSimulator::NumThreads::Auto);
 
     pooya::History history;
     history.track(pendulum_with_pid._phi);
@@ -188,7 +189,7 @@ int main()
        << gp.file1d(history[pendulum_with_pid._tau]) << "with lines title 'tau'\n";
 
 #if POOYA_TRACE != 0
-    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_verify0(pooya::helper::PooyaTracer::pooya_trace_info.size() == 1);
 #endif // POOYA_TRACE != 0
 
     return 0;

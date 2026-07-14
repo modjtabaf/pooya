@@ -95,7 +95,7 @@ int main()
        << "with lines title 'xd'\n";
 
 #if POOYA_TRACE != 0
-    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_verify0(pooya::helper::PooyaTracer::pooya_trace_info.size() == 1);
 #endif // POOYA_TRACE != 0
 
     return 0;

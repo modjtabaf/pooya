@@ -34,7 +34,7 @@ void pooya_throw_exception(const std::string& file, int line, const std::string&
                 "  "
              << msg << "\n\n";
 #if POOYA_TRACE != 0
-    full_msg << pooya_trace_info_string();
+    full_msg << PooyaTracer::pooya_trace_info_string();
 #endif // POOYA_TRACE != 0
     throw std::runtime_error(full_msg.str());
 }

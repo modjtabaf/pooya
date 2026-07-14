@@ -22,6 +22,12 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya
 {
 
+#if VERIFY_SIMULATOR != 0
+#define my_pooya_verify0 pooya_verify0
+#else // VERIFY_SIMULATOR != 0
+#define my_pooya_verify0(x) x
+#endif // VERIFY_SIMULATOR != 0
+
 void FastSimulator::process_model(double t, bool call_pre_step, bool call_post_step)
 {
     pooya_trace("t: " + std::to_string(t));
@@ -35,15 +41,32 @@ void FastSimulator::process_model(double t, bool call_pre_step, bool call_post_s
     if (call_pre_step) _model.pre_step(t);
 
     for (auto& list : _processing_order)
-        for (auto* leaf : list)
-#if VERIFY_SIMULATOR != 0
-            pooya_verify0(leaf->activation_function(t));
-#else  // VERIFY_SIMULATOR != 0
-            leaf->activation_function(t);
-#endif // VERIFY_SIMULATOR != 0
+    {
+        if (list.size() == 1)
+        {
+            my_pooya_verify0(list.front()->activation_function(t));
+        }
+        else if (_thread_pool)
+        {
+            for (auto* leaf : list)
+            {
+                _thread_pool->detach_task([leaf, t]() { my_pooya_verify0(leaf->activation_function(t)); });
+            }
+            _thread_pool->wait();
+        }
+        else
+        {
+            for (auto* leaf : list)
+            {
+                my_pooya_verify0(leaf->activation_function(t));
+            }
+        }
+    }
 
     if (call_post_step) _model.post_step(t);
 }
+
+#undef my_pooya_verify0
 
 void FastSimulator::init(double t0)
 {
@@ -95,21 +118,20 @@ void FastSimulator::init(double t0)
 
         for (auto* leaf : po)
         {
-            if (list.size() == num_blocks_to_add) break;
-
-            if (leaf->processed() || !leaf->ready_to_process()) continue;
-
-            leaf->process(t0, false);
-
-            if (leaf->processed())
+            if (!leaf->processed() && leaf->ready_to_process())
+            {
                 list.push_back(leaf);
-            else
-                break;
+                if (list.size() == num_blocks_to_add) break;
+            }
         }
 
-        if (list.size() != num_blocks_to_add) break;
-
-        list.shrink_to_fit();
+        for (auto* leaf : list)
+        {
+            leaf->process(t0, false);
+#if VERIFY_SIMULATOR != 0
+            pooya_verify0(leaf->processed());
+#endif // VERIFY_SIMULATOR != 0
+        }
 
         num_blocks_added += num_blocks_to_add;
     }

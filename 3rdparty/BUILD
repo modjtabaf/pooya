@@ -13,12 +13,10 @@
 load("//:pooya_rules.bzl", "pooya_cc_library")
 
 pooya_cc_library(
-    name = "misc",
+    name = "gnuplot",
     srcs = [],
-    hdrs = glob(["misc/**"]),
-    deps = [
-        "@eigen",
-        ],
+    hdrs = ["misc/gnuplot-iostream.h"],
+    deps = ["@eigen"],
     includes = [
         ".",
         ],
@@ -26,6 +24,16 @@ pooya_cc_library(
         "-lboost_iostreams",
         "-lboost_system",
         "-lboost_filesystem",
+        ],
+    visibility = ["//visibility:public"],
+)
+
+pooya_cc_library(
+    name = "bs_thread_pool",
+    srcs = [],
+    hdrs = ["misc/BS_thread_pool.hpp"],
+    includes = [
+        ".",
         ],
     visibility = ["//visibility:public"],
 )

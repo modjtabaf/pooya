@@ -96,7 +96,7 @@ int main()
     gp << "plot" << gp.file1d(history[pendulum._phi]) << "with lines title 'x'\n";
 
 #if POOYA_TRACE != 0
-    pooya_verify0(pooya::helper::pooya_trace_info.size() == 1);
+    pooya_verify0(pooya::helper::PooyaTracer::pooya_trace_info.size() == 1);
 #endif // POOYA_TRACE != 0
 
     return 0;

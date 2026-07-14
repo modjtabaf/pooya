@@ -24,9 +24,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 namespace pooya::helper
 {
 
-std::vector<PooyaTraceInfo> pooya_trace_info;
+thread_local std::vector<PooyaTraceInfo> PooyaTracer::pooya_trace_info;
 
-std::string pooya_trace_info_string()
+std::string PooyaTracer::pooya_trace_info_string()
 {
     std::stringstream msg;
     msg << "Pooya Traceback:\n";

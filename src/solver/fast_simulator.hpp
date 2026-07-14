@@ -18,6 +18,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_SOLVER_FAST_SIMULATOR_HPP__
 #define __POOYA_SOLVER_FAST_SIMULATOR_HPP__
 
+#include <cstddef>
+#include <optional>
+
+#include "misc/BS_thread_pool.hpp"
 #include "simulator_base.hpp"
 
 namespace pooya
@@ -28,10 +32,17 @@ class Leaf;
 class FastSimulator : public SimulatorBase
 {
 public:
+    enum NumThreads : std::size_t
+    {
+        Auto   = 0,
+        Single = 1,
+    };
+
     explicit FastSimulator(Block& model, SimulatorBase::InputCallback inputs_cb = nullptr,
-                           StepperBase* stepper = nullptr)
+                           StepperBase* stepper = nullptr, std::size_t num_threads = Single)
         : SimulatorBase(model, inputs_cb, stepper)
     {
+        if (num_threads != Single) _thread_pool.emplace(num_threads);
     }
     FastSimulator(const FastSimulator&) = delete; // no copy constructor
     virtual ~FastSimulator()            = default;
@@ -40,6 +51,7 @@ public:
 
 protected:
     std::vector<std::vector<Leaf*>> _processing_order;
+    std::optional<BS::thread_pool<>> _thread_pool;
 
     void process_model(double t, bool call_pre_step, bool call_post_step) override;
 };

@@ -18,15 +18,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #ifndef __POOYA_HELPER_TRACE_HPP__
 #define __POOYA_HELPER_TRACE_HPP__
 
-#include <string>
-#include <vector>
-
 #include "src/helper/defs.hpp" // should be the first include
 #include "src/helper/util.hpp"
 
 #if !defined(POOYA_TRACE)
 #define POOYA_TRACE POOYA_DEBUG
 #endif // !defined(POOYA_TRACE)
+
+#if POOYA_TRACE != 0
+#include <string>
+#include <vector>
+#endif // POOYA_TRACE == 0
 
 namespace pooya::helper
 {
@@ -38,8 +40,6 @@ namespace pooya::helper
 
 #else
 
-std::string pooya_trace_info_string();
-
 struct PooyaTraceInfo
 {
     std::string _file;
@@ -47,11 +47,12 @@ struct PooyaTraceInfo
     std::string _msg;
 };
 
-extern std::vector<PooyaTraceInfo> pooya_trace_info;
-
 class PooyaTracer
 {
 public:
+    static thread_local std::vector<PooyaTraceInfo> pooya_trace_info;
+    static std::string pooya_trace_info_string();
+
     PooyaTracer() { pooya_trace_info.emplace_back(); }
 
     static void update(const std::string& file, int line, const std::string& msg)

@@ -86,13 +86,13 @@ public:
         _x.push_back(_s_x);
     }
 
-    void activation_function(double t) override
+    bool activation_function(double t) override
     {
         pooya_trace("block: " + Base::full_name().str());
         if (_t.empty())
         {
             Base::_s_out = _s_initial;
-            return;
+            return true;
         }
 
         t -= _s_delay;
@@ -118,6 +118,8 @@ public:
 
             Base::_s_out = (_x[k] - _x[k - 1]) * (t - _t[k - 1]) / (_t[k] - _t[k - 1]) + _x[k - 1];
         }
+
+        return true;
     }
 
 protected:

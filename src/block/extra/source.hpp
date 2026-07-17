@@ -40,10 +40,11 @@ public:
     {
     }
 
-    void activation_function(double t) override
+    bool activation_function(double t) override
     {
         pooya_trace("block: " + Base::full_name().str());
         Base::_s_out = _src_func(t);
+        return true;
     }
 
 protected:

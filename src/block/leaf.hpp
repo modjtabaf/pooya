@@ -38,7 +38,7 @@ public:
     bool ready_to_process() const;
     uint process(double t, bool go_deep = true) override;
 
-    virtual void activation_function(double /*t*/) {}
+    virtual bool activation_function(double /*t*/) { return true; }
 }; // class Leaf
 
 } // namespace pooya

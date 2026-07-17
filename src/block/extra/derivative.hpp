@@ -48,7 +48,7 @@ public:
         _first_step = false;
     }
 
-    void activation_function(double t) override
+    bool activation_function(double t) override
     {
         pooya_trace("block: " + Base::full_name().str());
         if (_first_step)
@@ -65,6 +65,7 @@ public:
         {
             Base::_s_out = (Base::_s_in - _x) / (t - _t);
         }
+        return true;
     }
 
 protected:

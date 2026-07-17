@@ -64,12 +64,13 @@ public:
         return true;
     }
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace0;
 
         // calculate acceleration
         _s_xdd = _s_tau / _m - _c / _m * _s_xd - _k / _m * _s_x;
+        return true;
     }
 
     void pre_step(double /*t*/) override

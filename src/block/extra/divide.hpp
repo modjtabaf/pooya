@@ -51,10 +51,11 @@ public:
         return true;
     }
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         Base::_s_out = _s_x1 / _s_x2;
+        return true;
     }
 
 protected:

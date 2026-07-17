@@ -37,8 +37,11 @@ class Pendulum : public pooya::Submodel
 protected:
     pooya::Integrator _integ1{M_PI_4, this, "dphi"};
     pooya::Integrator _integ2{0.0, this, "phi"};
-    pooya::Function _sin{[](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> void
-                         { pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0))); },
+    pooya::Function _sin{[](double /*t*/, const pooya::Bus& ibus, const pooya::Bus& obus) -> bool
+                         {
+                             pooya::ScalarSignal(obus.at(0)) = std::sin(pooya::ScalarSignal(ibus.at(0)));
+                             return true;
+                         },
                          this, "sin(phi)"};
     // pooya::SISOFunction _sin{[](double /*t*/, double x) -> double { return std::sin(x); }, this, "sin(phi)"};
     // pooya::SOFunction _sin{[](double /*t*/, const pooya::Bus& ibus) -> double

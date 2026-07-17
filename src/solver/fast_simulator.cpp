@@ -35,7 +35,12 @@ void FastSimulator::process_model(double t, bool call_pre_step, bool call_post_s
     if (call_pre_step) _model.pre_step(t);
 
     for (auto& list : _processing_order)
-        for (auto* leaf : list) leaf->activation_function(t);
+        for (auto* leaf : list)
+#if VERIFY_SIMULATOR != 0
+            pooya_verify0(leaf->activation_function(t));
+#else  // VERIFY_SIMULATOR != 0
+            leaf->activation_function(t);
+#endif // VERIFY_SIMULATOR != 0
 
     if (call_post_step) _model.post_step(t);
 }

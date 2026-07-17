@@ -72,13 +72,14 @@ public:
         Base::pre_step(t);
     }
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         if (!_triggered)
         {
             _triggered = _trigger;
         }
+        return true;
     }
 
 protected:

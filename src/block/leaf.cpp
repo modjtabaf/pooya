@@ -28,10 +28,9 @@ uint Leaf::process(double t, bool /*go_deep*/)
         return 0;
     }
 
-    activation_function(t);
+    _processed = activation_function(t);
 
-    _processed = true;
-    return 1;
+    return _processed;
 }
 
 bool Leaf::ready_to_process() const

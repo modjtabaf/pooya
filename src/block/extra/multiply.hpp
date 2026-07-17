@@ -56,7 +56,7 @@ public:
         return true;
     }
 
-    void activation_function(double /*t*/) override
+    bool activation_function(double /*t*/) override
     {
         pooya_trace("block: " + Base::full_name().str());
         _ret = _initial;
@@ -65,6 +65,7 @@ public:
             _ret *= static_cast<const typename Types<T>::SignalImpl*>(&sig.second.impl())->get_value();
         }
         Base::_s_out = _ret;
+        return true;
     }
 
 protected:

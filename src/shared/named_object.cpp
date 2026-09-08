@@ -24,16 +24,17 @@ namespace pooya
 
 std::string ValidName::emend(std::string_view name)
 {
+    static const std::string valid_symbols{"_[](){}<>~!@#$%^&+-="};
     std::string ret(name);
-    std::for_each(
-        ret.begin(), ret.end(),
-        [](char& c) -> void
-        {
-            if (!((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')) || (c == '_')))
-            {
-                c = '_';
-            }
-        });
+    std::for_each(ret.begin(), ret.end(),
+                  [](char& c) -> void
+                  {
+                      if (!((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')) ||
+                            (valid_symbols.find(c) != std::string::npos)))
+                      {
+                          c = '_';
+                      }
+                  });
     return ret;
 }
 

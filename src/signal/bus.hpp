@@ -56,7 +56,6 @@ public:
 
         _signals.reserve(l.size());
 
-        int k{0};
         for (auto v : l)
         {
             if constexpr (is_pair_v<T>)
@@ -67,9 +66,7 @@ public:
             }
             else
             {
-                const ValidName label(_make_auto_label(k++));
-                if (v.impl().name().str().empty()) v.impl().rename(label.str());
-                _signals.emplace_back(label.str(), v.impl());
+                _signals.emplace_back(v.impl().name().str(), v.impl());
             }
         }
     }
@@ -144,8 +141,6 @@ public:
 
 protected:
     Signals _signals;
-
-    static std::string _make_auto_label(std::size_t index) { return "sig" + std::to_string(index); }
 };
 
 class Bus : public SignalT<BusSpec>

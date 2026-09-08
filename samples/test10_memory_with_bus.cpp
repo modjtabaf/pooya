@@ -37,14 +37,14 @@ public:
     MyBus(const std::string& name)
         : pooya::Bus( //
               {
-                  {"x0", pooya::ScalarSignal("x0")},
-                  {"x1", pooya::ScalarSignal("x1")},
-                  {"Z", pooya::Bus( //
-                            {
-                                {"z3", pooya::ScalarSignal("z3")},
-                            },
-                            "Z")},
-                  {"x2", pooya::ScalarSignal("x2")},
+                  pooya::ScalarSignal("x0"),
+                  pooya::ScalarSignal("x1"),
+                  pooya::Bus( //
+                        {
+                            {"z3", pooya::ScalarSignal("z3")},
+                        },
+                        "Z"),
+                  pooya::ScalarSignal("x2"),
               },
               name)
     {

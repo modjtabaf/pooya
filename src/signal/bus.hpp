@@ -132,7 +132,7 @@ public:
             return it->second;
         }
 
-        BusImpl* bus = static_cast<BusImpl*>(&it->second.impl());
+        BusImpl* bus = dynamic_cast<BusImpl*>(&it->second.impl());
         if (!bus) return std::nullopt;
         return bus->at(label.substr(pos + 1));
     }
